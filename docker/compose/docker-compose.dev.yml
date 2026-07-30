@@ -1,0 +1,94 @@
+name: trustlens-dev
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: trustlens-postgres
+    environment:
+      POSTGRES_USER: trustlens
+      POSTGRES_PASSWORD: trustlens
+      POSTGRES_DB: trustlens
+      # Deterministic collation so index ordering matches production
+      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../database/sql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trustlens -d trustlens"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    command:
+      - "postgres"
+      - "-c"
+      - "log_statement=none"
+      - "-c"
+      - "max_connections=200"
+
+  redis:
+    image: redis:7-alpine
+    container_name: trustlens-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    # appendonly protects the ARQ job queue across restarts; the cache DB is disposable
+    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: trustlens-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    # 9002, not 9000: 9000 is commonly taken by Portainer and other local tools
+    ports:
+      - "${MINIO_PORT:-9002}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - miniodata:/data
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: trustlens-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb --ignore-existing local/trustlens-documents;
+      mc mb --ignore-existing local/trustlens-listings;
+      mc mb --ignore-existing local/trustlens-models;
+      mc anonymous set none local/trustlens-documents;
+      mc anonymous set none local/trustlens-listings;
+      echo 'buckets ready (all private)';
+      "
+
+  mailhog:
+    image: axllent/mailpit:latest
+    container_name: trustlens-mailhog
+    ports:
+      - "${SMTP_PORT:-1025}:1025"
+      - "${MAILHOG_UI_PORT:-8025}:8025"
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

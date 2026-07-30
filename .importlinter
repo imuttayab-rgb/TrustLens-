@@ -1,0 +1,78 @@
+[importlinter]
+root_packages =
+    trustlens
+    trustlens_api
+    trustlens_worker
+include_external_packages = True
+
+# ── ADR-0004: the domain package must stay framework-free ────────────
+[importlinter:contract:core-is-pure]
+name = trustlens.core must not import frameworks, drivers or vendor SDKs
+type = forbidden
+source_modules =
+    trustlens.core
+forbidden_modules =
+    fastapi
+    starlette
+    sqlalchemy
+    alembic
+    arq
+    redis
+    boto3
+    openai
+    anthropic
+    cv2
+    easyocr
+    deepface
+    httpx
+    trustlens.db
+    trustlens.ai
+    trustlens.shared
+    trustlens_api
+    trustlens_worker
+
+# ── Adapters may not depend on each other ────────────────────────────
+[importlinter:contract:adapters-are-independent]
+name = Adapter packages must not import one another
+type = independence
+modules =
+    trustlens.db
+    trustlens.ai
+
+# ── Packages may not depend on applications ──────────────────────────
+[importlinter:contract:packages-never-import-apps]
+name = Shared packages must not import applications
+type = forbidden
+source_modules =
+    trustlens.core
+    trustlens.db
+    trustlens.ai
+    trustlens.shared
+forbidden_modules =
+    trustlens_api
+    trustlens_worker
+
+# ── ADR-0003: the API must not inherit the ML dependency graph ───────
+[importlinter:contract:api-has-no-ml-deps]
+name = The API must not import the worker or heavy ML libraries
+type = forbidden
+source_modules =
+    trustlens_api
+forbidden_modules =
+    trustlens_worker
+    cv2
+    easyocr
+    deepface
+    torch
+    tensorflow
+
+# ── Layering ─────────────────────────────────────────────────────────
+[importlinter:contract:layers]
+name = Clean architecture layering
+type = layers
+layers =
+    trustlens_api : trustlens_worker
+    trustlens.db | trustlens.ai
+    trustlens.shared
+    trustlens.core
+containers =

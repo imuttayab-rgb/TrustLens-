@@ -1,0 +1,32 @@
+[project]
+name = "trustlens-ai"
+version = "0.1.0"
+description = "TrustLens AI adapters: OCR (EasyOCR+OpenCV), face match (DeepFace), LLM (OpenAI/Claude), scam classifier."
+requires-python = ">=3.12"
+dependencies = [
+    "trustlens-core",
+    "trustlens-shared",
+    "pillow>=11.0.0",
+    "httpx>=0.27.2",
+]
+
+[project.optional-dependencies]
+# Heavy ML stack. Installed in the WORKER image only - the API must never
+# pull these in (ADR-0003, enforced by the import-linter contract).
+ml = [
+    "opencv-python-headless>=4.10.0.84",
+    "easyocr>=1.7.2",
+    "deepface>=0.0.93",
+    "tf-keras>=2.18.0",
+    "numpy>=1.26.4",
+    "scikit-learn>=1.5.2",
+    "joblib>=1.4.2",
+]
+llm = ["openai>=1.54.3", "anthropic>=0.39.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trustlens"]

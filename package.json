@@ -1,0 +1,44 @@
+{
+  "name": "trustlens",
+  "version": "0.1.0",
+  "private": true,
+  "description": "TrustLens - AI-Powered Seller Trust Verification System for Online Marketplaces",
+  "packageManager": "pnpm@9.12.3",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:watch": "turbo run test:watch",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\" --ignore-path .gitignore",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\" --ignore-path .gitignore",
+    "codegen": "bash tools/codegen/generate.sh",
+    "e2e": "pnpm --filter @trustlens/e2e test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.5.0",
+    "@commitlint/config-conventional": "^19.5.0",
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
+    "prettier": "^3.3.3",
+    "turbo": "^2.2.3",
+    "typescript": "^5.6.3"
+  },
+  "commitlint": {
+    "extends": ["./configs/commitlint.config.js"]
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": ["prettier --write", "eslint --fix --max-warnings=0"],
+    "*.py": ["ruff check --fix", "ruff format"],
+    "*.{json,yml,yaml,md}": ["prettier --write"]
+  },
+  "prettier": "./configs/prettier.config.js"
+}

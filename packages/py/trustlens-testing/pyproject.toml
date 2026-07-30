@@ -1,0 +1,13 @@
+[project]
+name = "trustlens-testing"
+version = "0.1.0"
+description = "Shared fakes, factories and port contract tests. One set of test doubles for the whole repo."
+requires-python = ">=3.12"
+dependencies = ["trustlens-core", "pytest>=8.3.3", "factory-boy>=3.3.1", "faker>=30.8.1"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trustlens"]

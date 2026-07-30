@@ -1,0 +1,212 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.12'
+  NODE_VERSION: '20'
+
+jobs:
+  # Path filters so a docs-only change does not run the ML test suite.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      python: ${{ steps.filter.outputs.python }}
+      js: ${{ steps.filter.outputs.js }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - 'apps/api/**'
+              - 'apps/worker/**'
+              - 'apps/ml/**'
+              - 'packages/py/**'
+              - 'database/**'
+              - 'pyproject.toml'
+            js:
+              - 'apps/web/**'
+              - 'apps/admin/**'
+              - 'packages/**'
+              - '!packages/py/**'
+              - 'package.json'
+
+  lint-python:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with: { enable-cache: true }
+      - run: uv sync --all-packages --dev
+      - name: Ruff lint
+        run: uv run ruff check --output-format=github .
+      - name: Ruff format check
+        run: uv run ruff format --check .
+      - name: mypy
+        run: uv run mypy packages/py apps/api/src apps/worker/src
+
+  architecture:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with: { enable-cache: true }
+      - run: uv sync --all-packages --dev
+      # Enforces the layering that the whole design rests on: the domain stays
+      # framework-free (ADR-0004) and the API never inherits the ML stack
+      # (ADR-0003). Without this gate both erode within weeks.
+      - name: Import-linter contracts
+        run: uv run lint-imports --config .importlinter
+
+  test-python:
+    needs: changes
+    if: needs.changes.outputs.python == 'true'
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: trustlens
+          POSTGRES_PASSWORD: trustlens
+          POSTGRES_DB: trustlens
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U trustlens" --health-interval 5s
+          --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping" --health-interval 5s
+          --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://trustlens:trustlens@localhost:5432/trustlens
+      DATABASE_URL_SYNC: postgresql+psycopg://trustlens:trustlens@localhost:5432/trustlens
+      REDIS_URL: redis://localhost:6379/0
+      REDIS_QUEUE_URL: redis://localhost:6379/1
+      # Tests never reach a real provider, a real key, or a real bill.
+      USE_FAKE_AI: 'true'
+      ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+        with: { enable-cache: true }
+      - run: uv sync --all-packages --dev
+
+      - name: Generate ephemeral secrets
+        run: bash scripts/generate-keys.sh >> "$GITHUB_ENV"
+
+      - name: Migrations apply, reverse and reapply
+        # An untested downgrade is not a rollback plan.
+        run: |
+          cd database
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
+
+      - name: Seed reference data
+        run: uv run python -m trustlens.db.seed.run reference
+
+      - name: Unit and integration tests
+        run: uv run pytest --cov --cov-report=xml --cov-report=term-missing
+
+      - name: Coverage gate
+        # 95% on the domain package: those rules decide whether a real person
+        # is labelled a fraud risk, and they are pure and fast to test.
+        run: |
+          uv run coverage report --fail-under=80
+          uv run coverage report --fail-under=95 --include='packages/py/trustlens-core/*'
+
+  lint-js:
+    needs: changes
+    if: needs.changes.outputs.js == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm format:check
+
+  build:
+    needs: [changes, lint-js]
+    if: needs.changes.outputs.js == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+  codegen-drift:
+    needs: changes
+    if: needs.changes.outputs.python == 'true' || needs.changes.outputs.js == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: pnpm }
+      - run: uv sync --all-packages --dev
+      - run: pnpm install --frozen-lockfile
+      - run: bash scripts/generate-keys.sh >> "$GITHUB_ENV"
+      - name: Regenerate the API client
+        run: make codegen
+      # A backend field rename must break the frontend build in the SAME PR -
+      # that is the entire point of generating the client (ADR-0005).
+      - name: Fail on drift
+        run: git diff --exit-code -- packages/api-client docs/api
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: astral-sh/setup-uv@v3
+      - run: uv sync --all-packages --dev
+      - name: Python dependency audit
+        run: uv run pip-audit --strict || true
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=high || true
+
+  ci-passed:
+    # Single required status check, so branch protection does not need
+    # updating every time a job is added.
+    if: always()
+    needs: [lint-python, architecture, test-python, lint-js, build, codegen-drift, security]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify no job failed
+        run: |
+          echo '${{ toJSON(needs) }}' | jq -e 'all(.result == "success" or .result == "skipped")' \
+            || (echo "One or more CI jobs failed." && exit 1)

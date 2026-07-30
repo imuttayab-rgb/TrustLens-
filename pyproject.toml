@@ -1,0 +1,161 @@
+[project]
+name = "trustlens-workspace"
+version = "0.1.0"
+description = "TrustLens - AI-Powered Seller Trust Verification System (workspace root)"
+requires-python = ">=3.12"
+dependencies = [
+    "trustlens-core",
+    "trustlens-shared",
+    "trustlens-db",
+    "trustlens-ai",
+    "trustlens-api",
+    "trustlens-worker",
+]
+
+[dependency-groups]
+dev = [
+    "trustlens-testing",
+    "pytest>=8.3.3",
+    "pytest-asyncio>=0.24.0",
+    "pytest-cov>=5.0.0",
+    "pytest-mock>=3.14.0",
+    "httpx>=0.27.2",
+    "testcontainers[postgres,redis]>=4.8.2",
+    "factory-boy>=3.3.1",
+    "faker>=30.8.1",
+    "mypy>=1.13.0",
+    "ruff>=0.7.2",
+    "import-linter>=2.1",
+    "types-passlib>=1.7.7",
+]
+
+[tool.uv.workspace]
+members = [
+    "packages/py/trustlens-core",
+    "packages/py/trustlens-shared",
+    "packages/py/trustlens-db",
+    "packages/py/trustlens-ai",
+    "packages/py/trustlens-testing",
+    "apps/api",
+    "apps/worker",
+]
+
+[tool.uv.sources]
+trustlens-core = { workspace = true }
+trustlens-shared = { workspace = true }
+trustlens-db = { workspace = true }
+trustlens-ai = { workspace = true }
+trustlens-testing = { workspace = true }
+trustlens-api = { workspace = true }
+trustlens-worker = { workspace = true }
+
+# ── Ruff ─────────────────────────────────────────────────────────────
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["database/migrations/versions", ".venv", ".venv-check", "node_modules"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # isort
+    "N",        # pep8-naming
+    "UP",       # pyupgrade
+    "B",        # flake8-bugbear
+    "S",        # flake8-bandit
+    "A",        # flake8-builtins
+    "C4",       # flake8-comprehensions
+    "DTZ",      # flake8-datetimez  (no naive datetimes)
+    "SIM",      # flake8-simplify
+    "PTH",      # flake8-use-pathlib
+    "RUF",      # ruff-specific
+]
+ignore = [
+    "B008",    # FastAPI Depends() in defaults is the framework idiom
+    "S101",    # assert - re-enabled outside tests below
+    "N818",    # error suffix on exception names
+    # flake8-type-checking is deliberately OFF. It wants runtime imports moved
+    # into `if TYPE_CHECKING`, which breaks Pydantic and SQLAlchemy: both
+    # resolve annotations at runtime to build models and mappers. The import
+    # discipline that actually matters here is enforced by import-linter
+    # (.importlinter), which checks real dependency direction rather than
+    # import placement.
+    "TC001", "TC002", "TC003",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"**/tests/**" = ["S101", "S105", "S106", "S311", "DTZ"]
+"**/seed/**" = ["S106"]
+"packages/py/trustlens-testing/**" = ["S101", "S105", "S106"]
+# S105 flags enum MEMBERS whose names look password-ish (`PASS`,
+# `PASSWORD_RESET`). They are signal statuses and token purposes, not secrets.
+"packages/py/trustlens-core/src/trustlens/core/domain/enums/**" = ["S105"]
+"apps/api/src/trustlens_api/api/v1/schemas/auth.py" = ["S105"]
+# `PgUUID` is the conventional alias for the postgresql UUID *type*; N811 reads
+# it as a mis-cased constant. RUF012 objects to SQLAlchemy declarative
+# attributes, which are class-level by design.
+"packages/py/trustlens-db/**" = ["N811", "RUF012"]
+# ARQ reads its configuration from class attributes; that is its documented API.
+"apps/worker/src/trustlens_worker/main.py" = ["RUF012"]
+# Fakes and OCR date parsing work with calendar dates, which carry no timezone.
+"packages/py/trustlens-ai/src/trustlens/ai/fakes/**" = ["DTZ011"]
+"packages/py/trustlens-ai/src/trustlens/ai/ocr/cnic_parser.py" = ["DTZ007"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["trustlens", "trustlens_api", "trustlens_worker", "trustlens_ml"]
+
+[tool.ruff.format]
+quote-style = "double"
+
+# ── mypy ─────────────────────────────────────────────────────────────
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+strict_equality = true
+plugins = ["pydantic.mypy"]
+exclude = ["database/migrations/", "\\.venv"]
+
+[[tool.mypy.overrides]]
+module = ["trustlens.core.*"]
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["easyocr.*", "deepface.*", "cv2.*", "arq.*", "boto3.*", "botocore.*", "magic.*"]
+ignore_missing_imports = true
+
+# ── pytest ───────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["packages/py", "apps/api/tests", "apps/worker/tests"]
+python_files = ["test_*.py"]
+addopts = "-q --strict-markers --strict-config"
+markers = [
+    "unit: fast, no I/O",
+    "integration: requires postgres/redis via testcontainers",
+    "api: exercises the ASGI app",
+    "slow: excluded from the default local run",
+]
+filterwarnings = ["error::DeprecationWarning:trustlens.*"]
+
+[tool.coverage.run]
+branch = true
+source = ["packages/py", "apps"]
+omit = ["*/tests/*", "*/migrations/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@overload",
+    "\\.\\.\\.",
+]

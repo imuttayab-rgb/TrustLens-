@@ -1,0 +1,2 @@
+# Unit tests only: a slow pre-push hook gets bypassed, and a bypassed hook protects nothing.
+make typecheck && make test-unit

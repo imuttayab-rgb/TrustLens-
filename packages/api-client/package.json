@@ -1,0 +1,12 @@
+{ "name": "@trustlens/api-client", "version": "0.1.0", "private": true,
+  "type": "module", "main": "./src/index.ts", "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": {
+    "codegen": "openapi-typescript ../../docs/api/openapi.json -o ./src/schema.gen.ts",
+    "lint": "eslint src", "typecheck": "tsc --noEmit"
+  },
+  "dependencies": { "openapi-fetch": "^0.13.0" },
+  "devDependencies": {
+    "@trustlens/config-typescript": "workspace:*",
+    "openapi-typescript": "^7.4.2", "typescript": "^5.6.3"
+  } }

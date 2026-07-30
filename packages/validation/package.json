@@ -1,0 +1,6 @@
+{ "name": "@trustlens/validation", "version": "0.1.0", "private": true,
+  "type": "module", "main": "./src/index.ts", "types": "./src/index.ts",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "lint": "eslint src", "typecheck": "tsc --noEmit" },
+  "dependencies": { "zod": "^3.23.8", "@trustlens/constants": "workspace:*" },
+  "devDependencies": { "@trustlens/config-typescript": "workspace:*", "typescript": "^5.6.3" } }

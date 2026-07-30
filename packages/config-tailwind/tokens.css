@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --primary: 222 47% 25%;
+    --primary-foreground: 210 40% 98%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+    --destructive: 0 72% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 47% 25%;
+    --radius: 0.625rem;
+
+    /* Risk palette. All four pairs meet 4.5:1 against their background. */
+    --risk-low: 142 71% 29%;
+    --risk-low-bg: 141 79% 95%;
+    --risk-medium: 32 85% 34%;
+    --risk-medium-bg: 48 96% 93%;
+    --risk-high: 0 72% 42%;
+    --risk-high-bg: 0 86% 96%;
+    /* Slate, deliberately: "not enough information" is not a verdict. */
+    --risk-unknown: 215 16% 40%;
+    --risk-unknown-bg: 210 40% 96%;
+  }
+
+  .dark {
+    --background: 222 47% 8%;
+    --foreground: 210 40% 96%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 96%;
+    --primary: 210 40% 96%;
+    --primary-foreground: 222 47% 11%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --destructive: 0 63% 45%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 20%;
+    --input: 217 33% 20%;
+    --ring: 213 27% 84%;
+
+    --risk-low: 142 65% 58%;
+    --risk-low-bg: 142 40% 14%;
+    --risk-medium: 45 90% 62%;
+    --risk-medium-bg: 38 45% 15%;
+    --risk-high: 0 84% 68%;
+    --risk-high-bg: 0 45% 16%;
+    --risk-unknown: 215 20% 70%;
+    --risk-unknown-bg: 217 33% 17%;
+  }
+
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; }
+
+  /* The score gauge animates; respect a user's motion preference. */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+}

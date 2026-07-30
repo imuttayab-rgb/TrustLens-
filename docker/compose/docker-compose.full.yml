@@ -1,0 +1,39 @@
+# Everything containerised. For a clean-machine demo: `docker compose -f
+# docker/compose/docker-compose.full.yml up`, no local toolchain required.
+name: trustlens-full
+
+include:
+  - docker-compose.dev.yml
+
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/api.Dockerfile
+    env_file: ../../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://trustlens:trustlens@postgres:5432/trustlens
+      DATABASE_URL_SYNC: postgresql+psycopg://trustlens:trustlens@postgres:5432/trustlens
+      REDIS_URL: redis://redis:6379/0
+      REDIS_QUEUE_URL: redis://redis:6379/1
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      SMTP_HOST: mailhog
+    ports: ["8000:8000"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: docker/worker.Dockerfile
+    env_file: ../../.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://trustlens:trustlens@postgres:5432/trustlens
+      REDIS_URL: redis://redis:6379/0
+      REDIS_QUEUE_URL: redis://redis:6379/1
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      SMTP_HOST: mailhog
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }

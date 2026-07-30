@@ -1,0 +1,33 @@
+from trustlens.core.application.use_cases.auth.authenticate import (
+    IssuedSession,
+    LoginCommand,
+    LoginUser,
+    LogoutCommand,
+    LogoutUser,
+    PasswordHasher,
+    RefreshSession,
+    RefreshSessionCommand,
+    RegisterUser,
+    RegisterUserCommand,
+    RegisterUserResult,
+    TokenHasher,
+    VerifyEmail,
+    VerifyEmailCommand,
+)
+
+__all__ = [
+    "IssuedSession",
+    "LoginCommand",
+    "LoginUser",
+    "LogoutCommand",
+    "LogoutUser",
+    "PasswordHasher",
+    "RefreshSession",
+    "RefreshSessionCommand",
+    "RegisterUser",
+    "RegisterUserCommand",
+    "RegisterUserResult",
+    "TokenHasher",
+    "VerifyEmail",
+    "VerifyEmailCommand",
+]

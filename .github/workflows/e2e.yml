@@ -1,0 +1,40 @@
+name: E2E
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  playwright:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+
+      - name: Generate ephemeral secrets
+        run: |
+          cp .env.example .env
+          bash scripts/generate-keys.sh >> .env
+
+      - name: Start the full stack
+        # USE_FAKE_AI keeps the run deterministic, fast, key-free and free.
+        run: |
+          echo "USE_FAKE_AI=true" >> .env
+          docker compose -f docker/compose/docker-compose.full.yml up -d --build
+          bash scripts/wait-for-services.sh
+
+      - run: pnpm --filter @trustlens/e2e exec playwright install --with-deps chromium
+      - run: pnpm --filter @trustlens/e2e test
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: testing/e2e/playwright-report/
+          retention-days: 7

@@ -1,0 +1,9 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.svg binary
+*.pdf binary
+pnpm-lock.yaml linguist-generated=true -diff
+uv.lock linguist-generated=true -diff
+packages/api-client/src/schema.gen.ts linguist-generated=true -diff
+docs/api/openapi.json linguist-generated=true -diff
