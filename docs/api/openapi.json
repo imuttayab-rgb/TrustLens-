@@ -1,1573 +1,670 @@
 {
-  "openapi": "3.1.0",
+  "components": {
+    "schemas": {
+      "BatchLookupRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "sellerRefs": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Sellerrefs",
+            "type": "array"
+          }
+        },
+        "required": ["sellerRefs"],
+        "title": "BatchLookupRequest",
+        "type": "object"
+      },
+      "BatchLookupResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "notFound": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Notfound",
+            "type": "array"
+          },
+          "results": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Results",
+            "type": "array"
+          }
+        },
+        "required": ["results"],
+        "title": "BatchLookupResponse",
+        "type": "object"
+      },
+      "BecomeSellerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "businessType": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Businesstype"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "countryCode": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countrycode"
+          },
+          "displayName": {
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Displayname",
+            "type": "string"
+          }
+        },
+        "required": ["displayName"],
+        "title": "BecomeSellerRequest",
+        "type": "object"
+      },
+      "ChangePasswordRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "currentPassword": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Currentpassword",
+            "type": "string"
+          },
+          "newPassword": {
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Newpassword",
+            "type": "string"
+          }
+        },
+        "required": ["currentPassword", "newPassword"],
+        "title": "ChangePasswordRequest",
+        "type": "object"
+      },
+      "DeviceFingerprintRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "fingerprint": {
+            "maxLength": 256,
+            "minLength": 16,
+            "title": "Fingerprint",
+            "type": "string"
+          },
+          "languages": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Languages"
+          },
+          "screenResolution": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Screenresolution"
+          },
+          "timezone": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Timezone"
+          },
+          "userAgent": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Useragent"
+          }
+        },
+        "required": ["fingerprint"],
+        "title": "DeviceFingerprintRequest",
+        "type": "object"
+      },
+      "ForgotPasswordRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": ["email"],
+        "title": "ForgotPasswordRequest",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "LoginRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceFingerprint": {
+            "anyOf": [
+              {
+                "maxLength": 256,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Devicefingerprint"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": ["email", "password"],
+        "title": "LoginRequest",
+        "type": "object"
+      },
+      "OverrideScoreRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Reason",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          }
+        },
+        "required": ["score", "reason"],
+        "title": "OverrideScoreRequest",
+        "type": "object"
+      },
+      "PublicReasonModel": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "description": "Stable reason code. Switch on this, not on `text`.",
+            "title": "Code",
+            "type": "string"
+          },
+          "impact": {
+            "description": "POSITIVE | NEGATIVE | NEUTRAL",
+            "title": "Impact",
+            "type": "string"
+          },
+          "text": {
+            "description": "Buyer-readable explanation.",
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": ["code", "impact", "text"],
+        "title": "PublicReasonModel",
+        "type": "object"
+      },
+      "PublicScoreResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "computedAt": {
+            "title": "Computedat",
+            "type": "string"
+          },
+          "confidence": {
+            "description": "How much evidence the score is based on.",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "expiresAt": {
+            "title": "Expiresat",
+            "type": "string"
+          },
+          "modelVersion": {
+            "title": "Modelversion",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "$ref": "#/components/schemas/PublicReasonModel"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "riskLabel": {
+            "title": "Risklabel",
+            "type": "string"
+          },
+          "riskLevel": {
+            "description": "LOW | MEDIUM | HIGH | UNKNOWN",
+            "title": "Risklevel",
+            "type": "string"
+          },
+          "score": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Score",
+            "type": "integer"
+          },
+          "sellerRef": {
+            "title": "Sellerref",
+            "type": "string"
+          },
+          "unavailableSignals": {
+            "description": "Checks that could not be performed. These are excluded from the score rather than counted as failures.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Unavailablesignals",
+            "type": "array"
+          },
+          "verifications": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Per-check status: identity, phone, email.",
+            "title": "Verifications",
+            "type": "object"
+          }
+        },
+        "required": [
+          "sellerRef",
+          "score",
+          "riskLevel",
+          "riskLabel",
+          "confidence",
+          "verifications",
+          "reasons",
+          "modelVersion",
+          "computedAt",
+          "expiresAt"
+        ],
+        "title": "PublicScoreResponse",
+        "type": "object"
+      },
+      "PublicStatusResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "apiVersion": {
+            "title": "Apiversion",
+            "type": "string"
+          },
+          "scoringModelVersion": {
+            "title": "Scoringmodelversion",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": ["status", "scoringModelVersion", "apiVersion"],
+        "title": "PublicStatusResponse",
+        "type": "object"
+      },
+      "RegisterRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "acceptedTerms": {
+            "description": "Must be true; recorded in `consents`.",
+            "title": "Acceptedterms",
+            "type": "boolean"
+          },
+          "asSeller": {
+            "default": false,
+            "title": "Asseller",
+            "type": "boolean"
+          },
+          "email": {
+            "format": "email",
+            "title": "Email",
+            "type": "string"
+          },
+          "fullName": {
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Fullname",
+            "type": "string"
+          },
+          "password": {
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password",
+            "type": "string"
+          }
+        },
+        "required": ["email", "password", "fullName", "acceptedTerms"],
+        "title": "RegisterRequest",
+        "type": "object"
+      },
+      "RequestOtpRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "phoneNumber": {
+            "description": "E.164 format, e.g. +923001234567",
+            "maxLength": 20,
+            "minLength": 8,
+            "title": "Phonenumber",
+            "type": "string"
+          }
+        },
+        "required": ["phoneNumber"],
+        "title": "RequestOtpRequest",
+        "type": "object"
+      },
+      "ResetPasswordRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "password": {
+            "maxLength": 128,
+            "minLength": 12,
+            "title": "Password",
+            "type": "string"
+          },
+          "token": {
+            "maxLength": 256,
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": ["token", "password"],
+        "title": "ResetPasswordRequest",
+        "type": "object"
+      },
+      "SubmitIdentityRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "biometricConsent": {
+            "title": "Biometricconsent",
+            "type": "boolean"
+          },
+          "cnicBackFileId": {
+            "format": "uuid",
+            "title": "Cnicbackfileid",
+            "type": "string"
+          },
+          "cnicFrontFileId": {
+            "format": "uuid",
+            "title": "Cnicfrontfileid",
+            "type": "string"
+          },
+          "selfieFileId": {
+            "format": "uuid",
+            "title": "Selfiefileid",
+            "type": "string"
+          }
+        },
+        "required": ["cnicFrontFileId", "cnicBackFileId", "selfieFileId", "biometricConsent"],
+        "title": "SubmitIdentityRequest",
+        "type": "object"
+      },
+      "UpdateSellerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "businessType": {
+            "anyOf": [
+              {
+                "maxLength": 50,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Businesstype"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "countryCode": {
+            "anyOf": [
+              {
+                "maxLength": 2,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Countrycode"
+          },
+          "displayName": {
+            "anyOf": [
+              {
+                "maxLength": 150,
+                "minLength": 2,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Displayname"
+          }
+        },
+        "title": "UpdateSellerRequest",
+        "type": "object"
+      },
+      "UploadIntentRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "contentType": {
+            "title": "Contenttype",
+            "type": "string"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "purpose": {
+            "description": "CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE",
+            "title": "Purpose",
+            "type": "string"
+          },
+          "sizeBytes": {
+            "exclusiveMinimum": 0.0,
+            "title": "Sizebytes",
+            "type": "integer"
+          }
+        },
+        "required": ["purpose", "contentType", "sizeBytes"],
+        "title": "UploadIntentRequest",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "VerifyEmailRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "token": {
+            "maxLength": 256,
+            "minLength": 16,
+            "title": "Token",
+            "type": "string"
+          }
+        },
+        "required": ["token"],
+        "title": "VerifyEmailRequest",
+        "type": "object"
+      },
+      "VerifyOtpRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 8,
+            "minLength": 4,
+            "pattern": "^\\d+$",
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": ["code"],
+        "title": "VerifyOtpRequest",
+        "type": "object"
+      }
+    }
+  },
   "info": {
-    "title": "TrustLens API",
     "description": "**TrustLens** verifies whether an online marketplace seller is genuine or fake\nand publishes a single **explainable Trust Score (0-100)** with a risk level\nand the reasons behind it.\n\nTwo APIs live here:\n\n| | Base path | Auth | Contains PII |\n|---|---|---|---|\n| Internal | `/api/v1` | JWT bearer + httpOnly refresh cookie | Yes (own data only) |\n| Public | `/public/v1` | API key (`Authorization: Bearer tl_live_...`) | **No** |\n\n### How the score works\n\nAI components (EasyOCR, DeepFace, an LLM, a trained classifier) produce\n*evidence with a confidence value*. A versioned, deterministic rule set turns\nthat evidence into points. The full per-signal breakdown is stored with every\nscore, so an explanation never requires recomputation - and the same inputs\nalways produce the same score.\n\nErrors follow **RFC 9457** (`application/problem+json`) and always carry a\nstable `code` plus the `requestId` to quote in a support request.\n",
+    "title": "TrustLens API",
     "version": "0.1.0"
   },
+  "openapi": "3.1.0",
   "paths": {
-    "/health/live": {
-      "get": {
-        "tags": [
-          "Health"
-        ],
-        "summary": "Liveness probe",
-        "operationId": "live_health_live_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Live Health Live Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/health/ready": {
-      "get": {
-        "tags": [
-          "Health"
-        ],
-        "summary": "Readiness probe",
-        "operationId": "ready_health_ready_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "additionalProperties": true,
-                  "type": "object",
-                  "title": "Response Ready Health Ready Get"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/register": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Register a new account",
-        "description": "Creates a PENDING account and emails a verification link. Responds identically whether or not the address is already registered, so the endpoint cannot be used to enumerate users.",
-        "operationId": "register_api_v1_auth_register_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RegisterRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Register Api V1 Auth Register Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/login": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Sign in",
-        "operationId": "login_api_v1_auth_login_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/LoginRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Login Api V1 Auth Login Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/refresh": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Rotate the session",
-        "description": "Exchanges the refresh cookie for a new access token and a new refresh token. Presenting an already-rotated token revokes the whole token family - a stolen token is therefore self-limiting.",
-        "operationId": "refresh_api_v1_auth_refresh_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          },
-          {
-            "name": "tl_rt",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Tl Rt"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Refresh Api V1 Auth Refresh Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/logout": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Sign out of this session",
-        "operationId": "logout_api_v1_auth_logout_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          },
-          {
-            "name": "tl_rt",
-            "in": "cookie",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Tl Rt"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Logout Api V1 Auth Logout Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/logout-all": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Sign out of every session",
-        "operationId": "logout_all_api_v1_auth_logout_all_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Logout All Api V1 Auth Logout All Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/verify-email": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Confirm an email address",
-        "operationId": "verify_email_api_v1_auth_verify_email_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyEmailRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Verify Email Api V1 Auth Verify Email Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/forgot-password": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Request a password reset",
-        "description": "Always returns 202, whether or not the address exists. Revealing which addresses are registered would make this a phishing target list.",
-        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ForgotPasswordRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Forgot Password Api V1 Auth Forgot Password Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/reset-password": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Complete a password reset",
-        "operationId": "reset_password_api_v1_auth_reset_password_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ResetPasswordRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Reset Password Api V1 Auth Reset Password Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/change-password": {
-      "post": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "Change your password",
-        "operationId": "change_password_api_v1_auth_change_password_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangePasswordRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Change Password Api V1 Auth Change Password Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/auth/sessions": {
-      "get": {
-        "tags": [
-          "Authentication"
-        ],
-        "summary": "List active sessions",
-        "operationId": "list_sessions_api_v1_auth_sessions_get",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response List Sessions Api V1 Auth Sessions Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/me": {
-      "get": {
-        "tags": [
-          "Me"
-        ],
-        "summary": "Current user",
-        "operationId": "get_me_api_v1_me_get",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Get Me Api V1 Me Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/me/become-seller": {
-      "post": {
-        "tags": [
-          "Me"
-        ],
-        "summary": "Upgrade a buyer account to also be a seller",
-        "operationId": "become_seller_api_v1_me_become_seller_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BecomeSellerRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Become Seller Api V1 Me Become Seller Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sellers/me": {
-      "get": {
-        "tags": [
-          "Me"
-        ],
-        "summary": "Own seller profile",
-        "operationId": "get_my_seller_api_v1_sellers_me_get",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Get My Seller Api V1 Sellers Me Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "patch": {
-        "tags": [
-          "Me"
-        ],
-        "summary": "Update own seller profile",
-        "operationId": "update_my_seller_api_v1_sellers_me_patch",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSellerRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Update My Seller Api V1 Sellers Me Patch"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/files/upload-intent": {
-      "post": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "Get a presigned upload URL",
-        "description": "Returns a short-lived presigned URL. The client uploads directly to object storage; bytes never pass through the API.",
-        "operationId": "upload_intent_api_v1_files_upload_intent_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UploadIntentRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Upload Intent Api V1 Files Upload Intent Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/verification/identity": {
-      "post": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "Submit CNIC and selfie for verification",
-        "description": "Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).",
-        "operationId": "submit_identity_api_v1_verification_identity_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/SubmitIdentityRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Submit Identity Api V1 Verification Identity Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      },
-      "get": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "Identity verification status",
-        "operationId": "identity_status_api_v1_verification_identity_get",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Identity Status Api V1 Verification Identity Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/verification/phone/request-otp": {
-      "post": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "Send a phone verification code",
-        "operationId": "request_otp_api_v1_verification_phone_request_otp_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RequestOtpRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Request Otp Api V1 Verification Phone Request Otp Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/verification/phone/verify-otp": {
-      "post": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "Confirm a phone verification code",
-        "operationId": "verify_otp_api_v1_verification_phone_verify_otp_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyOtpRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Verify Otp Api V1 Verification Phone Verify Otp Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/verification/device": {
-      "post": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "Submit a device fingerprint",
-        "operationId": "submit_device_api_v1_verification_device_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/DeviceFingerprintRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Submit Device Api V1 Verification Device Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/verification/status": {
-      "get": {
-        "tags": [
-          "Verification"
-        ],
-        "summary": "All verification checks in one call",
-        "operationId": "verification_status_api_v1_verification_status_get",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Verification Status Api V1 Verification Status Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sellers/{seller_id}/trust-score": {
-      "get": {
-        "tags": [
-          "Trust Score"
-        ],
-        "summary": "Get the current trust score with its full breakdown",
-        "description": "Returns the score, the risk band, and one entry per evaluated signal with its status, points, machine reason code and human explanation. This is the explainability contract: nothing is recomputed to answer this call.",
-        "operationId": "get_trust_score_api_v1_sellers__seller_id__trust_score_get",
-        "parameters": [
-          {
-            "name": "seller_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Seller Id"
-            }
-          },
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Get Trust Score Api V1 Sellers  Seller Id  Trust Score Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sellers/{seller_id}/trust-score/improvements": {
-      "get": {
-        "tags": [
-          "Trust Score"
-        ],
-        "summary": "Ranked list of what would raise this score",
-        "description": "The unearned points, ordered by how many are recoverable, each with the concrete action that would earn them.",
-        "operationId": "get_improvements_api_v1_sellers__seller_id__trust_score_improvements_get",
-        "parameters": [
-          {
-            "name": "seller_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Seller Id"
-            }
-          },
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Get Improvements Api V1 Sellers  Seller Id  Trust Score Improvements Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sellers/{seller_id}/trust-score/history": {
-      "get": {
-        "tags": [
-          "Trust Score"
-        ],
-        "summary": "Score history",
-        "description": "Scores are append-only, so history is a first-class read rather than a reconstruction.",
-        "operationId": "get_history_api_v1_sellers__seller_id__trust_score_history_get",
-        "parameters": [
-          {
-            "name": "seller_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Seller Id"
-            }
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 100,
-              "minimum": 1,
-              "default": 20,
-              "title": "Limit"
-            }
-          },
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Get History Api V1 Sellers  Seller Id  Trust Score History Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sellers/{seller_id}/trust-score/recompute": {
-      "post": {
-        "tags": [
-          "Trust Score"
-        ],
-        "summary": "Queue a recomputation",
-        "description": "Enqueues a scoring job. Rate-limited and debounced: a burst of requests collapses into a single computation.",
-        "operationId": "recompute_api_v1_sellers__seller_id__trust_score_recompute_post",
-        "parameters": [
-          {
-            "name": "seller_id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid",
-              "title": "Seller Id"
-            }
-          },
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "responses": {
-          "202": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "additionalProperties": true,
-                  "title": "Response Recompute Api V1 Sellers  Seller Id  Trust Score Recompute Post"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/admin/sellers/{seller_id}/trust-score/override": {
       "post": {
-        "tags": [
-          "Trust Score"
-        ],
-        "summary": "Override a computed score (ADMIN only)",
         "description": "Writes a NEW score row marked as a manual override. The computed score it replaces stays in history, a written reason is mandatory (enforced by a database CHECK), and the action is audit-logged.",
         "operationId": "override_score_api_v1_admin_sellers__seller_id__trust_score_override_post",
         "parameters": [
           {
-            "name": "seller_id",
             "in": "path",
+            "name": "seller_id",
             "required": true,
             "schema": {
-              "type": "string",
               "format": "uuid",
-              "title": "Seller Id"
+              "title": "Seller Id",
+              "type": "string"
             }
           },
           {
-            "name": "x-device-fingerprint",
             "in": "header",
+            "name": "x-device-fingerprint",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1583,61 +680,293 @@
           }
         ],
         "requestBody": {
-          "required": true,
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/OverrideScoreRequest"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Override Score Api V1 Admin Sellers  Seller Id  Trust Score Override Post"
+                  "title": "Response Override Score Api V1 Admin Sellers  Seller Id  Trust Score Override Post",
+                  "type": "object"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
+            },
+            "description": "Validation Error"
           }
-        }
+        },
+        "summary": "Override a computed score (ADMIN only)",
+        "tags": ["Trust Score"]
       }
     },
-    "/api/v1/jobs/{job_id}": {
-      "get": {
-        "tags": [
-          "Jobs"
-        ],
-        "summary": "Poll a background job",
-        "operationId": "get_job_api_v1_jobs__job_id__get",
+    "/api/v1/auth/change-password": {
+      "post": {
+        "operationId": "change_password_api_v1_auth_change_password_post",
         "parameters": [
           {
-            "name": "job_id",
-            "in": "path",
-            "required": true,
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
             "schema": {
-              "type": "string",
-              "title": "Job Id"
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Change Password Api V1 Auth Change Password Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change your password",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/forgot-password": {
+      "post": {
+        "description": "Always returns 202, whether or not the address exists. Revealing which addresses are registered would make this a phishing target list.",
+        "operationId": "forgot_password_api_v1_auth_forgot_password_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Forgot Password Api V1 Auth Forgot Password Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request a password reset",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/login": {
+      "post": {
+        "operationId": "login_api_v1_auth_login_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Login Api V1 Auth Login Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign in",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/logout": {
+      "post": {
+        "operationId": "logout_api_v1_auth_logout_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
             }
           },
           {
-            "name": "x-device-fingerprint",
+            "in": "cookie",
+            "name": "tl_rt",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tl Rt"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Logout Api V1 Auth Logout Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign out of this session",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/logout-all": {
+      "post": {
+        "operationId": "logout_all_api_v1_auth_logout_all_post",
+        "parameters": [
+          {
             "in": "header",
+            "name": "x-device-fingerprint",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1654,51 +983,1359 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
                   "additionalProperties": true,
-                  "title": "Response Get Job Api V1 Jobs  Job Id  Get"
+                  "title": "Response Logout All Api V1 Auth Logout All Post",
+                  "type": "object"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign out of every session",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/refresh": {
+      "post": {
+        "description": "Exchanges the refresh cookie for a new access token and a new refresh token. Presenting an already-rotated token revokes the whole token family - a stolen token is therefore self-limiting.",
+        "operationId": "refresh_api_v1_auth_refresh_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "tl_rt",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tl Rt"
             }
           }
-        }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Refresh Api V1 Auth Refresh Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rotate the session",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/register": {
+      "post": {
+        "description": "Creates a PENDING account and emails a verification link. Responds identically whether or not the address is already registered, so the endpoint cannot be used to enumerate users.",
+        "operationId": "register_api_v1_auth_register_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Register Api V1 Auth Register Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register a new account",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/reset-password": {
+      "post": {
+        "operationId": "reset_password_api_v1_auth_reset_password_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Reset Password Api V1 Auth Reset Password Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Complete a password reset",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/sessions": {
+      "get": {
+        "operationId": "list_sessions_api_v1_auth_sessions_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Sessions Api V1 Auth Sessions Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List active sessions",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/auth/verify-email": {
+      "post": {
+        "operationId": "verify_email_api_v1_auth_verify_email_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyEmailRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Verify Email Api V1 Auth Verify Email Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm an email address",
+        "tags": ["Authentication"]
+      }
+    },
+    "/api/v1/files/upload-intent": {
+      "post": {
+        "description": "Returns a short-lived presigned URL. The client uploads directly to object storage; bytes never pass through the API.",
+        "operationId": "upload_intent_api_v1_files_upload_intent_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadIntentRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Upload Intent Api V1 Files Upload Intent Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get a presigned upload URL",
+        "tags": ["Verification"]
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "operationId": "get_job_api_v1_jobs__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Job Api V1 Jobs  Job Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Poll a background job",
+        "tags": ["Jobs"]
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "get_me_api_v1_me_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Me Api V1 Me Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Current user",
+        "tags": ["Me"]
+      }
+    },
+    "/api/v1/me/become-seller": {
+      "post": {
+        "operationId": "become_seller_api_v1_me_become_seller_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BecomeSellerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Become Seller Api V1 Me Become Seller Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upgrade a buyer account to also be a seller",
+        "tags": ["Me"]
+      }
+    },
+    "/api/v1/sellers/me": {
+      "get": {
+        "operationId": "get_my_seller_api_v1_sellers_me_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get My Seller Api V1 Sellers Me Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Own seller profile",
+        "tags": ["Me"]
+      },
+      "patch": {
+        "operationId": "update_my_seller_api_v1_sellers_me_patch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSellerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Update My Seller Api V1 Sellers Me Patch",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update own seller profile",
+        "tags": ["Me"]
+      }
+    },
+    "/api/v1/sellers/{seller_id}/trust-score": {
+      "get": {
+        "description": "Returns the score, the risk band, and one entry per evaluated signal with its status, points, machine reason code and human explanation. This is the explainability contract: nothing is recomputed to answer this call.",
+        "operationId": "get_trust_score_api_v1_sellers__seller_id__trust_score_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Trust Score Api V1 Sellers  Seller Id  Trust Score Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get the current trust score with its full breakdown",
+        "tags": ["Trust Score"]
+      }
+    },
+    "/api/v1/sellers/{seller_id}/trust-score/history": {
+      "get": {
+        "description": "Scores are append-only, so history is a first-class read rather than a reconstruction.",
+        "operationId": "get_history_api_v1_sellers__seller_id__trust_score_history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get History Api V1 Sellers  Seller Id  Trust Score History Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Score history",
+        "tags": ["Trust Score"]
+      }
+    },
+    "/api/v1/sellers/{seller_id}/trust-score/improvements": {
+      "get": {
+        "description": "The unearned points, ordered by how many are recoverable, each with the concrete action that would earn them.",
+        "operationId": "get_improvements_api_v1_sellers__seller_id__trust_score_improvements_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Improvements Api V1 Sellers  Seller Id  Trust Score Improvements Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ranked list of what would raise this score",
+        "tags": ["Trust Score"]
+      }
+    },
+    "/api/v1/sellers/{seller_id}/trust-score/recompute": {
+      "post": {
+        "description": "Enqueues a scoring job. Rate-limited and debounced: a burst of requests collapses into a single computation.",
+        "operationId": "recompute_api_v1_sellers__seller_id__trust_score_recompute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Recompute Api V1 Sellers  Seller Id  Trust Score Recompute Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Queue a recomputation",
+        "tags": ["Trust Score"]
+      }
+    },
+    "/api/v1/verification/device": {
+      "post": {
+        "operationId": "submit_device_api_v1_verification_device_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceFingerprintRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Device Api V1 Verification Device Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit a device fingerprint",
+        "tags": ["Verification"]
+      }
+    },
+    "/api/v1/verification/identity": {
+      "get": {
+        "operationId": "identity_status_api_v1_verification_identity_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Identity Status Api V1 Verification Identity Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Identity verification status",
+        "tags": ["Verification"]
+      },
+      "post": {
+        "description": "Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).",
+        "operationId": "submit_identity_api_v1_verification_identity_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitIdentityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Identity Api V1 Verification Identity Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit CNIC and selfie for verification",
+        "tags": ["Verification"]
+      }
+    },
+    "/api/v1/verification/phone/request-otp": {
+      "post": {
+        "operationId": "request_otp_api_v1_verification_phone_request_otp_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Request Otp Api V1 Verification Phone Request Otp Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send a phone verification code",
+        "tags": ["Verification"]
+      }
+    },
+    "/api/v1/verification/phone/verify-otp": {
+      "post": {
+        "operationId": "verify_otp_api_v1_verification_phone_verify_otp_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyOtpRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Verify Otp Api V1 Verification Phone Verify Otp Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm a phone verification code",
+        "tags": ["Verification"]
+      }
+    },
+    "/api/v1/verification/status": {
+      "get": {
+        "operationId": "verification_status_api_v1_verification_status_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Verification Status Api V1 Verification Status Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "All verification checks in one call",
+        "tags": ["Verification"]
+      }
+    },
+    "/health/live": {
+      "get": {
+        "operationId": "live_health_live_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Live Health Live Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Liveness probe",
+        "tags": ["Health"]
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Ready Health Ready Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Readiness probe",
+        "tags": ["Health"]
+      }
+    },
+    "/public/v1/sellers/lookup": {
+      "post": {
+        "description": "Up to 50 references per request.",
+        "operationId": "batch_lookup_public_v1_sellers_lookup_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchLookupRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BatchLookupResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Look up several sellers at once",
+        "tags": ["Public API"]
       }
     },
     "/public/v1/sellers/{seller_ref}/trust-score": {
       "get": {
-        "tags": [
-          "Public API"
-        ],
-        "summary": "Get a seller's trust score",
         "description": "`seller_ref` may be a TrustLens id, a handle, or `{marketplaceSlug}:{yourSellerId}` if you registered the seller through this API.\n\nResponses are cached for 5 minutes and carry an ETag. Scores change rarely, so a well-behaved client polling this endpoint costs one Redis read.",
         "operationId": "get_trust_score_public_v1_sellers__seller_ref__trust_score_get",
         "parameters": [
           {
-            "name": "seller_ref",
             "in": "path",
+            "name": "seller_ref",
             "required": true,
             "schema": {
-              "type": "string",
-              "title": "Seller Ref"
+              "title": "Seller Ref",
+              "type": "string"
             }
           },
           {
-            "name": "If-None-Match",
             "in": "header",
+            "name": "If-None-Match",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1713,8 +2350,8 @@
             }
           },
           {
-            "name": "x-device-fingerprint",
             "in": "header",
+            "name": "x-device-fingerprint",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1731,834 +2368,79 @@
         ],
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicScoreResponse"
                 }
               }
-            }
+            },
+            "description": "Successful Response"
           },
           "422": {
-            "description": "Validation Error",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/HTTPValidationError"
                 }
               }
-            }
-          }
-        }
-      }
-    },
-    "/public/v1/sellers/lookup": {
-      "post": {
-        "tags": [
-          "Public API"
-        ],
-        "summary": "Look up several sellers at once",
-        "description": "Up to 50 references per request.",
-        "operationId": "batch_lookup_public_v1_sellers_lookup_post",
-        "parameters": [
-          {
-            "name": "x-device-fingerprint",
-            "in": "header",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "X-Device-Fingerprint"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/BatchLookupRequest"
-              }
-            }
+            },
+            "description": "Validation Error"
           }
         },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BatchLookupResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
+        "summary": "Get a seller's trust score",
+        "tags": ["Public API"]
       }
     },
     "/public/v1/status": {
       "get": {
-        "tags": [
-          "Public API"
-        ],
-        "summary": "Service status and current scoring model",
         "description": "No authentication required. Useful as an integration smoke test.",
         "operationId": "public_status_public_v1_status_get",
         "responses": {
           "200": {
-            "description": "Successful Response",
             "content": {
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/PublicStatusResponse"
                 }
               }
-            }
-          }
-        }
-      }
-    }
-  },
-  "components": {
-    "schemas": {
-      "BatchLookupRequest": {
-        "properties": {
-          "sellerRefs": {
-            "items": {
-              "type": "string"
             },
-            "type": "array",
-            "maxItems": 50,
-            "minItems": 1,
-            "title": "Sellerrefs"
+            "description": "Successful Response"
           }
         },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "sellerRefs"
-        ],
-        "title": "BatchLookupRequest"
-      },
-      "BatchLookupResponse": {
-        "properties": {
-          "results": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "type": "array",
-            "title": "Results"
-          },
-          "notFound": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Notfound"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "results"
-        ],
-        "title": "BatchLookupResponse"
-      },
-      "BecomeSellerRequest": {
-        "properties": {
-          "displayName": {
-            "type": "string",
-            "maxLength": 150,
-            "minLength": 2,
-            "title": "Displayname"
-          },
-          "businessType": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 50
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Businesstype"
-          },
-          "city": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 80
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "City"
-          },
-          "countryCode": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2,
-                "minLength": 2
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Countrycode"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "displayName"
-        ],
-        "title": "BecomeSellerRequest"
-      },
-      "ChangePasswordRequest": {
-        "properties": {
-          "currentPassword": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Currentpassword"
-          },
-          "newPassword": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 12,
-            "title": "Newpassword"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "currentPassword",
-          "newPassword"
-        ],
-        "title": "ChangePasswordRequest"
-      },
-      "DeviceFingerprintRequest": {
-        "properties": {
-          "fingerprint": {
-            "type": "string",
-            "maxLength": 256,
-            "minLength": 16,
-            "title": "Fingerprint"
-          },
-          "userAgent": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Useragent"
-          },
-          "screenResolution": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 20
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Screenresolution"
-          },
-          "timezone": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 60
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Timezone"
-          },
-          "languages": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 120
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Languages"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "fingerprint"
-        ],
-        "title": "DeviceFingerprintRequest"
-      },
-      "ForgotPasswordRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "email"
-        ],
-        "title": "ForgotPasswordRequest"
-      },
-      "HTTPValidationError": {
-        "properties": {
-          "detail": {
-            "items": {
-              "$ref": "#/components/schemas/ValidationError"
-            },
-            "type": "array",
-            "title": "Detail"
-          }
-        },
-        "type": "object",
-        "title": "HTTPValidationError"
-      },
-      "LoginRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 1,
-            "title": "Password"
-          },
-          "deviceFingerprint": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 256
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Devicefingerprint"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "email",
-          "password"
-        ],
-        "title": "LoginRequest"
-      },
-      "OverrideScoreRequest": {
-        "properties": {
-          "score": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Score"
-          },
-          "reason": {
-            "type": "string",
-            "maxLength": 1000,
-            "minLength": 10,
-            "title": "Reason"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "score",
-          "reason"
-        ],
-        "title": "OverrideScoreRequest"
-      },
-      "PublicReasonModel": {
-        "properties": {
-          "code": {
-            "type": "string",
-            "title": "Code",
-            "description": "Stable reason code. Switch on this, not on `text`."
-          },
-          "impact": {
-            "type": "string",
-            "title": "Impact",
-            "description": "POSITIVE | NEGATIVE | NEUTRAL"
-          },
-          "text": {
-            "type": "string",
-            "title": "Text",
-            "description": "Buyer-readable explanation."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "code",
-          "impact",
-          "text"
-        ],
-        "title": "PublicReasonModel"
-      },
-      "PublicScoreResponse": {
-        "properties": {
-          "sellerRef": {
-            "type": "string",
-            "title": "Sellerref"
-          },
-          "score": {
-            "type": "integer",
-            "maximum": 100.0,
-            "minimum": 0.0,
-            "title": "Score"
-          },
-          "riskLevel": {
-            "type": "string",
-            "title": "Risklevel",
-            "description": "LOW | MEDIUM | HIGH | UNKNOWN"
-          },
-          "riskLabel": {
-            "type": "string",
-            "title": "Risklabel"
-          },
-          "confidence": {
-            "type": "number",
-            "maximum": 1.0,
-            "minimum": 0.0,
-            "title": "Confidence",
-            "description": "How much evidence the score is based on."
-          },
-          "verifications": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "type": "object",
-            "title": "Verifications",
-            "description": "Per-check status: identity, phone, email."
-          },
-          "reasons": {
-            "items": {
-              "$ref": "#/components/schemas/PublicReasonModel"
-            },
-            "type": "array",
-            "title": "Reasons"
-          },
-          "modelVersion": {
-            "type": "string",
-            "title": "Modelversion"
-          },
-          "computedAt": {
-            "type": "string",
-            "title": "Computedat"
-          },
-          "expiresAt": {
-            "type": "string",
-            "title": "Expiresat"
-          },
-          "unavailableSignals": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "title": "Unavailablesignals",
-            "description": "Checks that could not be performed. These are excluded from the score rather than counted as failures."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "sellerRef",
-          "score",
-          "riskLevel",
-          "riskLabel",
-          "confidence",
-          "verifications",
-          "reasons",
-          "modelVersion",
-          "computedAt",
-          "expiresAt"
-        ],
-        "title": "PublicScoreResponse"
-      },
-      "PublicStatusResponse": {
-        "properties": {
-          "status": {
-            "type": "string",
-            "title": "Status"
-          },
-          "scoringModelVersion": {
-            "type": "string",
-            "title": "Scoringmodelversion"
-          },
-          "apiVersion": {
-            "type": "string",
-            "title": "Apiversion"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "status",
-          "scoringModelVersion",
-          "apiVersion"
-        ],
-        "title": "PublicStatusResponse"
-      },
-      "RegisterRequest": {
-        "properties": {
-          "email": {
-            "type": "string",
-            "format": "email",
-            "title": "Email"
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 12,
-            "title": "Password"
-          },
-          "fullName": {
-            "type": "string",
-            "maxLength": 150,
-            "minLength": 2,
-            "title": "Fullname"
-          },
-          "asSeller": {
-            "type": "boolean",
-            "title": "Asseller",
-            "default": false
-          },
-          "acceptedTerms": {
-            "type": "boolean",
-            "title": "Acceptedterms",
-            "description": "Must be true; recorded in `consents`."
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "email",
-          "password",
-          "fullName",
-          "acceptedTerms"
-        ],
-        "title": "RegisterRequest"
-      },
-      "RequestOtpRequest": {
-        "properties": {
-          "phoneNumber": {
-            "type": "string",
-            "maxLength": 20,
-            "minLength": 8,
-            "title": "Phonenumber",
-            "description": "E.164 format, e.g. +923001234567"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "phoneNumber"
-        ],
-        "title": "RequestOtpRequest"
-      },
-      "ResetPasswordRequest": {
-        "properties": {
-          "token": {
-            "type": "string",
-            "maxLength": 256,
-            "minLength": 16,
-            "title": "Token"
-          },
-          "password": {
-            "type": "string",
-            "maxLength": 128,
-            "minLength": 12,
-            "title": "Password"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "token",
-          "password"
-        ],
-        "title": "ResetPasswordRequest"
-      },
-      "SubmitIdentityRequest": {
-        "properties": {
-          "cnicFrontFileId": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Cnicfrontfileid"
-          },
-          "cnicBackFileId": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Cnicbackfileid"
-          },
-          "selfieFileId": {
-            "type": "string",
-            "format": "uuid",
-            "title": "Selfiefileid"
-          },
-          "biometricConsent": {
-            "type": "boolean",
-            "title": "Biometricconsent"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "cnicFrontFileId",
-          "cnicBackFileId",
-          "selfieFileId",
-          "biometricConsent"
-        ],
-        "title": "SubmitIdentityRequest"
-      },
-      "UpdateSellerRequest": {
-        "properties": {
-          "displayName": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 150,
-                "minLength": 2
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Displayname"
-          },
-          "businessType": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 50
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Businesstype"
-          },
-          "city": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 80
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "City"
-          },
-          "countryCode": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2,
-                "minLength": 2
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Countrycode"
-          },
-          "bio": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 2000
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Bio"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "title": "UpdateSellerRequest"
-      },
-      "UploadIntentRequest": {
-        "properties": {
-          "purpose": {
-            "type": "string",
-            "title": "Purpose",
-            "description": "CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE"
-          },
-          "contentType": {
-            "type": "string",
-            "title": "Contenttype"
-          },
-          "sizeBytes": {
-            "type": "integer",
-            "exclusiveMinimum": 0.0,
-            "title": "Sizebytes"
-          },
-          "filename": {
-            "anyOf": [
-              {
-                "type": "string",
-                "maxLength": 255
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Filename"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "purpose",
-          "contentType",
-          "sizeBytes"
-        ],
-        "title": "UploadIntentRequest"
-      },
-      "ValidationError": {
-        "properties": {
-          "loc": {
-            "items": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "integer"
-                }
-              ]
-            },
-            "type": "array",
-            "title": "Location"
-          },
-          "msg": {
-            "type": "string",
-            "title": "Message"
-          },
-          "type": {
-            "type": "string",
-            "title": "Error Type"
-          },
-          "input": {
-            "title": "Input"
-          },
-          "ctx": {
-            "type": "object",
-            "title": "Context"
-          }
-        },
-        "type": "object",
-        "required": [
-          "loc",
-          "msg",
-          "type"
-        ],
-        "title": "ValidationError"
-      },
-      "VerifyEmailRequest": {
-        "properties": {
-          "token": {
-            "type": "string",
-            "maxLength": 256,
-            "minLength": 16,
-            "title": "Token"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "token"
-        ],
-        "title": "VerifyEmailRequest"
-      },
-      "VerifyOtpRequest": {
-        "properties": {
-          "code": {
-            "type": "string",
-            "maxLength": 8,
-            "minLength": 4,
-            "pattern": "^\\d+$",
-            "title": "Code"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "code"
-        ],
-        "title": "VerifyOtpRequest"
+        "summary": "Service status and current scoring model",
+        "tags": ["Public API"]
       }
     }
   },
   "tags": [
     {
-      "name": "Authentication",
-      "description": "Registration, sign-in, session rotation."
+      "description": "Registration, sign-in, session rotation.",
+      "name": "Authentication"
     },
     {
-      "name": "Me",
-      "description": "The current user and their seller profile."
+      "description": "The current user and their seller profile.",
+      "name": "Me"
     },
     {
-      "name": "Verification",
-      "description": "Identity, phone, email and device checks."
+      "description": "Identity, phone, email and device checks.",
+      "name": "Verification"
     },
     {
-      "name": "Trust Score",
-      "description": "Scores, breakdowns, history and improvements."
+      "description": "Scores, breakdowns, history and improvements.",
+      "name": "Trust Score"
     },
     {
-      "name": "Jobs",
-      "description": "Poll background work such as OCR and face matching."
+      "description": "Poll background work such as OCR and face matching.",
+      "name": "Jobs"
     },
     {
-      "name": "Public API",
-      "description": "Partner-facing, API-key authenticated, PII-free."
+      "description": "Partner-facing, API-key authenticated, PII-free.",
+      "name": "Public API"
     },
     {
-      "name": "Health",
-      "description": "Liveness and readiness probes."
+      "description": "Liveness and readiness probes.",
+      "name": "Health"
     }
   ]
 }

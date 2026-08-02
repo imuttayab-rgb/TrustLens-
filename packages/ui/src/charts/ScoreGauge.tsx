@@ -21,9 +21,9 @@ export interface ScoreGaugeProps {
   score: number;
   riskLevel: RiskLevel;
   /** Rendered under the band label, e.g. "based on 12 of 14 checks". */
-  caption?: string;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
+  caption?: string | undefined;
+  size?: 'sm' | 'md' | 'lg' | undefined;
+  className?: string | undefined;
 }
 
 const SIZES = {
@@ -46,13 +46,7 @@ const TEXT_COLOR: Record<RiskLevel, string> = {
   UNKNOWN: 'text-risk-unknown',
 };
 
-export function ScoreGauge({
-  score,
-  riskLevel,
-  caption,
-  size = 'md',
-  className,
-}: ScoreGaugeProps) {
+export function ScoreGauge({ score, riskLevel, caption, size = 'md', className }: ScoreGaugeProps) {
   const { box, stroke, score: scoreText, label: labelText } = SIZES[size];
   const radius = (box - stroke) / 2;
   const centre = box / 2;
@@ -101,7 +95,9 @@ export function ScoreGauge({
         </svg>
 
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={cn('font-bold tabular-nums leading-none', scoreText, TEXT_COLOR[riskLevel])}>
+          <span
+            className={cn('leading-none font-bold tabular-nums', scoreText, TEXT_COLOR[riskLevel])}
+          >
             {displayScore}
           </span>
           {riskLevel !== 'UNKNOWN' && (

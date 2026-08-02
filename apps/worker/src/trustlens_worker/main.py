@@ -22,7 +22,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from arq import cron
+from arq import cron, func
 from arq.connections import RedisSettings
 
 from trustlens.ai.factory import (
@@ -111,18 +111,27 @@ async def on_job_end(ctx: dict[str, Any]) -> None:
 class WorkerSettings:
     """ARQ configuration. Referenced as `arq trustlens_worker.main.WorkerSettings`."""
 
+    # Registered under the SAME namespaced names the use cases enqueue.
+    #
+    # ARQ names a job after the Python function unless told otherwise, while
+    # the domain enqueues by string - `identity.verify`, `contact.send_otp_sms`
+    # - because it must not import the worker (ADR-0003). Left to the default,
+    # not one name matched: every job was accepted by Redis and then dropped
+    # with "function not found", so OCR, face matching, emails, OTP SMS and
+    # rescoring silently never ran. The strings below are the contract; change
+    # one only together with its caller.
     functions = [
-        identity.verify_identity,
-        listings.analyse_listing,
-        scoring.recompute_trust_score,
-        scoring.bulk_recompute_for_model,
-        notifications.send_email,
-        notifications.send_otp_sms,
-        notifications.send_security_alert,
-        maintenance.enrich_ip,
-        maintenance.lookup_phone,
-        maintenance.purge_expired_media,
-        maintenance.publish_outbox,
+        func(identity.verify_identity, name="identity.verify"),
+        func(listings.analyse_listing, name="listings.analyse_listing"),
+        func(scoring.recompute_trust_score, name="scoring.recompute_trust_score"),
+        func(scoring.bulk_recompute_for_model, name="scoring.bulk_recompute_for_model"),
+        func(notifications.send_email, name="notifications.send_email"),
+        func(notifications.send_otp_sms, name="contact.send_otp_sms"),
+        func(notifications.send_security_alert, name="notifications.send_security_alert"),
+        func(maintenance.enrich_ip, name="network.enrich_ip"),
+        func(maintenance.lookup_phone, name="contact.lookup_phone"),
+        func(maintenance.purge_expired_media, name="maintenance.purge_expired_media"),
+        func(maintenance.publish_outbox, name="maintenance.publish_outbox"),
     ]
 
     cron_jobs = [

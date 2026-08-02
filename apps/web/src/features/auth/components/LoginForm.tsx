@@ -2,18 +2,26 @@
 
 import { api } from '@/lib/api/client';
 import { setAccessToken } from '@/lib/auth/session';
+import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toApiError } from '@trustlens/api-client';
-import { Button } from '@trustlens/ui';
-import { loginSchema, type LoginInput } from '@trustlens/validation';
+import { Alert, Button, Field, fieldAria, Input } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { loginSchema, type LoginInput } from '@trustlens/validation';
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+
+/** Only ever redirect within this app - an open redirect is a phishing gift. */
+function safeNext(raw: string | null): string {
+  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/dashboard';
+  return raw;
+}
 
 export function LoginForm({ className }: { className?: string }) {
   const router = useRouter();
-  const [formError, setFormError] = useState<{ message: string; requestId?: string } | null>(null);
+  const params = useSearchParams();
+  const next = safeNext(params.get('next'));
 
   const {
     register,
@@ -22,81 +30,67 @@ export function LoginForm({ className }: { className?: string }) {
     formState: { errors, isSubmitting },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
 
-  const onSubmit = handleSubmit(async (values) => {
-    setFormError(null);
-    try {
-      const result = await api.POST('/api/v1/auth/login', { body: values });
-      if (result.error) throw result.error;
+  const { submit, formError } = useApiForm<LoginInput>(setError);
 
+  const onSubmit = handleSubmit(async (values) => {
+    const ok = await submit(async () => {
+      const result = await api.POST('/api/v1/auth/login', { body: values });
+      if (result.error) throw toApiError(result.error);
       const token = (result.data as { data: { accessToken: string } }).data.accessToken;
       setAccessToken(token);
-      router.push('/dashboard');
-    } catch (raw) {
-      const error = toApiError(raw);
-      // Map field errors from the RFC 9457 `errors[]` array straight onto the
-      // form inputs, so the user sees them where they typed.
-      for (const [field, message] of Object.entries(error.fieldErrors)) {
-        setError(field as keyof LoginInput, { message });
-      }
-      if (Object.keys(error.fieldErrors).length === 0) {
-        setFormError({ message: error.message, requestId: error.requestId });
-      }
+    });
+
+    if (ok) {
+      router.push(next);
+      // The dashboard renders on the server from the session cookie, so its
+      // cached payload has to be dropped or the first paint is the
+      // logged-out one.
+      router.refresh();
     }
   });
 
   return (
-    <form onSubmit={onSubmit} className={cn('space-y-4', className)} noValidate>
-      <div>
-        <label htmlFor="email" className="block text-sm font-medium">
-          Email address
-        </label>
-        <input
-          id="email"
+    <form
+      onSubmit={(event) => void onSubmit(event)}
+      className={cn('space-y-4', className)}
+      noValidate
+    >
+      <Field htmlFor="email" label="Email address" error={errors.email?.message}>
+        <Input
+          {...fieldAria('email', errors.email?.message)}
           type="email"
+          inputMode="email"
           autoComplete="email"
-          aria-invalid={!!errors.email}
-          aria-describedby={errors.email ? 'email-error' : undefined}
-          className="border-input focus-visible:ring-ring mt-1 h-10 w-full rounded-md border px-3 focus-visible:outline-none focus-visible:ring-2"
+          autoCapitalize="none"
           {...register('email')}
         />
-        {errors.email && (
-          <p id="email-error" role="alert" className="text-destructive mt-1 text-sm">
-            {errors.email.message}
-          </p>
-        )}
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="password" className="block text-sm font-medium">
-          Password
-        </label>
-        <input
-          id="password"
+      <Field htmlFor="password" label="Password" error={errors.password?.message}>
+        <Input
+          {...fieldAria('password', errors.password?.message)}
           type="password"
           autoComplete="current-password"
-          aria-invalid={!!errors.password}
-          aria-describedby={errors.password ? 'password-error' : undefined}
-          className="border-input focus-visible:ring-ring mt-1 h-10 w-full rounded-md border px-3 focus-visible:outline-none focus-visible:ring-2"
           {...register('password')}
         />
-        {errors.password && (
-          <p id="password-error" role="alert" className="text-destructive mt-1 text-sm">
-            {errors.password.message}
-          </p>
-        )}
+      </Field>
+
+      <div className="flex justify-end">
+        <Link
+          href="/forgot-password"
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Forgot your password?
+        </Link>
       </div>
 
       {formError && (
-        <div role="alert" className="bg-risk-high-bg text-risk-high rounded-md p-3 text-sm">
-          <p>{formError.message}</p>
-          {/* Surfacing the request id turns "it didn't work" into one log query. */}
-          {formError.requestId && (
-            <p className="mt-1 font-mono text-xs opacity-80">Reference: {formError.requestId}</p>
-          )}
-        </div>
+        <Alert tone="error" requestId={formError.requestId}>
+          {formError.message}
+        </Alert>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
+      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Signing in…' : 'Sign in'}
       </Button>
     </form>

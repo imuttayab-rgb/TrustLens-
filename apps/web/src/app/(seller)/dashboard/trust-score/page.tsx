@@ -1,7 +1,12 @@
 import { serverFetch } from '@/lib/api/server';
 import type { RiskLevel, SignalCategory, SignalStatus } from '@trustlens/constants';
 import {
-  Card, CardContent, CardHeader, CardTitle, ScoreGauge, SignalBreakdown, type SignalRow,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  ScoreGauge,
+  SignalBreakdown,
 } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
 import type { Metadata } from 'next';
@@ -20,9 +25,14 @@ interface ScoreDetail {
   capApplied: number | null;
   summary: string;
   signals: {
-    code: string; category: SignalCategory; status: SignalStatus;
-    pointsAwarded: number; pointsPossible: number; confidence: number;
-    reasonCode: string; reasonText: string;
+    code: string;
+    category: SignalCategory;
+    status: SignalStatus;
+    pointsAwarded: number;
+    pointsPossible: number;
+    confidence: number;
+    reasonCode: string;
+    reasonText: string;
   }[];
 }
 
@@ -38,13 +48,14 @@ export default async function TrustScorePage() {
 
   const score = await serverFetch<ScoreDetail>(`/api/v1/sellers/${seller.id}/trust-score`);
   const improvements =
-    (await serverFetch<Improvement[]>(`/api/v1/sellers/${seller.id}/trust-score/improvements`)) ?? [];
+    (await serverFetch<Improvement[]>(`/api/v1/sellers/${seller.id}/trust-score/improvements`)) ??
+    [];
 
   if (!score) {
     return (
       <main className="mx-auto max-w-3xl px-6 py-10">
         <h1 className="text-2xl font-bold">Your Trust Score</h1>
-        <p className="text-muted-foreground mt-4">
+        <p className="mt-4 text-muted-foreground">
           Your score has not been calculated yet. Complete a verification check to get started.
         </p>
       </main>
@@ -56,7 +67,7 @@ export default async function TrustScorePage() {
       <header className="flex flex-col items-center gap-3 text-center">
         <ScoreGauge score={score.score} riskLevel={score.riskLevel} size="lg" />
         <p className="max-w-prose">{score.summary}</p>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-sm text-muted-foreground">
           Calculated {formatDateTime(score.computedAt)} using model {score.modelVersion}
         </p>
       </header>
@@ -64,7 +75,7 @@ export default async function TrustScorePage() {
       {/* A capped score is not an arithmetic result, and saying so plainly is
           the difference between a seller understanding it and appealing it. */}
       {score.capApplied != null && (
-        <div className="bg-risk-high-bg text-risk-high mt-8 rounded-lg p-4 text-sm">
+        <div className="mt-8 rounded-lg bg-risk-high-bg p-4 text-sm text-risk-high">
           <p className="font-semibold">This score was capped at {score.capApplied}.</p>
           <p className="mt-1">
             A critical check failed, so the score is limited regardless of how the other checks
@@ -82,7 +93,7 @@ export default async function TrustScorePage() {
             <ol className="space-y-3">
               {improvements.map((item) => (
                 <li key={item.signalCode} className="flex items-start gap-3">
-                  <span className="text-risk-low shrink-0 text-sm font-semibold tabular-nums">
+                  <span className="shrink-0 text-sm font-semibold tabular-nums text-risk-low">
                     +{item.pointsAvailable.toFixed(0)}
                   </span>
                   <span className="text-sm">{item.action}</span>
@@ -98,7 +109,7 @@ export default async function TrustScorePage() {
           <CardTitle>Full breakdown</CardTitle>
         </CardHeader>
         <CardContent>
-          <SignalBreakdown signals={score.signals as SignalRow[]} />
+          <SignalBreakdown signals={score.signals} />
         </CardContent>
       </Card>
     </main>

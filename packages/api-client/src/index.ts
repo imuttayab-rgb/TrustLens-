@@ -7,10 +7,10 @@
  * same PR - which is exactly where it should break (ADR-0005).
  */
 import createClient, { type Middleware } from 'openapi-fetch';
+import type { paths } from './schema.gen';
 
-// The generated module may not exist before the first `pnpm codegen`, so the
-// import is typed loosely here and narrowed by consumers.
-export type ApiPaths = Record<string, unknown>;
+/** Every route the backend exposes, generated from its OpenAPI document. */
+export type ApiPaths = paths;
 
 /** RFC 9457 problem+json, as produced by the API's exception handlers. */
 export interface ProblemDetail {
@@ -35,7 +35,10 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code: string;
   readonly title: string;
-  readonly requestId?: string;
+  // `| undefined` rather than `?:` - the tsconfig sets
+  // exactOptionalPropertyTypes, under which an optional property may be
+  // absent but may not be *assigned* undefined. It is always assigned here.
+  readonly requestId: string | undefined;
   readonly fieldErrors: Record<string, string>;
 
   constructor(problem: ProblemDetail) {
@@ -45,9 +48,7 @@ export class ApiError extends Error {
     this.code = problem.code;
     this.title = problem.title;
     this.requestId = problem.requestId;
-    this.fieldErrors = Object.fromEntries(
-      (problem.errors ?? []).map((e) => [e.field, e.message]),
-    );
+    this.fieldErrors = Object.fromEntries((problem.errors ?? []).map((e) => [e.field, e.message]));
   }
 
   get isAuthError(): boolean {
@@ -68,7 +69,7 @@ export interface ClientOptions {
 }
 
 export function createApiClient(options: ClientOptions) {
-  const client = createClient({
+  const client = createClient<ApiPaths>({
     baseUrl: options.baseUrl,
     // Required so the httpOnly refresh cookie is sent to /auth endpoints.
     credentials: 'include',

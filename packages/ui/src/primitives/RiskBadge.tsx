@@ -27,8 +27,8 @@ export function RiskBadge({
   className,
 }: {
   riskLevel: RiskLevel;
-  score?: number;
-  className?: string;
+  score?: number | undefined;
+  className?: string | undefined;
 }) {
   const Icon = ICONS[riskLevel];
   return (

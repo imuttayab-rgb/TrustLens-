@@ -2,7 +2,13 @@
 
 import { Button } from '@trustlens/ui';
 
-export default function Error({ error, reset }: { error: Error; reset: () => void }) {
+export default function Error({
+  error,
+  reset,
+}: {
+  error: Error & { digest?: string };
+  reset: () => void;
+}) {
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col items-center justify-center gap-4 px-6 text-center">
       <h1 className="text-2xl font-bold">Something went wrong</h1>
@@ -11,7 +17,7 @@ export default function Error({ error, reset }: { error: Error; reset: () => voi
       </p>
       {/* The digest is what turns a vague bug report into a single log query. */}
       {error.digest && (
-        <p className="text-muted-foreground font-mono text-xs">Reference: {error.digest}</p>
+        <p className="font-mono text-xs text-muted-foreground">Reference: {error.digest}</p>
       )}
       <Button onClick={reset}>Try again</Button>
     </main>

@@ -2,7 +2,10 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022"],
+    // DOM is included because every package here is consumed by the Next
+    // apps and uses host APIs - fetch, setTimeout, File. Without it those
+    // are "Cannot find name" errors even though they exist at runtime.
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,

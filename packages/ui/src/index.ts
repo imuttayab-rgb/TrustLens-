@@ -1,10 +1,23 @@
 /** TrustLens design system. */
+export { Alert, type AlertProps, type AlertTone } from './primitives/Alert';
 export { Button, buttonVariants, type ButtonProps } from './primitives/Button';
+export { Field, fieldAria, type FieldProps } from './primitives/Field';
+export { Input, type InputProps } from './primitives/Input';
+export { Progress, Spinner } from './primitives/Spinner';
 export {
-  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from './primitives/Card';
 export { RiskBadge } from './primitives/RiskBadge';
 export { ScoreGauge, type ScoreGaugeProps } from './charts/ScoreGauge';
-export { SignalBreakdown, type SignalBreakdownProps, type SignalRow } from './composites/SignalBreakdown';
+export {
+  SignalBreakdown,
+  type SignalBreakdownProps,
+  type SignalRow,
+} from './composites/SignalBreakdown';
 export { VerificationChecklist, type ChecklistItem } from './composites/VerificationChecklist';
 export { cn } from './lib/cn';
