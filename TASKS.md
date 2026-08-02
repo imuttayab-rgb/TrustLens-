@@ -395,6 +395,12 @@ What the scaffold commit `5185529` actually delivered:
 - [ ] **P9-04** Run migrations against production; seed reference data only (never demo data).
 - [ ] **P9-05** Custom domain, HTTPS, CORS, production secrets via `scripts/generate-keys.sh`.
 - [ ] **P9-06** Confirm CI (`.github/workflows/ci.yml`) is green and deploys on merge to `main`.
+- [ ] **P9-09** ⚠️ **The worker dies permanently when Redis drops the connection.**
+      _Found 3 Aug._ Both worker processes exited with `redis.exceptions.ConnectionError: Connection closed by server` when the dev containers stopped, and neither came back. The cause was environmental — Docker Desktop shut down overnight — but the **behaviour** is the problem: one Redis blip means no OCR, no face matching, no emails, no OTP and no rescoring until a human notices, and nothing announces it.
+      This matters more in production than locally: **Upstash closes idle connections**, so this will happen without anyone stopping anything.
+      _Needs:_ a reconnect/retry loop around the ARQ worker, a process restart policy (`restart: unless-stopped` in compose, or the platform equivalent), and an alert when the worker is not consuming — pairs with P9-07.
+      _Done when:_ stopping and restarting Redis leaves the worker consuming jobs again without manual intervention.
+
 - [ ] **P9-07** **Basic monitoring** — fill the empty `shared/telemetry/`: structured error logging (Sentry free tier), uptime check, and an alert to your email when the API is down.
 - [ ] **P9-08** **Backups with a tested restore.** Take a backup, restore it into a scratch database, confirm it works. _An untested backup is not a backup._
       _Done when:_ the full seller journey works on the public URL, not just localhost.
