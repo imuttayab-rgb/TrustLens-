@@ -240,6 +240,60 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/listings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List your listings */
+    get: operations['list_listings_api_v1_listings_get'];
+    put?: never;
+    /** Create a listing */
+    post: operations['create_listing_api_v1_listings_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/listings/{listing_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read one of your listings */
+    get: operations['get_listing_api_v1_listings__listing_id__get'];
+    /** Update a listing */
+    put: operations['update_listing_api_v1_listings__listing_id__put'];
+    post?: never;
+    /** Remove a listing */
+    delete: operations['delete_listing_api_v1_listings__listing_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/listings/{listing_id}/analyse': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Re-run analysis on a listing */
+    post: operations['analyse_listing_api_v1_listings__listing_id__analyse_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me': {
     parameters: {
       query?: never;
@@ -618,6 +672,33 @@ export interface components {
     HTTPValidationError: {
       /** Detail */
       detail?: components['schemas']['ValidationError'][];
+    };
+    /**
+     * ListingWriteRequest
+     * @description Create or replace a listing.
+     *
+     *     Every field here is attacker-controlled - a seller writes it and an LLM
+     *     later reads it. The length caps are the first line of defence: they bound
+     *     what can be pushed into a prompt at all. The second line is that the
+     *     analyser's verdict can only move one bounded signal (ADR-0002).
+     */
+    ListingWriteRequest: {
+      /** Category */
+      category?: string | null;
+      /** City */
+      city?: string | null;
+      /** Condition */
+      condition?: string | null;
+      /** Countrycode */
+      countryCode?: string | null;
+      /** Currency */
+      currency?: string | null;
+      /** Description */
+      description: string;
+      /** Price */
+      price?: number | null;
+      /** Title */
+      title: string;
     };
     /** LoginRequest */
     LoginRequest: {
@@ -1269,6 +1350,217 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_listings_api_v1_listings_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_listing_api_v1_listings_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ListingWriteRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_listing_api_v1_listings__listing_id__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  update_listing_api_v1_listings__listing_id__put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ListingWriteRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  delete_listing_api_v1_listings__listing_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  analyse_listing_api_v1_listings__listing_id__analyse_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
         headers: {
           [name: string]: unknown;
         };
