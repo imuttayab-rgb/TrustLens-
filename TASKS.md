@@ -40,21 +40,21 @@ Three consequences, and they save real time:
 
 ### Software track
 
-| Phase | Title                                 | Days   | Status                                                          | Owner  |
-| ----- | ------------------------------------- | ------ | --------------------------------------------------------------- | ------ |
-| 0     | Make it run                           | 1      | `[~]` deps + quality gates done; Docker/API/worker boot pending | Zohaib |
-| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**           | Zohaib |
-| 2     | Seller verification UI (mobile-first) | 8      | `[ ]`                                                           |        |
-| 3     | Listings module                       | 4      | `[ ]`                                                           |        |
-| 4     | Admin panel                           | 5      | `[ ]`                                                           |        |
-| 5     | Appeals                               | 3      | `[ ]`                                                           |        |
-| 6     | Public marketplace API                | 3      | `[ ]`                                                           |        |
-| 7     | ML scam classifier                    | 4      | `[ ]`                                                           |        |
-| 8     | Real integrations                     | 4      | `[ ]`                                                           |        |
-| 9     | Deployment                            | 3      | `[ ]`                                                           |        |
-| 10    | QA & demo readiness                   | 4      | `[ ]`                                                           |        |
-| 11    | Handover & training                   | 3      | `[ ]`                                                           |        |
-|       | **Software total**                    | **44** |                                                                 |        |
+| Phase | Title                                 | Days   | Status                                                  | Owner  |
+| ----- | ------------------------------------- | ------ | ------------------------------------------------------- | ------ |
+| 0     | Make it run                           | 1      | `[x]` stack boots end to end; P0-09 + P0-11 outstanding | Zohaib |
+| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**   | Zohaib |
+| 2     | Seller verification UI (mobile-first) | 8      | `[ ]`                                                   |        |
+| 3     | Listings module                       | 4      | `[ ]`                                                   |        |
+| 4     | Admin panel                           | 5      | `[ ]`                                                   |        |
+| 5     | Appeals                               | 3      | `[ ]`                                                   |        |
+| 6     | Public marketplace API                | 3      | `[ ]`                                                   |        |
+| 7     | ML scam classifier                    | 4      | `[ ]`                                                   |        |
+| 8     | Real integrations                     | 4      | `[ ]`                                                   |        |
+| 9     | Deployment                            | 3      | `[ ]`                                                   |        |
+| 10    | QA & demo readiness                   | 4      | `[ ]`                                                   |        |
+| 11    | Handover & training                   | 3      | `[ ]`                                                   |        |
+|       | **Software total**                    | **44** |                                                         |        |
 
 ### Documentation track (runs in parallel — see Track D)
 
@@ -88,7 +88,7 @@ What the scaffold commit `5185529` actually delivered:
 | `apps/ml`                                                    | ❌ **Referenced but does not exist**                          |
 | `shared/telemetry/`, `db/queries/`                           | ❌ Empty folders                                              |
 
-**Nothing has been installed or booted yet.** Phase 0 exists to change that.
+**Status 31 July 2026:** the full stack has been installed and booted — Postgres/Redis/MinIO/Mailpit healthy, 41 tables migrated and seeded, API serving 32 endpoints, worker running 14 functions, web on :3000. Phase 0 is complete apart from P0-09 (broken Makefile targets) and P0-11 (91 mypy errors).
 
 ---
 
@@ -110,20 +110,26 @@ What the scaffold commit `5185529` actually delivered:
 - [x] **P0-02b** Commit the missing lockfiles.
       _Done 31 Jul:_ `uv.lock` and `pnpm-lock.yaml` were untracked, so every install re-resolved the entire graph from scratch (~10 GB of downloads). Now committed — subsequent installs are cached and fast.
 
-- [ ] **P0-03** Start infrastructure: `make up`. Confirm Postgres, Redis, MinIO, MailHog are healthy.
-      _Done when:_ `make ps` shows all four containers up.
+- [x] **P0-03** Start infrastructure: `make up`.
+      _Verified 31 Jul:_ Postgres 16, Redis 7, MinIO and Mailpit all healthy.
 
-- [ ] **P0-04** Apply migrations and seed: `make migrate && make seed && make seed-demo`.
-      _Done when:_ `make db-shell` → `\dt` lists 40 tables and `signal_definitions` has 14 rows.
+- [x] **P0-04** Apply migrations and seed.
+      _Verified 31 Jul:_ 41 tables (40 + `alembic_version`). Reference seed = 41 permissions, 4 roles, **14 signals, 14 weights**, 4 marketplaces. Demo seed = 6 users, 3 sellers, 3 listings, 3 scores.
+      _Fixed on the way:_ Alembic read `os.environ` directly and never loaded the root `.env`, so `make migrate` failed on a correctly configured checkout. Secrets must also be generated first — run `bash scripts/generate-keys.sh` and paste the six values into `.env`, or seeding rejects the `CHANGEME` placeholders.
 
-- [ ] **P0-05** Boot the API: `make dev-api`. Open `http://localhost:8000/docs`.
-      _Done when:_ Swagger UI lists ~33 endpoints and `/api/v1/health/ready` returns healthy.
+- [x] **P0-05** Boot the API.
+      _Verified 31 Jul:_ **32 endpoints across 30 paths**. `/health/ready` → `database: ok, cache: ok`. `/public/v1/status` → scoring model `v1.0`.
 
-- [ ] **P0-06** Boot the worker: `make dev-worker`.
-      _Done when:_ worker logs show 11 jobs and 3 cron schedules registered.
+  > Health lives at `/health/live` and `/health/ready` — **not** under `/api/v1/`.
 
-- [ ] **P0-07** Boot both frontends: `make dev-web` (:3000) and `make dev-admin` (:3001).
-      _Done when:_ both render without console errors.
+- [x] **P0-06** Boot the worker.
+      _Verified 31 Jul:_ registered **14 functions** (11 jobs + 3 cron), `fake_ai=True`, cron jobs executing.
+
+  > On Windows the console throws `UnicodeEncodeError` on arq's `→`/`●` log characters. Cosmetic only — jobs complete normally. Set `PYTHONIOENCODING=utf-8` to silence it.
+
+- [x] **P0-07** Boot the frontends.
+      _Verified 31 Jul:_ web ready in 25 s; `/`, `/check`, `/login`, `/register` all return 200.
+      _Fixed on the way:_ Next reads `.env` only from its own project directory, so neither app saw the root `.env`. `API_BASE_URL_INTERNAL` was `undefined`, so every server-rendered page fetched `undefined/public/v1/...`, hung 25 s and returned 500.
 
 - [x] **P0-08** Run the quality gates: `make test-py`, `make lint`, `make check-arch`.
       _Verified 31 Jul:_ **75 tests pass** (22 original + 53 new), ruff clean across 162 files, format clean, import-linter **5/5 contracts kept**. `make typecheck` still fails — see P0-11.
@@ -145,10 +151,15 @@ What the scaffold commit `5185529` actually delivered:
   - `make dev` → verify `scripts/dev.sh` works on Windows
     _Done when:_ all four run, or are removed from the Makefile with a note.
 
-- [ ] **P0-10** End-to-end smoke test with `USE_FAKE_AI=true`: register a seller → verify email → request OTP → verify OTP → submit device → trigger scoring → read the public score.
-      _Done when:_ a score with a full signal breakdown comes back from `/public/v1/...`.
+- [x] **P0-10** End-to-end smoke test with `USE_FAKE_AI=true`.
+      _Verified 31 Jul:_ logged in as `seller.low@trustlens.dev` and read the authenticated score endpoint. **Score 25, risk HIGH, `capApplied: 25`** from the failed face match, confidence 0.85, and **all 14 signals returned with plain-English reasons** — "The selfie does not match the photo on the submitted ID", "This device is linked to several other seller accounts", "Prices are far below the normal range for similar items". The explainable Trust Score the proposal promises, working end to end.
+      Demo sellers span all three bands: `ayesha-traders` 100/LOW, `bilal-motors` 77/MEDIUM, `quick-deals-pk` 25/HIGH.
 
-**Exit criteria:** you can run the whole system offline, with no API keys, and get a Trust Score.
+- [ ] **P0-12** 🔗 **Dependency found: the public buyer page cannot work until Phase 6.**
+      `/public/v1/**` correctly requires an API key, and no keys exist because `use_cases/public_api/` is unbuilt. So `apps/web`'s server render of `/seller/{handle}` gets 401 and renders not-found — currently a clean 404, which is honest but not the product.
+      _Decide:_ either issue the web app its own first-party server key, or give the buyer page an internal authenticated route instead of going through the partner API. **Settle this before Phase 2 Day 10 (P2-22), which polishes that exact page.**
+
+**Exit criteria:** you can run the whole system offline, with no API keys, and get a Trust Score. ✅ **Met 31 Jul** — except the public buyer page, see P0-12.
 
 ---
 
