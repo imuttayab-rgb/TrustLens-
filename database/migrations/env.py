@@ -26,6 +26,17 @@ config = context.config
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
+# Alembic runs as a bare script, so nothing has loaded the project's .env yet -
+# unlike the app, which goes through pydantic-settings. Without this, `make
+# migrate` fails on a correctly configured checkout. A real environment
+# variable still wins, so CI and production are unaffected.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(ROOT / ".env", override=False)
+except ModuleNotFoundError:  # pragma: no cover - dotenv ships with the app deps
+    pass
+
 url = os.environ.get("DATABASE_URL_SYNC")
 if not url:
     raise SystemExit(

@@ -1,4 +1,12 @@
+import { config as loadEnv } from 'dotenv';
 import type { NextConfig } from 'next';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+
+// Next only reads .env files from its own project directory, so in this
+// monorepo `apps/admin` never sees the root .env. Real environment variables
+// (Vercel, CI) still win.
+loadEnv({ path: resolve(dirname(fileURLToPath(import.meta.url)), '../../.env'), override: false });
 
 const config: NextConfig = {
   reactStrictMode: true,
