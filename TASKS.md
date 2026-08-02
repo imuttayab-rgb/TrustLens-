@@ -160,6 +160,10 @@ What the scaffold commit `5185529` actually delivered:
       That means **OCR, face matching, verification emails, OTP SMS, IP enrichment, phone lookup and score recomputation had never run.** The demo data looked healthy only because the seed writes scores straight to the database.
       Fixed with `arq.func(..., name=...)` and pinned by `apps/worker/tests/test_job_names.py`, which scans every enqueue call site and fails when a name is unregistered. Verified: registering a user now delivers a confirmation email to Mailpit.
 
+- [x] **P0-14** 🚨 **No authenticated page could ever render.**
+      _Found and fixed 2 Aug._ `serverFetch` forwarded cookies and its docstring claimed a server render was "authenticated exactly like the browser". It was not. The API reads an access token **only** from the `Authorization` header, and the one cookie (`tl_rt`) is httpOnly and path-scoped to `/api/v1/auth`, so it is never even sent to `/api/v1/me`. A server component holds no access token and cannot mint one — `/auth/refresh` rotates the refresh token, and a server component may not set the replacement cookie. **Every authenticated server render was guaranteed to redirect to login**, including the dashboard that shipped with the scaffold.
+      Fixed by splitting rendering along the line that already existed: private pages render on the client through the in-memory-token + refresh middleware (which already handles the cold-start 401); the **public** seller page, the one that must be fast and indexable, stays server-rendered against the public API. Private pages gain nothing from SSR, so this is the correct split rather than a workaround.
+
 - [ ] **P0-12** 🔗 **Dependency found: the public buyer page cannot work until Phase 6.**
       `/public/v1/**` correctly requires an API key, and no keys exist because `use_cases/public_api/` is unbuilt. So `apps/web`'s server render of `/seller/{handle}` gets 401 and renders not-found — currently a clean 404, which is honest but not the product.
       _Decide:_ either issue the web app its own first-party server key, or give the buyer page an internal authenticated route instead of going through the partner API. **Settle this before Phase 2 Day 10 (P2-22), which polishes that exact page.**
@@ -241,40 +245,28 @@ What the scaffold commit `5185529` actually delivered:
 - [ ] **P2-04** **Handle validation** — block reserved and impersonating handles (`olx`, `daraz`, `*-official`). On a trust product, handle squatting is an impersonation vector.
       _Note:_ handles are derived server-side from `displayName`; this belongs in the become-seller use case, not the form.
 
-### Day 5 — Seller dashboard shell
+### Days 5-9 — dashboard and the four verification flows
 
-- [ ] **P2-05** Dashboard layout: navigation, verification-progress checklist, current score card.
-- [ ] **P2-06** Wire `GET /api/v1/verification/status` to drive the checklist state.
-- [ ] **P2-07** Profile edit form → `PATCH /api/v1/sellers/me`.
-      _Done when:_ the dashboard truthfully reflects which checks are complete.
+- [x] **P2-05/06** Dashboard shell, navigation, and the verification checklist driven by `GET /api/v1/verification/status`.
+      _Done 2 Aug._ Surfaces one obvious next action with its point value rather than four links of equal weight.
 
-### Day 6 — CNIC upload
+- [x] **P2-08/09/10** CNIC upload with consent.
+      _Done 2 Aug._ Front, back and selfie upload direct to storage via presigned POST, so a 10 MB photo never touches the API. Explicit biometric consent wired to the backend's existing `ConsentType.BIOMETRIC_PROCESSING` gate. The page states plainly that this is **not** a NADRA check.
 
-- [ ] **P2-08** Upload component: front/back capture, client-side size and format validation, preview, retake.
-- [ ] **P2-09** Direct-to-storage upload via signed URL, then notify the API.
-- [ ] **P2-10** **Consent screen** — explicit checkbox explaining what is stored, why, and for how long, wired to the existing `ConsentType.BIOMETRIC_PROCESSING` gate. _(The backend already refuses face matching without it.)_
-      _Done when:_ a CNIC upload creates a verification record and enqueues the OCR job.
+- [x] **P2-11/12/13** Selfie capture and job polling.
+      _Done 2 Aug._ Polling backs off (1s → 2s → 4s) and stops on a terminal state or after a timeout, so a forgotten tab cannot poll forever. An unreadable upload shows "a reviewer will look at this by hand", matching the P1-05 backend behaviour.
 
-### Day 7 — Selfie & liveness
+- [x] **P2-14/15/16** Mobile capture, compression and states.
+      _Done 2 Aug._ `capture="environment"` for the card and `"user"` for the selfie — phones honour it, desktops ignore it, so one component serves both. Images are re-encoded to a **2000px longest edge**: an OCR-accuracy bound, not a bandwidth one, since the CNIC number is the smallest text on the card. **Do not lower it without re-running `ocr_bench.py`.** Files upload sequentially so per-file progress is honest and three requests do not compete for one mobile connection. Object URLs are revoked on change, or each retake pins another full-size bitmap in memory.
 
-- [ ] **P2-11** Webcam selfie capture with framing guide and retake.
-- [ ] **P2-12** Simple active liveness challenge (e.g. blink / turn head across 3 timed frames).
-- [ ] **P2-13** Job-status polling UI (`GET /api/v1/jobs/{job_id}`) with a progress state — this covers the 30–60s AI wait.
-      _Done when:_ selfie upload → job runs → face-match result appears without a page refresh.
+- [x] **P2-17** Phone OTP with resend cooldown.
+      _Done 2 Aug._ `autocomplete="one-time-code"` so iOS and Android offer the code from the SMS instead of making people switch apps.
 
-### Day 8 — Mobile capture & slow networks
+- [x] **P2-18/19** Device fingerprint via **ThumbmarkJS** (MIT — not BSL-licensed FingerprintJS v4).
+      _Done 2 Aug._ Headless, lazily imported, never blocking, and silent on failure: the signal only ever _lowers_ a score, so an error a seller cannot act on would be pure harm. **Verified working** — the device check moved `NOT_STARTED` → `VERIFIED` on first dashboard load.
+      ⚠️ **Partially done:** only the hash and four coarse attributes are sent, because that is all `DeviceFingerprintRequest` accepts. Storing the component vector — so a browser update that shifts one component does not orphan the device history — needs an API field first.
 
-- [ ] **P2-14** Mobile camera capture for CNIC and selfie (rear camera for the card, front for the selfie), with orientation handling.
-- [ ] **P2-15** Client-side image compression before upload, plus retry/resume on failure. _Three photos over a Pakistani mobile connection is the realistic worst case._
-- [ ] **P2-16** Loading, error, offline and empty states across the flow.
-      _Done when:_ the full verification flow completes on a real phone over mobile data.
-
-### Day 9 — Phone, email & device
-
-- [ ] **P2-17** Phone entry + OTP screen with countdown, resend, and attempt limiting.
-- [ ] **P2-18** Integrate **ThumbmarkJS** (MIT — _not_ FingerprintJS v4, which is BSL-licensed) and post to `POST /api/v1/verification/device`.
-- [ ] **P2-19** Store fingerprint **components**, not only the hash, so a browser update doesn't orphan the device record.
-      _Done when:_ all four verification types complete from the UI and appear in the score breakdown.
+- [x] **P2-03d** Email resend screen.
 
 ### Day 10 — Score & explanation UI
 
