@@ -1,75 +1,97 @@
-import { serverFetch } from '@/lib/api/server';
-import { type RiskLevel, type VerificationStatus } from '@trustlens/constants';
+'use client';
+
+import { useSeller, useVerificationStatus } from '@/features/seller';
 import {
-  Card, CardContent, CardHeader, CardTitle, RiskBadge, ScoreGauge, VerificationChecklist,
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  RiskBadge,
+  ScoreGauge,
+  Spinner,
+  VerificationChecklist,
 } from '@trustlens/ui';
-import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
-export const metadata: Metadata = { title: 'Dashboard' };
-export const dynamic = 'force-dynamic';
+export default function DashboardPage() {
+  const { data: seller, isPending: sellerLoading } = useSeller();
+  const { data: status } = useVerificationStatus();
 
-interface Seller {
-  id: string;
-  handle: string;
-  displayName: string;
-  identityStatus: VerificationStatus;
-  phoneStatus: VerificationStatus;
-  emailStatus: VerificationStatus;
-  score: number | null;
-  riskLevel: RiskLevel | null;
-}
+  if (sellerLoading) {
+    return (
+      <div className="flex min-h-[40dvh] items-center justify-center">
+        <Spinner label="Loading your dashboard" />
+      </div>
+    );
+  }
 
-interface Checklist {
-  checklist: {
-    key: string; label: string; status: VerificationStatus;
-    pointsAvailable: number; actionUrl: string | null;
-  }[];
-}
+  if (!seller) {
+    return (
+      <div className="mx-auto max-w-md space-y-4">
+        <h1 className="text-2xl font-bold">Start selling</h1>
+        <Alert tone="info" title="You do not have a seller profile yet">
+          Create one to start earning a Trust Score buyers can check before dealing with you.
+        </Alert>
+      </div>
+    );
+  }
 
-export default async function DashboardPage() {
-  const seller = await serverFetch<Seller>('/api/v1/sellers/me');
-  if (!seller) redirect('/login?next=/dashboard');
-
-  const status = await serverFetch<Checklist>('/api/v1/verification/status');
+  const nextStep = status?.checklist.find((item) => item.status !== 'VERIFIED' && item.actionUrl);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-10">
+    <>
       <h1 className="text-2xl font-bold">Welcome back, {seller.displayName}</h1>
-      <p className="text-muted-foreground mt-1">
-        Your public page: <code>/seller/{seller.handle}</code>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Your public page:{' '}
+        <Link href={`/seller/${seller.handle}`} className="text-primary hover:underline">
+          /seller/{seller.handle}
+        </Link>
       </p>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-[auto,1fr]">
-        <Card className="flex items-center justify-center p-6">
+      <div className="mt-8 grid gap-6 md:grid-cols-[auto_1fr]">
+        <Card className="flex flex-col items-center justify-center gap-3 p-6">
           <ScoreGauge
             score={seller.score ?? 0}
             riskLevel={seller.riskLevel ?? 'UNKNOWN'}
             size="md"
           />
+          {seller.riskLevel && (
+            <RiskBadge riskLevel={seller.riskLevel} score={seller.score ?? undefined} />
+          )}
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Complete your verification</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {status ? (
               <VerificationChecklist items={status.checklist} />
             ) : (
-              <p className="text-muted-foreground text-sm">
+              <p className="text-sm text-muted-foreground">
                 Verification status is unavailable right now.
               </p>
+            )}
+
+            {/* One obvious next action beats four links of equal weight. */}
+            {nextStep && (
+              <Button asChild className="w-full">
+                <Link href={nextStep.actionUrl as string}>
+                  Continue: {nextStep.label} (+{nextStep.pointsAvailable})
+                </Link>
+              </Button>
             )}
           </CardContent>
         </Card>
       </div>
 
-      {seller.riskLevel && (
-        <div className="mt-6">
-          <RiskBadge riskLevel={seller.riskLevel} score={seller.score ?? undefined} />
-        </div>
-      )}
-    </main>
+      <div className="mt-6">
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/trust-score">See your full score breakdown</Link>
+        </Button>
+      </div>
+    </>
   );
 }

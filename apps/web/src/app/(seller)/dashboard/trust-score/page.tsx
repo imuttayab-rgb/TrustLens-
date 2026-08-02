@@ -1,4 +1,9 @@
-import { serverFetch } from '@/lib/api/server';
+'use client';
+
+import { useSeller } from '@/features/seller';
+import { api } from '@/lib/api/client';
+import { qk } from '@/lib/api/query-keys';
+import { useQuery } from '@tanstack/react-query';
 import type { RiskLevel, SignalCategory, SignalStatus } from '@trustlens/constants';
 import {
   Card,
@@ -7,13 +12,9 @@ import {
   CardTitle,
   ScoreGauge,
   SignalBreakdown,
+  Spinner,
 } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
-import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
-
-export const metadata: Metadata = { title: 'Your Trust Score' };
-export const dynamic = 'force-dynamic';
 
 interface ScoreDetail {
   sellerId: string;
@@ -42,14 +43,41 @@ interface Improvement {
   action: string;
 }
 
-export default async function TrustScorePage() {
-  const seller = await serverFetch<{ id: string }>('/api/v1/sellers/me');
-  if (!seller) redirect('/login?next=/dashboard/trust-score');
+export default function TrustScorePage() {
+  const { data: seller } = useSeller();
+  const sellerId = seller?.id ?? null;
 
-  const score = await serverFetch<ScoreDetail>(`/api/v1/sellers/${seller.id}/trust-score`);
-  const improvements =
-    (await serverFetch<Improvement[]>(`/api/v1/sellers/${seller.id}/trust-score/improvements`)) ??
-    [];
+  const { data: score, isPending } = useQuery<ScoreDetail | null>({
+    queryKey: qk.trustScore.current(sellerId ?? 'none'),
+    enabled: Boolean(sellerId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/sellers/{seller_id}/trust-score', {
+        params: { path: { seller_id: sellerId as string } },
+      });
+      if (result.error) return null;
+      return (result.data as { data: ScoreDetail }).data;
+    },
+  });
+
+  const { data: improvements = [] } = useQuery<Improvement[]>({
+    queryKey: qk.trustScore.improvements(sellerId ?? 'none'),
+    enabled: Boolean(sellerId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/sellers/{seller_id}/trust-score/improvements', {
+        params: { path: { seller_id: sellerId as string } },
+      });
+      if (result.error) return [];
+      return (result.data as { data: Improvement[] }).data;
+    },
+  });
+
+  if (isPending || !sellerId) {
+    return (
+      <div className="flex min-h-[40dvh] items-center justify-center">
+        <Spinner label="Loading your Trust Score" />
+      </div>
+    );
+  }
 
   if (!score) {
     return (
