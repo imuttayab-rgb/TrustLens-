@@ -200,6 +200,11 @@ class FinalizeIdentityCommand:
     engine: str
     engine_version: str
     raw: dict[str, object]
+    #: Structural cross-checks on the parsed CNIC (format, gender digit vs the
+    #: printed field). Computed in the adapter layer and passed in as plain
+    #: data so the domain stays free of OCR concerns.
+    cnic_needs_review: bool = False
+    cnic_check_failures: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -296,8 +301,16 @@ class FinalizeIdentityVerification:
     def _decide(
         self, cmd: FinalizeIdentityCommand, duplicates: int
     ) -> tuple[VerificationStatus, bool, str]:
+        # An unreadable upload is a photograph problem, not a fraud finding.
+        # FAILED would cap the Trust Score for a blurry image, and the seller
+        # cannot appeal against "we could not read it" - so this waits for a
+        # human instead of penalising them (P1-05).
         if cmd.ocr_confidence is None or cmd.face_similarity is None:
-            return VerificationStatus.FAILED, True, "The documents could not be processed."
+            return (
+                VerificationStatus.PENDING,
+                True,
+                "The documents could not be read automatically; sent for manual review.",
+            )
         if cmd.document_expired:
             return VerificationStatus.REJECTED, False, "The submitted ID has expired."
         if duplicates >= 2:
@@ -305,6 +318,14 @@ class FinalizeIdentityVerification:
                 VerificationStatus.REJECTED,
                 True,
                 "This ID is already registered to another account.",
+            )
+        # The card contradicts itself - most often OCR mis-reading the gender
+        # field, occasionally a crude forgery. Neither is safe to auto-decide.
+        if cmd.cnic_needs_review:
+            return (
+                VerificationStatus.PENDING,
+                True,
+                "The ID details could not be confirmed; sent for manual review.",
             )
         if cmd.face_similarity >= cmd.threshold:
             return VerificationStatus.VERIFIED, False, "Selfie matches the ID photo."
@@ -318,6 +339,17 @@ class FinalizeIdentityVerification:
                 "Selfie partly matches the ID photo; sent for manual review.",
             )
         return VerificationStatus.REJECTED, False, "Selfie does not match the ID photo."
+
+    @staticmethod
+    def _review_reason(cmd: FinalizeIdentityCommand, duplicates: int) -> str:
+        """Why a human is being asked to look, in the reviewer's own terms."""
+        if duplicates >= 2:
+            return "Duplicate CNIC across accounts"
+        if cmd.ocr_confidence is None or cmd.face_similarity is None:
+            return "Documents could not be read automatically"
+        if cmd.cnic_check_failures:
+            return f"CNIC cross-check failed: {', '.join(cmd.cnic_check_failures)}"
+        return "Borderline face-match similarity"
 
     async def _open_review_case(
         self,
@@ -338,11 +370,7 @@ class FinalizeIdentityVerification:
                 status=ReviewStatus.QUEUED,
                 created_at=now,
                 priority=2 if duplicates >= 2 else 5,
-                trigger_reason=(
-                    "Duplicate CNIC across accounts"
-                    if duplicates >= 2
-                    else "Borderline face-match similarity"
-                ),
+                trigger_reason=self._review_reason(cmd, duplicates),
                 related_entity_type="identity_verifications",
                 related_entity_id=cmd.verification_id,
             )

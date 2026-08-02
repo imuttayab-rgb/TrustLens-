@@ -10,6 +10,8 @@ from __future__ import annotations
 from typing import Any
 from uuid import UUID
 
+from trustlens.ai.ocr.cnic_validation import ExpiryStatus
+from trustlens.ai.ocr.cnic_validation import validate as validate_cnic
 from trustlens.core.application.use_cases.verification.identity import (
     FinalizeIdentityCommand,
     FinalizeIdentityVerification,
@@ -58,11 +60,24 @@ async def verify_identity(
     face = await ctx["face"].compare(
         front_bytes, selfie_bytes, threshold=settings.ai.face_match_threshold
     )
+    # Structural cross-checks (P1-04): number format, province code, and the
+    # gender digit against the printed gender field. None of this proves the
+    # card is genuine - NADRA has no public verification API - but a card that
+    # contradicts itself is worth a human's attention.
+    checks = validate_cnic(
+        cnic_number=ocr.cnic_number,
+        text=ocr.text,
+        expiry=ocr.expiry_date,
+        today=ctx["clock"].now().date(),
+    )
     log.info(
         "identity_ai_complete",
         seller_id=seller_id,
         ocr_confidence=ocr.confidence,
         similarity=face.similarity,
+        cnic_format_valid=checks.format_valid,
+        cnic_gender_consistent=checks.gender_consistent,
+        cnic_failures=list(checks.failures),
     )
 
     cnic_hash = None
@@ -125,15 +140,22 @@ async def verify_identity(
             review_lower_bound=settings.ai.face_match_review_lower,
             liveness_passed=face.liveness_passed,
             cnic_hash=cnic_hash,
-            document_expired=(
-                front_doc.fields.expiry_date is not None
-                and ocr.expiry_date is not None
-                and ocr.expiry_date < ctx["clock"].now().date()
-            )
-            or (ocr.expiry_date is not None and ocr.expiry_date < ctx["clock"].now().date()),
+            document_expired=checks.expiry_status is ExpiryStatus.EXPIRED,
             engine=face.engine,
             engine_version=face.engine_version,
-            raw={"ocr_confidence": ocr.confidence, "similarity": face.similarity},
+            raw={
+                "ocr_confidence": ocr.confidence,
+                "similarity": face.similarity,
+                "cnic_checks": {
+                    "format_valid": checks.format_valid,
+                    "province": checks.province,
+                    "gender_consistent": checks.gender_consistent,
+                    "expiry_status": checks.expiry_status,
+                    "failures": list(checks.failures),
+                },
+            },
+            cnic_needs_review=checks.needs_manual_review,
+            cnic_check_failures=checks.failures,
         )
     )
 

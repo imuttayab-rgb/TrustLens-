@@ -1,0 +1,11 @@
+document_image,selfie_image,same_person,condition
+face_doc_01.jpg,face_selfie_01.jpg,true,same_person_clear
+face_doc_02.jpg,face_selfie_02.jpg,true,same_person_old_cnic_photo
+face_doc_03.jpg,face_selfie_03.jpg,true,same_person_beard_changed
+face_doc_04.jpg,face_selfie_04.jpg,true,same_person_glasses
+face_doc_05.jpg,face_selfie_05.jpg,true,same_person_headscarf
+face_doc_01.jpg,face_selfie_06.jpg,false,different_same_gender_similar_age
+face_doc_02.jpg,face_selfie_07.jpg,false,different_same_gender_similar_age
+face_doc_03.jpg,face_selfie_08.jpg,false,different_same_gender
+face_doc_04.jpg,face_selfie_09.jpg,false,different_cross_gender
+face_doc_05.jpg,face_selfie_10.jpg,false,different_cross_gender

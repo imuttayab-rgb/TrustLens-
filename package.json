@@ -29,16 +29,27 @@
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.8.1",
     "turbo": "^2.2.3",
     "typescript": "^5.6.3"
   },
   "commitlint": {
-    "extends": ["./configs/commitlint.config.js"]
+    "extends": [
+      "./configs/commitlint.config.js"
+    ]
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": ["prettier --write", "eslint --fix --max-warnings=0"],
-    "*.py": ["ruff check --fix", "ruff format"],
-    "*.{json,yml,yaml,md}": ["prettier --write"]
+    "*.{ts,tsx,js,jsx}": [
+      "prettier --write",
+      "eslint --fix --max-warnings=0"
+    ],
+    "*.py": [
+      "ruff check --fix",
+      "ruff format"
+    ],
+    "*.{json,yml,yaml,md}": [
+      "prettier --write"
+    ]
   },
   "prettier": "./configs/prettier.config.js"
 }

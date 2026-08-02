@@ -1,0 +1,13 @@
+# Real CNIC and selfie images must NEVER be committed.
+#
+# A CNIC is sensitive personal data under Pakistan's data protection regime,
+# and anything that reaches git history is effectively permanent - deleting the
+# file later does not remove it from the repository.
+#
+# Keep real test images in this directory locally; only the example manifests
+# (which contain no real values) are tracked.
+
+*
+!.gitignore
+!*.example.csv
+!README.md

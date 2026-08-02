@@ -1,0 +1,8 @@
+image,condition,cnic_number,full_name,father_name,date_of_birth,expiry_date,gender
+cnic_01.jpg,good_light,35202-1234567-1,Ahmad Khan,Muhammad Khan,1998-04-12,2030-04-11,M
+cnic_02.jpg,good_light,42101-7654321-2,Ayesha Siddiqui,Tariq Siddiqui,2000-11-03,2032-11-02,F
+cnic_03.jpg,low_light,35202-1112223-3,Bilal Ahmed,Rashid Ahmed,1995-01-20,2028-01-19,M
+cnic_04.jpg,angled,61101-9998887-4,Fatima Noor,Noor Hassan,1999-07-15,2031-07-14,F
+cnic_05.jpg,glare,35202-4445556-5,Usman Ali,Liaquat Ali,1997-02-28,2029-02-27,M
+cnic_06.jpg,blurry,42201-3334445-6,Sana Malik,Imran Malik,2001-09-09,2033-09-08,F
+cnic_07.jpg,screenshot,35202-6667778-7,Hamza Sheikh,Yousaf Sheikh,1996-12-01,2027-11-30,M

@@ -101,6 +101,10 @@ ignore = [
 # Fakes and OCR date parsing work with calendar dates, which carry no timezone.
 "packages/py/trustlens-ai/src/trustlens/ai/fakes/**" = ["DTZ011"]
 "packages/py/trustlens-ai/src/trustlens/ai/ocr/cnic_parser.py" = ["DTZ007"]
+# The Phase 1 benchmarks read calendar dates from a ground-truth CSV and stamp
+# reports with the local day; neither carries a timezone. E402 is inherent to
+# the sys.path bootstrap these standalone scripts need before importing `bench`.
+"apps/ml/bench/**" = ["DTZ007", "DTZ011", "E402"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["trustlens", "trustlens_api", "trustlens_worker", "trustlens_ml"]
@@ -111,6 +115,21 @@ quote-style = "double"
 # ── mypy ─────────────────────────────────────────────────────────────
 [tool.mypy]
 python_version = "3.12"
+# `trustlens` is a namespace package (no __init__.py), so without explicit
+# roots mypy derives the module name from the nearest directory that has one
+# and resolves the same file as both `ai.factory` and `trustlens.ai.factory`.
+# Naming each src root fixes the mapping.
+mypy_path = [
+    "packages/py/trustlens-core/src",
+    "packages/py/trustlens-shared/src",
+    "packages/py/trustlens-db/src",
+    "packages/py/trustlens-ai/src",
+    "packages/py/trustlens-testing/src",
+    "apps/api/src",
+    "apps/worker/src",
+]
+explicit_package_bases = true
+namespace_packages = true
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
