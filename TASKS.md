@@ -155,6 +155,11 @@ What the scaffold commit `5185529` actually delivered:
       _Verified 31 Jul:_ logged in as `seller.low@trustlens.dev` and read the authenticated score endpoint. **Score 25, risk HIGH, `capApplied: 25`** from the failed face match, confidence 0.85, and **all 14 signals returned with plain-English reasons** — "The selfie does not match the photo on the submitted ID", "This device is linked to several other seller accounts", "Prices are far below the normal range for similar items". The explainable Trust Score the proposal promises, working end to end.
       Demo sellers span all three bands: `ayesha-traders` 100/LOW, `bilal-motors` 77/MEDIUM, `quick-deals-pk` 25/HIGH.
 
+- [x] **P0-13** 🚨 **Every background job was silently discarded.**
+      _Found and fixed 31 Jul._ The domain enqueues by string (`identity.verify`, `notifications.send_email`, `contact.send_otp_sms`) because it must not import the worker (ADR-0003). ARQ registers a job under its Python function name unless told otherwise, so **none of the seven enqueued names matched** — Redis accepted each job and the worker dropped it with "function not found", with nothing surfacing to the caller.
+      That means **OCR, face matching, verification emails, OTP SMS, IP enrichment, phone lookup and score recomputation had never run.** The demo data looked healthy only because the seed writes scores straight to the database.
+      Fixed with `arq.func(..., name=...)` and pinned by `apps/worker/tests/test_job_names.py`, which scans every enqueue call site and fails when a name is unregistered. Verified: registering a user now delivers a confirmation email to Mailpit.
+
 - [ ] **P0-12** 🔗 **Dependency found: the public buyer page cannot work until Phase 6.**
       `/public/v1/**` correctly requires an API key, and no keys exist because `use_cases/public_api/` is unbuilt. So `apps/web`'s server render of `/seller/{handle}` gets 401 and renders not-found — currently a clean 404, which is honest but not the product.
       _Decide:_ either issue the web app its own first-party server key, or give the buyer page an internal authenticated route instead of going through the partner API. **Settle this before Phase 2 Day 10 (P2-22), which polishes that exact page.**
@@ -217,11 +222,24 @@ What the scaffold commit `5185529` actually delivered:
 
 ### Day 4 — Auth screens
 
-- [ ] **P2-01** Registration page with validation (`apps/web/src/app/(auth)/register/`) wired to `POST /api/v1/auth/register`.
-- [ ] **P2-02** Finish the login flow, session handling, and protected-route redirects (`src/lib/auth/session.ts`).
-- [ ] **P2-03** Email verification landing page + "resend link" + password reset screens.
+- [x] **P2-01** Registration page with validation, wired to `POST /api/v1/auth/register`.
+      _Done 31 Jul._ Uses the shared `registerSchema`. Sends only the five fields the API accepts — `confirmPassword` is a client-side cross-check and the API rejects unknown fields. Registration returns no session (email confirmation is required first), so the form only stores a token if one actually comes back, and otherwise shows a "check your email" state.
+
+- [x] **P2-02** Login flow, session handling and protected-route redirects.
+      _Done 31 Jul._ Refactored onto the shared primitives. Honours `?next=` after sign-in, through a `safeNext()` guard that rejects anything not starting with a single `/` — an open redirect on a login page is a phishing gift. Calls `router.refresh()` so the server-rendered dashboard does not paint its logged-out cache first.
+
+- [x] **P2-03** Email verification landing page, forgot-password and reset-password screens.
+      _Done 31 Jul._ The verify panel guards against React 19's double-invoked effects with a ref, or the first call spends the token and the second reports "already used". Forgot-password answers identically whether or not the address exists, so it cannot be used to enumerate accounts.
+
+- [x] **P2-03b** Form foundation, shared by every screen in this phase.
+      _Done 31 Jul._ `Input`, `Field`, `Alert`, `Spinner`, `Progress` in `@trustlens/ui`, plus a `useApiForm` hook that maps RFC 9457 `errors[]` onto the inputs the user typed into and falls back to a banner only when nothing landed on a field.
+      Two mobile rules are baked into `Input` and should not be overridden: `h-11` (44 px touch target), and `text-base sm:text-sm` — Safari on iOS zooms the page whenever a focused input renders below 16 px **and does not zoom back out**, which breaks the layout mid-form.
+
+- [x] **P2-03c** Generate the typed API client.
+      _Done 31 Jul._ `pnpm codegen` had never run, so `ApiPaths` was `Record<string, unknown>` and every `api.POST(...)` typed its path as `never`. Wrote the missing `trustlens_api.openapi_export` module (which also fixes `make openapi`, part of P0-09), regenerated `docs/api/openapi.json` from the live API, and generated `schema.gen.ts`. Every route and body is now type-checked against the backend contract.
+
 - [ ] **P2-04** **Handle validation** — block reserved and impersonating handles (`olx`, `daraz`, `*-official`). On a trust product, handle squatting is an impersonation vector.
-      _Done when:_ a new user can register, verify email, log out, log back in, and reset a password; reserved handles are rejected.
+      _Note:_ handles are derived server-side from `displayName`; this belongs in the become-seller use case, not the form.
 
 ### Day 5 — Seller dashboard shell
 
