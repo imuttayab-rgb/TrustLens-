@@ -706,6 +706,12 @@ class SqlDeviceRepository:
         return reputation
 
 
+#: Comparable listings required before a category median means anything.
+#: Below this the median is dominated by the listing being judged, so the
+#: price signal reports UNAVAILABLE rather than an unearned pass.
+MIN_COMPARABLE_LISTINGS = 5
+
+
 class SqlListingRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session
@@ -836,18 +842,35 @@ class SqlListingRepository:
 
     async def category_median_price(self, category: str, *, currency: str) -> float | None:
         """Median, not mean: a single absurd listing must not move the baseline
-        that "too good to be true" is measured against."""
-        value = (
+        that "too good to be true" is measured against.
+
+        Returns None below MIN_COMPARABLE_LISTINGS, and that is the important
+        part. With one listing in a category the median *is* that listing, so
+        its deviation is 0% and the signal reports "prices are in line with
+        similar items" - a PASS awarded on no evidence at all. Returning None
+        makes the signal UNAVAILABLE instead, which the scoring policy excludes
+        from the denominator rather than scoring as a pass.
+        """
+        row = (
             await self._s.execute(
-                select(func.percentile_cont(0.5).within_group(m.ListingModel.price.asc())).where(
+                select(
+                    func.percentile_cont(0.5).within_group(m.ListingModel.price.asc()),
+                    func.count(m.ListingModel.id),
+                ).where(
                     m.ListingModel.category == category,
                     m.ListingModel.currency == currency,
                     m.ListingModel.price.isnot(None),
                     m.ListingModel.deleted_at.is_(None),
                 )
             )
-        ).scalar_one_or_none()
-        return float(value) if value is not None else None
+        ).one_or_none()
+
+        if row is None:
+            return None
+        median, comparable = row
+        if median is None or comparable < MIN_COMPARABLE_LISTINGS:
+            return None
+        return float(median)
 
 
 class SqlTrustScoreRepository:

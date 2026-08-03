@@ -22,7 +22,7 @@ from trustlens.core.domain.enums import ListingSource, ListingStatus
 from trustlens.core.domain.errors import EntityNotFound, PermissionDenied, ValidationError
 from trustlens.core.domain.events import ListingCreated
 from trustlens.core.domain.ports import Clock, IdGenerator, JobQueue, UnitOfWork
-from trustlens.core.domain.value_objects import Money
+from trustlens.core.domain.value_objects import Money, validate_category
 
 #: Beyond this a listing is not a listing; it is an attempt to exhaust the LLM
 #: context or the token budget.
@@ -106,7 +106,7 @@ class CreateListing:
                     source=ListingSource.MANUAL,
                     created_at=now,
                     price=cmd.data.money(),
-                    category=cmd.data.category,
+                    category=validate_category(cmd.data.category),
                     condition=cmd.data.condition,
                     city=cmd.data.city,
                     country_code=cmd.data.country_code,
@@ -164,7 +164,7 @@ class UpdateListing:
                     title=title,
                     description=description,
                     price=cmd.data.money(),
-                    category=cmd.data.category,
+                    category=validate_category(cmd.data.category),
                     condition=cmd.data.condition,
                     city=cmd.data.city,
                     country_code=cmd.data.country_code,

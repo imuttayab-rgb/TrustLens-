@@ -13,6 +13,11 @@ from datetime import date
 
 from trustlens.core.domain.enums import RiskLevel
 from trustlens.core.domain.errors import ValidationError
+from trustlens.core.domain.value_objects.listing_category import (
+    LISTING_CATEGORIES,
+    normalise_category,
+    validate_category,
+)
 
 # ── Score ────────────────────────────────────────────────────────────
 
@@ -249,6 +254,7 @@ class DateOfBirth:
 
 __all__ = [
     "HIGH_RISK_MAX",
+    "LISTING_CATEGORIES",
     "MEDIUM_RISK_MAX",
     "CnicNumber",
     "Confidence",
@@ -258,4 +264,6 @@ __all__ = [
     "Money",
     "PhoneE164",
     "Score",
+    "normalise_category",
+    "validate_category",
 ]

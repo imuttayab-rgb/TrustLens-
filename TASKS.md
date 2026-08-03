@@ -299,10 +299,16 @@ What the scaffold commit `5185529` actually delivered:
 - [x] **P3-07** **Prompt-injection containment** — 12 tests.
       _Done 2 Aug._ Pins the **blast radius**, not the model. Injection strings are stored as ordinary text (blocklisting phrasings is theatre, and would reject honest listings that quote one) while length caps bound what can reach a prompt. The load-bearing test drives the scoring policy with **both listing signals passing**, as though the injection fully succeeded, and asserts the seller still cannot reach LOW risk — a captured analyser is worth 30 of 100 points and no verification status.
 
-- [ ] **P3-03** Persist the LLM verdict end to end and confirm the signal moves. _(Worker job exists; needs a run with a real listing.)_
-- [ ] **P3-04** Price-outlier detection feeding `LISTING_PRICE_REALISTIC`. _(`category_median_price` already exists in the repository.)_
+- [x] **P3-03** LLM verdict persisted end to end.
+      _Verified 3 Aug._ A scam-pattern listing went `ANALYSING` → **FLAGGED**, risk 74, labels `urgency_pressure` + `advance_fee`, and `LISTING_CONTENT_SAFE` moved to FAIL 0/10.
+- [x] **P3-04** Price-outlier detection — **and two defects fixed that made it award points on no evidence.**
+      _Done 3 Aug._ The plumbing existed, but live data showed it was silently broken:
+      **1. No minimum sample size.** With one listing in a category the median _is_ that listing, so its deviation is 0% and the signal reported "prices are in line with similar items" — a PASS the seller never earned. `category_median_price` now returns None below `MIN_COMPARABLE_LISTINGS` (5), so the signal is UNAVAILABLE and excluded from the denominator. **Verified:** the signal moved from `PASS 5.0/5.0` to `UNAVAILABLE 0.0/0.0`.
+      **2. Free-text categories fragmented the corpus.** The dev database held `Mobile Phones`, `mobile-phones` and `mobiles` as three buckets for one category, so a phone was never compared against other phones. Categories are now a controlled vocabulary shared by the constants package, the zod schema, the domain and the form dropdown, with normalisation for case and separator variants. 23 tests.
 - [ ] **P3-05** `imagehash` duplicate-photo detection. _(`ListingImage.perceptual_hash` column already exists.)_
-- [ ] **P3-06** Seller UI: listing create/edit form, image upload, per-listing risk panel.
+- [x] **P3-06** Seller listings UI — list, create, edit, remove, per-listing risk panel.
+      _Done 3 Aug._ The risk panel translates analyser codes into plain English ("Pressures the buyer to decide immediately"), and reports only _underpricing_ — an overpriced listing is a bad deal, not a scam, and flagging it would train sellers to ignore the panel. Removal is soft and says why: the evidence behind an already-published score has to survive so it can still be appealed.
+      _Not done:_ listing **image upload** — deferred with P3-05, since both need the same image pipeline.
 
 **Exit criteria:** a seller posts a listing, AI analyses it, and both listing signals move the Trust Score.
 

@@ -56,12 +56,22 @@ export const RISK_PRESENTATION: Record<
 // ── Signals ──────────────────────────────────────────────────────────
 
 export const SIGNAL_CATEGORIES = [
-  'IDENTITY', 'PHONE', 'EMAIL', 'DEVICE', 'NETWORK', 'BEHAVIOUR', 'LISTING',
+  'IDENTITY',
+  'PHONE',
+  'EMAIL',
+  'DEVICE',
+  'NETWORK',
+  'BEHAVIOUR',
+  'LISTING',
 ] as const;
 export type SignalCategory = (typeof SIGNAL_CATEGORIES)[number];
 
 export const SIGNAL_STATUSES = [
-  'PASS', 'PARTIAL', 'FAIL', 'UNAVAILABLE', 'NOT_APPLICABLE',
+  'PASS',
+  'PARTIAL',
+  'FAIL',
+  'UNAVAILABLE',
+  'NOT_APPLICABLE',
 ] as const;
 export type SignalStatus = (typeof SIGNAL_STATUSES)[number];
 
@@ -77,13 +87,25 @@ export const CATEGORY_LABELS: Record<SignalCategory, string> = {
 
 /** v1 weights. Mirrors the `scoring_weights` seed - shown in the checklist. */
 export const CATEGORY_MAX_POINTS: Record<SignalCategory, number> = {
-  IDENTITY: 30, PHONE: 15, EMAIL: 10, DEVICE: 10, NETWORK: 10, BEHAVIOUR: 10, LISTING: 15,
+  IDENTITY: 30,
+  PHONE: 15,
+  EMAIL: 10,
+  DEVICE: 10,
+  NETWORK: 10,
+  BEHAVIOUR: 10,
+  LISTING: 15,
 };
 
 // ── Verification ─────────────────────────────────────────────────────
 
 export const VERIFICATION_STATUSES = [
-  'NOT_STARTED', 'PENDING', 'PROCESSING', 'VERIFIED', 'REJECTED', 'EXPIRED', 'FAILED',
+  'NOT_STARTED',
+  'PENDING',
+  'PROCESSING',
+  'VERIFIED',
+  'REJECTED',
+  'EXPIRED',
+  'FAILED',
 ] as const;
 export type VerificationStatus = (typeof VERIFICATION_STATUSES)[number];
 
@@ -135,3 +157,53 @@ export const ADMIN_ROUTES = {
 
 /** Polling backoff for long jobs: 2s, then 5s, then 10s. */
 export const JOB_POLL_INTERVALS_MS = [2000, 5000, 10_000] as const;
+
+// ── Listing categories ───────────────────────────────────────────────
+
+/**
+ * The only categories a listing may carry.
+ *
+ * A controlled vocabulary rather than free text, because the price signal
+ * compares a listing against the median of its own category. With free text,
+ * sellers produced "Mobile Phones", "mobile-phones" and "mobiles" as three
+ * separate buckets for one category - so a phone was never compared against
+ * other phones, and "too good to be true" could not fire.
+ *
+ * Stored as the slug. Never renamed in place: an existing listing's category
+ * would silently change meaning. Add a new entry and migrate instead.
+ */
+export const LISTING_CATEGORIES = [
+  'mobiles',
+  'electronics',
+  'computers',
+  'vehicles',
+  'vehicle-parts',
+  'property-sale',
+  'property-rent',
+  'home-appliances',
+  'furniture',
+  'fashion',
+  'books-hobbies',
+  'animals',
+  'services',
+  'other',
+] as const;
+
+export type ListingCategory = (typeof LISTING_CATEGORIES)[number];
+
+export const LISTING_CATEGORY_LABELS: Record<ListingCategory, string> = {
+  mobiles: 'Mobile phones',
+  electronics: 'Electronics',
+  computers: 'Computers & tablets',
+  vehicles: 'Vehicles',
+  'vehicle-parts': 'Vehicle parts & accessories',
+  'property-sale': 'Property for sale',
+  'property-rent': 'Property for rent',
+  'home-appliances': 'Home appliances',
+  furniture: 'Furniture & home',
+  fashion: 'Fashion & beauty',
+  'books-hobbies': 'Books, sports & hobbies',
+  animals: 'Animals',
+  services: 'Services',
+  other: 'Other',
+};

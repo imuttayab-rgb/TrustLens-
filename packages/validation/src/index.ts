@@ -7,7 +7,7 @@
  * number looks like.
  */
 import { z } from 'zod';
-import { ALLOWED_IMAGE_TYPES, MAX_UPLOAD_BYTES } from '@trustlens/constants';
+import { ALLOWED_IMAGE_TYPES, LISTING_CATEGORIES, MAX_UPLOAD_BYTES } from '@trustlens/constants';
 
 // ── Primitives ───────────────────────────────────────────────────────
 
@@ -136,7 +136,11 @@ export const listingSchema = z.object({
   description: z.string().trim().min(10, 'Describe the item in at least 10 characters.').max(8000),
   price: z.coerce.number().nonnegative('Price cannot be negative.').optional(),
   currency: z.string().length(3).optional(),
-  category: z.string().max(80).optional(),
+  // A fixed vocabulary, not free text. The price signal compares a listing
+  // against the median of its own category, and free text produced
+  // "Mobile Phones", "mobile-phones" and "mobiles" as three separate buckets -
+  // so a phone was never compared against other phones.
+  category: z.enum(LISTING_CATEGORIES).optional(),
   city: z.string().max(80).optional(),
 });
 export type ListingInput = z.infer<typeof listingSchema>;
