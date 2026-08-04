@@ -3,94 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  /* One palette for the whole product.
+     Dark by default rather than as a theme option: TrustLens is an instrument
+     for judging a stranger, and the score reads as a panel rather than a
+     document. A light variant would need its own contrast pass on the risk
+     colours, and two half-tuned palettes serve nobody. */
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 222 47% 25%;
-    --primary-foreground: 210 40% 98%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --destructive: 0 72% 45%;
+    color-scheme: dark;
+    --background: 222 47% 5%;
+    --foreground: 210 40% 98%;
+    --card: 222 40% 9%;
+    --card-foreground: 210 40% 98%;
+    --primary: 165 84% 45%;
+    --primary-foreground: 222 47% 6%;
+    --muted: 222 33% 14%;
+    --muted-foreground: 215 20% 68%;
+    --destructive: 0 72% 58%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 222 47% 25%;
+    --border: 222 28% 18%;
+    --input: 222 28% 18%;
+    --ring: 165 84% 45%;
     --radius: 0.625rem;
 
-    /* Risk palette. All four pairs meet 4.5:1 against their background. */
-    --risk-low: 142 71% 29%;
-    --risk-low-bg: 141 79% 95%;
-    --risk-medium: 32 85% 34%;
-    --risk-medium-bg: 48 96% 93%;
-    --risk-high: 0 72% 42%;
-    --risk-high-bg: 0 86% 96%;
+    /* Risk palette. Every pair clears 4.5:1 on the dark surface. */
+    --risk-low: 158 72% 52%;
+    --risk-low-bg: 158 45% 12%;
+    --risk-medium: 42 92% 62%;
+    --risk-medium-bg: 38 45% 13%;
+    --risk-high: 0 84% 68%;
+    --risk-high-bg: 0 45% 14%;
     /* Slate, deliberately: "not enough information" is not a verdict. */
-    --risk-unknown: 215 16% 40%;
-    --risk-unknown-bg: 210 40% 96%;
+    --risk-unknown: 215 20% 70%;
+    --risk-unknown-bg: 222 33% 14%;
 
-  /* ── Brand accents ──────────────────────────────────────────────────
-     Emerald reads as "verified" and is the same hue family as risk-low, so
-     the marketing surface and the product agree about what green means.
-     Violet exists only as the far end of the CTA gradient - it is never a
-     status colour, because a second saturated hue competing with the risk
-     palette would make "which green is good" ambiguous. */
-  --brand: 165 84% 45%;
-  --brand-2: 258 90% 66%;
-  --brand-glow: 165 84% 45%;
-}
-
-/* The public marketing surface is dark regardless of the app theme: the
-   product's whole subject is judging a stranger in the dark, and the Trust
-   Score reads as an instrument panel rather than a document. */
-[data-surface='marketing'] {
-  color-scheme: dark;
-  --background: 222 47% 5%;
-  --foreground: 210 40% 98%;
-  --card: 222 40% 9%;
-  --card-foreground: 210 40% 98%;
-  --primary: 165 84% 45%;
-  --primary-foreground: 222 47% 6%;
-  --muted: 222 33% 14%;
-  --muted-foreground: 215 20% 68%;
-  --border: 222 28% 18%;
-  --input: 222 28% 18%;
-  --ring: 165 84% 45%;
-
-  --risk-low: 158 72% 52%;
-  --risk-low-bg: 158 45% 12%;
-  --risk-medium: 42 92% 62%;
-  --risk-medium-bg: 38 45% 13%;
-  --risk-high: 0 84% 68%;
-  --risk-high-bg: 0 45% 14%;
-  --risk-unknown: 215 20% 70%;
-  --risk-unknown-bg: 222 33% 14%;
+    /* ── Brand accents ────────────────────────────────────────────────
+       Emerald shares a hue family with risk-low, so the marketing surface
+       and the product agree about what green means. Violet exists only as
+       the far end of the CTA gradient and is never a status colour - a
+       second saturated hue competing with the risk palette would make
+       "which green is good" ambiguous. */
+    --brand: 165 84% 45%;
+    --brand-2: 258 90% 66%;
+    --brand-glow: 165 84% 45%;
   }
 
+  /* Retained so an explicit `class="dark"` is inert rather than wrong.
+     There is only one palette; see :root above. */
   .dark {
-    --background: 222 47% 8%;
-    --foreground: 210 40% 96%;
-    --card: 222 47% 11%;
-    --card-foreground: 210 40% 96%;
-    --primary: 210 40% 96%;
-    --primary-foreground: 222 47% 11%;
-    --muted: 217 33% 17%;
-    --muted-foreground: 215 20% 65%;
-    --destructive: 0 63% 45%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
-    --ring: 213 27% 84%;
-
-    --risk-low: 142 65% 58%;
-    --risk-low-bg: 142 40% 14%;
-    --risk-medium: 45 90% 62%;
-    --risk-medium-bg: 38 45% 15%;
-    --risk-high: 0 84% 68%;
-    --risk-high-bg: 0 45% 16%;
-    --risk-unknown: 215 20% 70%;
-    --risk-unknown-bg: 217 33% 17%;
+    color-scheme: dark;
   }
 
   * { @apply border-border; }

@@ -1,14 +1,7 @@
 import { SiteNav } from '@/features/marketing';
 import Link from 'next/link';
 
-/**
- * The public surface.
- *
- * `data-surface="marketing"` switches this subtree to the dark token set. The
- * signed-in app keeps its own theme: a dashboard someone works in all day and
- * a landing page seen once have genuinely different needs, and forcing one
- * palette on both would serve neither.
- */
+/** The public marketing surface: full-strength ambient light and a footer. */
 export default function MarketingLayout({ children }: { children: React.ReactNode }) {
   return (
     <div data-surface="marketing" className="min-h-dvh bg-background text-foreground">

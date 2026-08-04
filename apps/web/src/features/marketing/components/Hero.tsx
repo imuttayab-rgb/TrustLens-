@@ -1,7 +1,7 @@
 'use client';
 
 import { stagger, usePrefersReducedMotion } from '@/lib/motion';
-import { Button, cn } from '@trustlens/ui';
+import { Ambient, Button, cn } from '@trustlens/ui';
 import { ArrowRight, Eye, Lock, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { ScorePreview } from './ScorePreview';
@@ -19,18 +19,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden">
-      {/* Ambient light. Two very low-contrast orbs drifting out of phase, so
-          the background is never quite static but never asks for attention. */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
-        <div className="absolute -left-32 -top-40 h-[34rem] w-[34rem] animate-drift rounded-full bg-brand/[0.13] blur-[120px]" />
-        <div
-          className="absolute -top-24 right-[-10rem] h-[30rem] w-[30rem] animate-drift rounded-full bg-brand-2/[0.11] blur-[120px]"
-          style={{ animationDelay: '-11s' }}
-        />
-        {/* Hairline grid, barely there, fading out downward. Gives the dark
-            field a sense of surface without becoming a pattern. */}
-        <div className="absolute inset-0 bg-[linear-gradient(hsl(var(--border)/0.5)_1px,transparent_1px),linear-gradient(90deg,hsl(var(--border)/0.5)_1px,transparent_1px)] bg-[size:56px_56px] [mask-image:radial-gradient(ellipse_75%_55%_at_50%_0%,#000_35%,transparent_100%)]" />
-      </div>
+      <Ambient intensity="full" />
 
       <div className="mx-auto grid max-w-6xl items-center gap-12 px-5 pb-20 pt-14 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.02fr)] lg:gap-14 lg:pt-20">
         <div>

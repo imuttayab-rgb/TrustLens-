@@ -1,5 +1,6 @@
 /** TrustLens design system. */
 export { Alert, type AlertProps, type AlertTone } from './primitives/Alert';
+export { Ambient } from './primitives/Ambient';
 export { Button, buttonVariants, type ButtonProps } from './primitives/Button';
 export { Field, fieldAria, type FieldProps } from './primitives/Field';
 export { Input, type InputProps } from './primitives/Input';
