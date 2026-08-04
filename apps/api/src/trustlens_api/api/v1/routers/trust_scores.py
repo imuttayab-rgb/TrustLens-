@@ -7,6 +7,7 @@ computation time (ADR-0002).
 
 from __future__ import annotations
 
+from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
@@ -55,7 +56,7 @@ async def get_trust_score(
     actor: ActorDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     # Object-level check, separate from the route permission. Without it this
     # endpoint is an IDOR: any seller could read any other seller's breakdown.
     await assert_owns_seller(seller_id, actor, uow)
@@ -81,7 +82,7 @@ async def get_improvements(
     actor: ActorDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     await assert_owns_seller(seller_id, actor, uow)
 
     detail = await GetTrustScore(uow=uow).execute(
@@ -113,7 +114,7 @@ async def get_history(
     uow: UowDep,
     meta: MetaDep,
     limit: int = Query(default=20, ge=1, le=100),
-) -> dict:
+) -> dict[str, Any]:
     await assert_owns_seller(seller_id, actor, uow)
 
     history = await uow.trust_scores.list_history(seller_id, limit=limit)
@@ -150,7 +151,7 @@ async def recompute(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     await assert_owns_seller(seller_id, actor, uow)
 
     job_id = await container.queue.enqueue(
@@ -184,7 +185,7 @@ async def override_score(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     import dataclasses
 
     from trustlens.core.domain.entities import AuditLogEntry, TrustScore

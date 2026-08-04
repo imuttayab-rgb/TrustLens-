@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import hashlib
 from datetime import timedelta
+from typing import Any
 
 from fastapi import APIRouter, Depends, status
 
@@ -78,7 +79,7 @@ async def upload_intent(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     settings = container.settings.storage
 
     if body.size_bytes > settings.storage_max_upload_bytes:
@@ -167,7 +168,7 @@ async def submit_identity(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     now = container.clock.now()
 
     # Record biometric consent BEFORE the use case checks for it. Comparing a
@@ -210,7 +211,7 @@ async def submit_identity(
 
 
 @router.get("/verification/identity", summary="Identity verification status")
-async def identity_status(seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict:
+async def identity_status(seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
     verification = await uow.identities.get_latest_verification(seller.id)
     documents = await uow.identities.list_documents(seller.id)
     front = next((d for d in documents if d.document_type.value == "CNIC_FRONT"), None)
@@ -241,7 +242,7 @@ async def request_otp(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     notifications = container.settings.notifications
     result = await RequestPhoneOtp(
         uow=uow,
@@ -278,7 +279,7 @@ async def verify_otp(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     result = await VerifyPhoneOtp(
         uow=uow, otp=container.otp_generator, queue=container.queue, clock=container.clock
     ).execute(VerifyOtpCommand(user_id=actor.user_id, code=body.code))
@@ -296,7 +297,7 @@ async def submit_device(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     from trustlens.core.domain.entities import AccessEvent, Device, DeviceLink
 
     now = container.clock.now()
@@ -353,7 +354,7 @@ async def submit_device(
 
 
 @router.get("/verification/status", summary="All verification checks in one call")
-async def verification_status(seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict:
+async def verification_status(seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
     devices = await uow.devices.list_for_user(seller.user_id)
     statuses = {
         "identity": seller.identity_status.value,

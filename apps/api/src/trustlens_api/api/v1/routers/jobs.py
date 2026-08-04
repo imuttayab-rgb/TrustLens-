@@ -6,6 +6,8 @@ and a seller asking "is my verification done?" needs a durable answer.
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter
 
 from trustlens.core.domain.errors import EntityNotFound
@@ -35,7 +37,7 @@ async def get_job(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     run = await uow.job_runs.get_by_key(job_id)
 
     if run is None:

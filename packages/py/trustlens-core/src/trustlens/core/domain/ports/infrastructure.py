@@ -11,6 +11,28 @@ from uuid import UUID
 if TYPE_CHECKING:
     from trustlens.core.domain.entities import IpReputation
     from trustlens.core.domain.enums import LineType
+    from trustlens.core.domain.ports.repositories import (
+        ApiClientRepository,
+        AppealRepository,
+        AuditLogRepository,
+        ConsentRepository,
+        DeviceRepository,
+        EmailAddressRepository,
+        FileRepository,
+        IdentityRepository,
+        JobRunRepository,
+        ListingRepository,
+        NotificationRepository,
+        OtpRepository,
+        PhoneNumberRepository,
+        RefreshTokenRepository,
+        ReviewCaseRepository,
+        ScoringModelRepository,
+        SellerRepository,
+        TrustScoreRepository,
+        UserRepository,
+        VerificationTokenRepository,
+    )
 
 
 @runtime_checkable
@@ -46,26 +68,26 @@ class UnitOfWork(Protocol):
     leaving without `commit()` rolls back.
     """
 
-    users: Any
-    sellers: Any
-    identities: Any
-    phone_numbers: Any
-    email_addresses: Any
-    devices: Any
-    listings: Any
-    trust_scores: Any
-    scoring_models: Any
-    appeals: Any
-    review_cases: Any
-    api_clients: Any
-    refresh_tokens: Any
-    verification_tokens: Any
-    otps: Any
-    consents: Any
-    files: Any
-    notifications: Any
-    audit_logs: Any
-    job_runs: Any
+    users: UserRepository
+    sellers: SellerRepository
+    identities: IdentityRepository
+    phone_numbers: PhoneNumberRepository
+    email_addresses: EmailAddressRepository
+    devices: DeviceRepository
+    listings: ListingRepository
+    trust_scores: TrustScoreRepository
+    scoring_models: ScoringModelRepository
+    appeals: AppealRepository
+    review_cases: ReviewCaseRepository
+    api_clients: ApiClientRepository
+    refresh_tokens: RefreshTokenRepository
+    verification_tokens: VerificationTokenRepository
+    otps: OtpRepository
+    consents: ConsentRepository
+    files: FileRepository
+    notifications: NotificationRepository
+    audit_logs: AuditLogRepository
+    job_runs: JobRunRepository
 
     async def __aenter__(self) -> Self: ...
 

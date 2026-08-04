@@ -10,6 +10,8 @@ Two distinct checks, because they answer different questions:
 
 from __future__ import annotations
 
+from typing import Any
+
 from fastapi import APIRouter, Response, status
 from sqlalchemy import text
 
@@ -19,7 +21,7 @@ router = APIRouter(prefix="/health", tags=["Health"])
 
 
 @router.get("/live", summary="Liveness probe")
-async def live(container: ContainerDep) -> dict:
+async def live(container: ContainerDep) -> dict[str, Any]:
     return {
         "status": "ok",
         "service": container.settings.observability.otel_service_name,
@@ -29,7 +31,7 @@ async def live(container: ContainerDep) -> dict:
 
 
 @router.get("/ready", summary="Readiness probe")
-async def ready(container: ContainerDep, response: Response) -> dict:
+async def ready(container: ContainerDep, response: Response) -> dict[str, Any]:
     checks: dict[str, str] = {}
 
     try:

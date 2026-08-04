@@ -6,11 +6,12 @@ response body - an XSS payload must not be able to read it (ADR-0006).
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, Request, Response, status
 
 from trustlens.core.application.use_cases.auth import (
+    IssuedSession,
     LoginCommand,
     LoginUser,
     LogoutCommand,
@@ -25,7 +26,8 @@ from trustlens.core.application.use_cases.auth import (
 from trustlens.core.domain.enums import UserRole
 from trustlens.core.domain.errors import TokenInvalid
 from trustlens.core.domain.policies import LoginThrottlePolicy, PasswordPolicy
-from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
+from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
+from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, RequestMeta, UowDep
 from trustlens_api.api.v1.schemas.auth import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
@@ -39,6 +41,7 @@ from trustlens_api.api.v1.schemas.auth import (
     VerifyEmailRequest,
 )
 from trustlens_api.api.v1.schemas.common import MessageResponse, envelope
+from trustlens_api.container import Container
 from trustlens_api.core.cookies import clear_refresh_cookie, set_refresh_cookie
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
@@ -60,7 +63,7 @@ async def register(
     uow: UowDep,
     meta: MetaDep,
     request: Request,
-) -> dict:
+) -> dict[str, Any]:
     use_case = RegisterUser(
         uow=uow,
         hasher=container.password_hasher,
@@ -93,7 +96,7 @@ async def login(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     use_case = LoginUser(
         uow=uow,
         hasher=container.password_hasher,
@@ -137,7 +140,7 @@ async def refresh(
     uow: UowDep,
     meta: MetaDep,
     tl_rt: Annotated[str | None, Cookie()] = None,
-) -> dict:
+) -> dict[str, Any]:
     if not tl_rt:
         raise TokenInvalid("No session found. Please sign in.")
 
@@ -163,7 +166,7 @@ async def logout(
     uow: UowDep,
     meta: MetaDep,
     tl_rt: Annotated[str | None, Cookie()] = None,
-) -> dict:
+) -> dict[str, Any]:
     if tl_rt:
         await LogoutUser(uow=uow, tokens=container.token_hasher, clock=container.clock).execute(
             LogoutCommand(raw_token=tl_rt)
@@ -182,7 +185,7 @@ async def logout_all(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     revoked = await LogoutUser(
         uow=uow, tokens=container.token_hasher, clock=container.clock
     ).execute(LogoutCommand(user_id=actor.user_id, all_sessions=True))
@@ -199,7 +202,7 @@ async def verify_email(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     result = await VerifyEmail(
         uow=uow,
         tokens=container.token_hasher,
@@ -231,7 +234,7 @@ async def forgot_password(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     from datetime import timedelta
 
     from trustlens.core.domain.entities import VerificationToken
@@ -282,7 +285,7 @@ async def reset_password(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     from trustlens.core.domain.enums import TokenPurpose
     from trustlens.core.domain.errors import ValidationError
 
@@ -324,7 +327,7 @@ async def change_password(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     from trustlens.core.domain.errors import InvalidCredentials, ValidationError
 
     assert actor.user_id is not None
@@ -354,7 +357,7 @@ async def change_password(
 
 
 @router.get("/sessions", summary="List active sessions")
-async def list_sessions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict:
+async def list_sessions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
     assert actor.user_id is not None
     tokens = await uow.refresh_tokens.list_active_for_user(actor.user_id)
     return envelope(
@@ -376,7 +379,13 @@ async def list_sessions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict:
 # ── helpers ──────────────────────────────────────────────────────────
 
 
-async def _issue_session_response(session, response: Response, container, uow, meta) -> dict:
+async def _issue_session_response(
+    session: IssuedSession,
+    response: Response,
+    container: Container,
+    uow: SqlAlchemyUnitOfWork,
+    meta: RequestMeta,
+) -> dict[str, Any]:
     """Build the login/refresh response and set the refresh cookie."""
     now = container.clock.now()
 

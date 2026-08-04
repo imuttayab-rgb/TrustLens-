@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 import dataclasses
+from typing import Any
 
 from fastapi import APIRouter, status
 
 from trustlens.core.domain.entities import SellerProfile
 from trustlens.core.domain.enums import UserRole, VerificationStatus
 from trustlens.core.domain.errors import ConflictError, EntityNotFound
+from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
 from trustlens_api.api.v1.schemas.auth import UserSummary
 from trustlens_api.api.v1.schemas.common import envelope
@@ -22,7 +24,7 @@ router = APIRouter(tags=["Me"])
 
 
 @router.get("/me", summary="Current user")
-async def get_me(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict:
+async def get_me(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
     assert actor.user_id is not None
     user = await uow.users.get(actor.user_id)
     if user is None:
@@ -56,7 +58,7 @@ async def become_seller(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     assert actor.user_id is not None
     if await uow.sellers.get_by_user(actor.user_id) is not None:
         raise ConflictError("This account already has a seller profile.")
@@ -100,7 +102,7 @@ async def become_seller(
 
 
 @router.get("/sellers/me", summary="Own seller profile")
-async def get_my_seller(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict:
+async def get_my_seller(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
     assert actor.user_id is not None
     seller = await uow.sellers.get_by_user(actor.user_id)
     if seller is None:
@@ -119,7 +121,7 @@ async def update_my_seller(
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
-) -> dict:
+) -> dict[str, Any]:
     assert actor.user_id is not None
     seller = await uow.sellers.get_by_user(actor.user_id)
     if seller is None:
@@ -143,7 +145,7 @@ async def update_my_seller(
     return envelope(_seller_response(updated).model_dump(by_alias=True), request_id=meta.request_id)
 
 
-async def _unique_handle(uow, display_name: str) -> str:
+async def _unique_handle(uow: SqlAlchemyUnitOfWork, display_name: str) -> str:
     base = "".join(c if c.isalnum() else "-" for c in display_name.lower()).strip("-")[:40]
     base = base or "seller"
     for suffix in range(100):

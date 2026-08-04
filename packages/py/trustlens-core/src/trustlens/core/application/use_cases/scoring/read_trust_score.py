@@ -11,7 +11,7 @@ import json
 from dataclasses import asdict, dataclass, field
 from uuid import UUID
 
-from trustlens.core.domain.entities import SignalDefinition, TrustScore
+from trustlens.core.domain.entities import SellerProfile, SignalDefinition, TrustScore
 from trustlens.core.domain.enums import RiskLevel, ScoreTrigger, SignalCode, SignalStatus
 from trustlens.core.domain.errors import EntityNotFound
 from trustlens.core.domain.policies import band_label, rank_improvements
@@ -115,7 +115,7 @@ class GetPublicTrustScore:
         await self._cache.set(cache_key, payload.to_json(), ttl_seconds=self._ttl)
         return payload, False
 
-    async def _resolve_seller(self, ref: str):
+    async def _resolve_seller(self, ref: str) -> SellerProfile | None:
         if ":" in ref:
             marketplace_slug, _, external_ref = ref.partition(":")
             return await self._uow.sellers.get_by_external_ref(
@@ -130,7 +130,7 @@ class GetPublicTrustScore:
 def to_public(
     seller_ref: str,
     score: TrustScore,
-    seller: object,
+    seller: SellerProfile,
     definitions: dict[SignalCode, SignalDefinition],
 ) -> PublicTrustScore:
     reasons = [

@@ -147,7 +147,22 @@ module = ["trustlens.core.*"]
 strict = true
 
 [[tool.mypy.overrides]]
-module = ["easyocr.*", "deepface.*", "cv2.*", "arq.*", "boto3.*", "botocore.*", "magic.*"]
+# Optional ML and vendor SDKs. These live in the `ml`/`llm` extras and are
+# absent from a plain dev install, so mypy must not fail on a machine that
+# deliberately did not install a 2.5 GB dependency tree.
+module = [
+    "easyocr.*",
+    "deepface.*",
+    "cv2.*",
+    "numpy.*",
+    "joblib.*",
+    "openai.*",
+    "anthropic.*",
+    "arq.*",
+    "boto3.*",
+    "botocore.*",
+    "magic.*",
+]
 ignore_missing_imports = true
 
 # ── pytest ───────────────────────────────────────────────────────────

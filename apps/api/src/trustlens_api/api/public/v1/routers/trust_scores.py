@@ -19,8 +19,10 @@ from trustlens.core.application.use_cases.scoring import (
     GetPublicTrustScoreCommand,
 )
 from trustlens.core.domain.errors import EntityNotFound, QuotaExceeded, RateLimitExceeded
+from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
 from trustlens_api.api.deps import (
     ApiClientDep,
+    ApiClientPrincipal,
     ContainerDep,
     MetaDep,
     UowDep,
@@ -32,6 +34,7 @@ from trustlens_api.api.public.v1.schemas.public_score import (
     PublicScoreResponse,
     PublicStatusResponse,
 )
+from trustlens_api.container import Container
 
 router = APIRouter(tags=["Public API"])
 
@@ -174,7 +177,9 @@ async def public_status(container: ContainerDep, uow: UowDep) -> PublicStatusRes
 # ── helpers ──────────────────────────────────────────────────────────
 
 
-async def _enforce_quota(principal, container, uow) -> None:
+async def _enforce_quota(
+    principal: ApiClientPrincipal, container: Container, uow: SqlAlchemyUnitOfWork
+) -> None:
     """Per-minute rate limit and monthly quota.
 
     The public API fails CLOSED when Redis is unavailable: for a partner-facing
