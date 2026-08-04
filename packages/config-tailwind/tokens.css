@@ -29,6 +29,43 @@
     /* Slate, deliberately: "not enough information" is not a verdict. */
     --risk-unknown: 215 16% 40%;
     --risk-unknown-bg: 210 40% 96%;
+
+  /* ── Brand accents ──────────────────────────────────────────────────
+     Emerald reads as "verified" and is the same hue family as risk-low, so
+     the marketing surface and the product agree about what green means.
+     Violet exists only as the far end of the CTA gradient - it is never a
+     status colour, because a second saturated hue competing with the risk
+     palette would make "which green is good" ambiguous. */
+  --brand: 165 84% 45%;
+  --brand-2: 258 90% 66%;
+  --brand-glow: 165 84% 45%;
+}
+
+/* The public marketing surface is dark regardless of the app theme: the
+   product's whole subject is judging a stranger in the dark, and the Trust
+   Score reads as an instrument panel rather than a document. */
+[data-surface='marketing'] {
+  color-scheme: dark;
+  --background: 222 47% 5%;
+  --foreground: 210 40% 98%;
+  --card: 222 40% 9%;
+  --card-foreground: 210 40% 98%;
+  --primary: 165 84% 45%;
+  --primary-foreground: 222 47% 6%;
+  --muted: 222 33% 14%;
+  --muted-foreground: 215 20% 68%;
+  --border: 222 28% 18%;
+  --input: 222 28% 18%;
+  --ring: 165 84% 45%;
+
+  --risk-low: 158 72% 52%;
+  --risk-low-bg: 158 45% 12%;
+  --risk-medium: 42 92% 62%;
+  --risk-medium-bg: 38 45% 13%;
+  --risk-high: 0 84% 68%;
+  --risk-high-bg: 0 45% 14%;
+  --risk-unknown: 215 20% 70%;
+  --risk-unknown-bg: 222 33% 14%;
   }
 
   .dark {
@@ -59,8 +96,16 @@
   * { @apply border-border; }
   body { @apply bg-background text-foreground antialiased; }
 
-  /* The score gauge animates; respect a user's motion preference. */
+
+  /* Motion is decoration here, never information: every animated element is
+     already legible at its final state, so disabling them removes polish and
+     nothing else. */
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }

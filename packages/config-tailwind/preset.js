@@ -25,6 +25,10 @@ module.exports = {
           DEFAULT: 'hsl(var(--destructive))',
           foreground: 'hsl(var(--destructive-foreground))',
         },
+        brand: {
+          DEFAULT: 'hsl(var(--brand))',
+          2: 'hsl(var(--brand-2))',
+        },
         risk: {
           low: 'hsl(var(--risk-low))',
           'low-bg': 'hsl(var(--risk-low-bg))',
@@ -43,9 +47,43 @@ module.exports = {
       },
       fontFamily: { sans: ['var(--font-sans)', 'system-ui', 'sans-serif'] },
       keyframes: {
-        'score-fill': { from: { strokeDashoffset: '999' }, to: { strokeDashoffset: 'var(--dash)' } },
+        'score-fill': {
+          from: { strokeDashoffset: '999' },
+          to: { strokeDashoffset: 'var(--dash)' },
+        },
+        // Entrance: content arrives from slightly below, never from the side -
+        // horizontal drift fights the reading direction on a text-heavy hero.
+        'fade-up': {
+          from: { opacity: '0', transform: 'translateY(14px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },
+        // A signal resolving from unknown to verified.
+        'pop-in': {
+          '0%': { opacity: '0', transform: 'scale(0.7)' },
+          '70%': { opacity: '1', transform: 'scale(1.08)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
+        },
+        // Ambient background light. Very slow and very low contrast: it should
+        // register as atmosphere, not as something moving on the page.
+        drift: {
+          '0%, 100%': { transform: 'translate3d(0,0,0) scale(1)' },
+          '50%': { transform: 'translate3d(3%, -4%, 0) scale(1.08)' },
+        },
+        // Runs once behind the score arc as it settles.
+        sheen: {
+          from: { transform: 'translateX(-120%)' },
+          to: { transform: 'translateX(220%)' },
+        },
       },
-      animation: { 'score-fill': 'score-fill 900ms ease-out forwards' },
+      animation: {
+        'score-fill': 'score-fill 1100ms cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'fade-up': 'fade-up 620ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        'fade-in': 'fade-in 500ms ease-out both',
+        'pop-in': 'pop-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both',
+        drift: 'drift 22s ease-in-out infinite',
+        sheen: 'sheen 1400ms ease-out 700ms both',
+      },
     },
   },
   plugins: [require('tailwindcss-animate')],
