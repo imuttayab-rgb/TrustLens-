@@ -8,6 +8,7 @@ ComputeTrustScore raises NoActiveScoringModel and nothing can be scored.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from uuid import UUID, uuid5
 
 from sqlalchemy import select
@@ -400,7 +401,7 @@ async def seed_reference_data(session: AsyncSession) -> dict[str, int]:
     return counts
 
 
-async def _upsert(session: AsyncSession, model: type, row_id: UUID, **values: object) -> None:
+async def _upsert(session: AsyncSession, model: type[Any], row_id: UUID, **values: object) -> None:
     existing = await session.get(model, row_id)
     if existing is None:
         session.add(model(id=row_id, **values))

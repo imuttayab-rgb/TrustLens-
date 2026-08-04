@@ -8,6 +8,8 @@ the absence of forbidden keys in every public response.
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
@@ -47,7 +49,7 @@ class BatchLookupRequest(PublicSchema):
 
 
 class BatchLookupResponse(PublicSchema):
-    results: list[dict]
+    results: list[dict[str, Any]]
     not_found: list[str] = Field(default_factory=list)
 
 

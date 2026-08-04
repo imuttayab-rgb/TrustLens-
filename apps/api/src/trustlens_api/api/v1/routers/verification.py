@@ -17,6 +17,7 @@ from __future__ import annotations
 import hashlib
 from datetime import timedelta
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, status
 
@@ -28,9 +29,14 @@ from trustlens.core.application.use_cases.verification import (
     VerifyOtpCommand,
     VerifyPhoneOtp,
 )
-from trustlens.core.domain.entities import Consent, StoredFile
+from trustlens.core.domain.entities import (
+    AuthenticatedActor,
+    Consent,
+    IdentityDocument,
+    StoredFile,
+)
 from trustlens.core.domain.enums import ConsentType, FilePurpose
-from trustlens.core.domain.errors import ValidationError
+from trustlens.core.domain.errors import PermissionDenied, ValidationError
 from trustlens_api.api.deps import (
     ActorDep,
     ContainerDep,
@@ -52,6 +58,18 @@ from trustlens_api.api.v1.schemas.verification import (
     VerificationStatusResponse,
     VerifyOtpRequest,
 )
+
+
+def _require_user_id(actor: AuthenticatedActor) -> UUID:
+    """These flows belong to a person, not a principal.
+
+    `user_id` is optional because an API client and a system job are also
+    actors; neither can own a phone number, a device or a consent record.
+    """
+    if actor.user_id is None:
+        raise PermissionDenied()
+    return actor.user_id
+
 
 router = APIRouter(tags=["Verification"])
 
@@ -125,7 +143,7 @@ async def upload_intent(
             size_bytes=body.size_bytes,
             sha256=b"",  # filled in by the worker after it reads the object
             created_at=now,
-            owner_user_id=actor.user_id,
+            owner_user_id=_require_user_id(actor),
             original_filename=body.filename,
             # Sensitive media carries its retention deadline from the moment
             # it is created, so the purge job needs no special-casing.
@@ -180,7 +198,7 @@ async def submit_identity(
         await uow.consents.record(
             Consent(
                 id=container.ids.new(),
-                user_id=actor.user_id,
+                user_id=_require_user_id(actor),
                 consent_type=ConsentType.BIOMETRIC_PROCESSING,
                 version="1.0",
                 granted=True,
@@ -259,7 +277,7 @@ async def request_otp(
         # the offline demo can complete the flow.
         expose_debug_code=notifications.sms_provider == "console"
         and not container.settings.env.is_deployed,
-    ).execute(RequestOtpCommand(user_id=actor.user_id, phone_number=body.phone_number))
+    ).execute(RequestOtpCommand(user_id=_require_user_id(actor), phone_number=body.phone_number))
 
     return envelope(
         RequestOtpResponse(
@@ -282,7 +300,7 @@ async def verify_otp(
 ) -> dict[str, Any]:
     result = await VerifyPhoneOtp(
         uow=uow, otp=container.otp_generator, queue=container.queue, clock=container.clock
-    ).execute(VerifyOtpCommand(user_id=actor.user_id, code=body.code))
+    ).execute(VerifyOtpCommand(user_id=_require_user_id(actor), code=body.code))
 
     return envelope(
         {"phoneNumberId": str(result.phone_number_id), "verified": result.verified},
@@ -318,7 +336,7 @@ async def submit_device(
     )
     await uow.devices.link(
         DeviceLink(
-            user_id=actor.user_id,
+            user_id=_require_user_id(actor),
             device_id=device.id,
             first_seen_at=now,
             last_seen_at=now,
@@ -329,7 +347,7 @@ async def submit_device(
             id=container.ids.new(),
             event_type="VERIFY",
             occurred_at=now,
-            user_id=actor.user_id,
+            user_id=_require_user_id(actor),
             device_id=device.id,
             ip=meta.ip,
             request_id=meta.request_id,
@@ -381,7 +399,7 @@ async def verification_status(seller: SellerDep, uow: UowDep, meta: MetaDep) -> 
     )
 
 
-def _mask_cnic(document) -> str | None:
+def _mask_cnic(document: IdentityDocument) -> str | None:
     """The domain entity never carries the number; only its presence is known."""
     return "*****-*****XX-X" if document.extracted_cnic_hash else None
 

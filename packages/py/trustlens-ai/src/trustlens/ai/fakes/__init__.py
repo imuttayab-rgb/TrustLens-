@@ -17,6 +17,7 @@ import re
 from datetime import date, timedelta
 from typing import Any
 
+from trustlens.core.domain.entities import IpReputation
 from trustlens.core.domain.ports.ai import (
     ClassifierResult,
     FaceMatchResult,
@@ -217,7 +218,7 @@ class FakeScamClassifier:
 class FakeIpIntelligence:
     """Marks a stable ~15% of addresses as VPN so the NETWORK signal varies."""
 
-    async def lookup(self, ip: str):
+    async def lookup(self, ip: str) -> IpReputation:
         from datetime import UTC, datetime
 
         from trustlens.core.domain.entities import IpReputation

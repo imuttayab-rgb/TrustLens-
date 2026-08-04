@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import secrets
-from typing import Any
+from typing import Any, cast
 
 from redis.asyncio import ConnectionPool, Redis
 
@@ -83,7 +83,9 @@ class RedisCache(Cache):
             return
         # Compare-and-delete in Lua so we cannot delete a lock that already
         # expired and was re-acquired by someone else.
-        await self._redis.eval(
+        # redis-py types eval() as sync-or-async depending on the client
+        # flavour; this client is always the async one.
+        await cast("Any", self._redis).eval(
             """
             if redis.call('get', KEYS[1]) == ARGV[1] then
               return redis.call('del', KEYS[1])

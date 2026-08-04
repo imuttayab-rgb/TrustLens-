@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import boto3
 from botocore.client import Config as BotoConfig
@@ -77,7 +77,8 @@ class S3ObjectStorage(ObjectStorage):
         ttl_seconds: int,
     ) -> PresignedUpload:
         def _presign() -> dict[str, Any]:
-            return self._client.generate_presigned_post(
+            # boto3 ships no stubs, so this arrives as Any at the boundary.
+            presigned: Any = self._client.generate_presigned_post(
                 Bucket=bucket,
                 Key=object_key,
                 Fields={"Content-Type": content_type},
@@ -89,6 +90,7 @@ class S3ObjectStorage(ObjectStorage):
                 ],
                 ExpiresIn=ttl_seconds,
             )
+            return cast("dict[str, Any]", presigned)
 
         result = await asyncio.to_thread(_presign)
         return PresignedUpload(

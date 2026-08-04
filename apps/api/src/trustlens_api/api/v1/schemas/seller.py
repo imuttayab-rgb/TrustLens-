@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import Field
@@ -98,7 +99,7 @@ class JobStatusResponse(Schema):
     status: str
     stage: str | None = None
     progress: int = Field(default=0, ge=0, le=100)
-    result: dict | None = None
+    result: dict[str, Any] | None = None
     error: str | None = None
 
 

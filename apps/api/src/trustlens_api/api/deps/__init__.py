@@ -12,7 +12,7 @@ raises. These compose:
 from __future__ import annotations
 
 import ipaddress
-from collections.abc import AsyncIterator, Callable
+from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
 from typing import Annotated
 from uuid import UUID
@@ -182,7 +182,9 @@ ActorDep = Annotated[AuthenticatedActor, Depends(get_current_actor)]
 
 
 async def get_current_seller(actor: ActorDep, uow: UowDep) -> SellerProfile:
-    seller = await uow.sellers.get_by_user(actor.user_id) if actor.user_id else None
+    seller: SellerProfile | None = (
+        await uow.sellers.get_by_user(actor.user_id) if actor.user_id else None
+    )
     if seller is None:
         raise EntityNotFound("seller_profile", actor.user_id)
     return seller
@@ -194,7 +196,7 @@ SellerDep = Annotated[SellerProfile, Depends(get_current_seller)]
 # ── Authorization ────────────────────────────────────────────────────
 
 
-def require_roles(*roles: UserRole) -> Callable[..., AuthenticatedActor]:
+def require_roles(*roles: UserRole) -> Callable[..., Awaitable[AuthenticatedActor]]:
     """Coarse gate for whole route groups."""
 
     async def dependency(actor: ActorDep) -> AuthenticatedActor:
@@ -205,7 +207,7 @@ def require_roles(*roles: UserRole) -> Callable[..., AuthenticatedActor]:
     return dependency
 
 
-def require_permissions(*permissions: str) -> Callable[..., AuthenticatedActor]:
+def require_permissions(*permissions: str) -> Callable[..., Awaitable[AuthenticatedActor]]:
     """Fine gate on an individual action.
 
     Route-level permission answers "may this ROLE do this kind of thing".
@@ -230,7 +232,7 @@ async def assert_owns_seller(
     Without this, `GET /api/v1/sellers/{id}/trust-score` with only a
     permission check would let any seller read any other seller's breakdown.
     """
-    seller = await uow.sellers.get(seller_id)
+    seller: SellerProfile | None = await uow.sellers.get(seller_id)
     if seller is None:
         raise EntityNotFound("seller", seller_id)
 
@@ -302,7 +304,7 @@ async def get_api_client(
 ApiClientDep = Annotated[ApiClientPrincipal, Depends(get_api_client)]
 
 
-def require_scope(scope: str) -> Callable[..., ApiClientPrincipal]:
+def require_scope(scope: str) -> Callable[..., Awaitable[ApiClientPrincipal]]:
     async def dependency(principal: ApiClientDep) -> ApiClientPrincipal:
         if scope not in principal.scopes:
             raise ApiScopeMissing(scope)

@@ -7,8 +7,11 @@ run in production (see seed/run.py).
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid5
+
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from trustlens.core.domain.enums import (
     AccountStatus,
@@ -194,7 +197,7 @@ DEMO_LISTINGS: dict[RiskLevel, tuple[tuple[str, str, float, str], ...]] = {
 }
 
 
-async def seed_demo_data(session, settings: Settings) -> dict[str, int]:
+async def seed_demo_data(session: AsyncSession, settings: Settings) -> dict[str, int]:
     hasher = Argon2PasswordHasher(settings.security)
     now = datetime.now(UTC)
     created = {"users": 0, "sellers": 0, "listings": 0, "scores": 0}
@@ -270,14 +273,14 @@ async def seed_demo_data(session, settings: Settings) -> dict[str, int]:
 
 
 async def _seed_seller(
-    session,
+    session: AsyncSession,
     user_id: UUID,
     handle: str,
     display_name: str,
     band: RiskLevel,
     age_days: int,
     now: datetime,
-    definitions: dict,
+    definitions: Mapping[SignalCode, tuple[UUID, SignalCategory, float, int | None]],
 ) -> None:
     seller_id = _demo_id("seller", handle)
     opened = now - timedelta(days=age_days)
@@ -396,11 +399,11 @@ def _fallback_reason(status: SignalStatus) -> tuple[str, str]:
 
 
 def _seed_score(
-    session,
+    session: AsyncSession,
     seller_id: UUID,
     band: RiskLevel,
     profile: dict[SignalCode, SignalStatus],
-    definitions: dict,
+    definitions: Mapping[SignalCode, tuple[UUID, SignalCategory, float, int | None]],
     now: datetime,
 ) -> None:
     """Build a score using the same arithmetic as the real engine.

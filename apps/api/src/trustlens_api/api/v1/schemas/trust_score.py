@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import Any
 from uuid import UUID
 
 from pydantic import Field
@@ -19,7 +20,7 @@ class SignalBreakdown(Schema):
     confidence: float
     reason_code: str = Field(description="Stable machine-readable code; switch on this.")
     reason_text: str = Field(description="Buyer-readable sentence.")
-    evidence: dict = Field(default_factory=dict, description="Non-PII supporting values.")
+    evidence: dict[str, Any] = Field(default_factory=dict, description="Non-PII supporting values.")
 
 
 class CategoryRollup(Schema):

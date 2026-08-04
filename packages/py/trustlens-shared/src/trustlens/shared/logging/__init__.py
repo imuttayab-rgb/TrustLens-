@@ -12,7 +12,7 @@ from __future__ import annotations
 import logging
 import sys
 from contextvars import ContextVar
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 import structlog
 
@@ -97,7 +97,7 @@ def redact_processor(_logger: Any, _method: str, event_dict: dict[str, Any]) -> 
             return [scrub(v, depth + 1) for v in value]
         return value
 
-    return scrub(event_dict)  # type: ignore[return-value]
+    return cast("dict[str, Any]", scrub(event_dict))
 
 
 def context_processor(_logger: Any, _method: str, event_dict: dict[str, Any]) -> dict[str, Any]:

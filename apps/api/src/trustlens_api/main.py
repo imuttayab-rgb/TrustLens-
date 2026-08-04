@@ -169,7 +169,6 @@ def _assert_routes_are_guarded(app: FastAPI) -> None:
             for dep in route.dependant.dependencies
             for sub in dep.dependencies
         }
-        dependency_names |= {getattr(param.field_info, "alias", "") or "" for param in []}
         flattened = " ".join(dependency_names) + " " + str(route.dependant.dependencies)
         if not any(marker in flattened for marker in auth_markers):
             unguarded.append(f"{next(iter(route.methods or ['GET']))} {route.path}")

@@ -17,6 +17,7 @@ from trustlens.core.application.use_cases.scoring import (
     GetTrustScoreCommand,
     summarise,
 )
+from trustlens.core.domain.entities import TrustScore
 from trustlens.core.domain.enums import ScoreTrigger
 from trustlens.core.domain.errors import EntityNotFound
 from trustlens.core.domain.policies import band_label
@@ -247,7 +248,7 @@ async def override_score(
     return envelope(_to_response(saved).model_dump(by_alias=True), request_id=meta.request_id)
 
 
-def _to_response(score) -> TrustScoreResponse:
+def _to_response(score: TrustScore) -> TrustScoreResponse:
     rollup = score.category_breakdown
     return TrustScoreResponse(
         seller_id=score.seller_id,

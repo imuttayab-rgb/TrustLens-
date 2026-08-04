@@ -164,7 +164,7 @@ def to_public(
     )
 
 
-def _unscored_payload(seller_ref: str, seller: object) -> PublicTrustScore:
+def _unscored_payload(seller_ref: str, seller: SellerProfile) -> PublicTrustScore:
     """A seller with no score yet is UNKNOWN, never HIGH risk."""
     now = seller.created_at
     return PublicTrustScore(

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 import time
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Header, Request, Response
 
@@ -25,6 +25,7 @@ from trustlens_api.api.deps import (
     ApiClientPrincipal,
     ContainerDep,
     MetaDep,
+    RequestMeta,
     UowDep,
     require_scope,
 )
@@ -137,7 +138,7 @@ async def batch_lookup(
         cache_ttl_seconds=container.settings.redis.cache_ttl_score_seconds,
     )
 
-    found: list[dict] = []
+    found: list[dict[str, Any]] = []
     missing: list[str] = []
     for ref in body.seller_refs[:MAX_BATCH]:
         try:
@@ -224,10 +225,10 @@ async def _enforce_quota(
 
 async def _log_request(
     request: Request,
-    principal,
-    container,
-    uow,
-    meta,
+    principal: ApiClientPrincipal,
+    container: Container,
+    uow: SqlAlchemyUnitOfWork,
+    meta: RequestMeta,
     status_code: int,
     started: float,
     error_code: str | None,

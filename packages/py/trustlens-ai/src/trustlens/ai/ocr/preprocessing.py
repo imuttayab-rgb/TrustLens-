@@ -73,7 +73,8 @@ def quality_score(image: Any) -> float:
     sharpness = min(1.0, cv2.Laplacian(gray, cv2.CV_64F).var() / 500.0)
     brightness = float(np.mean(gray)) / 255.0
     exposure = 1.0 - abs(brightness - 0.5) * 2
-    return round(max(0.0, min(1.0, 0.7 * sharpness + 0.3 * exposure)), 3)
+    # round() over numpy scalars widens to Any; the port promises a float.
+    return float(round(max(0.0, min(1.0, 0.7 * sharpness + 0.3 * exposure)), 3))
 
 
 def prepare_for_ocr(data: bytes) -> tuple[Any, float]:

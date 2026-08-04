@@ -24,6 +24,7 @@ from trustlens.core.domain.entities import (
     RefreshToken,
     SellerProfile,
     User,
+    VerificationToken,
 )
 from trustlens.core.domain.enums import (
     AccountStatus,
@@ -242,7 +243,7 @@ def _verification_token(
     target: str,
     now: datetime,
     ttl: timedelta,
-):
+) -> VerificationToken:
     from trustlens.core.domain.entities import VerificationToken
 
     return VerificationToken(

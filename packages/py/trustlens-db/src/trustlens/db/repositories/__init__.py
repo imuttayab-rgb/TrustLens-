@@ -12,10 +12,11 @@ from __future__ import annotations
 
 import dataclasses
 from datetime import datetime
-from typing import Any
+from typing import Any, cast
 from uuid import UUID
 
 from sqlalchemy import Select, delete, func, select, update
+from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -1151,7 +1152,9 @@ class SqlRefreshTokenRepository:
             .where(m.RefreshToken.family_id == family_id, m.RefreshToken.revoked_at.is_(None))
             .values(revoked_at=at, revoked_reason=reason)
         )
-        return int(result.rowcount or 0)
+        # A DML statement always yields a CursorResult; only that subclass
+        # carries rowcount, and execute() is typed as the general Result.
+        return int(cast("CursorResult[Any]", result).rowcount or 0)
 
     async def revoke_all_for_user(
         self, user_id: UUID, *, at: datetime, reason: str, except_id: UUID | None = None
@@ -1164,7 +1167,9 @@ class SqlRefreshTokenRepository:
         if except_id is not None:
             stmt = stmt.where(m.RefreshToken.id != except_id)
         result = await self._s.execute(stmt)
-        return int(result.rowcount or 0)
+        # A DML statement always yields a CursorResult; only that subclass
+        # carries rowcount, and execute() is typed as the general Result.
+        return int(cast("CursorResult[Any]", result).rowcount or 0)
 
     async def list_active_for_user(self, user_id: UUID) -> list[ent.RefreshToken]:
         rows = await self._s.execute(
@@ -1178,7 +1183,9 @@ class SqlRefreshTokenRepository:
         result = await self._s.execute(
             delete(m.RefreshToken).where(m.RefreshToken.expires_at < before)
         )
-        return int(result.rowcount or 0)
+        # A DML statement always yields a CursorResult; only that subclass
+        # carries rowcount, and execute() is typed as the general Result.
+        return int(cast("CursorResult[Any]", result).rowcount or 0)
 
 
 class SqlVerificationTokenRepository:
@@ -1230,7 +1237,9 @@ class SqlVerificationTokenRepository:
             )
             .values(consumed_at=func.now())
         )
-        return int(result.rowcount or 0)
+        # A DML statement always yields a CursorResult; only that subclass
+        # carries rowcount, and execute() is typed as the general Result.
+        return int(cast("CursorResult[Any]", result).rowcount or 0)
 
 
 class SqlOtpRepository:
@@ -1891,7 +1900,9 @@ class SqlNotificationRepository:
             .where(m.NotificationModel.user_id == user_id, m.NotificationModel.read_at.is_(None))
             .values(read_at=at)
         )
-        return int(result.rowcount or 0)
+        # A DML statement always yields a CursorResult; only that subclass
+        # carries rowcount, and execute() is typed as the general Result.
+        return int(cast("CursorResult[Any]", result).rowcount or 0)
 
 
 __all__ = [

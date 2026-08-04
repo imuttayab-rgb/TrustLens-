@@ -14,6 +14,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse
+from starlette.types import ASGIApp
 
 from trustlens.shared.config.settings import Settings
 from trustlens.shared.logging import (
@@ -58,7 +59,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     else is denied.
     """
 
-    def __init__(self, app: FastAPI, *, is_production: bool) -> None:
+    def __init__(self, app: ASGIApp, *, is_production: bool) -> None:
         super().__init__(app)
         self._is_production = is_production
 
@@ -86,7 +87,7 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 class BodySizeLimitMiddleware(BaseHTTPMiddleware):
     """Reject oversized bodies BEFORE they are buffered into memory."""
 
-    def __init__(self, app: FastAPI, *, max_bytes: int) -> None:
+    def __init__(self, app: ASGIApp, *, max_bytes: int) -> None:
         super().__init__(app)
         self._max_bytes = max_bytes
 

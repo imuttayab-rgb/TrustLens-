@@ -7,7 +7,7 @@ from typing import Any
 
 from fastapi import APIRouter, status
 
-from trustlens.core.domain.entities import SellerProfile
+from trustlens.core.domain.entities import SellerProfile, TrustScore
 from trustlens.core.domain.enums import UserRole, VerificationStatus
 from trustlens.core.domain.errors import ConflictError, EntityNotFound
 from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
@@ -155,7 +155,7 @@ async def _unique_handle(uow: SqlAlchemyUnitOfWork, display_name: str) -> str:
     raise ConflictError("Could not allocate a unique handle. Try a different display name.")
 
 
-def _seller_response(seller: SellerProfile, score=None) -> SellerResponse:
+def _seller_response(seller: SellerProfile, score: TrustScore | None = None) -> SellerResponse:
     return SellerResponse(
         id=seller.id,
         handle=seller.handle,

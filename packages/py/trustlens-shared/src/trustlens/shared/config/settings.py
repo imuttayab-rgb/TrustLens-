@@ -325,9 +325,9 @@ class Settings(_Base):
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     log_format: Literal["console", "json"] = "json"
 
-    database: DatabaseSettings = Field(default_factory=DatabaseSettings)  # type: ignore[arg-type]
+    database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
-    security: SecuritySettings = Field(default_factory=SecuritySettings)  # type: ignore[arg-type]
+    security: SecuritySettings = Field(default_factory=SecuritySettings)
     ai: AiSettings = Field(default_factory=AiSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     notifications: NotificationSettings = Field(default_factory=NotificationSettings)
