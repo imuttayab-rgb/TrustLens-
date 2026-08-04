@@ -9,7 +9,7 @@ export default function ScoringPage() {
   return (
     <main className="p-8">
       <h1 className="text-2xl font-bold">Scoring models</h1>
-      <p className="text-muted-foreground mt-1">
+      <p className="mt-1 text-muted-foreground">
         Weights are data, not code — tune them here, simulate, then activate.
       </p>
 
@@ -18,13 +18,11 @@ export default function ScoringPage() {
           <CardTitle>Active model weighting</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="divide-border divide-y">
+          <ul className="divide-y divide-border">
             {SIGNAL_CATEGORIES.map((category) => (
               <li key={category} className="flex items-center justify-between py-2">
                 <span>{CATEGORY_LABELS[category]}</span>
-                <span className="font-semibold tabular-nums">
-                  {CATEGORY_MAX_POINTS[category]}
-                </span>
+                <span className="font-semibold tabular-nums">{CATEGORY_MAX_POINTS[category]}</span>
               </li>
             ))}
             <li className="flex items-center justify-between py-2 font-semibold">
@@ -32,7 +30,7 @@ export default function ScoringPage() {
               <span className="tabular-nums">{total}</span>
             </li>
           </ul>
-          <p className="text-muted-foreground mt-4 text-sm">
+          <p className="mt-4 text-sm text-muted-foreground">
             Enabled weights must sum to exactly 100. The form, the domain and a database CHECK
             constraint all enforce it, so an invalid model cannot be activated.
           </p>

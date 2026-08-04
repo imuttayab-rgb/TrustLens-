@@ -112,6 +112,24 @@
         "title": "ChangePasswordRequest",
         "type": "object"
       },
+      "DecideReviewRequest": {
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "note": {
+            "description": "Why this decision was made. Mandatory because a human verdict changes someone's Trust Score and must stay explainable to them.",
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": ["approve", "note"],
+        "title": "DecideReviewRequest",
+        "type": "object"
+      },
       "DeviceFingerprintRequest": {
         "additionalProperties": false,
         "properties": {
@@ -742,6 +760,209 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/review-cases": {
+      "get": {
+        "operationId": "list_review_cases_api_v1_admin_review_cases_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Perpage",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Review Cases Api V1 Admin Review Cases Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The review queue",
+        "tags": ["admin"]
+      }
+    },
+    "/api/v1/admin/review-cases/{case_id}/claim": {
+      "post": {
+        "description": "Claiming is what stops two reviewers deciding the same case differently. A case already assigned to someone else is refused.",
+        "operationId": "claim_review_case_api_v1_admin_review_cases__case_id__claim_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Claim Review Case Api V1 Admin Review Cases  Case Id  Claim Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Claim a case before working on it",
+        "tags": ["admin"]
+      }
+    },
+    "/api/v1/admin/review-cases/{case_id}/decide": {
+      "post": {
+        "description": "Records a verdict and enqueues a rescore. It never writes a score directly - the scoring policy stays the only thing that produces a number (ADR-0002). The decision and its reason are audit-logged in the same transaction.",
+        "operationId": "decide_review_case_api_v1_admin_review_cases__case_id__decide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "case_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Case Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DecideReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Decide Review Case Api V1 Admin Review Cases  Case Id  Decide Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Record a decision on a case",
+        "tags": ["admin"]
+      }
+    },
     "/api/v1/admin/sellers/{seller_id}/trust-score/override": {
       "post": {
         "description": "Writes a NEW score row marked as a manual override. The computed score it replaces stays in history, a written reason is mandatory (enforced by a database CHECK), and the action is audit-logged.",

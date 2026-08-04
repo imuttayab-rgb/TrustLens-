@@ -6,7 +6,7 @@ export default function AppealsPage() {
   return (
     <main className="p-8">
       <h1 className="text-2xl font-bold">Appeals</h1>
-      <p className="text-muted-foreground mt-1">
+      <p className="mt-1 text-muted-foreground">
         Each appeal references one specific score computation, with its breakdown frozen at the
         moment it was calculated.
       </p>
@@ -15,12 +15,19 @@ export default function AppealsPage() {
         <CardHeader>
           <CardTitle>Resolving an appeal</CardTitle>
         </CardHeader>
-        <CardContent className="text-muted-foreground space-y-2 text-sm">
+        <CardContent className="space-y-2 text-sm text-muted-foreground">
           <p>Three outcomes are possible:</p>
           <ul className="list-disc space-y-1 pl-5">
-            <li><strong>Recompute</strong> — the underlying evidence was corrected.</li>
-            <li><strong>Override</strong> — admin only, with a written reason, and it expires after 90 days.</li>
-            <li><strong>Reject</strong> — with an explanation the seller can read.</li>
+            <li>
+              <strong>Recompute</strong> — the underlying evidence was corrected.
+            </li>
+            <li>
+              <strong>Override</strong> — admin only, with a written reason, and it expires after 90
+              days.
+            </li>
+            <li>
+              <strong>Reject</strong> — with an explanation the seller can read.
+            </li>
           </ul>
           <p>Every outcome notifies the seller and is written to the audit log.</p>
         </CardContent>

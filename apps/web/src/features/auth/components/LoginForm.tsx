@@ -1,9 +1,11 @@
 'use client';
 
 import { api } from '@/lib/api/client';
+import { qk } from '@/lib/api/query-keys';
 import { setAccessToken } from '@/lib/auth/session';
 import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Field, fieldAria, Input } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
@@ -21,6 +23,7 @@ function safeNext(raw: string | null): string {
 export function LoginForm({ className }: { className?: string }) {
   const router = useRouter();
   const params = useSearchParams();
+  const queryClient = useQueryClient();
   const next = safeNext(params.get('next'));
 
   const {
@@ -41,6 +44,9 @@ export function LoginForm({ className }: { className?: string }) {
     });
 
     if (ok) {
+      // The guard may already have cached "not signed in" before redirecting
+      // here; without dropping it the dashboard bounces straight back.
+      await queryClient.invalidateQueries({ queryKey: qk.me });
       router.push(next);
       // The dashboard renders on the server from the session cookie, so its
       // cached payload has to be dropped or the first paint is the

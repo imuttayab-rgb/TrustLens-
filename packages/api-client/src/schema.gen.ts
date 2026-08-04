@@ -4,6 +4,63 @@
  */
 
 export interface paths {
+  '/api/v1/admin/review-cases': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The review queue */
+    get: operations['list_review_cases_api_v1_admin_review_cases_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/review-cases/{case_id}/claim': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Claim a case before working on it
+     * @description Claiming is what stops two reviewers deciding the same case differently. A case already assigned to someone else is refused.
+     */
+    post: operations['claim_review_case_api_v1_admin_review_cases__case_id__claim_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/review-cases/{case_id}/decide': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Record a decision on a case
+     * @description Records a verdict and enqueues a rescore. It never writes a score directly - the scoring policy stays the only thing that produces a number (ADR-0002). The decision and its reason are audit-logged in the same transaction.
+     */
+    post: operations['decide_review_case_api_v1_admin_review_cases__case_id__decide_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/sellers/{seller_id}/trust-score/override': {
     parameters: {
       query?: never;
@@ -647,6 +704,16 @@ export interface components {
       /** Newpassword */
       newPassword: string;
     };
+    /** DecideReviewRequest */
+    DecideReviewRequest: {
+      /** Approve */
+      approve: boolean;
+      /**
+       * Note
+       * @description Why this decision was made. Mandatory because a human verdict changes someone's Trust Score and must stay explainable to them.
+       */
+      note: string;
+    };
     /** DeviceFingerprintRequest */
     DeviceFingerprintRequest: {
       /** Fingerprint */
@@ -901,6 +968,116 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  list_review_cases_api_v1_admin_review_cases_get: {
+    parameters: {
+      query?: {
+        page?: number;
+        perPage?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  claim_review_case_api_v1_admin_review_cases__case_id__claim_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        case_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  decide_review_case_api_v1_admin_review_cases__case_id__decide_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        case_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DecideReviewRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   override_score_api_v1_admin_sellers__seller_id__trust_score_override_post: {
     parameters: {
       query?: never;
