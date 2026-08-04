@@ -318,7 +318,20 @@ What the scaffold commit `5185529` actually delivered:
 
 **Goal:** Module 7. Currently placeholder headings and an empty use-case folder.
 
-- [ ] **P4-01** Implement `use_cases/admin/` — seller search, review queue, decision recording, audit log. _(currently empty)_
+- [x] **P4-01** `use_cases/admin/` review queue — list, claim, decide, with audit logging.
+      _Done 3-4 Aug._ Claiming is what stops two reviewers deciding the same case differently, so a case assigned to someone else is refused. The audit entry is written in the **same transaction** as the decision — one written afterwards can be lost exactly when it matters. Deciding never writes a score; it records a verdict and enqueues a recompute (ADR-0002).
+
+- [x] **P4-02** `routers/admin.py` — queue, claim, decide, permission-gated per route.
+      _Verified 4 Aug._ seller 403 · reviewer 200 · admin 200 · anonymous 401. A two-word decision note is rejected 422. A full claim→decide cycle wrote two audit rows carrying actor, before/after and reason.
+
+- [x] **P4-00** 🚨 **Admin and reviewer accounts could not sign in at all.**
+      _Found and fixed 4 Aug._ Login returned `MFA_REQUIRED` for both roles and **no MFA enrolment or verification endpoint exists anywhere in the API**, so the requirement could never be satisfied. `SECURITY_MFA_REQUIRED_ROLES` looked like the control for this but was **dead config** — `User.requires_mfa` hardcoded `{ADMIN, REVIEWER}`, so nothing could reach the decision. The entire admin panel and appeal queue were unreachable.
+      Fixed by making the policy take the required roles (defaulting to the hardcoded pair, so production is unchanged) and having the login route pass the configured value. Development clears it; `.env.example` keeps the strict default with a warning.
+      ⚠️ **Still open:** MFA is unimplemented. Either build it or document the omission before production — do not simply ship the setting empty.
+
+- [ ] **P4-01b** Remaining admin use cases: seller search
+
+- [ ] ~~**P4-01** Implement `use_cases/admin/`~~ — seller search, review queue, decision recording, audit log. _(currently empty)_
 - [ ] **P4-02** Add `routers/admin.py` with RBAC enforced (admin/reviewer roles only).
 - [ ] **P4-03** Admin dashboard: counts by risk band, pending reviews, recent flags.
 - [ ] **P4-04** Seller list: search, filter by risk band and flag status, pagination.
