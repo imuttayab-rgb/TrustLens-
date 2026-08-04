@@ -22,6 +22,7 @@ from trustlens.core.application.use_cases.auth import (
     VerifyEmail,
     VerifyEmailCommand,
 )
+from trustlens.core.domain.enums import UserRole
 from trustlens.core.domain.errors import TokenInvalid
 from trustlens.core.domain.policies import LoginThrottlePolicy, PasswordPolicy
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
@@ -101,6 +102,13 @@ async def login(
         ids=container.ids,
         throttle=LoginThrottlePolicy(soft_limit=container.settings.rate_limit.login_per_15min),
         refresh_ttl_days=container.settings.security.refresh_token_ttl_days,
+        # Makes SECURITY_MFA_REQUIRED_ROLES real. It was previously a setting
+        # nothing read: the domain hardcoded ADMIN and REVIEWER, so with no MFA
+        # enrolment endpoint those accounts could not sign in at all and no
+        # configuration could change it.
+        mfa_required_roles=frozenset(
+            UserRole(role) for role in container.settings.security.mfa_required_roles
+        ),
     )
     session = await use_case.execute(
         LoginCommand(

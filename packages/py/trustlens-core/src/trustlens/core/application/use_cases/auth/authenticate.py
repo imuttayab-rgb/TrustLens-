@@ -292,7 +292,12 @@ class LoginUser:
         ids: IdGenerator,
         throttle: LoginThrottlePolicy | None = None,
         refresh_ttl_days: int = 30,
+        #: None keeps the domain default (ADMIN, REVIEWER). Supplying an empty
+        #: set disables the requirement, which a deployment without an MFA
+        #: enrolment flow must do or those accounts cannot sign in at all.
+        mfa_required_roles: frozenset[UserRole] | None = None,
     ) -> None:
+        self._mfa_required_roles = mfa_required_roles
         self._uow = uow
         self._hasher = hasher
         self._tokens = tokens
@@ -337,7 +342,7 @@ class LoginUser:
                 # successful login - old hashes stay verifiable meanwhile.
                 await self._uow.users.set_password_hash(user.id, self._hasher.hash(cmd.password))
 
-            if user.mfa_enabled or mfa_required_for(user):
+            if user.mfa_enabled or mfa_required_for(user, self._mfa_required_roles):
                 await self._uow.commit()
                 raise MfaRequired
 

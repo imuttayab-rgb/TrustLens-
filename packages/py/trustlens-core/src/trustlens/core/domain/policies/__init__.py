@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from trustlens.core.domain.entities.user import User
-from trustlens.core.domain.enums import AppealStatus, RiskLevel
+from trustlens.core.domain.enums import AppealStatus, RiskLevel, UserRole
 from trustlens.core.domain.errors import AppealLimitReached, AppealNotAllowed
 from trustlens.core.domain.policies.scoring import (
     DEFAULT_MIN_EVIDENCE_WEIGHT,
@@ -211,10 +211,18 @@ class LoginThrottlePolicy:
 # ── MFA ──────────────────────────────────────────────────────────────
 
 
-def mfa_required_for(user: User) -> bool:
-    """Admin and reviewer accounts can override scores and read identity
-    documents, so they are the highest-value targets in the system."""
-    return user.requires_mfa
+def mfa_required_for(user: User, required_roles: frozenset[UserRole] | None = None) -> bool:
+    """Whether this user must complete MFA before a session is issued.
+
+    Admin and reviewer accounts can override scores and read identity
+    documents, so they are the highest-value targets in the system - hence the
+    default. It is a parameter rather than a constant because deployments
+    without an MFA enrolment flow would otherwise lock those accounts out
+    entirely, with no configuration able to reach the decision.
+    """
+    if required_roles is None:
+        return user.requires_mfa
+    return bool(user.roles & required_roles)
 
 
 __all__ = [
