@@ -46,7 +46,7 @@ Three consequences, and they save real time:
 | 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**     | Zohaib |
 | 2     | Seller verification UI (mobile-first) | 8      | `[~]` all four verification flows done; ~2 days left      | Zohaib |
 | 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left | Zohaib |
-| 4     | Admin panel                           | 5      | `[ ]`                                                     |        |
+| 4     | Admin panel                           | 5      | `[~]` review queue API done + MFA lockout fixed; UI left  | Zohaib |
 | 5     | Appeals                               | 3      | `[ ]`                                                     |        |
 | 6     | Public marketplace API                | 3      | `[ ]`                                                     |        |
 | 7     | ML scam classifier                    | 4      | `[ ]`                                                     |        |
