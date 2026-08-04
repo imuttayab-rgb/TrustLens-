@@ -40,21 +40,21 @@ Three consequences, and they save real time:
 
 ### Software track
 
-| Phase | Title                                 | Days   | Status                                                    | Owner  |
-| ----- | ------------------------------------- | ------ | --------------------------------------------------------- | ------ |
-| 0     | Make it run                           | 1      | `[x]` stack boots end to end; P0-09 + P0-11 outstanding   | Zohaib |
-| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**     | Zohaib |
-| 2     | Seller verification UI (mobile-first) | 8      | `[~]` all four verification flows done; ~2 days left      | Zohaib |
-| 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left | Zohaib |
-| 4     | Admin panel                           | 5      | `[~]` review queue API done + MFA lockout fixed; UI left  | Zohaib |
-| 5     | Appeals                               | 3      | `[ ]`                                                     |        |
-| 6     | Public marketplace API                | 3      | `[ ]`                                                     |        |
-| 7     | ML scam classifier                    | 4      | `[ ]`                                                     |        |
-| 8     | Real integrations                     | 4      | `[ ]`                                                     |        |
-| 9     | Deployment                            | 3      | `[ ]`                                                     |        |
-| 10    | QA & demo readiness                   | 4      | `[ ]`                                                     |        |
-| 11    | Handover & training                   | 3      | `[ ]`                                                     |        |
-|       | **Software total**                    | **44** |                                                           |        |
+| Phase | Title                                 | Days   | Status                                                      | Owner  |
+| ----- | ------------------------------------- | ------ | ----------------------------------------------------------- | ------ |
+| 0     | Make it run                           | 1      | `[x]` stack boots end to end; P0-09 + P0-11 outstanding     | Zohaib |
+| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**       | Zohaib |
+| 2     | Seller verification UI (mobile-first) | 8      | `[~]` all four verification flows done; ~2 days left        | Zohaib |
+| 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left   | Zohaib |
+| 4     | Admin panel                           | 5      | `[~]` reviewer workflow works end to end; seller admin left | Zohaib |
+| 5     | Appeals                               | 3      | `[ ]`                                                       |        |
+| 6     | Public marketplace API                | 3      | `[ ]`                                                       |        |
+| 7     | ML scam classifier                    | 4      | `[ ]`                                                       |        |
+| 8     | Real integrations                     | 4      | `[ ]`                                                       |        |
+| 9     | Deployment                            | 3      | `[ ]`                                                       |        |
+| 10    | QA & demo readiness                   | 4      | `[ ]`                                                       |        |
+| 11    | Handover & training                   | 3      | `[ ]`                                                       |        |
+|       | **Software total**                    | **44** |                                                             |        |
 
 ### Documentation track (runs in parallel — see Track D)
 
@@ -333,7 +333,14 @@ What the scaffold commit `5185529` actually delivered:
 
 - [ ] ~~**P4-01** Implement `use_cases/admin/`~~ — seller search, review queue, decision recording, audit log. _(currently empty)_
 - [ ] **P4-02** Add `routers/admin.py` with RBAC enforced (admin/reviewer roles only).
-- [ ] **P4-03** Admin dashboard: counts by risk band, pending reviews, recent flags.
+- [x] **P4-03** Admin dashboard — live queue counts (waiting / claimed / decided).
+      _Done 4 Aug._ Counts by risk band still need a seller-search endpoint (P4-01b).
+
+- [x] **P4-06b** 🚨 **The admin app had no authentication at all**, and `adminFetch` forwarded cookies that are path-scoped to `/auth` — it could never have worked. Deleted and replaced with the same client-side session the seller app uses. Login sits outside the `(dashboard)` group, since guarding it would redirect the login page to itself.
+
+- [x] **P4-06c** 🚨 **Session-cache bug, in _both_ apps.** The guard asks "who is this?" before redirecting to login and caches the answer: nobody. Signing in put a token in memory but left that cached `null` in place, so the guard read it and bounced straight back — with a `200 OK` login sitting in the network tab. Both logins now drop the cached session before redirecting.
+
+- [ ] **P4-03b** Counts by risk band, pending reviews, recent flags _(needs P4-01b)_.
 - [ ] **P4-04** Seller list: search, filter by risk band and flag status, pagination.
 - [ ] **P4-05** Seller detail: full signal breakdown, verification history, score history, evidence viewer.
 - [ ] **P4-06** Manual identity review screen — CNIC and selfie via **short-lived signed URLs only**, approve/reject with reason.
