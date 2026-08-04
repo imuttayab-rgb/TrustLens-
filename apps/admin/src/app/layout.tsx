@@ -2,9 +2,11 @@ import '@/styles/globals.css';
 
 import { Providers } from '@/providers';
 import { ADMIN_ROUTES } from '@trustlens/constants';
-import { Ambient } from '@trustlens/ui';
+import { Ambient, ThemeToggle } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
+import { THEME_COOKIE, resolveTheme } from '@trustlens/ui';
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { Inter } from 'next/font/google';
 import Link from 'next/link';
 
@@ -27,9 +29,14 @@ const NAV = [
   { href: ADMIN_ROUTES.auditLogs, label: 'Audit log' },
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} ${theme === 'dark' ? 'dark' : ''}`}
+      suppressHydrationWarning
+    >
       <body className="min-h-dvh">
         <Providers>
           <div className="relative flex min-h-dvh overflow-hidden">
@@ -46,6 +53,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   />
                 </span>
                 <p className="text-sm font-bold tracking-tight">Admin</p>
+                <ThemeToggle className="ml-auto" />
               </div>
               <nav aria-label="Admin" className="mt-6 space-y-1">
                 {NAV.map((item) => (

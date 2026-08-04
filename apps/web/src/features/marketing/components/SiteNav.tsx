@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, cn } from '@trustlens/ui';
+import { Button, ThemeToggle, cn } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -70,6 +70,7 @@ export function SiteNav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 md:ml-0">
+          <ThemeToggle />
           <Button asChild variant="ghost" size="sm">
             <Link href="/login">Log in</Link>
           </Button>

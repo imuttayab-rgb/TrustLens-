@@ -1,6 +1,6 @@
 import { RequireSession } from '@/features/auth';
 import { DeviceCheck } from '@/features/verification';
-import { Ambient } from '@trustlens/ui';
+import { Ambient, ThemeToggle } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
@@ -49,6 +49,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
                 {item.label}
               </Link>
             ))}
+            <ThemeToggle className="ml-1" />
           </nav>
         </div>
       </header>

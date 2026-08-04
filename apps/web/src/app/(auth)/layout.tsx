@@ -1,4 +1,4 @@
-import { Ambient } from '@trustlens/ui';
+import { Ambient, ThemeToggle } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
@@ -14,7 +14,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="relative flex min-h-dvh flex-col overflow-hidden">
       <Ambient intensity="full" />
 
-      <header className="px-6 py-5">
+      <header className="flex items-center justify-between px-6 py-5">
         <Link
           href="/"
           className="group inline-flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
@@ -28,6 +28,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </span>
           <span className="text-sm font-bold tracking-tight">TrustLens</span>
         </Link>
+        <ThemeToggle />
       </header>
 
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-6 pb-16">

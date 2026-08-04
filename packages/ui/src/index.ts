@@ -5,6 +5,10 @@ export { Button, buttonVariants, type ButtonProps } from './primitives/Button';
 export { Field, fieldAria, type FieldProps } from './primitives/Field';
 export { Input, type InputProps } from './primitives/Input';
 export { Progress, Spinner } from './primitives/Spinner';
+export { ThemeToggle } from './primitives/ThemeToggle';
+// Not from ThemeToggle: it is a client module, and a server component that
+// imports a plain value from one receives a proxy rather than the value.
+export { DEFAULT_THEME, THEME_COOKIE, resolveTheme, type Theme } from './lib/theme';
 export {
   Card,
   CardContent,
