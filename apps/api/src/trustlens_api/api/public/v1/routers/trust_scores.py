@@ -9,10 +9,12 @@ than a review checklist item somebody eventually forgets.
 from __future__ import annotations
 
 import hashlib
+import json
 import time
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Body, Depends, Header, Request, Response
+from pydantic import BaseModel
 
 from trustlens.core.application.use_cases.scoring import (
     GetPublicTrustScore,
@@ -97,7 +99,7 @@ async def get_trust_score(
     if if_none_match == etag:
         return Response(status_code=304, headers=dict(response.headers))
 
-    return PublicScoreResponse(
+    body = PublicScoreResponse(
         seller_ref=payload.seller_ref,
         score=payload.score,
         risk_level=payload.risk_level,
@@ -110,6 +112,7 @@ async def get_trust_score(
         expires_at=payload.expires_at,
         unavailable_signals=payload.unavailable_signals,
     )
+    return _signed(body, response, container, meta)
 
 
 @router.post(
@@ -121,12 +124,13 @@ async def get_trust_score(
 )
 async def batch_lookup(
     request: Request,
+    response: Response,
     principal: ApiClientDep,
     container: ContainerDep,
     uow: UowDep,
     meta: MetaDep,
     body: Annotated[BatchLookupRequest, Body()],
-) -> BatchLookupResponse:
+) -> Response:
     started = time.perf_counter()
     await _enforce_quota(principal, container, uow)
 
@@ -157,7 +161,7 @@ async def batch_lookup(
         )
 
     await _log_request(request, principal, container, uow, meta, 200, started, None)
-    return BatchLookupResponse(results=found, not_found=missing)
+    return _signed(BatchLookupResponse(results=found, not_found=missing), response, container, meta)
 
 
 @router.get(
@@ -176,6 +180,42 @@ async def public_status(container: ContainerDep, uow: UowDep) -> PublicStatusRes
 
 
 # ── helpers ──────────────────────────────────────────────────────────
+
+
+def _signed(
+    body: BaseModel,
+    response: Response,
+    container: Container,
+    meta: RequestMeta,
+) -> Response:
+    """Serialise once and sign those exact bytes (P6-04).
+
+    A Trust Score is a claim about a person that money moves on, and a partner
+    receiving one through a proxy or a cache it does not control cannot
+    otherwise tell it apart from a score an attacker wrote.
+
+    The response is built here rather than returned as a model because the
+    signature has to cover the bytes actually served. Letting FastAPI
+    serialise afterwards would sign one encoding and send another, and the
+    partner's verification would fail for reasons nobody could reproduce.
+
+    Unsigned when no secret is configured: an unsigned score is still a usable
+    score, and refusing to serve one would make signing a boot requirement
+    rather than an integrity guarantee.
+    """
+    payload = body.model_dump(by_alias=True, mode="json")
+    raw = json.dumps(payload, separators=(",", ":"), sort_keys=True).encode()
+
+    headers = dict(response.headers)
+    signer = container.response_signer
+    if signer is not None:
+        timestamp = int(container.clock.now().timestamp())
+        headers["X-TrustLens-Signature"] = signer.sign(raw, timestamp=timestamp)
+        headers["X-TrustLens-Key-Id"] = signer.key_id
+    if meta.request_id:
+        headers["X-Request-Id"] = meta.request_id
+
+    return Response(content=raw, media_type="application/json", headers=headers)
 
 
 async def _enforce_quota(

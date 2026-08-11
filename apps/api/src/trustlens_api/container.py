@@ -30,6 +30,7 @@ from trustlens.shared.crypto import (
     ApiKeyFactory,
     Argon2PasswordHasher,
     EnvelopeEncryptor,
+    HmacResponseSigner,
     JwtService,
     OtpCodeGenerator,
     PepperedTokenHasher,
@@ -59,6 +60,7 @@ class Container:
     token_hasher: PepperedTokenHasher
     otp_generator: OtpCodeGenerator
     api_keys: ApiKeyFactory
+    response_signer: HmacResponseSigner | None
     jwt: JwtService
     encryptor: EnvelopeEncryptor
     email: EmailSender
@@ -110,6 +112,17 @@ async def build_container(settings: Settings) -> Container:
         ),
         otp_generator=OtpCodeGenerator(settings.security.otp_pepper.get_secret_value().encode()),
         api_keys=ApiKeyFactory(settings.security.api_key_prefix, password_hasher),
+        # None when no secret is configured: an unsigned score is still a
+        # usable score, so a missing secret must not stop the API booting.
+        response_signer=(
+            HmacResponseSigner(
+                settings.security.response_signing_secret.get_secret_value().encode(),
+                settings.security.response_signing_key_id,
+                max_age_seconds=settings.security.response_signature_ttl_seconds,
+            )
+            if settings.security.response_signing_secret.get_secret_value()
+            else None
+        ),
         jwt=JwtService(settings.security),
         encryptor=EnvelopeEncryptor(
             settings.security.aes_key(), settings.security.encryption_key_id

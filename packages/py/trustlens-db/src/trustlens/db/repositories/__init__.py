@@ -1665,6 +1665,16 @@ class SqlApiClientRepository:
         )
         return [map_.to_api_client(r) for r in rows.scalars().all()]
 
+    async def get_by_slug(self, slug: str) -> ent.ApiClient | None:
+        row = (
+            await self._s.execute(
+                _alive(select(m.ApiClientModel), m.ApiClientModel).where(
+                    m.ApiClientModel.slug == slug
+                )
+            )
+        ).scalar_one_or_none()
+        return map_.to_api_client(row) if row else None
+
     async def get_key_by_prefix(self, prefix: str) -> ent.ApiKey | None:
         row = (
             await self._s.execute(
@@ -1674,6 +1684,29 @@ class SqlApiClientRepository:
             )
         ).scalar_one_or_none()
         return map_.to_api_key(row) if row else None
+
+    async def get_key(self, key_id: UUID) -> ent.ApiKey | None:
+        row = await self._s.get(m.ApiKeyModel, key_id)
+        return map_.to_api_key(row) if row and row.deleted_at is None else None
+
+    async def list_keys(self, client_id: UUID) -> list[ent.ApiKey]:
+        rows = await self._s.execute(
+            _alive(select(m.ApiKeyModel), m.ApiKeyModel)
+            .where(m.ApiKeyModel.api_client_id == client_id)
+            .order_by(m.ApiKeyModel.created_at.desc())
+        )
+        return [map_.to_api_key(r) for r in rows.scalars().all()]
+
+    async def expire_key(self, key_id: UUID, *, at: datetime) -> None:
+        """Set an expiry without revoking.
+
+        This is what makes rotation safe: the old key keeps working for the
+        overlap and dies on its own. Revoking instead would take the partner
+        down for the length of their deploy, which is why nobody rotates.
+        """
+        await self._s.execute(
+            update(m.ApiKeyModel).where(m.ApiKeyModel.id == key_id).values(expires_at=at)
+        )
 
     async def add_key(self, key: ent.ApiKey) -> ent.ApiKey:
         self._s.add(

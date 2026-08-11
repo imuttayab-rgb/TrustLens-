@@ -234,7 +234,48 @@ class PhoneLookup(Protocol):
     async def lookup(self, e164: str) -> tuple[LineType, str | None, dict[str, Any]]: ...
 
 
+@runtime_checkable
+class ApiKeyGenerator(Protocol):
+    """Mints partner API keys.
+
+    A port because the use case must never see how a key is hashed, and
+    because tests need a deterministic key without paying for argon2 on every
+    case.
+    """
+
+    def generate(self) -> tuple[str, str, bytes]:
+        """Return `(plaintext, prefix, hash)`.
+
+        The plaintext is the only copy that will ever exist - it is returned
+        to the caller once and never stored. A lost key is rotated, not
+        recovered.
+        """
+        ...
+
+    def verify(self, secret: str, key_hash: bytes) -> bool: ...
+
+
+@runtime_checkable
+class ResponseSigner(Protocol):
+    """Signs public API responses so a marketplace can prove authenticity.
+
+    A trust score that arrives over a compromised proxy is worth nothing if
+    the recipient cannot tell it apart from one an attacker wrote. The
+    signature is over the exact bytes served (P6-04).
+    """
+
+    def sign(self, payload: bytes, *, timestamp: int) -> str: ...
+
+    def verify(self, payload: bytes, *, timestamp: int, signature: str) -> bool: ...
+
+    @property
+    def key_id(self) -> str:
+        """Names the key that signed, so it can be rotated without a flag day."""
+        ...
+
+
 __all__ = [
+    "ApiKeyGenerator",
     "Cache",
     "Clock",
     "EmailSender",
@@ -244,6 +285,7 @@ __all__ = [
     "ObjectStorage",
     "PhoneLookup",
     "PresignedUpload",
+    "ResponseSigner",
     "SmsSender",
     "UnitOfWork",
 ]

@@ -75,6 +75,125 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/partners': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Every partner, with usage against quota */
+    get: operations['list_partners_api_v1_admin_partners_get'];
+    put?: never;
+    /**
+     * Register a partner
+     * @description Created as PENDING. Approve it before issuing a key.
+     */
+    post: operations['register_partner_api_v1_admin_partners_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/partners/keys/{key_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke a key immediately
+     * @description No overlap. Use this when a key has leaked.
+     */
+    delete: operations['revoke_key_api_v1_admin_partners_keys__key_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/partners/keys/{key_id}/rotate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotate a key
+     * @description Issues a replacement and expires the old key after a 24-hour overlap, so the partner can redeploy without an outage. Use revoke instead when a key is known to be compromised.
+     */
+    post: operations['rotate_key_api_v1_admin_partners_keys__key_id__rotate_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/partners/scopes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Scopes a key can be granted */
+    get: operations['list_scopes_api_v1_admin_partners_scopes_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/partners/{client_id}/keys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Keys held by a partner */
+    get: operations['list_keys_api_v1_admin_partners__client_id__keys_get'];
+    put?: never;
+    /**
+     * Issue a key
+     * @description The response contains the only copy of the key that will ever exist. It is argon2-hashed before storage, so it cannot be shown again - a lost key is rotated, not recovered.
+     */
+    post: operations['issue_key_api_v1_admin_partners__client_id__keys_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/partners/{client_id}/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Approve, suspend or reinstate a partner
+     * @description Suspending stops all of a partner's traffic at once, without having to hunt down every key they hold.
+     */
+    post: operations['set_partner_status_api_v1_admin_partners__client_id__status_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/review-cases': {
     parameters: {
       query?: never;
@@ -880,6 +999,15 @@ export interface components {
       /** Detail */
       detail?: components['schemas']['ValidationError'][];
     };
+    /** IssueKeyRequest */
+    IssueKeyRequest: {
+      /** Expiresindays */
+      expiresInDays?: number | null;
+      /** Name */
+      name: string;
+      /** Scopes */
+      scopes?: string[];
+    };
     /**
      * ListingWriteRequest
      * @description Create or replace a listing.
@@ -992,6 +1120,27 @@ export interface components {
       /** Status */
       status: string;
     };
+    /** RegisterPartnerRequest */
+    RegisterPartnerRequest: {
+      /** Contactemail */
+      contactEmail: string;
+      /** Contactname */
+      contactName?: string | null;
+      /**
+       * Monthlyquota
+       * @default 10000
+       */
+      monthlyQuota: number;
+      /** Name */
+      name: string;
+      /**
+       * Ratelimittier
+       * @default free
+       */
+      rateLimitTier: string;
+      /** Slug */
+      slug: string;
+    };
     /** RegisterRequest */
     RegisterRequest: {
       /**
@@ -1040,6 +1189,14 @@ export interface components {
       note: string;
       /** Overridescore */
       overrideScore?: number | null;
+    };
+    /** SetStatusRequest */
+    SetStatusRequest: {
+      /**
+       * Status
+       * @description PENDING | ACTIVE | SUSPENDED
+       */
+      status: string;
     };
     /** SubmitAppealRequest */
     SubmitAppealRequest: {
@@ -1260,6 +1417,292 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['ResolveAppealRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_partners_api_v1_admin_partners_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  register_partner_api_v1_admin_partners_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RegisterPartnerRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  revoke_key_api_v1_admin_partners_keys__key_id__delete: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        key_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  rotate_key_api_v1_admin_partners_keys__key_id__rotate_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        key_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_scopes_api_v1_admin_partners_scopes_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_keys_api_v1_admin_partners__client_id__keys_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        client_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  issue_key_api_v1_admin_partners__client_id__keys_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        client_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IssueKeyRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  set_partner_status_api_v1_admin_partners__client_id__status_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        client_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetStatusRequest'];
       };
     };
     responses: {

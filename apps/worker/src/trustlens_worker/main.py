@@ -42,7 +42,14 @@ from trustlens.shared.logging import configure_logging, get_logger, request_id_v
 from trustlens.shared.notifications import build_email_sender, build_sms_sender
 from trustlens.shared.queue import ArqJobQueue
 from trustlens.shared.storage import build_storage
-from trustlens_worker.jobs import identity, listings, maintenance, notifications, scoring
+from trustlens_worker.jobs import (
+    identity,
+    listings,
+    maintenance,
+    notifications,
+    scoring,
+    webhooks,
+)
 
 log = get_logger(__name__)
 
@@ -132,6 +139,8 @@ class WorkerSettings:
         func(maintenance.lookup_phone, name="contact.lookup_phone"),
         func(maintenance.purge_expired_media, name="maintenance.purge_expired_media"),
         func(maintenance.publish_outbox, name="maintenance.publish_outbox"),
+        func(webhooks.deliver_webhook, name="webhooks.deliver"),
+        func(webhooks.retry_pending_webhooks, name="webhooks.retry_pending"),
     ]
 
     cron_jobs = [
@@ -144,6 +153,10 @@ class WorkerSettings:
         # The transactional outbox relay. Frequent, because a delayed webhook
         # is a partner integration that looks broken.
         cron(maintenance.publish_outbox, second={0, 15, 30, 45}),
+        # Safety net for deliveries whose follow-up job was lost to a
+        # worker restart. deliver_webhook schedules its own next attempt;
+        # this catches the ones that fell on the floor.
+        cron(webhooks.retry_pending_webhooks, minute=set(range(0, 60, 5))),
     ]
 
     on_startup = startup

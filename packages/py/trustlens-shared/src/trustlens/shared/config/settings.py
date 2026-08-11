@@ -129,6 +129,18 @@ class SecuritySettings(_Base):
     encryption_key: SecretStr
     encryption_key_id: str = "k1"
 
+    #: Signs public API responses (P6-04). A distinct secret from the token and
+    #: OTP peppers: this one is shared with partners in the sense that they
+    #: verify against it, so its blast radius must not include session tokens.
+    #: Defaults to empty, in which case responses are served unsigned rather
+    #: than the API refusing to boot - signing is an integrity guarantee to add,
+    #: not a precondition for serving a score.
+    response_signing_secret: SecretStr = SecretStr("")
+    response_signing_key_id: str = "s1"
+    #: How long a signed response stays verifiable. Bounded so a captured
+    #: response cannot be replayed as current a month later.
+    response_signature_ttl_seconds: int = 300
+
     api_key_prefix: str = "tl_test"
     cors_origins: CsvList = Field(default_factory=list)
     trusted_hosts: CsvList = Field(default_factory=lambda: ["localhost", "127.0.0.1"])

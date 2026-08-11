@@ -282,6 +282,50 @@ def sign_webhook_payload(secret: bytes, body: bytes, timestamp: int) -> str:
     return f"t={timestamp},v1={digest}"
 
 
+class HmacResponseSigner:
+    """Signs public API responses so a marketplace can prove what we said.
+
+    A Trust Score is a claim about a person that money moves on. A marketplace
+    receiving one over a compromised proxy, or from a cache it does not
+    control, has no way to distinguish it from a score an attacker wrote -
+    unless it is signed. This is P6-04, and it is what makes the public API
+    quotable rather than merely readable.
+
+    The timestamp is inside the signed material, not beside it. Signing the
+    body alone would let anyone replay a captured "score: 95" response
+    indefinitely, which is precisely the attack a scammer wants.
+
+    Same `t=<ts>,v1=<hmac>` shape as the webhook signature, so a partner
+    writes one verification routine rather than two.
+    """
+
+    def __init__(self, secret: bytes, key_id: str = "s1", *, max_age_seconds: int = 300) -> None:
+        self._secret = secret
+        self._key_id = key_id
+        self._max_age = max_age_seconds
+
+    @property
+    def key_id(self) -> str:
+        return self._key_id
+
+    def sign(self, payload: bytes, *, timestamp: int) -> str:
+        return sign_webhook_payload(self._secret, payload, timestamp)
+
+    def verify(self, payload: bytes, *, timestamp: int, signature: str) -> bool:
+        """Constant-time check of a signature this service produced.
+
+        Exists so the contract is testable from the partner's side: a
+        signature nobody can verify is decoration.
+        """
+        expected = self.sign(payload, timestamp=timestamp)
+        return hmac.compare_digest(expected, signature)
+
+    def is_fresh(self, timestamp: int, *, now: int) -> bool:
+        # Rejects both a stale replay and a timestamp from the future, which
+        # would otherwise extend a captured response's life indefinitely.
+        return -self._max_age <= (now - timestamp) <= self._max_age
+
+
 def stable_json(value: Any) -> str:
     """Deterministic JSON for hashing and idempotency fingerprints."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
@@ -295,6 +339,7 @@ __all__ = [
     "ApiKeyFactory",
     "Argon2PasswordHasher",
     "EnvelopeEncryptor",
+    "HmacResponseSigner",
     "JwtService",
     "OtpCodeGenerator",
     "PepperedTokenHasher",

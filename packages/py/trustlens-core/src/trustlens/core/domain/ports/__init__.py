@@ -23,6 +23,7 @@ from trustlens.core.domain.ports.ai import (
     ScamClassifier,
 )
 from trustlens.core.domain.ports.infrastructure import (
+    ApiKeyGenerator,
     Cache,
     Clock,
     EmailSender,
@@ -32,6 +33,7 @@ from trustlens.core.domain.ports.infrastructure import (
     ObjectStorage,
     PhoneLookup,
     PresignedUpload,
+    ResponseSigner,
     SmsSender,
     UnitOfWork,
 )
@@ -60,6 +62,7 @@ from trustlens.core.domain.ports.repositories import (
 
 __all__ = [
     "ApiClientRepository",
+    "ApiKeyGenerator",
     "AppealRepository",
     "AuditLogRepository",
     "Cache",
@@ -89,6 +92,7 @@ __all__ = [
     "PhoneNumberRepository",
     "PresignedUpload",
     "RefreshTokenRepository",
+    "ResponseSigner",
     "ReviewCaseRepository",
     "ScamClassifier",
     "ScoringModelRepository",

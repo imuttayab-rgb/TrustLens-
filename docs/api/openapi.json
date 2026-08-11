@@ -236,6 +236,39 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "IssueKeyRequest": {
+        "properties": {
+          "expiresInDays": {
+            "anyOf": [
+              {
+                "maximum": 3650.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Expiresindays"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "scopes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Scopes",
+            "type": "array"
+          }
+        },
+        "required": ["name"],
+        "title": "IssueKeyRequest",
+        "type": "object"
+      },
       "ListingWriteRequest": {
         "additionalProperties": false,
         "description": "Create or replace a listing.\n\nEvery field here is attacker-controlled - a seller writes it and an LLM\nlater reads it. The length caps are the first line of defence: they bound\nwhat can be pushed into a prompt at all. The second line is that the\nanalyser's verdict can only move one bounded signal (ADR-0002).",
@@ -505,6 +538,51 @@
         "title": "PublicStatusResponse",
         "type": "object"
       },
+      "RegisterPartnerRequest": {
+        "properties": {
+          "contactEmail": {
+            "title": "Contactemail",
+            "type": "string"
+          },
+          "contactName": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Contactname"
+          },
+          "monthlyQuota": {
+            "default": 10000,
+            "minimum": 1.0,
+            "title": "Monthlyquota",
+            "type": "integer"
+          },
+          "name": {
+            "maxLength": 120,
+            "minLength": 2,
+            "title": "Name",
+            "type": "string"
+          },
+          "rateLimitTier": {
+            "default": "free",
+            "title": "Ratelimittier",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 60,
+            "minLength": 2,
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": ["name", "slug", "contactEmail"],
+        "title": "RegisterPartnerRequest",
+        "type": "object"
+      },
       "RegisterRequest": {
         "additionalProperties": false,
         "properties": {
@@ -604,6 +682,18 @@
         },
         "required": ["decision", "note"],
         "title": "ResolveAppealRequest",
+        "type": "object"
+      },
+      "SetStatusRequest": {
+        "properties": {
+          "status": {
+            "description": "PENDING | ACTIVE | SUSPENDED",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": ["status"],
+        "title": "SetStatusRequest",
         "type": "object"
       },
       "SubmitAppealRequest": {
@@ -1130,6 +1220,479 @@
         },
         "summary": "Resolve an appeal",
         "tags": ["appeals"]
+      }
+    },
+    "/api/v1/admin/partners": {
+      "get": {
+        "operationId": "list_partners_api_v1_admin_partners_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Partners Api V1 Admin Partners Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Every partner, with usage against quota",
+        "tags": ["partners"]
+      },
+      "post": {
+        "description": "Created as PENDING. Approve it before issuing a key.",
+        "operationId": "register_partner_api_v1_admin_partners_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterPartnerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Register Partner Api V1 Admin Partners Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Register a partner",
+        "tags": ["partners"]
+      }
+    },
+    "/api/v1/admin/partners/keys/{key_id}": {
+      "delete": {
+        "description": "No overlap. Use this when a key has leaked.",
+        "operationId": "revoke_key_api_v1_admin_partners_keys__key_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Revoke Key Api V1 Admin Partners Keys  Key Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Revoke a key immediately",
+        "tags": ["partners"]
+      }
+    },
+    "/api/v1/admin/partners/keys/{key_id}/rotate": {
+      "post": {
+        "description": "Issues a replacement and expires the old key after a 24-hour overlap, so the partner can redeploy without an outage. Use revoke instead when a key is known to be compromised.",
+        "operationId": "rotate_key_api_v1_admin_partners_keys__key_id__rotate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "key_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Key Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Rotate Key Api V1 Admin Partners Keys  Key Id  Rotate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Rotate a key",
+        "tags": ["partners"]
+      }
+    },
+    "/api/v1/admin/partners/scopes": {
+      "get": {
+        "operationId": "list_scopes_api_v1_admin_partners_scopes_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Scopes Api V1 Admin Partners Scopes Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Scopes a key can be granted",
+        "tags": ["partners"]
+      }
+    },
+    "/api/v1/admin/partners/{client_id}/keys": {
+      "get": {
+        "operationId": "list_keys_api_v1_admin_partners__client_id__keys_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Keys Api V1 Admin Partners  Client Id  Keys Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Keys held by a partner",
+        "tags": ["partners"]
+      },
+      "post": {
+        "description": "The response contains the only copy of the key that will ever exist. It is argon2-hashed before storage, so it cannot be shown again - a lost key is rotated, not recovered.",
+        "operationId": "issue_key_api_v1_admin_partners__client_id__keys_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IssueKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Issue Key Api V1 Admin Partners  Client Id  Keys Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Issue a key",
+        "tags": ["partners"]
+      }
+    },
+    "/api/v1/admin/partners/{client_id}/status": {
+      "post": {
+        "description": "Suspending stops all of a partner's traffic at once, without having to hunt down every key they hold.",
+        "operationId": "set_partner_status_api_v1_admin_partners__client_id__status_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "client_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Client Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetStatusRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Set Partner Status Api V1 Admin Partners  Client Id  Status Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve, suspend or reinstate a partner",
+        "tags": ["partners"]
       }
     },
     "/api/v1/admin/review-cases": {

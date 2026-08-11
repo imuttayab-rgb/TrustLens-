@@ -6,9 +6,20 @@ import dataclasses
 from typing import Any
 from uuid import UUID
 
+from trustlens.core.domain.enums import WebhookEvent
 from trustlens.shared.logging import get_logger
 
 log = get_logger(__name__)
+
+#: Domain event name -> the public webhook event partners subscribe to.
+#: See `_fan_out_to_webhooks` for why this is a map and not a conversion.
+_WEBHOOK_EVENTS: dict[str, WebhookEvent] = {
+    "trust_score.computed": WebhookEvent.SCORE_UPDATED,
+    "trust_score.overridden": WebhookEvent.SCORE_UPDATED,
+    "identity.verified": WebhookEvent.SELLER_VERIFIED,
+    "seller.flagged": WebhookEvent.SELLER_FLAGGED,
+    "appeal.resolved": WebhookEvent.APPEAL_RESOLVED,
+}
 
 
 async def enrich_ip(ctx: dict[str, Any], *, ip: str) -> dict[str, Any]:
@@ -104,6 +115,7 @@ async def publish_outbox(ctx: dict[str, Any], *, batch: int = 100) -> dict[str, 
 
     now = ctx["clock"].now()
     published = 0
+    queued: list[UUID] = []
 
     async with ctx["session_factory"]() as session:
         rows = (
@@ -121,14 +133,17 @@ async def publish_outbox(ctx: dict[str, Any], *, batch: int = 100) -> dict[str, 
         )
 
         for event in rows:
-            # Webhook fan-out to partner endpoints belongs here. Marking the
-            # row published in the same transaction keeps the relay
-            # at-least-once rather than at-most-once.
+            deliveries = await _fan_out_to_webhooks(session, event, ctx)
+            queued.extend(deliveries)
             log.info(
                 "outbox_event_published",
                 event_type=event.event_type,
                 aggregate=event.aggregate_type,
+                webhook_deliveries=len(deliveries),
             )
+            # Marked published in the SAME transaction as the delivery rows,
+            # so the relay is at-least-once rather than at-most-once: a crash
+            # here replays the event, it does not lose it.
             await session.execute(
                 update(m.OutboxEvent)
                 .where(m.OutboxEvent.id == event.id)
@@ -138,7 +153,73 @@ async def publish_outbox(ctx: dict[str, Any], *, batch: int = 100) -> dict[str, 
 
         await session.commit()
 
-    return {"published": published}
+    # Enqueued only after the commit. A delivery job that started before the
+    # row it references was visible would look up nothing and drop the event.
+    for delivery_id in queued:
+        await ctx["queue"].enqueue("webhooks.deliver", delivery_id=str(delivery_id))
+
+    return {"published": published, "webhooks_queued": len(queued)}
+
+
+async def _fan_out_to_webhooks(session: Any, event: Any, ctx: dict[str, Any]) -> list[UUID]:
+    """Create a delivery row per subscribed endpoint. Returns their ids.
+
+    Rows are written inside the caller's transaction, alongside the outbox row
+    being marked published, so "the event was published but nobody was told"
+    cannot happen. Actually sending them is a separate job.
+    """
+    from sqlalchemy import func, literal, select
+
+    from trustlens.db import models as m
+
+    # Internal event name -> the public event a partner subscribes to. The two
+    # vocabularies are deliberately separate: `trust_score.computed` is what
+    # the domain calls it, `SCORE_UPDATED` is what a marketplace integrates
+    # against, and renaming a domain event must not silently break partners.
+    #
+    # Anything absent from this map is internal-only and fans out to nobody,
+    # which is why it is an explicit mapping rather than a name conversion -
+    # a conversion would have matched nothing at all and failed silently.
+    webhook_event = _WEBHOOK_EVENTS.get(event.event_type)
+    if webhook_event is None:
+        return []
+
+    endpoints = (
+        (
+            await session.execute(
+                select(m.WebhookEndpointModel).where(
+                    m.WebhookEndpointModel.is_active.is_(True),
+                    m.WebhookEndpointModel.deleted_at.is_(None),
+                    # `events` is mapped as the generic ARRAY, whose
+                    # `.contains()` raises NotImplementedError - the operator
+                    # belongs to the postgresql dialect type. Comparing against
+                    # an explicit text[] literal keeps the containment check in
+                    # the database (so an index can serve it) without depending
+                    # on how the column happens to be mapped.
+                    literal(webhook_event.value) == func.any(m.WebhookEndpointModel.events),
+                )
+            )
+        )
+        .scalars()
+        .all()
+    )
+
+    created: list[UUID] = []
+    for endpoint in endpoints:
+        delivery_id = ctx["ids"].new()
+        session.add(
+            m.WebhookDeliveryModel(
+                id=delivery_id,
+                webhook_endpoint_id=endpoint.id,
+                event_type=webhook_event,
+                payload=event.payload,
+            )
+        )
+        created.append(delivery_id)
+
+    if created:
+        await session.flush()
+    return created
 
 
 __all__ = [
