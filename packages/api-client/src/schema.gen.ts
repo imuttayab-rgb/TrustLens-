@@ -4,6 +4,77 @@
  */
 
 export interface paths {
+  '/api/v1/admin/appeals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The appeal queue */
+    get: operations['list_appeal_queue_api_v1_admin_appeals_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/appeals/{appeal_id}/claim': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Claim an appeal before working on it */
+    post: operations['claim_appeal_api_v1_admin_appeals__appeal_id__claim_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/appeals/{appeal_id}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reply or add an internal note */
+    post: operations['add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/appeals/{appeal_id}/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resolve an appeal
+     * @description Approving corrects the evidence and enqueues a rescore; it never writes a score directly (ADR-0002). An override is admin-only, needs a written reason, and is recorded in the audit log.
+     */
+    post: operations['resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/review-cases': {
     parameters: {
       query?: never;
@@ -75,6 +146,64 @@ export interface paths {
      * @description Writes a NEW score row marked as a manual override. The computed score it replaces stays in history, a written reason is mandatory (enforced by a database CHECK), and the action is audit-logged.
      */
     post: operations['override_score_api_v1_admin_sellers__seller_id__trust_score_override_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/appeals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Own appeals
+     * @description Reviewer-only internal notes are never included.
+     */
+    get: operations['list_own_appeals_api_v1_appeals_get'];
+    put?: never;
+    /** Appeal a trust score */
+    post: operations['submit_appeal_api_v1_appeals_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/appeals/{appeal_id}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reply on an appeal */
+    post: operations['add_own_message_api_v1_appeals__appeal_id__messages_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/appeals/{appeal_id}/withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Withdraw an appeal
+     * @description Without this the one-open-appeal limit becomes a trap: a seller who appeals in haste could not appeal properly until a reviewer got to it.
+     */
+    post: operations['withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -672,6 +801,17 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** AppealMessageRequest */
+    AppealMessageRequest: {
+      /** Body */
+      body: string;
+      /**
+       * Isinternal
+       * @description Reviewer-only note. Rejected for seller accounts.
+       * @default false
+       */
+      isInternal: boolean;
+    };
     /** BatchLookupRequest */
     BatchLookupRequest: {
       /** Sellerrefs */
@@ -889,6 +1029,31 @@ export interface components {
       /** Token */
       token: string;
     };
+    /** ResolveAppealRequest */
+    ResolveAppealRequest: {
+      /**
+       * Decision
+       * @description RECOMPUTE corrects the evidence and re-runs scoring; OVERRIDE is admin-only and expires; REJECT closes it with an explanation.
+       */
+      decision: string;
+      /** Note */
+      note: string;
+      /** Overridescore */
+      overrideScore?: number | null;
+    };
+    /** SubmitAppealRequest */
+    SubmitAppealRequest: {
+      /** Reason */
+      reason: string;
+      /** Reasoncategory */
+      reasonCategory: string;
+      /**
+       * Trustscoreid
+       * Format: uuid
+       * @description The specific computation being appealed. Required: a score is recomputed on every signal change, so 'my score is wrong' is not reviewable by the time a human reads it.
+       */
+      trustScoreId: string;
+    };
     /** SubmitIdentityRequest */
     SubmitIdentityRequest: {
       /** Biometricconsent */
@@ -968,6 +1133,158 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  list_appeal_queue_api_v1_admin_appeals_get: {
+    parameters: {
+      query?: {
+        status?: string | null;
+        /** @description Include withdrawn and decided appeals. Off by default: a queue is work. */
+        includeResolved?: boolean;
+        page?: number;
+        perPage?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  claim_appeal_api_v1_admin_appeals__appeal_id__claim_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        appeal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        appeal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppealMessageRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        appeal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResolveAppealRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   list_review_cases_api_v1_admin_review_cases_get: {
     parameters: {
       query?: {
@@ -1094,6 +1411,150 @@ export interface operations {
         'application/json': components['schemas']['OverrideScoreRequest'];
       };
     };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_own_appeals_api_v1_appeals_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  submit_appeal_api_v1_appeals_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SubmitAppealRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  add_own_message_api_v1_appeals__appeal_id__messages_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        appeal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppealMessageRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        appeal_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {

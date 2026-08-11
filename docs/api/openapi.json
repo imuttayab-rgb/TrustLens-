@@ -1,6 +1,25 @@
 {
   "components": {
     "schemas": {
+      "AppealMessageRequest": {
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          },
+          "isInternal": {
+            "default": false,
+            "description": "Reviewer-only note. Rejected for seller accounts.",
+            "title": "Isinternal",
+            "type": "boolean"
+          }
+        },
+        "required": ["body"],
+        "title": "AppealMessageRequest",
+        "type": "object"
+      },
       "BatchLookupRequest": {
         "additionalProperties": false,
         "properties": {
@@ -556,6 +575,60 @@
         "title": "ResetPasswordRequest",
         "type": "object"
       },
+      "ResolveAppealRequest": {
+        "properties": {
+          "decision": {
+            "description": "RECOMPUTE corrects the evidence and re-runs scoring; OVERRIDE is admin-only and expires; REJECT closes it with an explanation.",
+            "title": "Decision",
+            "type": "string"
+          },
+          "note": {
+            "maxLength": 4000,
+            "minLength": 20,
+            "title": "Note",
+            "type": "string"
+          },
+          "overrideScore": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Overridescore"
+          }
+        },
+        "required": ["decision", "note"],
+        "title": "ResolveAppealRequest",
+        "type": "object"
+      },
+      "SubmitAppealRequest": {
+        "properties": {
+          "reason": {
+            "maxLength": 4000,
+            "minLength": 20,
+            "title": "Reason",
+            "type": "string"
+          },
+          "reasonCategory": {
+            "title": "Reasoncategory",
+            "type": "string"
+          },
+          "trustScoreId": {
+            "description": "The specific computation being appealed. Required: a score is recomputed on every signal change, so 'my score is wrong' is not reviewable by the time a human reads it.",
+            "format": "uuid",
+            "title": "Trustscoreid",
+            "type": "string"
+          }
+        },
+        "required": ["trustScoreId", "reasonCategory", "reason"],
+        "title": "SubmitAppealRequest",
+        "type": "object"
+      },
       "SubmitIdentityRequest": {
         "additionalProperties": false,
         "properties": {
@@ -760,6 +833,305 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/admin/appeals": {
+      "get": {
+        "operationId": "list_appeal_queue_api_v1_admin_appeals_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "description": "Include withdrawn and decided appeals. Off by default: a queue is work.",
+            "in": "query",
+            "name": "includeResolved",
+            "required": false,
+            "schema": {
+              "default": false,
+              "description": "Include withdrawn and decided appeals. Off by default: a queue is work.",
+              "title": "Includeresolved",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Perpage",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Appeal Queue Api V1 Admin Appeals Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The appeal queue",
+        "tags": ["appeals"]
+      }
+    },
+    "/api/v1/admin/appeals/{appeal_id}/claim": {
+      "post": {
+        "operationId": "claim_appeal_api_v1_admin_appeals__appeal_id__claim_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appeal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appeal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Claim Appeal Api V1 Admin Appeals  Appeal Id  Claim Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Claim an appeal before working on it",
+        "tags": ["appeals"]
+      }
+    },
+    "/api/v1/admin/appeals/{appeal_id}/messages": {
+      "post": {
+        "operationId": "add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appeal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appeal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppealMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Add Reviewer Message Api V1 Admin Appeals  Appeal Id  Messages Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reply or add an internal note",
+        "tags": ["appeals"]
+      }
+    },
+    "/api/v1/admin/appeals/{appeal_id}/resolve": {
+      "post": {
+        "description": "Approving corrects the evidence and enqueues a rescore; it never writes a score directly (ADR-0002). An override is admin-only, needs a written reason, and is recorded in the audit log.",
+        "operationId": "resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appeal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appeal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveAppealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resolve Appeal Api V1 Admin Appeals  Appeal Id  Resolve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve an appeal",
+        "tags": ["appeals"]
+      }
+    },
     "/api/v1/admin/review-cases": {
       "get": {
         "operationId": "list_review_cases_api_v1_admin_review_cases_get",
@@ -1031,6 +1403,242 @@
         },
         "summary": "Override a computed score (ADMIN only)",
         "tags": ["Trust Score"]
+      }
+    },
+    "/api/v1/appeals": {
+      "get": {
+        "description": "Reviewer-only internal notes are never included.",
+        "operationId": "list_own_appeals_api_v1_appeals_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Own Appeals Api V1 Appeals Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Own appeals",
+        "tags": ["appeals"]
+      },
+      "post": {
+        "operationId": "submit_appeal_api_v1_appeals_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitAppealRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Appeal Api V1 Appeals Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Appeal a trust score",
+        "tags": ["appeals"]
+      }
+    },
+    "/api/v1/appeals/{appeal_id}/messages": {
+      "post": {
+        "operationId": "add_own_message_api_v1_appeals__appeal_id__messages_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appeal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appeal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppealMessageRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Add Own Message Api V1 Appeals  Appeal Id  Messages Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reply on an appeal",
+        "tags": ["appeals"]
+      }
+    },
+    "/api/v1/appeals/{appeal_id}/withdraw": {
+      "post": {
+        "description": "Without this the one-open-appeal limit becomes a trap: a seller who appeals in haste could not appeal properly until a reviewer got to it.",
+        "operationId": "withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "appeal_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Appeal Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Withdraw Appeal Api V1 Appeals  Appeal Id  Withdraw Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Withdraw an appeal",
+        "tags": ["appeals"]
       }
     },
     "/api/v1/auth/change-password": {
