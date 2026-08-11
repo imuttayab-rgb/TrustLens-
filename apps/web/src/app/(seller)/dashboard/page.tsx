@@ -1,8 +1,7 @@
 'use client';
 
-import { useSeller, useVerificationStatus } from '@/features/seller';
+import { BecomeSellerForm, useSeller, useVerificationStatus } from '@/features/seller';
 import {
-  Alert,
   Button,
   Card,
   CardContent,
@@ -29,11 +28,15 @@ export default function DashboardPage() {
 
   if (!seller) {
     return (
-      <div className="mx-auto max-w-md space-y-4">
-        <h1 className="text-2xl font-bold">Start selling</h1>
-        <Alert tone="info" title="You do not have a seller profile yet">
-          Create one to start earning a Trust Score buyers can check before dealing with you.
-        </Alert>
+      <div className="mx-auto max-w-md space-y-6">
+        <div className="space-y-2">
+          <h1 className="text-2xl font-bold">Start selling</h1>
+          <p className="text-sm text-muted-foreground">
+            Create a seller profile to start earning a Trust Score buyers can check before dealing
+            with you.
+          </p>
+        </div>
+        <BecomeSellerForm />
       </div>
     );
   }

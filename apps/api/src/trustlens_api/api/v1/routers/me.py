@@ -9,7 +9,13 @@ from fastapi import APIRouter, status
 
 from trustlens.core.domain.entities import SellerProfile, TrustScore
 from trustlens.core.domain.enums import UserRole, VerificationStatus
-from trustlens.core.domain.errors import ConflictError, EntityNotFound
+from trustlens.core.domain.errors import ConflictError, EntityNotFound, ValidationError
+from trustlens.core.domain.policies import (
+    MAX_HANDLE_LENGTH,
+    MIN_HANDLE_LENGTH,
+    is_reserved,
+    slugify_handle,
+)
 from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
 from trustlens_api.api.v1.schemas.auth import UserSummary
@@ -146,10 +152,28 @@ async def update_my_seller(
 
 
 async def _unique_handle(uow: SqlAlchemyUnitOfWork, display_name: str) -> str:
-    base = "".join(c if c.isalnum() else "-" for c in display_name.lower()).strip("-")[:40]
-    base = base or "seller"
+    """Derive a free, non-impersonating handle from the display name.
+
+    The handle is public identity: `/seller/<handle>` is where a buyer checks
+    a score, so a derived `daraz-official` would hand a scammer a marketplace's
+    reputation. Reserved names are refused outright rather than suffixed —
+    `olx-1` still trades on the same brand (P2-04).
+    """
+    base = slugify_handle(display_name)
+    if len(base) < MIN_HANDLE_LENGTH:
+        base = "seller"
+    if is_reserved(base):
+        raise ValidationError(
+            "That display name is reserved. Choose a name that is clearly your own.",
+            field="displayName",
+        )
+
     for suffix in range(100):
         candidate = base if suffix == 0 else f"{base}-{suffix}"
+        # A numeric suffix can push the handle past the column limit, and a
+        # truncated one could collide with a name already taken.
+        if len(candidate) > MAX_HANDLE_LENGTH:
+            candidate = f"{base[: MAX_HANDLE_LENGTH - len(str(suffix)) - 1].strip('-')}-{suffix}"
         if not await uow.sellers.handle_exists(candidate):
             return candidate
     raise ConflictError("Could not allocate a unique handle. Try a different display name.")

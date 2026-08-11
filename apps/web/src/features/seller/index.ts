@@ -1,3 +1,4 @@
+export { BecomeSellerForm } from './components/BecomeSellerForm';
 export {
   useSeller,
   useVerificationStatus,

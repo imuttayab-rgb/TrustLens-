@@ -124,12 +124,89 @@ export const verifyOtpSchema = z.object({ code: otpSchema });
 
 // ── Seller & listings ────────────────────────────────────────────────
 
+/**
+ * Names nobody may trade under.
+ *
+ * The public page lives at `/seller/<handle>` and the handle is derived from
+ * this display name, so "Daraz Official" would mint a handle that borrows a
+ * marketplace's reputation. The backend holds the authoritative list and
+ * re-checks it (`domain/policies/handles.py`); this copy exists so the user
+ * finds out while typing rather than after submitting.
+ */
+const RESERVED_NAME_WORDS = [
+  'olx',
+  'daraz',
+  'amazon',
+  'ebay',
+  'alibaba',
+  'aliexpress',
+  'shopify',
+  'foodpanda',
+  'careem',
+  'easypaisa',
+  'jazzcash',
+  'sadapay',
+  'nayapay',
+  'pakwheels',
+  'zameen',
+  'priceoye',
+  'telemart',
+  'nadra',
+  'trustlens',
+  'admin',
+  'administrator',
+  'moderator',
+  'support',
+  'helpdesk',
+  'official',
+  'verified',
+  'staff',
+  'security',
+  'billing',
+  'refund',
+  'refunds',
+];
+
+/** Mirrors `_canonical` in the backend policy: fold lookalikes, drop noise. */
+function canonicalName(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[0]/g, 'o')
+    .replace(/[1|]/g, 'l')
+    .replace(/[3]/g, 'e')
+    .replace(/[4@]/g, 'a')
+    .replace(/[5$]/g, 's')
+    .replace(/[7]/g, 't')
+    .replace(/[^a-z]/g, '');
+}
+
+function isReservedName(value: string): boolean {
+  const canonical = canonicalName(value);
+  if (RESERVED_NAME_WORDS.some((word) => canonical === canonicalName(word))) return true;
+  // Token-level match so "Megamart" survives while "Daraz Official" does not.
+  const tokens = value
+    .split(/[^a-zA-Z0-9]+/)
+    .filter(Boolean)
+    .map(canonicalName);
+  return tokens.some((token) => RESERVED_NAME_WORDS.some((w) => token === canonicalName(w)));
+}
+
 export const becomeSellerSchema = z.object({
-  displayName: z.string().trim().min(2, 'Enter a display name.').max(150),
+  displayName: z
+    .string()
+    .trim()
+    .min(2, 'Enter a display name.')
+    .max(150)
+    .refine(
+      (v) => !isReservedName(v),
+      'That name is reserved. Choose a name that is clearly your own.',
+    ),
   businessType: z.string().max(50).optional(),
   city: z.string().max(80).optional(),
   countryCode: z.string().length(2, 'Use a 2-letter country code.').optional(),
 });
+export type BecomeSellerInput = z.infer<typeof becomeSellerSchema>;
 
 export const listingSchema = z.object({
   title: z.string().trim().min(3, 'Enter a title.').max(250),

@@ -127,6 +127,10 @@ mypy_path = [
     "packages/py/trustlens-testing/src",
     "apps/api/src",
     "apps/worker/src",
+    # The bench harnesses are scripts, not an installed package: they add their
+    # own parent to sys.path at runtime so `bench.manifest` resolves. mypy does
+    # not execute that, so the root is declared here instead (P0-11).
+    "apps/ml",
 ]
 explicit_package_bases = true
 namespace_packages = true

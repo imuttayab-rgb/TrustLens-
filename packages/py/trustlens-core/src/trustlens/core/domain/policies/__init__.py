@@ -13,6 +13,14 @@ from datetime import datetime, timedelta
 from trustlens.core.domain.entities.user import User
 from trustlens.core.domain.enums import AppealStatus, RiskLevel, UserRole
 from trustlens.core.domain.errors import AppealLimitReached, AppealNotAllowed
+from trustlens.core.domain.policies.handles import (
+    MAX_HANDLE_LENGTH,
+    MIN_HANDLE_LENGTH,
+    RESERVED_HANDLES,
+    is_reserved,
+    slugify_handle,
+    validate_handle,
+)
 from trustlens.core.domain.policies.scoring import (
     DEFAULT_MIN_EVIDENCE_WEIGHT,
     ScoreComputation,
@@ -228,6 +236,9 @@ def mfa_required_for(user: User, required_roles: frozenset[UserRole] | None = No
 __all__ = [
     "COMMON_PASSWORDS",
     "DEFAULT_MIN_EVIDENCE_WEIGHT",
+    "MAX_HANDLE_LENGTH",
+    "MIN_HANDLE_LENGTH",
+    "RESERVED_HANDLES",
     "AccountAgePolicy",
     "AppealPolicy",
     "DeviceLinkagePolicy",
@@ -239,6 +250,9 @@ __all__ = [
     "ScoringPolicy",
     "band_for",
     "band_label",
+    "is_reserved",
     "mfa_required_for",
     "rank_improvements",
+    "slugify_handle",
+    "validate_handle",
 ]
