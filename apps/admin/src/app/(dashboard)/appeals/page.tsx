@@ -1,3 +1,4 @@
+import { AppealQueue } from '@/features/appeals';
 import { Card, CardContent, CardHeader, CardTitle } from '@trustlens/ui';
 
 export const metadata = { title: 'Appeals' };
@@ -10,6 +11,10 @@ export default function AppealsPage() {
         Each appeal references one specific score computation, with its breakdown frozen at the
         moment it was calculated.
       </p>
+
+      <div className="mt-8">
+        <AppealQueue />
+      </div>
 
       <Card className="mt-8">
         <CardHeader>

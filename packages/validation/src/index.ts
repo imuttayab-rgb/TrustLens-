@@ -239,6 +239,7 @@ export const appealSchema = z.object({
     .min(20, 'Explain in at least 20 characters so a reviewer can act on it.')
     .max(4000),
 });
+export type AppealInput = z.infer<typeof appealSchema>;
 
 // ── Admin ────────────────────────────────────────────────────────────
 

@@ -1,11 +1,13 @@
 'use client';
 
+import { AppealForm, AppealList } from '@/features/appeals';
 import { useSeller } from '@/features/seller';
 import { api } from '@/lib/api/client';
 import { qk } from '@/lib/api/query-keys';
 import { useQuery } from '@tanstack/react-query';
 import type { RiskLevel, SignalCategory, SignalStatus } from '@trustlens/constants';
 import {
+  Button,
   Card,
   CardContent,
   CardHeader,
@@ -15,8 +17,10 @@ import {
   Spinner,
 } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
+import { useState } from 'react';
 
 interface ScoreDetail {
+  id: string;
   sellerId: string;
   score: number;
   riskLevel: RiskLevel;
@@ -46,6 +50,7 @@ interface Improvement {
 export default function TrustScorePage() {
   const { data: seller } = useSeller();
   const sellerId = seller?.id ?? null;
+  const [appealing, setAppealing] = useState(false);
 
   const { data: score, isPending } = useQuery<ScoreDetail | null>({
     queryKey: qk.trustScore.current(sellerId ?? 'none'),
@@ -138,6 +143,39 @@ export default function TrustScorePage() {
         </CardHeader>
         <CardContent>
           <SignalBreakdown signals={score.signals} />
+        </CardContent>
+      </Card>
+
+      {/* An explainable score without recourse is just a nicer error message.
+          The dispute route belongs on the screen showing the verdict, not
+          buried in a settings page the seller never opens. */}
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle>Think one of these is wrong?</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {appealing ? (
+            <AppealForm
+              sellerId={sellerId}
+              trustScoreId={score.id}
+              onDone={() => setAppealing(false)}
+            />
+          ) : (
+            <>
+              <p className="text-sm text-muted-foreground">
+                A reviewer will look at the evidence behind the check you name. If they agree, the
+                score is recalculated from the corrected evidence.
+              </p>
+              <Button variant="outline" onClick={() => setAppealing(true)}>
+                Appeal this score
+              </Button>
+            </>
+          )}
+
+          <div className="border-t pt-4">
+            <h3 className="mb-3 text-sm font-medium">Your appeals</h3>
+            <AppealList />
+          </div>
         </CardContent>
       </Card>
     </main>
