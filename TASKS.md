@@ -42,12 +42,12 @@ Three consequences, and they save real time:
 
 | Phase | Title                                 | Days   | Status                                                      | Owner  |
 | ----- | ------------------------------------- | ------ | ----------------------------------------------------------- | ------ |
-| 0     | Make it run                           | 1      | `[x]` stack boots end to end; P0-09 + P0-11 outstanding     | Zohaib |
+| 0     | Make it run                           | 1      | `[x]` **complete** — P0-09 and P0-11 both closed            | Zohaib |
 | 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**       | Zohaib |
-| 2     | Seller verification UI (mobile-first) | 8      | `[~]` all four verification flows done; ~2 days left        | Zohaib |
+| 2     | Seller verification UI (mobile-first) | 8      | `[~]` onboarding + all four flows done; score/account left  | Zohaib |
 | 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left   | Zohaib |
 | 4     | Admin panel                           | 5      | `[~]` reviewer workflow works end to end; seller admin left | Zohaib |
-| 5     | Appeals                               | 3      | `[ ]`                                                       |        |
+| 5     | Appeals                               | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green    | Zohaib |
 | 6     | Public marketplace API                | 3      | `[ ]`                                                       |        |
 | 7     | ML scam classifier                    | 4      | `[ ]`                                                       |        |
 | 8     | Real integrations                     | 4      | `[ ]`                                                       |        |
@@ -89,6 +89,37 @@ What the scaffold commit `5185529` actually delivered:
 | `shared/telemetry/`, `db/queries/`                           | ❌ Empty folders                                              |
 
 **Status 31 July 2026:** the full stack has been installed and booted — Postgres/Redis/MinIO/Mailpit healthy, 41 tables migrated and seeded, API serving 32 endpoints, worker running 14 functions, web on :3000. Phase 0 is complete apart from P0-09 (broken Makefile targets) and P0-11 (91 mypy errors).
+
+---
+
+## Current state (measured 11 August 2026)
+
+**Phase 0 is now genuinely complete**, and Phase 5 with it.
+
+| Gate                | State                                    |
+| ------------------- | ---------------------------------------- |
+| `pytest`            | ✅ 219 passing                           |
+| `mypy`              | ✅ clean — 144 files, 0 errors (was 91)  |
+| `ruff` + `format`   | ✅ clean                                 |
+| `tsc` web + admin   | ✅ clean                                 |
+| `eslint` web +admin | ✅ clean                                 |
+| Playwright          | ✅ appeal journey green across both apps |
+| API surface         | 43 paths / 49 operations                 |
+
+**What a user can now actually do, verified in a browser:** register → receive the email →
+verify → sign in → create a seller profile → see the verification checklist → read an explainable
+score with a capped-score explanation and ranked improvements → dispute it → have a reviewer claim,
+decide, and trigger a recompute.
+
+**Three defects found by testing the running system rather than reading the code.** All three
+returned `200` to the caller while doing nothing:
+
+1. The dashboard dead end (P2-04b) — the reported "nothing works". Auth was fine.
+2. Two rescore jobs that never ran (P5-06), one of them since the Phase 4 review queue shipped.
+3. `make codegen` pointing at a missing script (P0-09), so CI's drift guard had never passed.
+
+**Still blocked and unchanged:** P1-01 / P1-06 need real CNIC and face images. Nothing in the
+software track can substitute for them, and they gate the accuracy numbers the report needs (D-05).
 
 ---
 
@@ -140,16 +171,26 @@ What the scaffold commit `5185529` actually delivered:
   - No root `eslint.config.mjs`, and ESLint v9 treats a missing config as a hard error → added
     _Done when:_ `git commit` completes with hooks enabled. ✅
 
-- [ ] **P0-11** Clear the remaining **91 mypy errors** across 28 scaffold files.
+- [x] **P0-11** Clear the remaining **91 mypy errors** across 28 scaffold files.
+      _Done 11 Aug:_ the tree typechecks clean — 144 source files, zero errors. The last two were
+      `apps/ml/bench`, whose harnesses add their own `sys.path` root at runtime; mypy does not
+      execute that, so `apps/ml` is declared in `mypy_path` instead.
       _Context:_ was 408. Adding PEP 561 `py.typed` markers to all six packages plus `mypy_path`/`explicit_package_bases` for the namespace layout fixed 317 of them. The rest are genuine gaps — mostly bare `dict` without type arguments and missing annotations in `middleware/`, `routers/auth.py`, `routers/verification.py`. None are in Phase 1 code.
       _Done when:_ `make typecheck` exits clean, so CI's mypy step can go green.
 
-- [ ] **P0-09** Fix the four **broken Makefile targets** — they reference files that were never created:
-  - `make openapi` → `trustlens_api.openapi_export` module missing
-  - `make postman` → `scripts/export-postman.sh` missing
-  - `make erd` → `tools/erd/generate.sh` missing
-  - `make dev` → verify `scripts/dev.sh` works on Windows
-    _Done when:_ all four run, or are removed from the Makefile with a note.
+- [x] **P0-09** Fix the four **broken Makefile targets** — they reference files that were never created:
+  - `make openapi` → works; exports 43 paths
+  - `make postman` → `scripts/export-postman.sh` written; 10 tagged folders
+  - `make erd` → `tools/erd/generate.py` renders all 40 tables as Mermaid (feeds **D-04**)
+  - `make codegen` → `tools/codegen/generate.sh` was missing too, and this was the costly one:
+    CI runs `make codegen` and fails on any diff, so the **codegen-drift job could not have passed
+    on any PR since the scaffold**. The guard that makes a backend rename break the frontend build
+    in the same PR (ADR-0005) was itself broken.
+    _Done 11 Aug:_ all four run.
+
+  > Mermaid rather than eralchemy/Graphviz for the ERD: no system package to install on a lab
+  > machine during submission week, it renders inline on GitHub, and it pastes into the report.
+  > Generated from the SQLAlchemy metadata, so it cannot drift from the schema it documents.
 
 - [x] **P0-10** End-to-end smoke test with `USE_FAKE_AI=true`.
       _Verified 31 Jul:_ logged in as `seller.low@trustlens.dev` and read the authenticated score endpoint. **Score 25, risk HIGH, `capApplied: 25`** from the failed face match, confidence 0.85, and **all 14 signals returned with plain-English reasons** — "The selfie does not match the photo on the submitted ID", "This device is linked to several other seller accounts", "Prices are far below the normal range for similar items". The explainable Trust Score the proposal promises, working end to end.
@@ -242,7 +283,22 @@ What the scaffold commit `5185529` actually delivered:
 - [x] **P2-03c** Generate the typed API client.
       _Done 31 Jul._ `pnpm codegen` had never run, so `ApiPaths` was `Record<string, unknown>` and every `api.POST(...)` typed its path as `never`. Wrote the missing `trustlens_api.openapi_export` module (which also fixes `make openapi`, part of P0-09), regenerated `docs/api/openapi.json` from the live API, and generated `schema.gen.ts`. Every route and body is now type-checked against the backend contract.
 
-- [ ] **P2-04** **Handle validation** — block reserved and impersonating handles (`olx`, `daraz`, `*-official`). On a trust product, handle squatting is an impersonation vector.
+- [x] **P2-04** **Handle validation** — block reserved and impersonating handles (`olx`, `daraz`, `*-official`). On a trust product, handle squatting is an impersonation vector.
+      _Done 11 Aug:_ `domain/policies/handles.py`, 61 tests. Matching is on a canonical form, so
+      `d4raz`, `d-a-r-a-z` and Cyrillic lookalikes collapse onto the blocklisted spelling; token-level
+      rather than substring, so "Megamart" stays allowed. Reserved names are **refused**, not
+      suffixed — `olx-1` trades on the same brand.
+
+  > The confusables table is written as `\uXXXX` escapes on purpose. The first draft used Greek
+  > omicron (U+03BF) where it meant Cyrillic o (U+043E), leaving the likelier attack unmapped, and
+  > no amount of staring at the source would have shown it — the glyphs are identical.
+
+- [x] **P2-04b** 🚨 **The dashboard was a dead end for every new account.**
+      It said "you do not have a seller profile yet" and offered nothing to click.
+      `POST /api/v1/me/become-seller` existed and no UI ever called it, so a user could register,
+      verify, sign in — and stop. **This was the "nothing works" report:** auth was fine end to end,
+      the journey was not. Onboarding form added; verified in a browser through to a working
+      checklist at 30/75 points.
       _Note:_ handles are derived server-side from `displayName`; this belongs in the become-seller use case, not the form.
 
 ### Days 5-9 — dashboard and the four verification flows
@@ -354,12 +410,41 @@ What the scaffold commit `5185529` actually delivered:
 
 **Goal:** the appeal loop promised in the proposal. Entity and tables exist; all logic is missing.
 
-- [ ] **P5-01** Implement `use_cases/appeals/` — submit, withdraw, review, resolve, trigger rescoring. _(currently empty)_
-- [ ] **P5-02** Add `routers/appeals.py` (seller submit/track + admin review).
-- [ ] **P5-03** Seller UI: "appeal this signal" from the score breakdown, with evidence upload.
-- [ ] **P5-04** Admin UI: appeal queue, decision, reason, automatic rescore on approval.
-- [ ] **P5-05** Notifications on appeal state changes.
-      _Done when:_ a seller appeals a failed signal, an admin approves it, and the score recomputes automatically.
+- [x] **P5-01** `use_cases/appeals/` — submit, withdraw, claim, message, resolve, rescore. 31 tests.
+- [x] **P5-02** `routers/appeals.py` — 8 endpoints, seller and reviewer routes gated separately.
+- [x] **P5-03** Seller UI on the score page, under the breakdown: category + reason, thread, withdraw.
+- [x] **P5-04** Admin UI: queue, claim, decision with mandatory note, internal notes, override guard.
+- [x] **P5-05** `notifications.send_email` enqueued on every resolution.
+      _Verified 11 Aug:_ e2e spec `testing/e2e/specs/appeals.spec.ts` drives both apps in one run —
+      seller disputes a score, reviewer claims and resolves, appeal leaves the queue. The worker
+      recomputes with `trigger='APPEAL_RESOLUTION'`.
+
+**Properties held, and checked by test rather than by hope:**
+
+- An appeal names **one computation**, not "my score" — required exposing the score id on the
+  trust-score response, which it did not have, so appealing was literally impossible from the UI.
+- Resolving **never writes a score**. `RECOMPUTE` corrects the evidence and re-runs the engine;
+  `OVERRIDE` is admin-only, needs a reason and expires; `REJECT` closes with an explanation.
+- A reviewer attempting an override gets **403** from both the router and the use case.
+- Internal reviewer notes are stripped before the seller ever sees the thread.
+- A seller cannot read, act on, or post to another seller's appeal — **404, not 403**, so the id
+  is not an enumeration oracle.
+
+- [x] **P5-06** 🚨 **Two rescore jobs had never run — one of them since Phase 4 shipped.**
+      `trigger="APPEAL"` and `trigger="MANUAL_REVIEW"` are not `ScoreTrigger` members. The job
+      raised `ValueError` **after** the endpoint had already returned `200`, so every admin review
+      decision recorded its verdict, wrote its audit entry, notified nobody of a problem — and
+      never rescored the seller. Found by reading the worker log rather than the response.
+      A test now scans the source for `trigger=` literals and parses each one, so the next
+      plausible-looking name fails in CI instead of in production.
+
+- [x] **P5-07** The reviewer queue listed resolved and withdrawn appeals alongside open work.
+      Claiming one fails, and a queue whose top row cannot be actioned reads as a broken screen.
+
+- [x] **P5-08** The appeal form re-reads the current score id immediately before submitting.
+      A page left open while a verification finishes held a superseded id and earned "your score
+      has been recomputed since this one" — true, and unactionable, since the seller is objecting
+      to the same verdict either way. One extra `GET` turns a dead end into a submission.
 
 ---
 
