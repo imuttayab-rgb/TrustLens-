@@ -37,6 +37,11 @@ class ImprovementItem(Schema):
 
 
 class TrustScoreResponse(Schema):
+    #: The identifier of *this computation*. An appeal must name one, because
+    #: scores are recomputed on every signal change and "my score is wrong" is
+    #: unreviewable by the time a human reads it. Without this field on the
+    #: response the seller UI has no way to say which number it means.
+    id: UUID
     seller_id: UUID
     score: int = Field(ge=0, le=100)
     risk_level: str = Field(description="LOW | MEDIUM | HIGH | UNKNOWN")

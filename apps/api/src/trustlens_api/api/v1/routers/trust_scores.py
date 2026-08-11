@@ -251,6 +251,7 @@ async def override_score(
 def _to_response(score: TrustScore) -> TrustScoreResponse:
     rollup = score.category_breakdown
     return TrustScoreResponse(
+        id=score.id,
         seller_id=score.seller_id,
         score=int(score.score),
         risk_level=score.risk_level.value,

@@ -23,7 +23,7 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from trustlens.core.domain.entities import AuditLogEntry, ReviewCase
-from trustlens.core.domain.enums import ReviewStatus, VerificationStatus
+from trustlens.core.domain.enums import ReviewStatus, ScoreTrigger, VerificationStatus
 from trustlens.core.domain.errors import EntityNotFound, InvalidStateError, ValidationError
 from trustlens.core.domain.ports import Clock, IdGenerator, JobQueue, UnitOfWork
 
@@ -192,10 +192,15 @@ class DecideReviewCase:
             await self._uow.commit()
 
         # Recompute rather than adjust: the scoring policy owns the number.
+        #
+        # The enum member, not a string literal. This read "MANUAL_REVIEW",
+        # which is not a ScoreTrigger, so the job raised ValueError *after*
+        # the endpoint had already returned 200: every review decision was
+        # recorded and audited, and none of them ever rescored the seller.
         await self._queue.enqueue(
             "scoring.recompute_trust_score",
             seller_id=str(case.seller_id),
-            trigger="MANUAL_REVIEW",
+            trigger=ScoreTrigger.MANUAL.value,
         )
         return DecideReviewCaseResult(case=decided, identity_updated=identity_updated)
 
