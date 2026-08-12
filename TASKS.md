@@ -48,7 +48,7 @@ Three consequences, and they save real time:
 | 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left   | Zohaib |
 | 4     | Admin panel                           | 5      | `[~]` reviewer workflow works end to end; seller admin left | Zohaib |
 | 5     | Appeals                               | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green    | Zohaib |
-| 6     | Public marketplace API                | 3      | `[ ]`                                                       |        |
+| 6     | Public marketplace API                | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs | Zohaib |
 | 7     | ML scam classifier                    | 4      | `[ ]`                                                       |        |
 | 8     | Real integrations                     | 4      | `[ ]`                                                       |        |
 | 9     | Deployment                            | 3      | `[ ]`                                                       |        |
@@ -205,9 +205,10 @@ software track can substitute for them, and they gate the accuracy numbers the r
       _Found and fixed 2 Aug._ `serverFetch` forwarded cookies and its docstring claimed a server render was "authenticated exactly like the browser". It was not. The API reads an access token **only** from the `Authorization` header, and the one cookie (`tl_rt`) is httpOnly and path-scoped to `/api/v1/auth`, so it is never even sent to `/api/v1/me`. A server component holds no access token and cannot mint one — `/auth/refresh` rotates the refresh token, and a server component may not set the replacement cookie. **Every authenticated server render was guaranteed to redirect to login**, including the dashboard that shipped with the scaffold.
       Fixed by splitting rendering along the line that already existed: private pages render on the client through the in-memory-token + refresh middleware (which already handles the cold-start 401); the **public** seller page, the one that must be fast and indexable, stays server-rendered against the public API. Private pages gain nothing from SSR, so this is the correct split rather than a workaround.
 
-- [ ] **P0-12** 🔗 **Dependency found: the public buyer page cannot work until Phase 6.**
-      `/public/v1/**` correctly requires an API key, and no keys exist because `use_cases/public_api/` is unbuilt. So `apps/web`'s server render of `/seller/{handle}` gets 401 and renders not-found — currently a clean 404, which is honest but not the product.
-      _Decide:_ either issue the web app its own first-party server key, or give the buyer page an internal authenticated route instead of going through the partner API. **Settle this before Phase 2 Day 10 (P2-22), which polishes that exact page.**
+- [ ] **P0-12** 🔗 **The public buyer page still 404s. No longer blocked — now a decision.**
+      `/public/v1/**` correctly requires an API key. Phase 6 built key issuance, so the blocker is gone, but `/seller/{handle}` still renders not-found (verified 12 Aug) because the web app holds no key.
+      _Decide:_ either issue `apps/web` its own first-party server key at boot, or give the buyer page an internal authenticated route instead of going through the partner API. The second is probably right — the buyer page is not a partner, and giving it a partner key means the demo's most visible screen shares a credential path with third parties.
+      **This is the screen in the final demo (P2-22). Settle it before that day.**
 
 **Exit criteria:** you can run the whole system offline, with no API keys, and get a Trust Score. ✅ **Met 31 Jul** — except the public buyer page, see P0-12.
 
@@ -452,13 +453,26 @@ software track can substitute for them, and they gate the accuracy numbers the r
 
 **Goal:** Module 8. The score endpoint exists; key management around it does not.
 
-- [ ] **P6-01** Implement `use_cases/public_api/` — API key issue, rotate, revoke, usage accounting. _(currently empty)_
-- [ ] **P6-02** Partner registration + key management screens.
-- [ ] **P6-03** Per-key rate limiting and quota enforcement via Redis.
-- [ ] **P6-04** **HMAC-signed responses** so a marketplace can prove a score is authentic and untampered.
-- [ ] **P6-05** Webhook delivery on score change, with retries and signature.
-- [ ] **P6-06** Public API documentation page + Postman collection (`make postman`).
-      _Done when:_ an external `curl` with a valid key returns a signed score; an invalid key is rejected and rate-limited.
+- [x] **P6-01** `use_cases/public_api/` — key issue, rotate, revoke, usage accounting.
+      _Done 12 Aug._ The plaintext key exists once, in the issue response, and only an argon2 hash is stored — a design where support can read a key back is a design where a database dump is a set of live credentials. **Rotation is not revocation:** rotating issues a replacement and _expires_ the old key after a 24-hour overlap, because revoke-then-issue takes the partner down for the length of their deploy, which is why in practice nobody rotates and leaked keys stay live for months. Revocation has no overlap. A key cannot be issued for a partner who is not ACTIVE. 21 tests.
+
+- [x] **P6-02** Partner registration + key management screens.
+      _Done 12 Aug._ Register, approve, suspend, issue, rotate, revoke, with usage against quota per partner. Revoke is two clicks (immediate, no overlap — a misclick takes a live partner offline); rotate is one, because friction there just means nobody rotates. The plaintext is held in component state and never written to a query cache.
+
+- [x] **P6-03** Per-key rate limiting and quota enforcement via Redis.
+      _Already built in the scaffold_ — the tracker was wrong. Verified: per-minute limit by tier, monthly quota, and it fails **closed** when Redis is unavailable, since for a partner-facing endpoint refusing traffic beats silently removing the only control on cost and abuse.
+
+- [x] **P6-04** **HMAC-signed responses** so a marketplace can prove a score is authentic.
+      _Done 12 Aug._ `X-TrustLens-Signature: t=<ts>,v1=<hmac>` over the **exact bytes served** — the response is built in the handler rather than left to FastAPI, because signing one encoding and sending another fails verification for reasons nobody can reproduce. The timestamp is inside the signed material, so a captured "score: 95" cannot be replayed forever. Verified independently: a tampered body fails the check. 12 tests.
+
+- [x] **P6-05** Webhook delivery on score change, with retries and signature.
+      _Done 12 Aug._ Fan-out happens in the outbox relay, so delivery rows are written in the **same transaction** as the event being marked published — "the score changed but nobody was told" cannot happen. Retries back off 30s/1m/2m/4m and then stop; only failures retrying can fix are retried (a 400 will be exactly as wrong in four minutes). Verified against a real receiver that returned 500 once: the retry arrived and was accepted, and the partner's independent HMAC check passed.
+      _Two defects found by running it rather than reading it:_ the fan-out compared domain event names (`trust_score.computed`) against the webhook enum (`SCORE_UPDATED`) and would have matched **nothing**; and `events.contains()` raises `NotImplementedError` on the generic ARRAY type.
+
+- [x] **P6-06** Public API documentation page + Postman collection (`make postman`).
+      _Done 12 Aug._ Written for the engineer handed a key and an afternoon, with real captured responses rather than idealised ones — including the parts that look like bugs on day two: `unavailableSignals` are checks that could not run and are excluded rather than counted against the seller, and a 404 means "no record", not "fraudulent". Carries a copy-pasteable signature verifier.
+
+**Exit criteria met:** an external `curl` with a valid key returns a signed score whose signature verifies; an invalid key is rejected 401, a revoked one 410, and both rate limit and quota return 429.
 
 ---
 
