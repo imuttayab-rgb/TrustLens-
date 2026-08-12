@@ -132,6 +132,7 @@ export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as 
 export const ROUTES = {
   home: '/',
   check: '/check',
+  apiDocs: '/docs/api',
   seller: (handle: string) => `/seller/${handle}`,
   login: '/login',
   register: '/register',

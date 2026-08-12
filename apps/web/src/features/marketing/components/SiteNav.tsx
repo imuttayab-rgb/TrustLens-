@@ -5,10 +5,18 @@ import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+/**
+ * Absolute, not bare fragments.
+ *
+ * These sections live on the landing page, but this nav renders on every
+ * marketing route. `#checks` from `/docs/api` scrolls to nothing and looks
+ * like a dead link; `/#checks` navigates home and then scrolls.
+ */
 const LINKS = [
-  { href: '#how-it-works', label: 'How it works' },
-  { href: '#checks', label: 'What we check' },
-  { href: '#explainable', label: 'Why explainable' },
+  { href: '/#how-it-works', label: 'How it works' },
+  { href: '/#checks', label: 'What we check' },
+  { href: '/#explainable', label: 'Why explainable' },
+  { href: '/docs/api', label: 'API docs' },
 ] as const;
 
 export function SiteNav() {
