@@ -58,9 +58,19 @@ Three consequences, and they save real time:
 
 ### Documentation track (runs in parallel — see Track D)
 
-| Track | Title                     | Days | Status | Owner                          |
-| ----- | ------------------------- | ---- | ------ | ------------------------------ |
-| D     | FYP academic deliverables | 9    | `[ ]`  | **TBD — decide who owns this** |
+| Track | Title                     | Days | Status | Owner                                    |
+| ----- | ------------------------- | ---- | ------ | ---------------------------------------- |
+| D     | FYP academic deliverables | 9    | `[ ]`  | **Haseeb + Muttayab** (confirmed 12 Aug) |
+
+**Decisions, 12 August 2026**
+
+- **Documentation track is owned by Haseeb and Muttayab.** Zohaib supplies the
+  technical content, diagrams and measured numbers; the students write and
+  present it. They defend this at viva, so writing it is part of the point -
+  a report handed to them is a report they cannot answer questions about.
+- **No submission date set.** Sequencing is therefore by dependency, not by
+  calendar. If a date lands later, the schedule can be cut from the back
+  (Phases 10-11 compress; Phase 9 cannot).
 
 **Grand total: 53 working days** ≈ 13 weeks at 4 days/week, or 10.5 weeks at 5 days/week.
 Map to real dates once the submission date is confirmed.
