@@ -36,6 +36,26 @@ def _stable_unit(*parts: str) -> float:
     return int.from_bytes(digest[:4], "big") / 0xFFFFFFFF
 
 
+def _looks_like_an_image(data: bytes) -> bool:
+    """Cheap magic-number check: JPEG, PNG, WEBP, BMP, GIF.
+
+    A fake that reads a CNIC number out of *any* bytes will happily verify a
+    seller who uploaded a text file, and `USE_FAKE_AI=true` is the demo path -
+    so that is not a harmless simplification, it is a demo where the fraud
+    check passes on a photo of a wallpaper. A real engine gets nothing from
+    non-image bytes; the fake must not get more.
+    """
+    if len(data) < 12:
+        return False
+    return (
+        data[:3] == b"\xff\xd8\xff"  # JPEG
+        or data[:8] == b"\x89PNG\r\n\x1a\n"  # PNG
+        or (data[:4] == b"RIFF" and data[8:12] == b"WEBP")  # WEBP
+        or data[:2] == b"BM"  # BMP
+        or data[:6] in (b"GIF87a", b"GIF89a")  # GIF
+    )
+
+
 class FakeOcrEngine:
     """Returns plausible CNIC fields derived from the image bytes."""
 
@@ -51,6 +71,20 @@ class FakeOcrEngine:
 
         if document_type == "SELFIE":
             return OcrResult(text="", confidence=confidence, engine="fake", engine_version="1.0")
+
+        if not _looks_like_an_image(image):
+            # No text, no fields, low confidence: exactly what a real engine
+            # returns for something that is not a document. The identity use
+            # case routes this to manual review rather than failing the seller
+            # (P1-05), which is the behaviour worth rehearsing in a demo.
+            return OcrResult(
+                text="",
+                confidence=0.0,
+                engine="fake",
+                engine_version="1.0",
+                quality_score=0.0,
+                raw={"engine": "fake", "reason": "not_an_image"},
+            )
 
         return OcrResult(
             text=f"PAKISTAN NATIONAL IDENTITY CARD\n{digits}",
@@ -82,6 +116,27 @@ class FakeFaceMatcher:
     async def compare(
         self, document_image: bytes, selfie_image: bytes, *, threshold: float
     ) -> FaceMatchResult:
+        # A real matcher cannot find a face in bytes that are not an image, and
+        # neither may this one. Reporting a 0.97 match on a text file would let
+        # a demo "verify" someone who uploaded nothing of the sort - and would
+        # collapse "retake your selfie" into "you are not who you claim", which
+        # are opposite messages to a seller.
+        doc_ok = _looks_like_an_image(document_image)
+        selfie_ok = _looks_like_an_image(selfie_image)
+        if not (doc_ok and selfie_ok):
+            return FaceMatchResult(
+                similarity=0.0,
+                distance=1.0,
+                threshold=threshold,
+                engine="fake",
+                engine_version="1.0",
+                liveness_passed=None,
+                face_detected_in_document=doc_ok,
+                face_detected_in_selfie=selfie_ok,
+                quality_score=0.0,
+                raw={"engine": "fake", "reason": "no_face_detected"},
+            )
+
         if document_image == selfie_image:
             similarity = 0.97
         else:
