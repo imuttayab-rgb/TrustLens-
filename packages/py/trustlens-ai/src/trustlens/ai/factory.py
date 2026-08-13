@@ -30,6 +30,15 @@ def build_ocr_engine(settings: AiSettings) -> OcrEngine:
 
         return FakeOcrEngine()
 
+    # Both engines satisfy the same contract test suite, so nothing downstream
+    # can tell which one it received - which is what makes benchmarking them
+    # against each other on real CNICs (P1-01) a configuration change rather
+    # than a rewrite.
+    if settings.ocr_engine == "rapidocr":
+        from trustlens.ai.ocr.rapidocr_engine import RapidOcrEngine
+
+        return RapidOcrEngine(min_confidence=settings.ocr_min_confidence)
+
     from trustlens.ai.ocr.easyocr_engine import EasyOcrEngine
 
     return EasyOcrEngine(
@@ -44,6 +53,11 @@ def build_face_matcher(settings: AiSettings) -> FaceMatcher:
         from trustlens.ai.fakes import FakeFaceMatcher
 
         return FakeFaceMatcher()
+
+    if settings.face_engine == "insightface":
+        from trustlens.ai.face.insightface_matcher import InsightFaceMatcher
+
+        return InsightFaceMatcher(model_name=settings.face_onnx_model)
 
     from trustlens.ai.face.deepface_matcher import DeepFaceMatcher
 

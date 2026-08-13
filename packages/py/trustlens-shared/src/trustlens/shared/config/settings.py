@@ -196,12 +196,25 @@ class AiSettings(_Base):
     ai_monthly_budget_usd: float = 50.0
     ai_prompt_version: str = "v1"
 
-    ocr_engine: str = "easyocr"
+    #: Which OCR implementation to build. `rapidocr` runs the same class of
+    #: model through onnxruntime instead of PyTorch, which is what makes the
+    #: worker image small enough for a free tier. Both stay selectable so
+    #: Phase 1 can benchmark them against real CNICs (P1-01) and the report
+    #: can quote a measured comparison rather than a preference.
+    ocr_engine: Literal["easyocr", "rapidocr"] = "easyocr"
     ocr_languages: CsvList = Field(default_factory=lambda: ["en"])
     ocr_min_confidence: float = 0.60
     ocr_gpu: bool = False
 
+    #: `insightface` drops TensorFlow for onnxruntime. DeepFace's default model
+    #: is ArcFace, which is InsightFace's own, so this is the same family of
+    #: model on a lighter runtime rather than a different approach.
+    face_engine: Literal["deepface", "insightface"] = "deepface"
     face_match_model: str = "ArcFace"
+    #: InsightFace's packaged model bundle. Small by default: on a CPU-only
+    #: free tier the large model's cold start costs more than its accuracy
+    #: gains, and a demo that times out scores nothing.
+    face_onnx_model: str = "buffalo_s"
     face_detector_backend: str = "retinaface"
     face_match_threshold: float = 0.70
     #: Between the lower bound and the threshold, route to a human rather than

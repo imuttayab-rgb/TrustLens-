@@ -157,6 +157,9 @@ strict = true
 module = [
     "easyocr.*",
     "deepface.*",
+    "rapidocr_onnxruntime.*",
+    "insightface.*",
+    "onnxruntime.*",
     "cv2.*",
     "numpy.*",
     "joblib.*",

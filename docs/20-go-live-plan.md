@@ -70,7 +70,7 @@ approaches and chose on measured accuracy" is a better methodology section than
 
 Each step is independently verifiable and independently committable.
 
-### Step 1 — Fix the worker's Redis death (P9-09) · ½ day
+### Step 1 — Fix the worker's Redis death (P9-09) · ½ day ✅ done 13 Aug
 
 **Why first:** it blocks deployment, and it is small.
 
@@ -87,7 +87,7 @@ rescoring, and nothing announces it.
 **Done when:** stop Redis, start it again, and the worker resumes consuming
 without a human touching it.
 
-### Step 2 — Contract tests for the AI ports · ½ day
+### Step 2 — Contract tests for the AI ports · ½ day ✅ done 13 Aug
 
 **Written before the new adapters, not after.** One suite that any `OcrEngine`
 or `FaceMatcher` must pass — fake, easyocr/deepface, and the ONNX pair all run
@@ -104,15 +104,32 @@ against the same cases:
 Without this, swapping adapters is "it seems to work". With it, the swap is
 proved.
 
-### Step 3 — ONNX adapters · 1 day
+### Step 3 — ONNX adapters · 1 day ✅ done 13 Aug
 
-- `ocr/rapidocr_engine.py` implementing `OcrEngine`.
-- `face/insightface_matcher.py` implementing `FaceMatcher`.
-- A new `onnx` extra in `trustlens-ai`; `ml` stays so the old path remains
-  runnable for the Phase 1 comparison.
-- `factory.py` picks by `AI_ENGINE=onnx|legacy|fake`.
+- `ocr/rapidocr_engine.py` and `face/insightface_matcher.py`, both implementing
+  the existing ports.
+- An `onnx` extra in `trustlens-ai`. `ml` is **kept**, so Phase 1 can benchmark
+  the two against each other on real CNICs.
+- Selected by `OCR_ENGINE` and `FACE_ENGINE`, both `Literal`-typed so a typo in
+  an env var fails at startup rather than silently falling through to the heavy
+  engine.
 
-The existing `ml` extra is **not deleted**. Phase 1 needs both to benchmark.
+**Measured, not assumed.** Installed into a scratch environment and run:
+
+|                        | Result                                                                    |
+| ---------------------- | ------------------------------------------------------------------------- |
+| ONNX OCR stack on disk | **233 MB** (against ~800 MB for PyTorch alone)                            |
+| Real inference         | read a generated CNIC at **0.995 confidence**, parsed the number and name |
+| Bad input              | zero confidence, no exception, on garbage / empty / 1px PNG               |
+| Determinism            | identical bytes produce identical results                                 |
+| Contract suite         | **41 passed** with both ONNX adapters auto-detected                       |
+
+**Latency is the honest catch:** ~13 s to load the models once, then ~2 s per
+document on a 12-core dev machine (1 thread ~2.6 s, 4 threads ~2.0 s, hence the
+configurable `threads`). That is slow enough to matter, and it confirms rather
+than changes the design: identity verification already returns `202 Accepted`
+with a job id and is polled. On a free tier with a fraction of a core it will be
+slower; the number for the report is the one measured on the deployed instance.
 
 ### Step 4 — Slim the worker image · ½ day
 
