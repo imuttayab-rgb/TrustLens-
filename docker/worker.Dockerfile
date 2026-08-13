@@ -33,7 +33,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=builder --chown=trustlens:trustlens /app /app
 USER trustlens
 
-# ARQ handles SIGTERM: it finishes the current job and stops pulling. Jobs are
-# idempotent, so a killed job is safely retried.
+# The supervisor handles SIGTERM: it stops retrying and lets the worker finish
+# the current job before exiting. Jobs are idempotent, so a killed job is
+# safely retried.
+#
+# Runs the supervisor rather than `arq` directly, because arq returns when
+# Redis drops and PID 1 returning means the queue silently stops being
+# consumed. Upstash closes idle connections by design (P9-09).
 STOPSIGNAL SIGTERM
-CMD ["arq", "trustlens_worker.main.WorkerSettings"]
+CMD ["python", "-m", "trustlens_worker.supervisor"]

@@ -49,7 +49,7 @@ dev-admin: ## Next.js admin app on :3001
 dev-api: ## FastAPI on :8000
 	$(UV) uvicorn trustlens_api.main:app --reload --host 0.0.0.0 --port 8000
 dev-worker: ## ARQ worker
-	$(UV) arq trustlens_worker.main.WorkerSettings --watch apps/worker/src
+	$(UV) python -m trustlens_worker.supervisor
 dev-offline: ## Everything with USE_FAKE_AI=true (no keys, no internet)
 	USE_FAKE_AI=true bash scripts/dev.sh
 

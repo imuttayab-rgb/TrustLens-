@@ -18,7 +18,11 @@ services:
       REDIS_QUEUE_URL: redis://redis:6379/1
       STORAGE_ENDPOINT_URL: http://minio:9000
       SMTP_HOST: mailhog
-    ports: ["8000:8000"]
+    ports: ['8000:8000']
+    # The outer net. The supervisor recovers from a dropped Redis
+    # connection in-process; this catches what it cannot - OOM, a bad
+    # deploy, the host rebooting.
+    restart: unless-stopped
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
@@ -34,6 +38,11 @@ services:
       REDIS_QUEUE_URL: redis://redis:6379/1
       STORAGE_ENDPOINT_URL: http://minio:9000
       SMTP_HOST: mailhog
+    # A restart policy is NOT the fix for P9-09 on its own: restarting
+    # reloads the OCR and face models from disk, which is seconds of work
+    # to recover from a blip that lasted milliseconds. The supervisor
+    # handles the blip; this handles the crash.
+    restart: unless-stopped
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
