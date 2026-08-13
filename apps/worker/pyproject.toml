@@ -14,6 +14,12 @@ dependencies = [
 
 [project.optional-dependencies]
 # The heavy stack lives here, and ONLY here. The API must never install it.
+#
+# `onnx` is the deployed one: same class of model on onnxruntime rather than
+# PyTorch and TensorFlow, so the image is ~400 MB instead of ~2.5 GB and fits a
+# free tier. `ml` is kept because Phase 1 benchmarks the two against real CNICs
+# (P1-01) and the report should quote a measurement, not a preference.
+onnx = ["trustlens-ai[onnx,llm]"]
 ml = ["trustlens-ai[ml,llm]"]
 
 [build-system]

@@ -24,6 +24,7 @@ stay behind `FACE_ENGINE` for Phase 1 to benchmark.
 from __future__ import annotations
 
 import asyncio
+import os
 from typing import Any
 
 from trustlens.core.domain.ports.ai import FaceMatchResult
@@ -49,18 +50,37 @@ MIN_FACE_PIXELS = 40
 class InsightFaceMatcher:
     """`FaceMatcher` backed by InsightFace's ONNX models."""
 
-    def __init__(self, *, model_name: str = DEFAULT_MODEL, det_size: int = 640) -> None:
+    def __init__(
+        self,
+        *,
+        model_name: str = DEFAULT_MODEL,
+        det_size: int = 640,
+        model_root: str | None = None,
+    ) -> None:
         self._model_name = model_name
         self._det_size = det_size
+        # Read from the environment rather than hard-coded, so the same class
+        # works from a checkout (default cache) and from the image (baked
+        # weights) without a second code path.
+        self._model_root = model_root or os.environ.get("INSIGHTFACE_HOME", "~/.insightface")
         self._app: Any | None = None
 
     def _get_app(self) -> Any:
-        """Built once, lazily - model load is seconds, not milliseconds."""
+        """Built once, lazily - model load is seconds, not milliseconds.
+
+        Weights are read from `INSIGHTFACE_HOME` (`/app/models` in the image,
+        baked at build time). InsightFace otherwise downloads them to
+        `~/.insightface` on first use, which turns the first verification after
+        a deploy into a several-hundred-megabyte fetch - on a free tier that
+        cold-starts, that is a job that times out rather than a job that is
+        slow, and it fails for a seller rather than for us.
+        """
         if self._app is None:
             from insightface.app import FaceAnalysis
 
             app = FaceAnalysis(
                 name=self._model_name,
+                root=self._model_root,
                 # Detection and recognition only. The bundled age/gender and
                 # landmark models are weight we would load and never call.
                 allowed_modules=["detection", "recognition"],
