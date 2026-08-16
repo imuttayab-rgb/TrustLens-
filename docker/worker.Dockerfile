@@ -53,7 +53,17 @@ app = FaceAnalysis(name=os.environ.get('FACE_ONNX_MODEL', 'buffalo_s'), \
                    allowed_modules=['detection', 'recognition'], \
                    providers=['CPUExecutionProvider']); \
 app.prepare(ctx_id=-1, det_size=(640, 640)); \
-print('insightface weights cached')"; \
+print('insightface weights cached')" && \
+      # InsightFace downloads the whole bundle as a zip and unpacks it, keeping
+      # both. `allowed_modules` decides what gets *loaded*, not what gets
+      # *fetched*, so the image otherwise carries 265 MB it will never open:
+      # the 122 MB zip, and 143 MB of landmark and age/gender models this
+      # adapter explicitly excludes. Detection and recognition are 15 MB.
+      find /app/models -name '*.zip' -delete && \
+      find /app/models -name '1k3d68.onnx' -delete && \
+      find /app/models -name '2d106det.onnx' -delete && \
+      find /app/models -name 'genderage.onnx' -delete && \
+      du -sh /app/models; \
     fi
 
 FROM python:3.12-slim AS runtime
