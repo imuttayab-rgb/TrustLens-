@@ -1,4 +1,9 @@
 * text=auto eol=lf
+# Windows batch files must keep CRLF. cmd.exe mis-parses LF-only .bat
+# files - the classic symptom is a label or a multi-line block silently
+# doing nothing, which is very hard to debug from the output.
+*.bat text eol=crlf
+*.cmd text eol=crlf
 *.png binary
 *.jpg binary
 *.svg binary
