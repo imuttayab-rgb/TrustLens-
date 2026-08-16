@@ -40,6 +40,17 @@ members = [
     "apps/worker",
 ]
 
+# `insightface` and `rapidocr-onnxruntime` both require plain `opencv-python`,
+# which ships GUI bindings and its own copy of the native libraries. We already
+# install `opencv-python-headless`, so without this the worker image carries
+# OpenCV twice - measured at ~197 MB of pure duplication.
+#
+# Headless is the correct build for a container regardless: the GUI variant
+# links against X11 libraries that are not present, so the only thing the extra
+# copy adds is size and a chance of loading the wrong one.
+[tool.uv]
+override-dependencies = ["opencv-python; sys_platform == 'never'"]
+
 [tool.uv.sources]
 trustlens-core = { workspace = true }
 trustlens-shared = { workspace = true }
