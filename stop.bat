@@ -17,12 +17,25 @@ echo  ============================================
 echo.
 
 REM ---------- 1. Dev servers ----------
-REM Matched on command line rather than image name: killing every
-REM python.exe or node.exe would take out unrelated work the user
-REM has open, which is a rude thing for a stop script to do.
+REM Killed by PORT OWNERSHIP first, then by command line.
+REM
+REM Matching on the command line alone is not enough, and this cost an
+REM afternoon to find: uvicorn --reload spawns a child worker whose command
+REM line reads "from multiprocessing.spawn import spawn_main", with the word
+REM uvicorn nowhere in it. Killing the parent left that child alive holding
+REM port 8000, so the NEXT start.bat could not bind - and the only symptom
+REM was that login silently stopped working.
+REM
+REM Whoever owns the port is who has to go, whatever it calls itself.
 echo [1/3] Stopping API, worker, web and admin...
 powershell -NoProfile -Command ^
-  "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { $_.CommandLine -match 'uvicorn|trustlens_worker' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }; Get-CimInstance Win32_Process -Filter \"Name='node.exe'\" | Where-Object { $_.CommandLine -match 'next' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" 2>nul
+  "foreach ($port in 3000,3001,8000) { Get-NetTCPConnection -LocalPort $port -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue } }" 2>nul
+
+REM The worker binds no port, so it is matched on its command line. Narrow
+REM patterns on purpose: killing every python.exe would take out unrelated
+REM work the user has open, which is a rude thing for a stop script to do.
+powershell -NoProfile -Command ^
+  "Get-CimInstance Win32_Process -Filter \"Name='python.exe'\" | Where-Object { $_.CommandLine -match 'trustlens_worker|uvicorn|multiprocessing.spawn' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" 2>nul
 
 REM Close the four terminal windows start.bat opened.
 taskkill /FI "WINDOWTITLE eq TrustLens API*" /T /F >nul 2>&1
