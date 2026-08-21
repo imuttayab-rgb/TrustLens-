@@ -106,7 +106,10 @@ async def get_trust_score(
         risk_label=payload.risk_label,
         confidence=payload.confidence,
         verifications=payload.verifications,
-        reasons=[{"code": r.code, "impact": r.impact, "text": r.text} for r in payload.reasons],
+        reasons=[
+            {"code": r.code, "impact": r.impact, "category": r.category, "text": r.text}
+            for r in payload.reasons
+        ],
         model_version=payload.model_version,
         computed_at=payload.computed_at,
         expires_at=payload.expires_at,

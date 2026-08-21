@@ -418,6 +418,12 @@
       "PublicReasonModel": {
         "additionalProperties": false,
         "properties": {
+          "category": {
+            "default": "",
+            "description": "Signal family: IDENTITY | PHONE | EMAIL | DEVICE | NETWORK | BEHAVIOUR | LISTING. Names the kind of check, never what was checked, so it carries no PII.",
+            "title": "Category",
+            "type": "string"
+          },
           "code": {
             "description": "Stable reason code. Switch on this, not on `text`.",
             "title": "Code",
@@ -3361,6 +3367,79 @@
         "tags": ["Me"]
       }
     },
+    "/api/v1/public/sellers/{seller_ref}/trust-score": {
+      "get": {
+        "description": "Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.\n\nMarketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.",
+        "operationId": "get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_ref",
+            "required": true,
+            "schema": {
+              "title": "Seller Ref",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "If-None-Match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "title": "Response Get Public Trust Score Api V1 Public Sellers  Seller Ref  Trust Score Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Buyer-facing score for the public seller page (no auth)",
+        "tags": ["Public Page"]
+      }
+    },
     "/api/v1/sellers/me": {
       "get": {
         "operationId": "get_my_seller_api_v1_sellers_me_get",
@@ -4270,6 +4349,10 @@
     {
       "description": "Partner-facing, API-key authenticated, PII-free.",
       "name": "Public API"
+    },
+    {
+      "description": "Anonymous buyer-facing reads. No key, no PII.",
+      "name": "Public Page"
     },
     {
       "description": "Liveness and readiness probes.",

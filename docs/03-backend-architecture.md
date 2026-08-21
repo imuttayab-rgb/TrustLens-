@@ -7,12 +7,12 @@ Python 3.12 · FastAPI · SQLAlchemy 2.0 (async) · Alembic · Pydantic v2 · AR
 Clean Architecture with four layers. The **Dependency Rule** is absolute: source dependencies point
 inward only.
 
-| Layer | Lives in | Knows about | Never knows about |
-|---|---|---|---|
-| **Domain** | `packages/py/trustlens-core/domain/` | Nothing but Python + Pydantic | HTTP, SQL, Redis, vendors |
-| **Application** (use cases) | `packages/py/trustlens-core/application/` | Domain + ports | Concrete adapters |
-| **Adapters** | `packages/py/trustlens-{db,ai,shared}/` | Domain ports + vendor SDKs | Each other, or apps |
-| **Presentation / composition** | `apps/api`, `apps/worker` | Everything (it wires them) | — |
+| Layer                          | Lives in                                  | Knows about                   | Never knows about         |
+| ------------------------------ | ----------------------------------------- | ----------------------------- | ------------------------- |
+| **Domain**                     | `packages/py/trustlens-core/domain/`      | Nothing but Python + Pydantic | HTTP, SQL, Redis, vendors |
+| **Application** (use cases)    | `packages/py/trustlens-core/application/` | Domain + ports                | Concrete adapters         |
+| **Adapters**                   | `packages/py/trustlens-{db,ai,shared}/`   | Domain ports + vendor SDKs    | Each other, or apps       |
+| **Presentation / composition** | `apps/api`, `apps/worker`                 | Everything (it wires them)    | —                         |
 
 ```
 HTTP request
@@ -204,7 +204,7 @@ apps/api/
 
 ### Middleware order (outermost first — order is a correctness concern)
 
-1. `RequestContextMiddleware` — assign `request_id` first so *everything* downstream can log it
+1. `RequestContextMiddleware` — assign `request_id` first so _everything_ downstream can log it
 2. `SecurityHeadersMiddleware`
 3. `CORSMiddleware`
 4. `BodySizeLimitMiddleware` — reject before buffering
@@ -229,14 +229,14 @@ raises `ForbiddenError` on failure. Details in [07](07-authentication-authorizat
 
 The cross-cutting behaviours an "interceptor" would provide are mapped explicitly:
 
-| Interceptor concern | Implementation |
-|---|---|
-| Response envelope | `ResponseModel` + a `response_model` wrapper generic `Envelope[T]` |
-| Timing / access log | `LoggingMiddleware` |
-| Exception translation | Global exception handlers (`exceptions/handlers.py`) |
-| Serialization | Pydantic `model_config` with `from_attributes=True`, camelCase alias generator |
-| Caching | Explicit in the use case — never a magic decorator that hides invalidation |
-| Audit trail | `AuditingUnitOfWork` decorator that writes `audit_logs` rows on commit |
+| Interceptor concern   | Implementation                                                                 |
+| --------------------- | ------------------------------------------------------------------------------ |
+| Response envelope     | `ResponseModel` + a `response_model` wrapper generic `Envelope[T]`             |
+| Timing / access log   | `LoggingMiddleware`                                                            |
+| Exception translation | Global exception handlers (`exceptions/handlers.py`)                           |
+| Serialization         | Pydantic `model_config` with `from_attributes=True`, camelCase alias generator |
+| Caching               | Explicit in the use case — never a magic decorator that hides invalidation     |
+| Audit trail           | `AuditingUnitOfWork` decorator that writes `audit_logs` rows on commit         |
 
 > **WHY no cache decorator:** implicit caching is the most common source of "why is this data stale" bugs.
 > Cache reads and invalidations are written out in the use case where the reader can see both halves.
@@ -245,19 +245,19 @@ The cross-cutting behaviours an "interceptor" would provide are mapped explicitl
 
 One mapping table, no scattered `HTTPException`s in routers:
 
-| Domain error | HTTP | `type` (RFC 9457) |
-|---|---|---|
-| `ValidationError` (Pydantic) | 422 | `/errors/validation-failed` |
-| `InvalidCredentials` | 401 | `/errors/invalid-credentials` |
-| `TokenExpired` / `TokenReused` | 401 | `/errors/token-invalid` |
-| `PermissionDenied` | 403 | `/errors/permission-denied` |
-| `EntityNotFound` | 404 | `/errors/not-found` |
-| `ConflictError` (duplicate email/phone) | 409 | `/errors/conflict` |
-| `UnprocessableStateError` (e.g. appeal on a score that no longer exists) | 422 | `/errors/invalid-state` |
-| `RateLimitExceeded` | 429 | `/errors/rate-limited` |
-| `ExternalServiceError` | 502 | `/errors/upstream-failed` |
-| `ServiceUnavailable` | 503 | `/errors/unavailable` |
-| Anything else | 500 | `/errors/internal` — **message replaced with a generic string**, real detail logged with `request_id` |
+| Domain error                                                             | HTTP | `type` (RFC 9457)                                                                                     |
+| ------------------------------------------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------- |
+| `ValidationError` (Pydantic)                                             | 422  | `/errors/validation-failed`                                                                           |
+| `InvalidCredentials`                                                     | 401  | `/errors/invalid-credentials`                                                                         |
+| `TokenExpired` / `TokenReused`                                           | 401  | `/errors/token-invalid`                                                                               |
+| `PermissionDenied`                                                       | 403  | `/errors/permission-denied`                                                                           |
+| `EntityNotFound`                                                         | 404  | `/errors/not-found`                                                                                   |
+| `ConflictError` (duplicate email/phone)                                  | 409  | `/errors/conflict`                                                                                    |
+| `UnprocessableStateError` (e.g. appeal on a score that no longer exists) | 422  | `/errors/invalid-state`                                                                               |
+| `RateLimitExceeded`                                                      | 429  | `/errors/rate-limited`                                                                                |
+| `ExternalServiceError`                                                   | 502  | `/errors/upstream-failed`                                                                             |
+| `ServiceUnavailable`                                                     | 503  | `/errors/unavailable`                                                                                 |
+| Anything else                                                            | 500  | `/errors/internal` — **message replaced with a generic string**, real detail logged with `request_id` |
 
 Rule: internal exception text is never returned to a client. The response carries a `request_id` the
 user can quote; the log carries the stack trace.
@@ -413,6 +413,7 @@ src/trustlens/shared/
 (`DatabaseSettings`, `RedisSettings`, `AiSettings`, `StorageSettings`, `SecuritySettings`).
 
 Rules:
+
 1. **Fail fast.** The app refuses to start on a missing or malformed variable — never `os.getenv(...) or ""`.
 2. **No defaults for secrets.** A default `JWT_SECRET` is how a development key reaches production.
 3. **`Settings` is constructed once** at startup and injected; nothing reads `os.environ` at call time.
@@ -424,10 +425,10 @@ Full variable list: [12 — Environment Variables](12-environment-variables.md).
 
 ## 9. How SOLID shows up here (concretely)
 
-| Principle | Where |
-|---|---|
-| **S**ingle responsibility | One class per use case; policies separated from entities; repositories separated from query models |
-| **O**pen/closed | New signal = new `SignalCollector` + a `signal_definitions` row + a weight. The scoring policy is not modified |
-| **L**iskov | `OpenAiAnalyzer` and `AnthropicAnalyzer` are interchangeable behind `LlmAnalyzer`; both pass the same contract test suite |
+| Principle                 | Where                                                                                                                                    |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **S**ingle responsibility | One class per use case; policies separated from entities; repositories separated from query models                                       |
+| **O**pen/closed           | New signal = new `SignalCollector` + a `signal_definitions` row + a weight. The scoring policy is not modified                           |
+| **L**iskov                | `OpenAiAnalyzer` and `AnthropicAnalyzer` are interchangeable behind `LlmAnalyzer`; both pass the same contract test suite                |
 | **I**nterface segregation | Narrow ports (`OcrEngine` has one method) instead of one `AiService` god-interface; repositories are per-aggregate, not one `Repository` |
-| **D**ependency inversion | `trustlens-core` defines the ports; adapters depend on core, never the reverse — enforced by `import-linter` in CI |
+| **D**ependency inversion  | `trustlens-core` defines the ports; adapters depend on core, never the reverse — enforced by `import-linter` in CI                       |

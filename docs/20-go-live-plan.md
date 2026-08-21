@@ -24,6 +24,7 @@ changes. The ports already define the contract:
 class OcrEngine(Protocol):
     async def extract(self, image: bytes, *, document_type: str) -> OcrResult: ...
 
+
 class FaceMatcher(Protocol):
     async def compare(self, document: bytes, selfie: bytes) -> FaceMatchResult: ...
 ```

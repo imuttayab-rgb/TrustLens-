@@ -42,6 +42,7 @@ from trustlens.shared.logging import configure_logging, get_logger, request_id_v
 from trustlens.shared.notifications import build_email_sender, build_sms_sender
 from trustlens.shared.queue import ArqJobQueue
 from trustlens.shared.storage import build_storage
+from trustlens.shared.telemetry import Heartbeat, init_error_reporting
 from trustlens_worker.jobs import (
     identity,
     listings,
@@ -91,6 +92,14 @@ async def startup(ctx: dict[str, Any]) -> None:
     ctx["llm"] = build_llm_analyzer(settings.ai)
     ctx["classifier"] = build_scam_classifier(settings.ai)
 
+    ctx["heartbeat"] = Heartbeat()
+    init_error_reporting(
+        settings.observability,
+        environment=settings.env.value,
+        release=settings.app_version,
+        component="worker",
+    )
+
     log.info("worker_started", fake_ai=settings.ai.use_fake_ai)
 
 
@@ -113,6 +122,16 @@ async def on_job_end(ctx: dict[str, Any]) -> None:
     started = ctx.get("_started_at")
     if started is not None:
         log.info("job_finished", duration_ms=round((time.perf_counter() - started) * 1000, 2))
+
+    # Proof of consumption, not just of being alive (P9-07).
+    #
+    # A worker can be running, connected and processing nothing - no OCR, no
+    # emails, no OTP, no rescoring - while every process-level check reports
+    # healthy and the UI says "processing" forever. `GET /health/worker` reads
+    # this key; missing or stale is exactly that case.
+    heartbeat = ctx.get("heartbeat")
+    if heartbeat is not None:
+        await heartbeat.beat(ctx["cache"], job_name=str(ctx.get("job_id", "")))
 
 
 class WorkerSettings:

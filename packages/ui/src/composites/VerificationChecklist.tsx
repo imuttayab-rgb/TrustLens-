@@ -67,7 +67,9 @@ export function VerificationChecklist({
                 {...(item.actionUrl && !done ? { href: item.actionUrl } : {})}
                 className={cn(
                   'border-border flex items-center gap-3 rounded-lg border p-3',
-                  item.actionUrl && !done && 'hover:bg-muted focus-visible:ring-ring transition-colors focus-visible:outline-none focus-visible:ring-2',
+                  item.actionUrl &&
+                    !done &&
+                    'hover:bg-muted focus-visible:ring-ring transition-colors focus-visible:ring-2 focus-visible:outline-none',
                 )}
               >
                 <span className={cn('rounded-full p-1.5', TONE[item.status])} aria-hidden="true">

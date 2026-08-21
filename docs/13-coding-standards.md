@@ -13,19 +13,19 @@ Additional rules:
 - **No abbreviations** except universally understood ones (`id`, `url`, `api`, `db`, `ocr`, `cnic`).
   `calculateTrustScore`, never `calcTS`.
 - **Booleans read as assertions**: `isVerified`, `hasActiveAppeal`, `canOverrideScore`.
-- **Domain vocabulary is fixed and shared.** *Signal*, *Trust Score*, *Risk Level*, *Appeal*,
-  *Review Case*, *Scoring Model*, *Marketplace*. The same word means the same thing in the database, the
+- **Domain vocabulary is fixed and shared.** _Signal_, _Trust Score_, _Risk Level_, _Appeal_,
+  _Review Case_, _Scoring Model_, _Marketplace_. The same word means the same thing in the database, the
   API, the UI, and the FYP report. Renaming a concept means renaming it everywhere, in one PR.
 
 ## 2. Python standards
 
-| Tool | Purpose | Config |
-|---|---|---|
-| **Ruff** | Lint + import sorting (replaces flake8, isort, pyupgrade, bandit-lite) | Root `pyproject.toml` |
-| **Black** | Formatting, line length 100 | Root `pyproject.toml` |
-| **mypy** | `--strict` on `packages/py/*`, standard on `apps/*` | Root `pyproject.toml` |
-| **import-linter** | Enforces the layering contracts in [02 §3](02-system-architecture.md) | `.importlinter` |
-| **pytest** | Tests, `--cov`, `-x` locally | Root `pyproject.toml` |
+| Tool              | Purpose                                                                | Config                |
+| ----------------- | ---------------------------------------------------------------------- | --------------------- |
+| **Ruff**          | Lint + import sorting (replaces flake8, isort, pyupgrade, bandit-lite) | Root `pyproject.toml` |
+| **Black**         | Formatting, line length 100                                            | Root `pyproject.toml` |
+| **mypy**          | `--strict` on `packages/py/*`, standard on `apps/*`                    | Root `pyproject.toml` |
+| **import-linter** | Enforces the layering contracts in [02 §3](02-system-architecture.md)  | `.importlinter`       |
+| **pytest**        | Tests, `--cov`, `-x` locally                                           | Root `pyproject.toml` |
 
 Enabled Ruff rule groups: `E,W` (pycodestyle), `F` (pyflakes), `I` (isort), `N` (naming), `UP` (pyupgrade),
 `B` (bugbear), `S` (bandit security), `A` (builtin shadowing), `C4`, `SIM`, `TCH`, `PTH`, `RUF`.
@@ -45,18 +45,18 @@ Conventions:
   never `except:` bare, never `except Exception: pass`.
 - **No I/O in the domain layer.** No `requests`, no `open()`, no `datetime.now()`, no `uuid4()` inside
   `trustlens-core` — use the `Clock` and `IdGenerator` ports.
-- **Docstrings** on public modules, classes, and non-obvious functions: what and *why*, not a restatement
+- **Docstrings** on public modules, classes, and non-obvious functions: what and _why_, not a restatement
   of the signature.
 - Line length 100, double quotes, trailing commas.
 
 ## 3. TypeScript standards
 
-| Tool | Purpose |
-|---|---|
-| **ESLint** (flat config) | `packages/config-eslint` — base, react, next, node presets |
-| **Prettier** | Formatting — `configs/prettier.config.js` |
-| **TypeScript** | `strict: true`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `exactOptionalPropertyTypes` |
-| **knip** | Dead code and unused dependency detection |
+| Tool                     | Purpose                                                                                        |
+| ------------------------ | ---------------------------------------------------------------------------------------------- |
+| **ESLint** (flat config) | `packages/config-eslint` — base, react, next, node presets                                     |
+| **Prettier**             | Formatting — `configs/prettier.config.js`                                                      |
+| **TypeScript**           | `strict: true`, `noUncheckedIndexedAccess`, `noImplicitOverride`, `exactOptionalPropertyTypes` |
+| **knip**                 | Dead code and unused dependency detection                                                      |
 
 Key ESLint rules:
 
@@ -95,14 +95,14 @@ main ──────●────────●────────●
              ●────●   ●────●                     feat/… fix/… — 1–3 days each
 ```
 
-| Branch | Purpose | Lifetime |
-|---|---|---|
-| `main` | Production. Protected. Deploys on tag | permanent |
-| `develop` | Optional integration branch → staging. Use only if the team wants a staging gate | permanent |
-| `feat/<issue>-<slug>` | New feature | ≤ 3 days |
-| `fix/<issue>-<slug>` | Bug fix | ≤ 1 day |
-| `chore/…`, `docs/…`, `refactor/…`, `test/…` | Maintenance | short |
-| `hotfix/<slug>` | Production emergency; branches from `main`, merges to `main` | hours |
+| Branch                                      | Purpose                                                                          | Lifetime  |
+| ------------------------------------------- | -------------------------------------------------------------------------------- | --------- |
+| `main`                                      | Production. Protected. Deploys on tag                                            | permanent |
+| `develop`                                   | Optional integration branch → staging. Use only if the team wants a staging gate | permanent |
+| `feat/<issue>-<slug>`                       | New feature                                                                      | ≤ 3 days  |
+| `fix/<issue>-<slug>`                        | Bug fix                                                                          | ≤ 1 day   |
+| `chore/…`, `docs/…`, `refactor/…`, `test/…` | Maintenance                                                                      | short     |
+| `hotfix/<slug>`                             | Production emergency; branches from `main`, merges to `main`                     | hours     |
 
 Rules: rebase onto `main` before opening a PR (linear history); **squash merge** so one PR = one commit on
 `main`; delete the branch after merge; never force-push to `main` or `develop`.
@@ -144,19 +144,27 @@ Template (`.github/pull_request_template.md`):
 
 ```markdown
 ## What
+
 ## Why
+
 ## How
+
 ## Testing
+
 - [ ] Unit tests added/updated
 - [ ] Integration tests where I/O or SQL changed
 - [ ] Manually verified locally
+
 ## Checklist
+
 - [ ] Migration reviewed line by line (if schema changed)
 - [ ] `pnpm codegen` run (if the API contract changed)
 - [ ] Docs updated (if behaviour or architecture changed)
 - [ ] No secrets, no PII, no real CNIC images committed
 - [ ] Env vars added to `.env.example` and docs/12
+
 ## Screenshots / API examples
+
 ## Related issues
 ```
 
@@ -167,13 +175,13 @@ rubber stamp. Split by layer (migration → repository → use case → endpoint
 
 ### Husky hooks
 
-| Hook | Runs | Why |
-|---|---|---|
-| `pre-commit` | `lint-staged` | Format + lint only what changed — fast |
-| `commit-msg` | `commitlint` | Rejects a non-conventional message before it exists |
-| `pre-push` | `make typecheck && make test-unit` | Catches the obvious break before CI does |
+| Hook         | Runs                               | Why                                                 |
+| ------------ | ---------------------------------- | --------------------------------------------------- |
+| `pre-commit` | `lint-staged`                      | Format + lint only what changed — fast              |
+| `commit-msg` | `commitlint`                       | Rejects a non-conventional message before it exists |
+| `pre-push`   | `make typecheck && make test-unit` | Catches the obvious break before CI does            |
 
-`pre-push` deliberately runs only *unit* tests — a pre-push hook that takes three minutes gets bypassed
+`pre-push` deliberately runs only _unit_ tests — a pre-push hook that takes three minutes gets bypassed
 with `--no-verify`, and a bypassed hook protects nothing.
 
 ### lint-staged
@@ -182,10 +190,10 @@ with `--no-verify`, and a bypassed hook protects nothing.
 // configs/lint-staged.config.js
 module.exports = {
   '*.{ts,tsx,js,jsx}': ['prettier --write', 'eslint --fix --max-warnings=0'],
-  '*.py':              ['ruff check --fix', 'ruff format', 'black'],
+  '*.py': ['ruff check --fix', 'ruff format', 'black'],
   '*.{json,yml,yaml,md}': ['prettier --write'],
-  '*.md':              ['markdownlint --fix'],
-  '*':                 ['gitleaks protect --staged --no-banner'],
+  '*.md': ['markdownlint --fix'],
+  '*': ['gitleaks protect --staged --no-banner'],
 };
 ```
 
@@ -216,13 +224,14 @@ Path-filtered so a docs change doesn't run the ML test suite:
   none, because it is confidently wrong.
 - Non-obvious decisions get an [ADR](adr/README.md).
 - Comments explain **why**, never what. `# increment i` is noise; `# EasyOCR returns tokens in reading
-  order, but CNIC back pages are two-column, so re-sort by bbox x-position first` is the reason the next
+order, but CNIC back pages are two-column, so re-sort by bbox x-position first` is the reason the next
   person doesn't "simplify" the code and break it.
 - Every public API endpoint carries an OpenAPI `summary`, `description`, and example.
 
 ## 9. Definition of Done
 
 A change is done when:
+
 1. It meets the acceptance criteria on the issue.
 2. Unit tests cover the new logic; integration tests cover new I/O.
 3. `make ci` passes locally.

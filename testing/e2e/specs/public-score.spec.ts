@@ -18,17 +18,38 @@ test.describe('public seller page', () => {
 
   test('never exposes personal data', async ({ page }) => {
     await page.goto('/seller/ayesha-traders');
-    const body = (await page.textContent('body')) ?? '';
+
+    // innerText, not textContent: textContent includes <script> contents, and
+    // in dev mode Next inlines the RSC payload there - full of pnpm specifiers
+    // like `next@15.5.22` that match an email regex and fail this for no
+    // reason. innerText is what a buyer can actually read.
+    const visible = await page.locator('body').innerText();
 
     // The public schema has no field for any of these. If one appears, a
     // serialiser somewhere started leaking - fail loudly.
-    expect(body).not.toMatch(/\d{5}-\d{7}-\d/); // CNIC
-    expect(body).not.toMatch(/\+\d{10,15}/); // phone
-    expect(body).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/); // email
+    expect(visible).not.toMatch(/\d{5}-\d{7}-\d/); // CNIC
+    expect(visible).not.toMatch(/\+\d{10,15}/); // phone
+    expect(visible).not.toMatch(/[\w.+-]+@[\w-]+\.[\w.]+/); // email
   });
 
   test('a high-risk seller is not rendered as reassuring', async ({ page }) => {
     await page.goto('/seller/quick-deals-pk');
-    await expect(page.getByText(/high risk/i)).toBeVisible();
+
+    // The band appears twice by design - once under the gauge, once as a
+    // badge - so this asserts the badge specifically rather than using a bare
+    // text match, which trips Playwright's strict mode on two hits.
+    await expect(page.getByText(/high risk/i).first()).toBeVisible();
+    await expect(page.getByText(/low risk/i)).toHaveCount(0);
+  });
+
+  test('labels each reason with the check it came from', async ({ page }) => {
+    await page.goto('/seller/ayesha-traders');
+    const visible = await page.locator('body').innerText();
+
+    // Regression test for a defect the 404 hid: every reason row was
+    // hardcoded to the Identity category, so "The email address was
+    // confirmed" was presented to buyers as an identity check.
+    const identityLabels = visible.match(/^Identity$/gm) ?? [];
+    expect(identityLabels.length).toBeLessThan(4);
   });
 });

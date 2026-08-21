@@ -23,18 +23,19 @@ high-impact event, not a nuisance.
 
 ## Alternatives considered
 
-| Option | Why rejected |
-|---|---|
-| **Server-side sessions in Redis** | Simple and revocable, but makes every request a Redis round-trip and couples the API to session storage. The `perm_version` counter gives most of the revocability at a fraction of the cost |
-| **Long-lived JWT, no refresh** | A stolen token is valid until expiry with no revocation path. Unacceptable given the data at stake |
-| **Both tokens in `localStorage`** | Readable by any XSS payload. In an application holding biometric data, this is not an acceptable residual risk |
-| **Non-rotating refresh token** | A stolen refresh token becomes a 30-day skeleton key with no detection mechanism |
+| Option                                                    | Why rejected                                                                                                                                                                                   |
+| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Server-side sessions in Redis**                         | Simple and revocable, but makes every request a Redis round-trip and couples the API to session storage. The `perm_version` counter gives most of the revocability at a fraction of the cost   |
+| **Long-lived JWT, no refresh**                            | A stolen token is valid until expiry with no revocation path. Unacceptable given the data at stake                                                                                             |
+| **Both tokens in `localStorage`**                         | Readable by any XSS payload. In an application holding biometric data, this is not an acceptable residual risk                                                                                 |
+| **Non-rotating refresh token**                            | A stolen refresh token becomes a 30-day skeleton key with no detection mechanism                                                                                                               |
 | **Third-party auth provider (Auth0/Clerk/Supabase Auth)** | Faster to build, but adds a vendor dependency and an external cost, and the FYP is partly assessed on demonstrating the auth design — outsourcing it removes something the project should show |
-| **HS256 symmetric JWT** | Acceptable for a single service, but forecloses letting a future extracted service verify tokens without holding the signing key |
+| **HS256 symmetric JWT**                                   | Acceptable for a single service, but forecloses letting a future extracted service verify tokens without holding the signing key                                                               |
 
 ## Consequences
 
 **Positive**
+
 - XSS cannot read the refresh token (httpOnly) and the access token dies with the tab.
 - A stolen refresh token is **self-limiting**: whichever party uses the older copy triggers revocation of
   both sessions.
@@ -42,6 +43,7 @@ high-impact event, not a nuisance.
 - Asymmetric signing keeps the service-extraction option open.
 
 **Negative / accepted costs**
+
 - More moving parts than a session cookie: rotation, families, reuse detection, and `perm_version` all
   need tests.
 - The refresh cookie makes `/auth/refresh` a CSRF target, requiring `SameSite`, a scoped `Path`, a

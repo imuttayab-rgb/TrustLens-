@@ -12,7 +12,13 @@ from dataclasses import asdict, dataclass, field
 from uuid import UUID
 
 from trustlens.core.domain.entities import SellerProfile, SignalDefinition, TrustScore
-from trustlens.core.domain.enums import RiskLevel, ScoreTrigger, SignalCode, SignalStatus
+from trustlens.core.domain.enums import (
+    RiskLevel,
+    ScoreTrigger,
+    SignalCategory,
+    SignalCode,
+    SignalStatus,
+)
 from trustlens.core.domain.errors import EntityNotFound
 from trustlens.core.domain.policies import band_label, rank_improvements
 from trustlens.core.domain.ports import Cache, Clock, JobQueue, UnitOfWork
@@ -23,6 +29,14 @@ class PublicReason:
     code: str
     impact: str
     text: str
+    #: Which signal family this reason belongs to, so a reader can group and
+    #: label reasons rather than guessing from the code. Not PII - it names a
+    #: category of check, never a value that was checked.
+    #:
+    #: Defaulted because this field was added after payloads were already in
+    #: the score cache; an entry written before the change deserialises
+    #: without it rather than raising for the length of one cache TTL.
+    category: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,6 +151,7 @@ def to_public(
         PublicReason(
             code=signal.reason_code.value,
             impact="NEGATIVE" if signal.points_lost > 0 else "POSITIVE",
+            category=signal.category.value,
             text=(
                 definitions[signal.signal_code].buyer_facing_description
                 if signal.signal_code in definitions and not signal.reason_text
@@ -182,6 +197,7 @@ def _unscored_payload(seller_ref: str, seller: SellerProfile) -> PublicTrustScor
             PublicReason(
                 code="INSUFFICIENT_EVIDENCE",
                 impact="NEUTRAL",
+                category=SignalCategory.IDENTITY.value,
                 text="This seller has not completed enough checks to be scored yet.",
             )
         ],

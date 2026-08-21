@@ -1,0 +1,46 @@
+[project]
+name = "trustlens-ml"
+version = "0.1.0"
+description = "TrustLens model training: data, training, evaluation, export for the scam-listing classifier."
+requires-python = ">=3.12"
+
+# Training-only. Nothing in this package is imported at runtime by the API or
+# the worker - they load the exported artifact through `trustlens.ai`, which
+# is enforced by the `nothing-imports-training-code` import-linter contract.
+#
+# `trustlens-ai` is a dependency in one direction only, for the shared feature
+# extractor: training and serving MUST compute features with the same code, or
+# the model scores well offline and behaves randomly in production.
+dependencies = [
+    "trustlens-ai",
+    "trustlens-shared",
+    "scikit-learn>=1.5.2",
+    "numpy>=1.26.4",
+    "scipy>=1.14.1",
+    "joblib>=1.4.2",
+    "httpx>=0.27.2",
+]
+
+[project.optional-dependencies]
+# Plots for the report (P7-05). Separated because a CI run that only needs to
+# verify training works does not need a plotting stack.
+plots = ["matplotlib>=3.9.2"]
+# The DistilBERT fine-tune (P7-04) runs on Colab, not here - see
+# notebooks/distilbert_colab.py. Listed so the versions are pinned somewhere
+# the report can cite.
+transformer = [
+    "transformers>=4.46.0",
+    "torch>=2.5.0",
+    "datasets>=3.1.0",
+    "onnxruntime>=1.19.2",
+]
+
+[project.scripts]
+trustlens-ml = "trustlens_ml.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trustlens_ml"]

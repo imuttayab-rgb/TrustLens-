@@ -20,23 +20,25 @@ Consequence by design: a backend field rename breaks the **frontend type-check i
 
 ## Alternatives considered
 
-| Option | Why rejected |
-|---|---|
-| **Hand-written TS types and fetch wrappers** | Guaranteed drift. The failure mode is a runtime `undefined` in front of an examiner, not a compile error |
-| **tRPC** | Requires a TypeScript backend; the proposal mandates FastAPI |
-| **GraphQL** | Adds a schema layer, a client cache, and N+1 concerns to solve a problem that generated REST types already solve. Also a poor fit for the partner-facing public API, where REST + API keys is what integrators expect |
-| **Protobuf / gRPC** | Strong typing, but browser support requires a proxy, and it forfeits the human-readable REST surface the public API needs |
-| **Generate the backend from a hand-written OpenAPI spec** (spec-first) | Cleaner in theory, but fights FastAPI, whose value is that the spec falls out of typed Python |
+| Option                                                                 | Why rejected                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Hand-written TS types and fetch wrappers**                           | Guaranteed drift. The failure mode is a runtime `undefined` in front of an examiner, not a compile error                                                                                                              |
+| **tRPC**                                                               | Requires a TypeScript backend; the proposal mandates FastAPI                                                                                                                                                          |
+| **GraphQL**                                                            | Adds a schema layer, a client cache, and N+1 concerns to solve a problem that generated REST types already solve. Also a poor fit for the partner-facing public API, where REST + API keys is what integrators expect |
+| **Protobuf / gRPC**                                                    | Strong typing, but browser support requires a proxy, and it forfeits the human-readable REST surface the public API needs                                                                                             |
+| **Generate the backend from a hand-written OpenAPI spec** (spec-first) | Cleaner in theory, but fights FastAPI, whose value is that the spec falls out of typed Python                                                                                                                         |
 
 ## Consequences
 
 **Positive**
+
 - One definition of every request and response shape.
 - Breaking changes surface at build time, in the PR that caused them.
 - Swagger UI, ReDoc, and the Postman collection (a proposal-listed tool) all come from the same document.
 - Schemathesis can fuzz the API directly from the spec ([14 §5](../14-testing-strategy.md)).
 
 **Negative / accepted costs**
+
 - `pnpm codegen` must be run after any API change; forgetting it fails CI (which is the intended
   behaviour, but is friction).
 - Generated code is committed, so PR diffs include generated files. Mitigated by marking them

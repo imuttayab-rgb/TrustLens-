@@ -109,7 +109,9 @@ def build_scam_classifier(settings: AiSettings) -> ScamClassifier:
     if settings.use_fake_ai:
         from trustlens.ai.fakes import FakeScamClassifier
 
-        return FakeScamClassifier(threshold=settings.classifier_threshold)
+        # The fake has no calibration curve to fall back on, so it keeps its
+        # own documented default when the setting is unset.
+        return FakeScamClassifier(threshold=settings.classifier_threshold or 0.65)
 
     from trustlens.ai.classifier.scam_classifier import TrainedScamClassifier
 

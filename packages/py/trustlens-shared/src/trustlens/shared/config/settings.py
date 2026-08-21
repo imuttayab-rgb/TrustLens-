@@ -223,7 +223,13 @@ class AiSettings(_Base):
     face_match_review_lower: float = 0.55
 
     classifier_model_version: str = "scamclf-v1"
-    classifier_threshold: float = 0.65
+    #: `None` means "use the threshold the artifact was calibrated with".
+    #:
+    #: The operating point is chosen against a validation curve during training
+    #: and stored in the artifact, so a hard default here would silently
+    #: override a measured decision with a guessed one. Set it only to move the
+    #: operating point deliberately, and record why.
+    classifier_threshold: float | None = None
 
     @model_validator(mode="after")
     def _key_present_for_live_provider(self) -> AiSettings:

@@ -11,3 +11,11 @@
 !.gitignore
 !*.example.csv
 !README.md
+
+# Git does not descend into an excluded directory, so a `!*.example.csv` rule
+# alone cannot rescue a file inside one. The directory has to be re-included
+# first, then its contents excluded, then the example file rescued.
+!local_ads/
+local_ads/*
+!local_ads/*.example.csv
+!README.md

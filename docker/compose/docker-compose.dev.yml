@@ -9,35 +9,35 @@ services:
       POSTGRES_PASSWORD: trustlens
       POSTGRES_DB: trustlens
       # Deterministic collation so index ordering matches production
-      POSTGRES_INITDB_ARGS: "--locale=C --encoding=UTF8"
+      POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - '${POSTGRES_PORT:-5432}:5432'
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ../../database/sql/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U trustlens -d trustlens"]
+      test: ['CMD-SHELL', 'pg_isready -U trustlens -d trustlens']
       interval: 5s
       timeout: 3s
       retries: 10
     command:
-      - "postgres"
-      - "-c"
-      - "log_statement=none"
-      - "-c"
-      - "max_connections=200"
+      - 'postgres'
+      - '-c'
+      - 'log_statement=none'
+      - '-c'
+      - 'max_connections=200'
 
   redis:
     image: redis:7-alpine
     container_name: trustlens-redis
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - '${REDIS_PORT:-6379}:6379'
     # appendonly protects the ARQ job queue across restarts; the cache DB is disposable
-    command: ["redis-server", "--appendonly", "yes", "--save", "60", "1"]
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
     volumes:
       - redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -50,13 +50,13 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     # 9002, not 9000: 9000 is commonly taken by Portainer and other local tools
     ports:
-      - "${MINIO_PORT:-9002}:9000"
-      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+      - '${MINIO_PORT:-9002}:9000'
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
     volumes:
       - miniodata:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "mc", "ready", "local"]
+      test: ['CMD', 'mc', 'ready', 'local']
       interval: 5s
       timeout: 3s
       retries: 10
@@ -82,8 +82,8 @@ services:
     image: axllent/mailpit:latest
     container_name: trustlens-mailhog
     ports:
-      - "${SMTP_PORT:-1025}:1025"
-      - "${MAILHOG_UI_PORT:-8025}:8025"
+      - '${SMTP_PORT:-1025}:1025'
+      - '${MAILHOG_UI_PORT:-8025}:8025'
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1

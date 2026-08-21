@@ -21,6 +21,14 @@ class PublicSchema(BaseModel):
 class PublicReasonModel(PublicSchema):
     code: str = Field(description="Stable reason code. Switch on this, not on `text`.")
     impact: str = Field(description="POSITIVE | NEGATIVE | NEUTRAL")
+    category: str = Field(
+        default="",
+        description=(
+            "Signal family: IDENTITY | PHONE | EMAIL | DEVICE | NETWORK | "
+            "BEHAVIOUR | LISTING. Names the kind of check, never what was "
+            "checked, so it carries no PII."
+        ),
+    )
     text: str = Field(description="Buyer-readable explanation.")
 
 

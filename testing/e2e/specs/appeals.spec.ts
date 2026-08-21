@@ -76,7 +76,10 @@ test('a seller can dispute a score and a reviewer can resolve it', async ({ brow
 
   await staff.goto(`${ADMIN}/login`, { waitUntil: 'domcontentloaded' });
   await signIn(staff, 'reviewer@trustlens.dev', 'Review!Passw0rd123');
-  await expect(staff.getByRole('link', { name: /review queue/i })).toBeVisible({
+  // Exact match on the nav link: the dashboard also carries an "Open the
+  // review queue" call to action, and a loose regex matches both, which
+  // trips Playwright's strict mode before it can assert anything.
+  await expect(staff.getByRole('link', { name: 'Review queue', exact: true })).toBeVisible({
     timeout: 60_000,
   });
 

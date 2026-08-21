@@ -11,7 +11,7 @@ export default function CheckPage() {
   return (
     <main className="mx-auto max-w-xl px-6 py-20">
       <h1 className="text-3xl font-bold">Check a seller</h1>
-      <p className="text-muted-foreground mt-2">
+      <p className="mt-2 text-muted-foreground">
         Enter the seller&apos;s TrustLens handle to see their score and the reasons behind it.
       </p>
 
@@ -34,7 +34,7 @@ export default function CheckPage() {
               onChange={(event) => setHandle(event.target.value)}
               placeholder="e.g. ayesha-traders"
               autoComplete="off"
-              className="border-input focus-visible:ring-ring h-10 flex-1 rounded-md border px-3 focus-visible:outline-none focus-visible:ring-2"
+              className="h-10 flex-1 rounded-md border border-input px-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             />
             <Button type="submit" disabled={!handle.trim()}>
               Check

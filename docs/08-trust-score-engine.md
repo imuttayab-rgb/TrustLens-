@@ -1,7 +1,7 @@
 # 08 — Trust Score Engine
 
-The proposal's central requirement: *"combines all signals into a single Trust Score (0–100) with a clear
-risk level and the reasons behind it"* and *"clearly showing why a seller is low, medium, or high risk."*
+The proposal's central requirement: _"combines all signals into a single Trust Score (0–100) with a clear
+risk level and the reasons behind it"_ and _"clearly showing why a seller is low, medium, or high risk."_
 
 ## 1. Design principle: deterministic rules, AI as evidence
 
@@ -22,8 +22,8 @@ An LLM cannot be the arbiter of a score for three reasons that matter for this s
 2. **Reproducibility.** The same inputs must produce the same score, or the FYP evaluation is unrepeatable.
 3. **Auditability.** "The model said so" is not a defensible basis for labelling a real person a fraud risk.
 
-So AI outputs land in `listing_analyses`, `identity_verifications`, and `ip_addresses` as *evidence with
-confidence values*, and a versioned weighted rule set converts evidence into points.
+So AI outputs land in `listing_analyses`, `identity_verifications`, and `ip_addresses` as _evidence with
+confidence values_, and a versioned weighted rule set converts evidence into points.
 
 The LLM is still used for one thing in the scoring path: **rephrasing** a rule-derived reason code into a
 friendly sentence for the buyer-facing summary. It is given the facts and the decision, and may only
@@ -31,23 +31,23 @@ reword them; if it is unavailable, the stored template text is shown instead.
 
 ## 2. Signals (v1 model — 100 points)
 
-| Code | Category | Points | Evidence source | PASS condition |
-|---|---|---:|---|---|
-| `IDENTITY_DOCUMENT_VALID` | IDENTITY | 15 | `identity_documents` | CNIC OCR succeeded, fields parsed, not expired, quality ≥ threshold |
-| `IDENTITY_FACE_MATCH` | IDENTITY | 15 | `identity_verifications` | DeepFace similarity ≥ threshold, liveness gate passed |
-| `PHONE_VERIFIED` | PHONE | 10 | `phone_numbers.verified_at` | OTP completed |
-| `PHONE_NOT_DISPOSABLE` | PHONE | 5 | `phone_numbers.line_type` | line type `MOBILE`, not flagged disposable |
-| `EMAIL_VERIFIED` | EMAIL | 6 | `email_addresses.verified_at` | Verification link consumed |
-| `EMAIL_NOT_DISPOSABLE` | EMAIL | 4 | `email_addresses` | Not a disposable domain, MX valid, domain age ≥ 180 d |
-| `DEVICE_NOT_SHARED` | DEVICE | 6 | `user_devices` | ≤ 2 accounts share any of this seller's devices |
-| `DEVICE_CONSISTENT` | DEVICE | 4 | `devices`, `access_events` | Not an emulator/bot; stable device history |
-| `NETWORK_NOT_VPN` | NETWORK | 6 | `ip_addresses` | No VPN/proxy/Tor/datacenter IP in recent access events |
-| `NETWORK_GEO_CONSISTENT` | NETWORK | 4 | `ip_addresses` vs `seller_profiles.country_code` | Country matches the declared country |
-| `ACCOUNT_AGE` | BEHAVIOUR | 6 | `seller_profiles.account_opened_at` | Graded: ≥180 d full, 90–179 d 4, 30–89 d 2, <30 d 0 |
-| `ACTIVITY_CONSISTENT` | BEHAVIOUR | 4 | `access_events` | Regular activity, no burst-then-vanish pattern |
-| `LISTING_CONTENT_SAFE` | LISTING | 10 | `listing_analyses` (LLM + classifier) | Mean listing risk below threshold, no critical scam labels |
-| `LISTING_PRICE_REALISTIC` | LISTING | 5 | `listing_analyses.price_deviation_pct` | Price within category norms |
-| | **Total** | **100** | | |
+| Code                      | Category  |  Points | Evidence source                                  | PASS condition                                                      |
+| ------------------------- | --------- | ------: | ------------------------------------------------ | ------------------------------------------------------------------- |
+| `IDENTITY_DOCUMENT_VALID` | IDENTITY  |      15 | `identity_documents`                             | CNIC OCR succeeded, fields parsed, not expired, quality ≥ threshold |
+| `IDENTITY_FACE_MATCH`     | IDENTITY  |      15 | `identity_verifications`                         | DeepFace similarity ≥ threshold, liveness gate passed               |
+| `PHONE_VERIFIED`          | PHONE     |      10 | `phone_numbers.verified_at`                      | OTP completed                                                       |
+| `PHONE_NOT_DISPOSABLE`    | PHONE     |       5 | `phone_numbers.line_type`                        | line type `MOBILE`, not flagged disposable                          |
+| `EMAIL_VERIFIED`          | EMAIL     |       6 | `email_addresses.verified_at`                    | Verification link consumed                                          |
+| `EMAIL_NOT_DISPOSABLE`    | EMAIL     |       4 | `email_addresses`                                | Not a disposable domain, MX valid, domain age ≥ 180 d               |
+| `DEVICE_NOT_SHARED`       | DEVICE    |       6 | `user_devices`                                   | ≤ 2 accounts share any of this seller's devices                     |
+| `DEVICE_CONSISTENT`       | DEVICE    |       4 | `devices`, `access_events`                       | Not an emulator/bot; stable device history                          |
+| `NETWORK_NOT_VPN`         | NETWORK   |       6 | `ip_addresses`                                   | No VPN/proxy/Tor/datacenter IP in recent access events              |
+| `NETWORK_GEO_CONSISTENT`  | NETWORK   |       4 | `ip_addresses` vs `seller_profiles.country_code` | Country matches the declared country                                |
+| `ACCOUNT_AGE`             | BEHAVIOUR |       6 | `seller_profiles.account_opened_at`              | Graded: ≥180 d full, 90–179 d 4, 30–89 d 2, <30 d 0                 |
+| `ACTIVITY_CONSISTENT`     | BEHAVIOUR |       4 | `access_events`                                  | Regular activity, no burst-then-vanish pattern                      |
+| `LISTING_CONTENT_SAFE`    | LISTING   |      10 | `listing_analyses` (LLM + classifier)            | Mean listing risk below threshold, no critical scam labels          |
+| `LISTING_PRICE_REALISTIC` | LISTING   |       5 | `listing_analyses.price_deviation_pct`           | Price within category norms                                         |
+|                           | **Total** | **100** |                                                  |                                                                     |
 
 The 30 points on IDENTITY reflect that the CNIC + face check is the hardest signal to forge and the one
 the proposal foregrounds. PHONE + EMAIL together (25) cover the "throwaway contact" pattern.
@@ -58,12 +58,12 @@ Weights live in `scoring_weights` and are tunable by an admin; this table is the
 
 ## 3. Signal statuses
 
-| Status | Meaning | Points |
-|---|---|---|
-| `PASS` | Check performed, passed | Full |
-| `PARTIAL` | Passed with reservations (graded signals) | Fractional |
-| `FAIL` | Check performed, failed | 0 |
-| `UNAVAILABLE` | Could not be performed (provider outage, timeout) | Excluded from the denominator |
+| Status           | Meaning                                            | Points                        |
+| ---------------- | -------------------------------------------------- | ----------------------------- |
+| `PASS`           | Check performed, passed                            | Full                          |
+| `PARTIAL`        | Passed with reservations (graded signals)          | Fractional                    |
+| `FAIL`           | Check performed, failed                            | 0                             |
+| `UNAVAILABLE`    | Could not be performed (provider outage, timeout)  | Excluded from the denominator |
 | `NOT_APPLICABLE` | Doesn't apply (e.g. no listings yet → `LISTING_*`) | Excluded from the denominator |
 
 ## 4. Scoring algorithm
@@ -87,7 +87,7 @@ Weights live in `scoring_weights` and are tunable by an admin; this table is the
 ### Normalisation (step 5) — why
 
 If the LLM provider is down, `LISTING_CONTENT_SAFE` is `UNAVAILABLE`. Scoring it as 0 would drop a fully
-verified seller from 100 to 90 because of *our* outage. Normalising over the weight actually evaluated
+verified seller from 100 to 90 because of _our_ outage. Normalising over the weight actually evaluated
 keeps the score fair, and the response lists `unavailableSignals` so the consumer knows the evidence base
 was narrower than usual. `confidence` drops accordingly, which is the honest way to express "this score is
 based on less information".
@@ -97,13 +97,13 @@ based on less information".
 A weighted sum alone can be gamed. A seller who fails face match but passes everything else would score
 ~85 — "low risk" — which is exactly wrong. Caps encode non-negotiables:
 
-| Failed critical signal | Score capped at | Rationale |
-|---|---|---|
-| `IDENTITY_FACE_MATCH` = FAIL | 25 | The selfie doesn't match the ID; identity is unproven |
-| `IDENTITY_DOCUMENT_VALID` = FAIL (forged/expired) | 20 | Document itself is not trustworthy |
-| Duplicate CNIC across ≥3 accounts | 15 | Classic multi-account fraud |
-| Device shared with a banned account | 10 | Ban evasion |
-| Admin manual flag | 20 | Human judgement overrides arithmetic |
+| Failed critical signal                            | Score capped at | Rationale                                             |
+| ------------------------------------------------- | --------------- | ----------------------------------------------------- |
+| `IDENTITY_FACE_MATCH` = FAIL                      | 25              | The selfie doesn't match the ID; identity is unproven |
+| `IDENTITY_DOCUMENT_VALID` = FAIL (forged/expired) | 20              | Document itself is not trustworthy                    |
+| Duplicate CNIC across ≥3 accounts                 | 15              | Classic multi-account fraud                           |
+| Device shared with a banned account               | 10              | Ban evasion                                           |
+| Admin manual flag                                 | 20              | Human judgement overrides arithmetic                  |
 
 Caps are `hard_cap_on_fail` values on `scoring_weights`, so they are versioned and tunable like weights.
 `cap_applied` is stored on `trust_scores` so an appeal review can see instantly that the score was clamped
@@ -111,12 +111,12 @@ rather than computed.
 
 ### Risk bands (ASSUMPTION A1)
 
-| Band | Range | Buyer-facing meaning |
-|---|---|---|
-| **LOW** | 70–100 | Multiple independent checks passed; proceed with normal caution |
-| **MEDIUM** | 40–69 | Partly verified; ask for more proof before paying |
-| **HIGH** | 0–39 | Weak or contradicted verification; high scam risk |
-| **UNKNOWN** | insufficient evidence | Not enough checks completed to judge |
+| Band        | Range                 | Buyer-facing meaning                                            |
+| ----------- | --------------------- | --------------------------------------------------------------- |
+| **LOW**     | 70–100                | Multiple independent checks passed; proceed with normal caution |
+| **MEDIUM**  | 40–69                 | Partly verified; ask for more proof before paying               |
+| **HIGH**    | 0–39                  | Weak or contradicted verification; high scam risk               |
+| **UNKNOWN** | insufficient evidence | Not enough checks completed to judge                            |
 
 `UNKNOWN` is a deliberate fourth state that the proposal does not name but the product needs: a
 brand-new honest seller and a proven scammer must not be shown identically. The UI renders `UNKNOWN` in
@@ -133,21 +133,21 @@ Three levels, each generated from `trust_score_signals` — no recomputation, no
 
 Reason codes are stable strings so the frontend can localise them and partners can switch on them:
 
-| Reason code | Text |
-|---|---|
-| `IDENTITY_VERIFIED` | Government ID verified with a matching selfie. |
-| `FACE_MATCH_LOW` | The selfie does not clearly match the photo on the submitted ID. |
-| `CNIC_EXPIRED` | The submitted ID has expired. |
-| `PHONE_LINE_TYPE_VOIP` | The phone number is an internet number rather than a mobile SIM. |
-| `EMAIL_DOMAIN_DISPOSABLE` | The email address uses a temporary email service. |
-| `DEVICE_SHARED_MANY_ACCOUNTS` | This device is linked to several other seller accounts. |
-| `NETWORK_VPN_DETECTED` | The seller connects through a VPN or proxy, hiding their location. |
-| `GEO_MISMATCH` | The seller's connection location doesn't match their stated location. |
-| `ACCOUNT_TOO_NEW` | The account was created very recently. |
-| `LISTING_URGENCY_PRESSURE` | Listings use pressure tactics such as "pay now, others are waiting". |
-| `LISTING_OFF_PLATFORM_CONTACT` | Listings push buyers to move the conversation off-platform. |
-| `PRICE_TOO_GOOD_TO_BE_TRUE` | Prices are far below the normal range for similar items. |
-| `INSUFFICIENT_EVIDENCE` | Not enough checks have been completed to judge this seller. |
+| Reason code                    | Text                                                                  |
+| ------------------------------ | --------------------------------------------------------------------- |
+| `IDENTITY_VERIFIED`            | Government ID verified with a matching selfie.                        |
+| `FACE_MATCH_LOW`               | The selfie does not clearly match the photo on the submitted ID.      |
+| `CNIC_EXPIRED`                 | The submitted ID has expired.                                         |
+| `PHONE_LINE_TYPE_VOIP`         | The phone number is an internet number rather than a mobile SIM.      |
+| `EMAIL_DOMAIN_DISPOSABLE`      | The email address uses a temporary email service.                     |
+| `DEVICE_SHARED_MANY_ACCOUNTS`  | This device is linked to several other seller accounts.               |
+| `NETWORK_VPN_DETECTED`         | The seller connects through a VPN or proxy, hiding their location.    |
+| `GEO_MISMATCH`                 | The seller's connection location doesn't match their stated location. |
+| `ACCOUNT_TOO_NEW`              | The account was created very recently.                                |
+| `LISTING_URGENCY_PRESSURE`     | Listings use pressure tactics such as "pay now, others are waiting".  |
+| `LISTING_OFF_PLATFORM_CONTACT` | Listings push buyers to move the conversation off-platform.           |
+| `PRICE_TOO_GOOD_TO_BE_TRUE`    | Prices are far below the normal range for similar items.              |
+| `INSUFFICIENT_EVIDENCE`        | Not enough checks have been completed to judge this seller.           |
 
 Sellers additionally get `GET /sellers/{id}/trust-score/improvements`: the unearned points, ranked by
 value, each with the action that would earn them ("Verify your phone with a mobile SIM: +15 points").
@@ -158,17 +158,17 @@ they cooperate with.
 
 `ComputeTrustScore` is invoked by a domain event, never inline in a request handler:
 
-| Trigger | Event | Enum |
-|---|---|---|
-| Identity approved/rejected | `IdentityVerified` / `IdentityRejected` | `SIGNAL_CHANGE` |
-| Phone/email verified or changed | `PhoneVerified` / `EmailVerified` | `SIGNAL_CHANGE` |
-| New device or IP observed | `DeviceLinked` / `SuspiciousNetworkDetected` | `SIGNAL_CHANGE` |
-| Listing analysed | `ListingAnalysed` | `SIGNAL_CHANGE` |
-| Admin override | `TrustScoreOverridden` | `MANUAL` |
-| Appeal resolved | `AppealResolved` | `APPEAL_RESOLUTION` |
-| Scoring model activated | `ScoringModelActivated` → bulk backfill job | `MODEL_CHANGE` |
-| Nightly staleness sweep | cron over `valid_until < now()` | `SCHEDULED` |
-| Public API miss on an expired score | on-demand | `API_REQUEST` |
+| Trigger                             | Event                                        | Enum                |
+| ----------------------------------- | -------------------------------------------- | ------------------- |
+| Identity approved/rejected          | `IdentityVerified` / `IdentityRejected`      | `SIGNAL_CHANGE`     |
+| Phone/email verified or changed     | `PhoneVerified` / `EmailVerified`            | `SIGNAL_CHANGE`     |
+| New device or IP observed           | `DeviceLinked` / `SuspiciousNetworkDetected` | `SIGNAL_CHANGE`     |
+| Listing analysed                    | `ListingAnalysed`                            | `SIGNAL_CHANGE`     |
+| Admin override                      | `TrustScoreOverridden`                       | `MANUAL`            |
+| Appeal resolved                     | `AppealResolved`                             | `APPEAL_RESOLUTION` |
+| Scoring model activated             | `ScoringModelActivated` → bulk backfill job  | `MODEL_CHANGE`      |
+| Nightly staleness sweep             | cron over `valid_until < now()`              | `SCHEDULED`         |
+| Public API miss on an expired score | on-demand                                    | `API_REQUEST`       |
 
 **Debouncing.** A verification burst (identity + phone + email within seconds) would trigger three
 recomputations. A per-seller Redis dedup key with a 10-second window collapses them into one, and the
@@ -198,8 +198,8 @@ An admin may override a score, but the design makes overriding expensive on purp
 
 Appeal flow: seller submits an appeal against a specific `trust_score_id` → a `review_case` is created →
 a reviewer sees the full signal breakdown plus the underlying evidence (OCR output, face similarity,
-device cluster) → decision is either *recompute* (evidence corrected), *override* (with reason), or
-*reject* (with explanation). Every outcome notifies the seller and is audit-logged.
+device cluster) → decision is either _recompute_ (evidence corrected), _override_ (with reason), or
+_reject_ (with explanation). Every outcome notifies the seller and is audit-logged.
 
 ## 9. Fairness and error-cost considerations
 
@@ -207,7 +207,7 @@ The system labels real people as fraud risks. Two guardrails follow from that:
 
 - **False positives are more harmful than false negatives here.** Wrongly marking an honest seller HIGH
   risk costs them their livelihood; wrongly marking a scammer MEDIUM costs a buyer one extra check. So
-  automatic *demotion* thresholds are conservative, and every high-risk automatic outcome that a seller
+  automatic _demotion_ thresholds are conservative, and every high-risk automatic outcome that a seller
   appeals goes to a human, not to an automated re-check.
 - **Face matching has known demographic error-rate disparities.** The threshold is therefore set with a
   deliberate margin, a borderline band (`0.55–0.70` similarity) routes to **manual review** instead of an

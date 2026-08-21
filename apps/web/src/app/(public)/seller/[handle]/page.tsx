@@ -10,7 +10,7 @@
  * cannot disagree by more than one window.
  */
 import { serverFetch } from '@/lib/api/server';
-import { type RiskLevel } from '@trustlens/constants';
+import { type RiskLevel, SIGNAL_CATEGORIES, type SignalCategory } from '@trustlens/constants';
 import {
   Card,
   CardContent,
@@ -34,15 +34,26 @@ interface PublicScore {
   riskLabel: string;
   confidence: number;
   verifications: Record<string, string>;
-  reasons: { code: string; impact: string; text: string }[];
+  reasons: { code: string; impact: string; category: string; text: string }[];
   modelVersion: string;
   computedAt: string;
   expiresAt: string;
   unavailableSignals: string[];
 }
 
+/**
+ * Reads the first-party buyer route, not the partner API at `/public/v1`.
+ *
+ * The partner API requires an API key, and this page holds none - which is
+ * why it rendered not-found for every seller until P0-12. It could have been
+ * issued one, but the buyer page is not a partner: sharing that credential
+ * path would mean a revoked key or an exhausted quota takes down the most
+ * visible screen in the product. Same PII-free payload, different door.
+ */
 async function getScore(handle: string): Promise<PublicScore | null> {
-  return serverFetch<PublicScore>(`/public/v1/sellers/${encodeURIComponent(handle)}/trust-score`);
+  return serverFetch<PublicScore>(
+    `/api/v1/public/sellers/${encodeURIComponent(handle)}/trust-score`,
+  );
 }
 
 export async function generateMetadata({
@@ -72,17 +83,21 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
 
   // The public payload carries reasons, not raw signal rows - it is
   // deliberately PII-free. Map them into the shared breakdown shape.
-  const signals: SignalRow[] = score.reasons.map((reason, index) => ({
+  const signals: SignalRow[] = score.reasons.map((reason) => ({
     code: reason.code,
-    category: 'IDENTITY',
+    // Sent by the API. It used to be hardcoded to 'IDENTITY', which labelled
+    // every row "Identity" - a confirmed email address was presented to
+    // buyers as an identity check. Invisible until P0-12, because the page
+    // 404'd before it could render a single reason.
+    category: SIGNAL_CATEGORIES.includes(reason.category as SignalCategory)
+      ? (reason.category as SignalCategory)
+      : 'IDENTITY',
     status: reason.impact === 'NEGATIVE' ? 'FAIL' : 'PASS',
     pointsAwarded: reason.impact === 'NEGATIVE' ? 0 : 1,
     pointsPossible: 1,
     confidence: score.confidence,
     reasonCode: reason.code,
     reasonText: reason.text,
-    // Stable key for React when two reasons share a code.
-    ...(index === 0 ? {} : {}),
   }));
 
   return (
@@ -100,7 +115,7 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         />
         <h1 className="text-2xl font-bold">{handle}</h1>
         <RiskBadge riskLevel={score.riskLevel} />
-        <p className="text-muted-foreground text-sm">
+        <p className="text-sm text-muted-foreground">
           Last checked {formatDateTime(score.computedAt)} · scoring model {score.modelVersion}
         </p>
       </header>
@@ -121,8 +136,8 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         <CardContent>
           <dl className="grid gap-3 sm:grid-cols-3">
             {Object.entries(score.verifications).map(([key, value]) => (
-              <div key={key} className="border-border rounded-lg border p-3">
-                <dt className="text-muted-foreground text-sm capitalize">{key}</dt>
+              <div key={key} className="rounded-lg border border-border p-3">
+                <dt className="text-sm capitalize text-muted-foreground">{key}</dt>
                 <dd className="mt-0.5 font-medium">{value.replace(/_/g, ' ').toLowerCase()}</dd>
               </div>
             ))}
@@ -130,7 +145,7 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         </CardContent>
       </Card>
 
-      <section className="text-muted-foreground mt-10 text-sm">
+      <section className="mt-10 text-sm text-muted-foreground">
         <p>
           A Trust Score is an assessment based on the checks listed above, not a guarantee. Always
           meet in a public place, inspect goods before paying, and never send money in advance to

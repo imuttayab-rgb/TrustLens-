@@ -1,5 +1,12 @@
-{ "name": "@trustlens/config-eslint", "version": "0.1.0", "private": true,
-  "main": "index.js", "files": ["index.js", "next.js"],
+{
+  "name": "@trustlens/config-eslint",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "files": [
+    "index.js",
+    "next.js"
+  ],
   "dependencies": {
     "@eslint/js": "^9.14.0",
     "typescript-eslint": "^8.13.0",
@@ -7,4 +14,5 @@
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-config-prettier": "^9.1.0"
-  } }
+  }
+}

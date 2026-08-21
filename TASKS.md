@@ -40,21 +40,21 @@ Three consequences, and they save real time:
 
 ### Software track
 
-| Phase | Title                                 | Days   | Status                                                      | Owner  |
-| ----- | ------------------------------------- | ------ | ----------------------------------------------------------- | ------ |
-| 0     | Make it run                           | 1      | `[x]` **complete** — P0-09 and P0-11 both closed            | Zohaib |
-| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**       | Zohaib |
-| 2     | Seller verification UI (mobile-first) | 8      | `[~]` onboarding + all four flows done; score/account left  | Zohaib |
-| 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left   | Zohaib |
-| 4     | Admin panel                           | 5      | `[~]` reviewer workflow works end to end; seller admin left | Zohaib |
-| 5     | Appeals                               | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green    | Zohaib |
-| 6     | Public marketplace API                | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs | Zohaib |
-| 7     | ML scam classifier                    | 4      | `[ ]`                                                       |        |
-| 8     | Real integrations                     | 4      | `[ ]`                                                       |        |
-| 9     | Deployment                            | 3      | `[ ]`                                                       |        |
-| 10    | QA & demo readiness                   | 4      | `[ ]`                                                       |        |
-| 11    | Handover & training                   | 3      | `[ ]`                                                       |        |
-|       | **Software total**                    | **44** |                                                             |        |
+| Phase | Title                                 | Days   | Status                                                       | Owner  |
+| ----- | ------------------------------------- | ------ | ------------------------------------------------------------ | ------ |
+| 0     | Make it run                           | 1      | `[x]` **complete** — P0-09 and P0-11 both closed             | Zohaib |
+| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**        | Zohaib |
+| 2     | Seller verification UI (mobile-first) | 8      | `[~]` onboarding, four flows and score UI done; account left | Zohaib |
+| 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left    | Zohaib |
+| 4     | Admin panel                           | 5      | `[~]` reviewer workflow works end to end; seller admin left  | Zohaib |
+| 5     | Appeals                               | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green     | Zohaib |
+| 6     | Public marketplace API                | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs  | Zohaib |
+| 7     | ML scam classifier                    | 4      | `[~]` pipeline + baseline shipped; **blocked on local ads**  | Zohaib |
+| 8     | Real integrations                     | 4      | `[ ]`                                                        |        |
+| 9     | Deployment                            | 3      | `[ ]`                                                        |        |
+| 10    | QA & demo readiness                   | 4      | `[ ]`                                                        |        |
+| 11    | Handover & training                   | 3      | `[ ]`                                                        |        |
+|       | **Software total**                    | **44** |                                                              |        |
 
 ### Documentation track (runs in parallel — see Track D)
 
@@ -215,12 +215,35 @@ software track can substitute for them, and they gate the accuracy numbers the r
       _Found and fixed 2 Aug._ `serverFetch` forwarded cookies and its docstring claimed a server render was "authenticated exactly like the browser". It was not. The API reads an access token **only** from the `Authorization` header, and the one cookie (`tl_rt`) is httpOnly and path-scoped to `/api/v1/auth`, so it is never even sent to `/api/v1/me`. A server component holds no access token and cannot mint one — `/auth/refresh` rotates the refresh token, and a server component may not set the replacement cookie. **Every authenticated server render was guaranteed to redirect to login**, including the dashboard that shipped with the scaffold.
       Fixed by splitting rendering along the line that already existed: private pages render on the client through the in-memory-token + refresh middleware (which already handles the cold-start 401); the **public** seller page, the one that must be fast and indexable, stays server-rendered against the public API. Private pages gain nothing from SSR, so this is the correct split rather than a workaround.
 
-- [ ] **P0-12** 🔗 **The public buyer page still 404s. No longer blocked — now a decision.**
-      `/public/v1/**` correctly requires an API key. Phase 6 built key issuance, so the blocker is gone, but `/seller/{handle}` still renders not-found (verified 12 Aug) because the web app holds no key.
-      _Decide:_ either issue `apps/web` its own first-party server key at boot, or give the buyer page an internal authenticated route instead of going through the partner API. The second is probably right — the buyer page is not a partner, and giving it a partner key means the demo's most visible screen shares a credential path with third parties.
-      **This is the screen in the final demo (P2-22). Settle it before that day.**
+- [x] **P0-12** 🔗 **The public buyer page 404'd for every seller.**
+      _Done 22 Aug._ `/public/v1/**` correctly requires an API key; `apps/web` held none, so
+      `/seller/{handle}` fetched a 401, `serverFetch` returned `null`, and the page rendered
+      not-found — for the screen the demo opens on.
+      **Decided: a first-party route, not a partner key.** New
+      `GET /api/v1/public/sellers/{seller_ref}/trust-score`, anonymous and IP rate limited,
+      reusing the _same_ `GetPublicTrustScore` use case and `PublicScoreResponse` model as the
+      partner API — so the "no PII in a public response" guarantee is inherited rather than
+      re-implemented. Issuing the web app a partner key was rejected: a revoked key or an
+      exhausted quota would then take the product's most visible screen down with it.
+      Three deliberate differences from the partner route, documented in the module: rate
+      limiting fails **open** here (a Redis blip must degrade the limit, not blank the page),
+      responses are unsigned (a browser cannot verify an HMAC), and nothing is written to
+      `api_request_logs` (that table is partner usage accounting, keyed by an API key id).
 
-**Exit criteria:** you can run the whole system offline, with no API keys, and get a Trust Score. ✅ **Met 31 Jul** — except the public buyer page, see P0-12.
+- [x] **P0-16** 🚨 **The startup route guard had been checking almost nothing.**
+      _Found 22 Aug while relying on it for P0-12._ `_assert_routes_are_guarded` is the
+      deny-by-default check that fails the boot when a route has no authentication
+      dependency — the mechanism that makes an anonymous route a recorded decision rather
+      than an oversight. Since FastAPI 0.141 an `include_router` call leaves a deferred
+      `_IncludedRouter` placeholder in `app.routes` instead of the routes themselves, so the
+      loop walked 8 objects, found **1** real route out of 59, and reported everything fine.
+      It also only logged a warning, while its own docstring promised a failed boot.
+      Now walks the real tree via `iter_route_contexts` and **raises**. On the current
+      codebase it checks 59 routes and finds 0 unguarded — the code was clean, the check was
+      blind. A regression test asserts the guard actually fires on an unguarded route, since
+      a guard that never fires is indistinguishable from no guard.
+
+**Exit criteria:** you can run the whole system offline, with no API keys, and get a Trust Score. ✅ **Fully met 22 Aug** — the public buyer page was the last gap (P0-12), and it now renders without a key.
 
 ---
 
@@ -337,9 +360,19 @@ software track can substitute for them, and they gate the accuracy numbers the r
 
 ### Day 10 — Score & explanation UI
 
-- [ ] **P2-20** Seller trust-score page: gauge, risk band, per-signal breakdown with reasons.
-- [ ] **P2-21** "How to improve your score" panel driven by `rank_improvements` — ranked by points recoverable.
+- [x] **P2-20** Seller trust-score page: gauge, risk band, per-signal breakdown with reasons.
+      _Done 11 Aug, box corrected 22 Aug (P0-15)._ Shipped with the Phase 5 appeal UI, which sits on
+      the same page, but the box was never ticked. `ScoreGauge` + `SignalBreakdown` render from
+      `GET /api/v1/sellers/{id}/trust-score`, including the capped-score explanation.
+- [x] **P2-21** "How to improve your score" panel driven by `rank_improvements` — ranked by points recoverable.
+      _Done 11 Aug, box corrected 22 Aug (P0-15)._ Reads
+      `GET /api/v1/sellers/{id}/trust-score/improvements`; the endpoint, the `rank_improvements`
+      policy and its tests all predate this correction.
 - [ ] **P2-22** Polish the public buyer page `(public)/seller/[handle]` — **this is the screen in the final demo**, so it must look finished on both phone and laptop.
+      _Unblocked 22 Aug by P0-12; the page now renders instead of 404ing._ One defect already
+      fixed on the way (**P0-17**): every reason row was labelled "Identity", so a confirmed
+      email address was presented to buyers as an identity check. What remains here is
+      responsive polish at 360 px and 1440 px, not correctness.
       _Done when:_ the buyer page clearly shows score, band, reasons, and verified badges at 360 px and 1440 px.
 
 ### Day 11 — Account & data rights
@@ -398,8 +431,12 @@ software track can substitute for them, and they gate the accuracy numbers the r
 
 - [ ] **P4-01b** Remaining admin use cases: seller search
 
-- [ ] ~~**P4-01** Implement `use_cases/admin/`~~ — seller search, review queue, decision recording, audit log. _(currently empty)_
-- [ ] **P4-02** Add `routers/admin.py` with RBAC enforced (admin/reviewer roles only).
+- [x] ~~**P4-01** Implement `use_cases/admin/`~~ — superseded by the **P4-01** entry above, done 4 Aug.
+      Seller search is the one part not covered, and it is tracked separately as **P4-01b**.
+      _Box corrected 22 Aug (P0-15) — a duplicate left open reads as unstarted work._
+- [x] ~~**P4-02** Add `routers/admin.py` with RBAC enforced~~ — superseded by the **P4-02** entry
+      above, done 4 Aug. Queue, claim and decide are permission-gated per route.
+      _Box corrected 22 Aug (P0-15)._
 - [x] **P4-03** Admin dashboard — live queue counts (waiting / claimed / decided).
       _Done 4 Aug._ Counts by risk band still need a seller-search endpoint (P4-01b).
 
@@ -440,6 +477,38 @@ software track can substitute for them, and they gate the accuracy numbers the r
 - Internal reviewer notes are stripped before the seller ever sees the thread.
 - A seller cannot read, act on, or post to another seller's appeal — **404, not 403**, so the id
   is not an enumeration oracle.
+
+- [x] **P0-17** 🚨 **Every reason on the public buyer page was labelled "Identity."**
+      _Found 22 Aug, immediately after P0-12 made the page render._ `category: 'IDENTITY'` was
+      hardcoded for every row, so "The phone number was confirmed" and "The email address was
+      confirmed" were both presented to buyers as identity checks — on the explainability
+      screen, which is the product's entire claim. The public payload had no category field to
+      use, so `PublicReason` gained one (a signal-family name; it names the kind of check, never
+      what was checked, so it stays PII-free). Defaulted rather than required, because payloads
+      were already sitting in the score cache and an entry written before the change must
+      deserialise rather than raise for the length of one TTL — verified by observing exactly
+      that during testing.
+
+- [x] **P0-18** 🚨 **Three end-to-end tests could never have passed.**
+      _Found 22 Aug._ `public-score.spec.ts` asserts the buyer page shows a score and its
+      reasons — against a page that had 404'd since it was written, so all three of its tests
+      were red. Two more had drifted into Playwright strict-mode violations: `getByRole('alert')`
+      also matches Next's empty route-announcer div, and `/review queue/i` matches both the
+      admin nav link and a call-to-action added later. The suite now runs **7/7 green**, and a
+      new case asserts the P0-17 labelling so it cannot regress.
+
+- [x] **P0-19** 🚨 **CI's Prettier gate had never passed.**
+      _Found 22 Aug._ `pnpm format:check` runs in CI, and 50-odd committed Markdown files had
+      never been formatted, so the job was red on content that predates it. Two compounding
+      causes, both now fixed: the pre-commit hook formats only _staged_ files, so files
+      committed before the hook existed were never reached; and `.import_linter_cache/` was
+      missing from the root `.gitignore` while `.mypy_cache/`, `.ruff_cache/` and
+      `.pytest_cache/` were all listed — Prettier reads the root ignore file only, so the gate
+      also failed on any machine that had run `make check-arch`. The whole tree is formatted
+      and `pnpm format:check` passes clean.
+      _This is the fourth gate in this project found to be reporting success it had not
+      earned_ — after the git hooks (P0-08b), the Makefile targets (P0-09), and the route
+      guard (P0-16).
 
 - [x] **P5-06** 🚨 **Two rescore jobs had never run — one of them since Phase 4 shipped.**
       `trigger="APPEAL"` and `trigger="MANUAL_REVIEW"` are not `ScoreTrigger` members. The job
@@ -492,14 +561,103 @@ software track can substitute for them, and they gate the accuracy numbers the r
 
 > `apps/ml` is referenced by `scam_classifier.py` (_"Train it with `make -C apps/ml train`"_) but was never created.
 
-- [ ] **P7-01** Create the `apps/ml` package: data, training, evaluation, export.
-- [ ] **P7-02** Acquire and prepare datasets — the fake-job-postings set (~18k rows) and the DIFrauD deceptive-text corpus as proxies, plus a small hand-labelled set of Pakistani marketplace ads.
-- [ ] **P7-03** Train a **TF-IDF + Logistic Regression baseline** first. _You need a baseline to compare against, or the deep model's numbers mean nothing._
-- [ ] **P7-04** Fine-tune **DistilBERT** on free Google Colab GPU. Export to ONNX for cheap CPU inference.
-- [ ] **P7-05** Evaluation: accuracy, precision, recall, F1, ROC-AUC, confusion matrix — baseline vs. DistilBERT. **Save the plots; they go straight into the report.**
-- [ ] **P7-06** Wire the exported model into `scam_classifier.py` behind the existing port so `USE_FAKE_AI=false` uses it.
-- [ ] **P7-07** Write `apps/ml/README.md` — dataset, method, results, limitations.
-- [ ] **P7-08** **Model licence note** — record that the pretrained face weights are non-commercial research licences, which academic FYP use permits. Feeds the report's limitations section.
+> ### 🔴 The headline result, 22 August 2026
+>
+> **The trained classifier scores F1 0.906 on held-out data, and it does not work
+> on TrustLens listings.** Both halves are true; the second is the finding.
+>
+> | Measured on                                | Precision | Recall                  | F1        |
+> | ------------------------------------------ | --------- | ----------------------- | --------- |
+> | Held-out split of its own training corpora | 0.918     | 0.894                   | **0.906** |
+> | A fraud corpus it never trained on         | 0.698     | 0.665                   | **0.681** |
+> | A different one, same test                 | 0.320     | 0.714                   | **0.442** |
+> | Pakistani marketplace ads                  | —         | **1 of 7 scams caught** | —         |
+>
+> Shown _"Send advance payment via easypaisa to confirm. WhatsApp me, no calls.
+> Shipping today only, hurry!"_ it returns **p = 0.13, genuine** — a lower scam
+> probability than it gives an ordinary used-iPhone listing. The 30-line keyword
+> placeholder catches 4 of those 7.
+>
+> **Cause:** the corpora are English job adverts and scam SMS; the product scores
+> Urdu-and-English ads for physical goods. Its strongest learned indicators are
+> `link`, `using below`, `apply using`, `clerk` — fake-job-posting boilerplate.
+> `easypaisa`, `jazzcash` and `token money` appear in no training example.
+>
+> **Consequences.** The number in the report is the cross-corpus one, not 0.906.
+> The model must not feed a seller's score yet: `jobs/listings.py` combines it as
+> `max(llm_risk, classifier × 100)`, so a false positive _becomes_ the listing's
+> risk. And the fix is **data, not architecture** — which makes P7-02 the gate on
+> the whole phase, exactly as P1-01 gates Phase 1.
+
+- [x] **P7-01** Create the `apps/ml` package: data, training, evaluation, export.
+      _Done 22 Aug._ Workspace member `trustlens-ml` with a CLI (`fetch`, `train`,
+      `compare`, `inspect`, `predict`, `export-jsonl`) and `make -C apps/ml train` — the
+      command the worker's missing-artifact error has always quoted. A new import-linter
+      contract (**6 now, up from 5**) fails the build if the API, the worker or any shared
+      package ever imports training code.
+
+- [~] **P7-02** Acquire and prepare datasets.
+  _Proxies done 22 Aug; the corpus that matters is outstanding._ EMSCAD (17,880 rows,
+  866 fraudulent, **CC0-1.0**) and DIFrauD `job_scams` + `sms` (**MIT**) both fetch and
+  load; 36,695 rows after deduplication. DIFrauD's `product_reviews` and
+  `political_statements` are deliberately excluded — deceptive-review detection and
+  fact-checking are different problems wearing the same label name.
+  **🔴 Still needed: 300–500 hand-labelled Pakistani marketplace ads.** Labelling
+  instructions and a CSV template are in `apps/ml/README.md`. This is a human task and
+  it is the gate on Phase 7, for the reason in the box above.
+
+- [x] **P7-03** Train a **TF-IDF + Logistic Regression baseline** first.
+      _Done 22 Aug._ Unigrams + bigrams, `class_weight="balanced"` (the corpus is ~13:1, so
+      without it the optimiser buys accuracy by predicting "genuine"), threshold chosen on
+      the **validation** split and the test split scored once afterwards. 2,054 exact
+      duplicates dropped before splitting — a duplicate straddling the split is the model
+      being asked a question it was handed the answer to, and it reads as a good score
+      rather than as an error.
+
+- [~] **P7-04** Fine-tune **DistilBERT** on free Colab GPU.
+  _Script written 22 Aug, **not run** — needs a GPU._
+  `apps/ml/notebooks/distilbert_colab.py`, with a weighted loss for the imbalance,
+  PR-AUC (not accuracy) selecting the best checkpoint, and ONNX export to the runtime
+  the worker already carries. `trustlens-ml export-jsonl` writes the **same rows and
+  the same split** the baseline used, because two models measured on two different test
+  sets are not comparable. The script's own header says the honest thing: capacity is
+  not the bottleneck, and the GPU time buys less than collecting P7-02 would.
+
+- [x] **P7-05** Evaluation.
+      _Done 22 Aug, plus a test the plan did not ask for._ Precision, recall, F1, ROC-AUC,
+      PR-AUC and a confusion matrix, written to JSON and rendered as PNGs at print
+      resolution. **Accuracy is never reported without the majority-class baseline beside
+      it** — at 7% positives, "always genuine" scores 93% — and a unit test asserts that
+      stays true.
+      The addition is a **cross-corpus** evaluation: train on one corpus, test on another.
+      A single random split cannot tell "learned what fraud sounds like" from "learned what
+      _this dataset's_ fraud sounds like", because both halves share the same quirks. It is
+      what turned a 0.906 success story into the result in the box above.
+
+- [x] **P7-06** Wire the exported model in behind the existing port.
+      _Done 22 Aug._ `USE_FAKE_AI=false` loads the artifact. The `ScamClassifier` port is
+      unchanged — only the adapter's internals — so the swap cost one file, as ADR-0004
+      intends. Two design points: the artifact is a dict of **stock** scikit-learn
+      estimators, because unpickling restores classes by import path and a custom
+      transformer would drag `apps/ml` into the worker image; and the threshold now comes
+      **from the artifact** by default, since it was chosen against a validation curve and
+      the old hardcoded `0.65` was not.
+
+- [x] **P7-07** Write `apps/ml/README.md` — dataset, method, results, limitations.
+
+- [x] **P7-08** **Model licence note.** _Done 22 Aug, in `apps/ml/README.md`._ Everything in
+      the training pipeline is permissive — EMSCAD CC0, DIFrauD MIT, scikit-learn BSD,
+      DistilBERT Apache-2.0 — so **the classifier itself is unencumbered**. The constraint
+      is elsewhere: InsightFace `buffalo_s` and the DeepFace/ArcFace weights are
+      **non-commercial research only**. Academic FYP use is exactly what those licences
+      permit, so the project is compliant as it stands, but TrustLens could not be
+      commercialised on them without a commercial licence or a retrained face model.
+
+- [x] **P7-09** 🚨 **Figures and tables were drawn from different rows.**
+      _Found 22 Aug during the first training run._ The CLI re-split the corpus to draw the
+      plots, but training deduplicates _before_ splitting and the caller did not — so the
+      figures described 7,750 rows while the table beside them described 7,339. The
+      evaluated split now travels out of training with the result, and a test asserts it.
       _Done when:_ `make -C apps/ml train` works end to end and produces a metrics report.
 
 **Exit criteria:** Haseeb and Muttayab can stand in the viva and say _"we trained this, here is our confusion matrix."_
@@ -551,7 +709,16 @@ software track can substitute for them, and they gate the accuracy numbers the r
 - [ ] **P10-03** Security pass — OWASP basics, auth rate limiting/brute-force protection, RBAC checks, PII leak scan on API responses.
 - [ ] **P10-04** Load-test the public score endpoint; confirm the "score within seconds" claim with real p95 numbers.
 - [ ] **P10-05** Cross-browser and cross-device check: Chrome, Safari on iPhone, Chrome on Android.
-- [ ] **P10-06** **Fix the stale docs.** `ARCHITECTURE.md` §6 still says _"No implementation code has been written yet"_; `docs/05` says 30 tables but the migration creates 40; `ARCHITECTURE.md` §4 lists `infrastructure/`, `tools/` and `apps/ml`, none of which exist.
+- [x] **P10-06** **Fix the stale docs.**
+      _Done 22 Aug._ `README.md` said _"Design phase … implementation has not started"_ and
+      `ARCHITECTURE.md` §6 said _"No implementation code has been written yet"_ — both replaced
+      with measured status and a pointer to `REMAINING.md`. Table count corrected 30 → 40.
+      `tools/` and `apps/ml` do now exist, so only the `infrastructure/` folder was fictional:
+      it is `docker/`, and the wrong path had leaked into **runnable commands** in
+      `docs/11` and `docs/16`, which would have failed for anyone who copied them.
+      Also corrected: `docs/16` described Railway and a ~2.5 GB worker image, both superseded
+      by the Fly.io decision and the 1.16 GB measured rebuild; README listed EasyOCR/DeepFace
+      as the AI stack and linked a `LICENSE` file that does not exist.
 - [ ] **P10-07** Seed a convincing demo dataset — sellers across all three risk bands, including a clear scammer profile and a clear genuine profile.
 - [ ] **P10-08** Write and time the demo script. Rehearse it end to end.
 - [ ] **P10-09** **Demo fallback plan** — recorded video and screenshots, in case the venue's internet fails on the day.

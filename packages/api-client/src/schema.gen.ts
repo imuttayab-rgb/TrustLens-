@@ -633,6 +633,28 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/public/sellers/{seller_ref}/trust-score': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Buyer-facing score for the public seller page (no auth)
+     * @description Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.
+     *
+     *     Marketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.
+     */
+    get: operations['get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/sellers/me': {
     parameters: {
       query?: never;
@@ -1056,6 +1078,12 @@ export interface components {
     };
     /** PublicReasonModel */
     PublicReasonModel: {
+      /**
+       * Category
+       * @description Signal family: IDENTITY | PHONE | EMAIL | DEVICE | NETWORK | BEHAVIOUR | LISTING. Names the kind of check, never what was checked, so it carries no PII.
+       * @default
+       */
+      category: string;
       /**
        * Code
        * @description Stable reason code. Switch on this, not on `text`.
@@ -2719,6 +2747,40 @@ export interface operations {
           'application/json': {
             [key: string]: unknown;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'If-None-Match'?: string | null;
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        seller_ref: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */

@@ -38,6 +38,7 @@ members = [
     "packages/py/trustlens-testing",
     "apps/api",
     "apps/worker",
+    "apps/ml",
 ]
 
 # `insightface` and `rapidocr-onnxruntime` both require plain `opencv-python`,
@@ -53,6 +54,7 @@ override-dependencies = ["opencv-python; sys_platform == 'never'"]
 
 [tool.uv.sources]
 trustlens-core = { workspace = true }
+trustlens-ml = { workspace = true }
 trustlens-shared = { workspace = true }
 trustlens-db = { workspace = true }
 trustlens-ai = { workspace = true }
@@ -142,6 +144,7 @@ mypy_path = [
     # own parent to sys.path at runtime so `bench.manifest` resolves. mypy does
     # not execute that, so the root is declared here instead (P0-11).
     "apps/ml",
+    "apps/ml/src",
 ]
 explicit_package_bases = true
 namespace_packages = true
@@ -174,12 +177,16 @@ module = [
     "cv2.*",
     "numpy.*",
     "joblib.*",
+    "scipy.*",
+    "sklearn.*",
+    "matplotlib.*",
     "openai.*",
     "anthropic.*",
     "arq.*",
     "boto3.*",
     "botocore.*",
     "magic.*",
+    "sentry_sdk.*",
 ]
 ignore_missing_imports = true
 
@@ -187,7 +194,7 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-testpaths = ["packages/py", "apps/api/tests", "apps/worker/tests"]
+testpaths = ["packages/py", "apps/api/tests", "apps/worker/tests", "apps/ml/tests"]
 python_files = ["test_*.py"]
 addopts = "-q --strict-markers --strict-config"
 markers = [

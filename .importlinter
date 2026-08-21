@@ -3,6 +3,7 @@ root_packages =
     trustlens
     trustlens_api
     trustlens_worker
+    trustlens_ml
 include_external_packages = True
 
 # ── ADR-0004: the domain package must stay framework-free ────────────
@@ -51,6 +52,20 @@ source_modules =
 forbidden_modules =
     trustlens_api
     trustlens_worker
+
+# ── Training code never ships ────────────────────────────────────────
+[importlinter:contract:nothing-imports-training-code]
+name = The API, the worker and the shared packages must not import apps/ml
+type = forbidden
+source_modules =
+    trustlens.core
+    trustlens.db
+    trustlens.ai
+    trustlens.shared
+    trustlens_api
+    trustlens_worker
+forbidden_modules =
+    trustlens_ml
 
 # ── ADR-0003: the API must not inherit the ML dependency graph ───────
 [importlinter:contract:api-has-no-ml-deps]

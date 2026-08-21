@@ -1,0 +1,236 @@
+# The whole product, production mode, on one machine.
+#
+#   cp .env.production.example .env.production
+#   bash scripts/generate-keys.sh >> .env.production     # real secrets
+#   docker compose -f docker/compose/docker-compose.prod.yml --env-file .env.production up -d
+#
+# or just run `prod-start.bat` on Windows / `make prod-up` elsewhere.
+#
+# ── Why this file exists ─────────────────────────────────────────────
+#
+# The project is handed to students who will choose a host later - or never,
+# and demo it from a laptop. So the deployable unit is this compose file, not a
+# platform account. Everything runs in production mode: built Next.js servers,
+# uvicorn with workers, migrations as a release step, health checks, restart
+# policies.
+#
+# ── Moving any piece to a managed service ────────────────────────────
+#
+# Every backing service here is addressed ONLY through an environment variable.
+# To move one to a hosted provider, point the variable at it and delete (or
+# stop) the local container - no application change, no rebuild:
+#
+#   Postgres  → DATABASE_URL, DATABASE_URL_SYNC   (Neon, Supabase, RDS, a VPS)
+#   Redis     → REDIS_URL, REDIS_QUEUE_URL        (Upstash, Elasticache, a VPS)
+#   S3        → STORAGE_ENDPOINT_URL + keys       (Cloudflare R2, AWS S3, Wasabi)
+#   Email     → EMAIL_PROVIDER=resend + key, or SMTP_*
+#
+# That is the whole migration story. It is deliberately boring.
+name: trustlens
+
+x-postgres-env: &postgres-env
+  POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER in .env.production}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env.production}
+  POSTGRES_DB: ${POSTGRES_DB:-trustlens}
+
+# Shared by api, worker and the migrate job so the three cannot drift apart.
+x-backend-env: &backend-env
+  ENV: production
+  DATABASE_URL: ${DATABASE_URL}
+  DATABASE_URL_SYNC: ${DATABASE_URL_SYNC}
+  REDIS_URL: ${REDIS_URL}
+  REDIS_QUEUE_URL: ${REDIS_QUEUE_URL}
+  STORAGE_ENDPOINT_URL: ${STORAGE_ENDPOINT_URL}
+  STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID}
+  STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY}
+  SECURITY_JWT_PRIVATE_KEY: ${SECURITY_JWT_PRIVATE_KEY:?run scripts/generate-keys.sh >> .env.production}
+  SECURITY_JWT_PUBLIC_KEY: ${SECURITY_JWT_PUBLIC_KEY:?run scripts/generate-keys.sh >> .env.production}
+  SECURITY_OTP_PEPPER: ${SECURITY_OTP_PEPPER:?run scripts/generate-keys.sh >> .env.production}
+  SECURITY_TOKEN_PEPPER: ${SECURITY_TOKEN_PEPPER:?run scripts/generate-keys.sh >> .env.production}
+  SECURITY_ENCRYPTION_KEY: ${SECURITY_ENCRYPTION_KEY:?run scripts/generate-keys.sh >> .env.production}
+  SECURITY_RESPONSE_SIGNING_SECRET: ${SECURITY_RESPONSE_SIGNING_SECRET:-}
+  WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3000}
+  SECURITY_CORS_ORIGINS: ${SECURITY_CORS_ORIGINS:-http://localhost:3000,http://localhost:3001}
+  USE_FAKE_AI: ${USE_FAKE_AI:-true}
+  OCR_ENGINE: ${OCR_ENGINE:-rapidocr}
+  FACE_ENGINE: ${FACE_ENGINE:-insightface}
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+  EMAIL_FROM: ${EMAIL_FROM:-no-reply@trustlens.local}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT_INTERNAL:-1025}
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+
+x-restart: &restart
+  restart: unless-stopped
+
+services:
+  # ── Backing services ───────────────────────────────────────────────
+  # Delete any of these three once you point its URL at a managed provider.
+
+  postgres:
+    image: postgres:16-alpine
+    <<: *restart
+    environment:
+      <<: *postgres-env
+      POSTGRES_INITDB_ARGS: '--locale=C --encoding=UTF8'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ../../database/sql/init:/docker-entrypoint-initdb.d:ro
+    # Not published by default. Nothing outside the compose network needs it,
+    # and a Postgres on 5432 with a guessable password is how demo machines
+    # get found. Uncomment to connect a GUI.
+    # ports: ['${POSTGRES_PORT:-5432}:5432']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB:-trustlens}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    command: ['postgres', '-c', 'max_connections=200', '-c', 'log_statement=none']
+
+  redis:
+    image: redis:7-alpine
+    <<: *restart
+    # appendonly protects the ARQ job queue across restarts: an identity
+    # verification already accepted with a 202 must survive a reboot.
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    <<: *restart
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:?set STORAGE_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_ACCESS_KEY:?set STORAGE_SECRET_ACCESS_KEY}
+    volumes:
+      - miniodata:/data
+    ports:
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 '${STORAGE_ACCESS_KEY_ID}' '${STORAGE_SECRET_ACCESS_KEY}';
+      mc mb --ignore-existing local/trustlens-documents;
+      mc mb --ignore-existing local/trustlens-listings;
+      mc anonymous set none local/trustlens-documents;
+      mc anonymous set none local/trustlens-listings;
+      echo 'buckets ready (private)';
+      "
+
+  # Local mail sink, so verification emails are visible without a provider.
+  # Set EMAIL_PROVIDER=resend and drop this service when going live for real.
+  mailpit:
+    image: axllent/mailpit:latest
+    <<: *restart
+    ports:
+      - '${MAILPIT_UI_PORT:-8025}:8025'
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  # ── Release step ───────────────────────────────────────────────────
+
+  migrate:
+    build:
+      context: ../..
+      dockerfile: docker/api.Dockerfile
+    environment: *backend-env
+    # Runs to completion and exits. api and worker wait for it, so two
+    # replicas can never race on the same migration - the reason this is a
+    # separate job rather than something the app does at boot.
+    entrypoint: ['sh', '/app/docker/entrypoints/migrate.sh']
+    restart: 'no'
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  # ── Application ────────────────────────────────────────────────────
+
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/api.Dockerfile
+    <<: *restart
+    environment:
+      <<: *backend-env
+      WEB_CONCURRENCY: ${API_WORKERS:-2}
+    ports:
+      - '${API_PORT:-8000}:8000'
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: docker/worker.Dockerfile
+    <<: *restart
+    environment: *backend-env
+    # The supervisor recovers in-process from a dropped Redis connection
+    # (P9-09); this outer policy is for what it cannot catch - OOM, a bad
+    # image, the host rebooting. Restarting reloads the OCR and face models
+    # from disk, so it is the last resort, not the first.
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    # Measured at 323 MB peak with both ONNX engines resident. The limit is
+    # set above that so an actual leak is caught, rather than a busy job.
+    mem_limit: ${WORKER_MEM_LIMIT:-768m}
+
+  web:
+    build:
+      context: ../..
+      dockerfile: docker/web.Dockerfile
+      args:
+        APP: web
+        # Baked in at build time - a browser cannot read the compose
+        # environment. Changing it means rebuilding, not restarting.
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    <<: *restart
+    environment:
+      API_BASE_URL_INTERNAL: http://api:8000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - '${WEB_PORT:-3000}:3000'
+    depends_on:
+      api: { condition: service_started }
+
+  admin:
+    build:
+      context: ../..
+      dockerfile: docker/web.Dockerfile
+      args:
+        APP: admin
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    <<: *restart
+    environment:
+      API_BASE_URL_INTERNAL: http://api:8000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+    ports:
+      - '${ADMIN_PORT:-3001}:3000'
+    depends_on:
+      api: { condition: service_started }
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:

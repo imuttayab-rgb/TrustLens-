@@ -5,11 +5,11 @@
 
 ## 1. Identity model
 
-| Principal | Credential | Carries |
-|---|---|---|
-| **User** (buyer / seller / reviewer / admin) | password (+ optional TOTP MFA) | JWT access token |
-| **API client** (partner marketplace) | API key | scopes, quota tier |
-| **System** (worker jobs) | none — in-process | `actor_type = SYSTEM` in audit logs |
+| Principal                                    | Credential                     | Carries                             |
+| -------------------------------------------- | ------------------------------ | ----------------------------------- |
+| **User** (buyer / seller / reviewer / admin) | password (+ optional TOTP MFA) | JWT access token                    |
+| **API client** (partner marketplace)         | API key                        | scopes, quota tier                  |
+| **System** (worker jobs)                     | none — in-process              | `actor_type = SYSTEM` in audit logs |
 
 Three principal types means authorisation checks must never assume "there is a current user". Every
 audit row records `actor_type` explicitly.
@@ -32,6 +32,7 @@ POST /api/v1/auth/register  { email, password, fullName, accountType }
 ```
 
 Design points:
+
 - **argon2id, not bcrypt.** Memory-hard, GPU-resistant, and the current OWASP recommendation. Parameters
   live in config so they can be raised as hardware improves; the hash string records its own parameters,
   so old hashes stay verifiable and are transparently re-hashed on next successful login.
@@ -74,15 +75,15 @@ that option.
 {
   "iss": "https://api.trustlens.app",
   "aud": "trustlens-web",
-  "sub": "018f2c3d-…",            // user id
-  "jti": "018f2c4a-…",            // for targeted revocation
+  "sub": "018f2c3d-…", // user id
+  "jti": "018f2c4a-…", // for targeted revocation
   "iat": 1753876800,
-  "exp": 1753877700,              // +15 min
+  "exp": 1753877700, // +15 min
   "typ": "access",
   "roles": ["SELLER"],
   "perms": ["seller:read:self", "listing:write:self", "appeal:create"],
-  "pv": 7,                        // permission version — see below
-  "sid": "018f2c50-…"             // session/refresh-family id
+  "pv": 7, // permission version — see below
+  "sid": "018f2c50-…", // session/refresh-family id
 }
 ```
 
@@ -113,7 +114,7 @@ POST /api/v1/auth/refresh    (cookie only, no body)
    └─ Return a new access token + Set-Cookie with the new refresh token
 ```
 
-Rotation with family revocation is what makes a stolen refresh token *self-limiting*: whoever uses the
+Rotation with family revocation is what makes a stolen refresh token _self-limiting_: whoever uses the
 older copy second triggers the alarm and both parties are logged out. Without rotation, a stolen refresh
 token is a 30-day skeleton key.
 
@@ -146,13 +147,14 @@ async def activate_model(...): ...
 ```
 
 Three composable dependencies:
+
 - `get_current_user` — decodes the JWT, validates `pv`, loads a cached principal
 - `require_roles(*roles)` — coarse gate for whole route groups
 - `require_permissions(*perms)` — fine gate on individual actions
 - `require_ownership(resource_loader)` — object-level check for `:self` permissions
 
 **Object-level authorisation is mandatory and separate.** Route-level permission answers "may this role do
-this kind of thing"; ownership answers "may this user touch *this row*". Skipping the second is IDOR —
+this kind of thing"; ownership answers "may this user touch _this row_". Skipping the second is IDOR —
 `GET /api/v1/listings/{id}` with a permission check alone would let any seller read any other seller's
 listing. Every resource-scoped handler resolves the object and asserts ownership (or `:any`) before acting.
 
@@ -194,11 +196,11 @@ Layered defence:
 
 Three layers, because each defends a different thing:
 
-| Layer | Where | Defends against |
-|---|---|---|
-| Edge middleware (`middleware.ts`) | Before any JS ships | Unauthenticated users seeing a protected shell; wrong-role users reaching `/admin` |
-| Server component guard (`requireRole()` in `(admin)/layout.tsx`) | Server render | A forged/expired cookie that passed the cheap edge check |
-| API authorisation | Backend | Everything — this is the **only** layer that is actually security |
+| Layer                                                            | Where               | Defends against                                                                    |
+| ---------------------------------------------------------------- | ------------------- | ---------------------------------------------------------------------------------- |
+| Edge middleware (`middleware.ts`)                                | Before any JS ships | Unauthenticated users seeing a protected shell; wrong-role users reaching `/admin` |
+| Server component guard (`requireRole()` in `(admin)/layout.tsx`) | Server render       | A forged/expired cookie that passed the cheap edge check                           |
+| API authorisation                                                | Backend             | Everything — this is the **only** layer that is actually security                  |
 
 The first two are UX. Stating that explicitly matters: frontend guards can always be bypassed with curl,
 so no endpoint may rely on them.
@@ -215,15 +217,15 @@ accounts can override trust scores and read identity documents — the highest-v
 
 ## 11. Session security summary
 
-| Control | Value |
-|---|---|
-| Access token lifetime | 15 min |
-| Refresh token lifetime | 30 days (absolute), 7 days idle |
-| Refresh rotation | Every use, with family reuse detection |
-| Max concurrent sessions | 5 per user (oldest evicted) |
-| Password | argon2id, ≥12 chars, common-password blocklist, no forced rotation (NIST 800-63B) |
-| Login lockout | 5/15 min soft, exponential lock after 10 |
-| MFA | Optional for sellers/buyers, **mandatory** for admin/reviewer |
-| Password change | Revokes all sessions except the current one |
-| Email/phone change | Requires re-verification and re-scores the affected signal |
-| Suspicious login (new device + new country) | Email alert + optional step-up challenge |
+| Control                                     | Value                                                                             |
+| ------------------------------------------- | --------------------------------------------------------------------------------- |
+| Access token lifetime                       | 15 min                                                                            |
+| Refresh token lifetime                      | 30 days (absolute), 7 days idle                                                   |
+| Refresh rotation                            | Every use, with family reuse detection                                            |
+| Max concurrent sessions                     | 5 per user (oldest evicted)                                                       |
+| Password                                    | argon2id, ≥12 chars, common-password blocklist, no forced rotation (NIST 800-63B) |
+| Login lockout                               | 5/15 min soft, exponential lock after 10                                          |
+| MFA                                         | Optional for sellers/buyers, **mandatory** for admin/reviewer                     |
+| Password change                             | Revokes all sessions except the current one                                       |
+| Email/phone change                          | Requires re-verification and re-scores the affected signal                        |
+| Suspicious login (new device + new country) | Email alert + optional step-up challenge                                          |

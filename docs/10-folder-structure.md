@@ -6,8 +6,8 @@
 trustlens/
 ├── apps/                 # Deployable units. Thin — they wire packages together.
 ├── packages/             # Shared libraries. TS in packages/*, Python in packages/py/*.
-├── database/             # Migrations, seeds, ERD, hand-written SQL. One home for schema truth.
-├── infrastructure/       # Dockerfiles, compose, platform config, observability.
+├── database/             # Alembic migrations and hand-written SQL. One home for schema truth.
+├── docker/               # Dockerfiles, compose files, container entrypoints.
 ├── configs/              # Cross-cutting tool configuration shared by apps and packages.
 ├── docs/                 # This documentation set.
 ├── scripts/              # Developer and CI scripts.
@@ -22,21 +22,21 @@ trustlens/
 ├── pyproject.toml        # uv workspace root; shared Ruff/Black/mypy/pytest config.
 ├── uv.lock
 ├── Makefile              # ONE entry point across both languages: make dev / test / migrate.
-├── docker-compose.yml    # Local Postgres, Redis, MinIO, MailHog.
+├── start.bat / stop.bat  # One-click local start and stop on Windows.
 ├── .env.example
 ├── .editorconfig  .gitignore  .gitattributes  .nvmrc  .python-version
 ├── ARCHITECTURE.md  README.md  CONTRIBUTING.md  LICENSE  CHANGELOG.md
 ```
 
-### Why some commonly-suggested top-level folders are *not* here
+### Why some commonly-suggested top-level folders are _not_ here
 
-| Suggested | Decision | Reason |
-|---|---|---|
-| `backend/`, `frontend/` | **Merged into `apps/`** | Two competing conventions for "a deployable thing" is worse than one. `apps/api` + `apps/web` is unambiguous and is what Turborepo/Vercel expect |
-| `shared/` | **Merged into `packages/`** | Two shared locations guarantees drift — nobody can answer "does this go in `shared/` or `packages/`?" consistently |
-| `src/` at the root | Not used | Meaningless in a monorepo; each app/package has its own `src/` |
-| `services/` | Not used | `apps/worker` *is* the only extra service today; a `services/` folder would imply a microservice split that does not exist ([02 §10](02-system-architecture.md)) |
-| `libs/` | Not used | Nx vocabulary; `packages/` is the pnpm/Turborepo convention |
+| Suggested               | Decision                    | Reason                                                                                                                                                           |
+| ----------------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `backend/`, `frontend/` | **Merged into `apps/`**     | Two competing conventions for "a deployable thing" is worse than one. `apps/api` + `apps/web` is unambiguous and is what Turborepo/Vercel expect                 |
+| `shared/`               | **Merged into `packages/`** | Two shared locations guarantees drift — nobody can answer "does this go in `shared/` or `packages/`?" consistently                                               |
+| `src/` at the root      | Not used                    | Meaningless in a monorepo; each app/package has its own `src/`                                                                                                   |
+| `services/`             | Not used                    | `apps/worker` _is_ the only extra service today; a `services/` folder would imply a microservice split that does not exist ([02 §10](02-system-architecture.md)) |
+| `libs/`                 | Not used                    | Nx vocabulary; `packages/` is the pnpm/Turborepo convention                                                                                                      |
 
 ## 2. `apps/`
 
@@ -48,12 +48,12 @@ apps/
 └── ml/           # Offline: trains/evaluates/versions the scam-listing classifier.
 ```
 
-| App | Detailed structure |
-|---|---|
-| `web` | [04 — Frontend Architecture §2](04-frontend-architecture.md) |
-| `api` | [03 — Backend Architecture §3](03-backend-architecture.md) |
-| `worker` | [03 §4](03-backend-architecture.md) |
-| `ml` | below |
+| App      | Detailed structure                                           |
+| -------- | ------------------------------------------------------------ |
+| `web`    | [04 — Frontend Architecture §2](04-frontend-architecture.md) |
+| `api`    | [03 — Backend Architecture §3](03-backend-architecture.md)   |
+| `worker` | [03 §4](03-backend-architecture.md)                          |
+| `ml`     | below                                                        |
 
 ### `apps/ml`
 
@@ -104,6 +104,7 @@ packages/
 ```
 
 Package rules:
+
 - Each package has its own `package.json` / `pyproject.toml`, `README.md`, and tests.
 - Every package exports through a single public entry point (`src/index.ts` or `__init__.py`); deep
   imports into another package's internals are lint errors.
@@ -149,32 +150,28 @@ database/
 > single unambiguous path (`database/`) for the migrate step. `env.py` imports the metadata from the
 > package, so models and migrations still have a single source of truth.
 
-## 5. `infrastructure/`
+## 5. `docker/`
+
+**As built.** An earlier draft of this document placed containers under an
+`infrastructure/` folder with sub-trees for Railway, Vercel and observability.
+None of that was created, and the flatter layout below is what exists — so
+paths copied out of here now work.
 
 ```
-infrastructure/
-├── docker/
-│   ├── api.Dockerfile          # slim, no ML deps, multi-stage, non-root
-│   ├── worker.Dockerfile       # ML deps, pinned system libs for OpenCV
-│   ├── web.Dockerfile          # only for self-hosting; Vercel builds natively
-│   └── base.Dockerfile
+docker/
+├── api.Dockerfile              # slim, no ML deps, multi-stage, non-root
+├── worker.Dockerfile           # ONNX runtime + baked model weights (1.16 GB)
+├── web.Dockerfile              # only for self-hosting; Vercel builds natively
 ├── compose/
-│   ├── docker-compose.dev.yml  # Postgres, Redis, MinIO, MailHog
-│   ├── docker-compose.test.yml # ephemeral, tmpfs volumes, no ports published
+│   ├── docker-compose.dev.yml  # Postgres, Redis, MinIO, Mailpit
 │   └── docker-compose.full.yml # everything containerised, for a clean-machine demo
-├── railway/
-│   ├── railway.json            # service definitions, health checks
-│   └── README.md               # env var provisioning per service
-├── vercel/
-│   └── vercel.json             # headers, redirects, region
-├── observability/
-│   ├── otel-collector.yaml
-│   ├── prometheus.yml
-│   └── dashboards/             # committed JSON dashboards
-└── scripts/
-    ├── wait-for-it.sh
-    └── entrypoint.sh
+└── entrypoints/
+    └── migrate.sh
 ```
+
+Not yet created, and listed in `REMAINING.md` rather than here: platform
+configuration for the host chosen in P9-03, and the observability collector
+config that P9-07 needs.
 
 ## 6. `configs/`
 
@@ -245,41 +242,41 @@ enforced by a generator instead of by review comments.
 
 ## 10. Naming conventions
 
-| Thing | Convention | Example |
-|---|---|---|
-| Directories | `kebab-case` | `verification-identity/` |
-| React components | `PascalCase.tsx` | `ScoreGauge.tsx` |
-| React hooks | `useThing.ts` | `useTrustScore.ts` |
-| Other TS modules | `kebab-case.ts` | `query-keys.ts` |
-| TS types/interfaces | `PascalCase`, no `I` prefix | `TrustScoreSummary` |
-| TS constants | `SCREAMING_SNAKE_CASE` | `MAX_UPLOAD_BYTES` |
-| Feature-scoped TS files | `<name>.<kind>.ts` | `auth.api.ts`, `listing.schema.ts` |
-| Test files (TS) | `*.test.ts(x)` beside the source; E2E `*.spec.ts` | `ScoreGauge.test.tsx` |
-| Python modules/packages | `snake_case` | `trust_score.py` |
-| Python classes | `PascalCase` | `ComputeTrustScore` |
-| Python functions/vars | `snake_case` | `compute_trust_score` |
-| Python constants | `SCREAMING_SNAKE_CASE` | `DEFAULT_SCORE_TTL` |
-| Python protocols (ports) | Noun, no `I`/`Abstract` prefix | `OcrEngine`, `TrustScoreRepository` |
-| Test files (Python) | `test_*.py` mirroring the source tree | `test_scoring_policy.py` |
-| DB tables/columns | `snake_case`, plural tables | `trust_score_signals` |
-| Alembic revisions | `YYYYMMDDHHMM_<slug>.py` | `202607301200_add_scoring_weights.py` |
-| Env vars | `SCREAMING_SNAKE_CASE`, prefixed by domain | `AI_OPENAI_API_KEY` |
-| API routes | `kebab-case`, plural nouns | `/api/v1/trust-scores` |
-| JSON fields | `camelCase` | `riskLevel` |
-| Git branches | `<type>/<issue>-<slug>` | `feat/42-cnic-ocr-pipeline` |
+| Thing                    | Convention                                        | Example                               |
+| ------------------------ | ------------------------------------------------- | ------------------------------------- |
+| Directories              | `kebab-case`                                      | `verification-identity/`              |
+| React components         | `PascalCase.tsx`                                  | `ScoreGauge.tsx`                      |
+| React hooks              | `useThing.ts`                                     | `useTrustScore.ts`                    |
+| Other TS modules         | `kebab-case.ts`                                   | `query-keys.ts`                       |
+| TS types/interfaces      | `PascalCase`, no `I` prefix                       | `TrustScoreSummary`                   |
+| TS constants             | `SCREAMING_SNAKE_CASE`                            | `MAX_UPLOAD_BYTES`                    |
+| Feature-scoped TS files  | `<name>.<kind>.ts`                                | `auth.api.ts`, `listing.schema.ts`    |
+| Test files (TS)          | `*.test.ts(x)` beside the source; E2E `*.spec.ts` | `ScoreGauge.test.tsx`                 |
+| Python modules/packages  | `snake_case`                                      | `trust_score.py`                      |
+| Python classes           | `PascalCase`                                      | `ComputeTrustScore`                   |
+| Python functions/vars    | `snake_case`                                      | `compute_trust_score`                 |
+| Python constants         | `SCREAMING_SNAKE_CASE`                            | `DEFAULT_SCORE_TTL`                   |
+| Python protocols (ports) | Noun, no `I`/`Abstract` prefix                    | `OcrEngine`, `TrustScoreRepository`   |
+| Test files (Python)      | `test_*.py` mirroring the source tree             | `test_scoring_policy.py`              |
+| DB tables/columns        | `snake_case`, plural tables                       | `trust_score_signals`                 |
+| Alembic revisions        | `YYYYMMDDHHMM_<slug>.py`                          | `202607301200_add_scoring_weights.py` |
+| Env vars                 | `SCREAMING_SNAKE_CASE`, prefixed by domain        | `AI_OPENAI_API_KEY`                   |
+| API routes               | `kebab-case`, plural nouns                        | `/api/v1/trust-scores`                |
+| JSON fields              | `camelCase`                                       | `riskLevel`                           |
+| Git branches             | `<type>/<issue>-<slug>`                           | `feat/42-cnic-ocr-pipeline`           |
 
 ## 11. Where does new code go? (decision guide)
 
-| I am adding… | It goes in |
-|---|---|
-| A business rule | `packages/py/trustlens-core/domain/policies/` |
-| A new user-triggered operation | `packages/py/trustlens-core/application/use_cases/<area>/` |
-| A new HTTP endpoint | `apps/api/src/trustlens_api/api/v1/routers/` + a schema in `.../schemas/` |
-| A new third-party integration | A **port** in `trustlens-core/domain/ports/` + an adapter in `trustlens-shared` or `trustlens-ai` |
-| A new database table | Model in `trustlens-db/models/`, migration in `database/migrations/`, repository in `trustlens-db/repositories/` |
-| A new background job | `apps/worker/src/trustlens_worker/jobs/` (thin — it calls a use case) |
-| A new page | `apps/web/src/app/<group>/…/page.tsx` (routing only) |
-| Page logic/components | `apps/web/src/features/<feature>/` |
-| A reusable, feature-agnostic UI primitive | `packages/ui/src/primitives/` |
-| A shared Zod schema | `packages/validation/src/` |
-| A new scoreable signal | `signal_definitions` seed row + a collector in `trustlens-core/application/services/` + a weight in `scoring_weights` — **the scoring policy is not modified** |
+| I am adding…                              | It goes in                                                                                                                                                     |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A business rule                           | `packages/py/trustlens-core/domain/policies/`                                                                                                                  |
+| A new user-triggered operation            | `packages/py/trustlens-core/application/use_cases/<area>/`                                                                                                     |
+| A new HTTP endpoint                       | `apps/api/src/trustlens_api/api/v1/routers/` + a schema in `.../schemas/`                                                                                      |
+| A new third-party integration             | A **port** in `trustlens-core/domain/ports/` + an adapter in `trustlens-shared` or `trustlens-ai`                                                              |
+| A new database table                      | Model in `trustlens-db/models/`, migration in `database/migrations/`, repository in `trustlens-db/repositories/`                                               |
+| A new background job                      | `apps/worker/src/trustlens_worker/jobs/` (thin — it calls a use case)                                                                                          |
+| A new page                                | `apps/web/src/app/<group>/…/page.tsx` (routing only)                                                                                                           |
+| Page logic/components                     | `apps/web/src/features/<feature>/`                                                                                                                             |
+| A reusable, feature-agnostic UI primitive | `packages/ui/src/primitives/`                                                                                                                                  |
+| A shared Zod schema                       | `packages/validation/src/`                                                                                                                                     |
+| A new scoreable signal                    | `signal_definitions` seed row + a collector in `trustlens-core/application/services/` + a weight in `scoring_weights` — **the scoring policy is not modified** |

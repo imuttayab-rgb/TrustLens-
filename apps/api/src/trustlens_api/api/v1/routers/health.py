@@ -53,4 +53,37 @@ async def ready(container: ContainerDep, response: Response) -> dict[str, Any]:
     return {"status": "ok" if healthy else "degraded", "checks": checks}
 
 
+@router.get("/worker", summary="Is the worker still consuming jobs?")
+async def worker(container: ContainerDep, response: Response) -> dict[str, Any]:
+    """The check that catches the failure nothing else does (P9-07).
+
+    A worker process can be alive, connected, and consuming nothing. Every
+    process-level probe reports healthy, `restart: unless-stopped` sees nothing
+    to restart, and the only symptom is verifications that never finish.
+
+    This reads the heartbeat the worker writes after each job, so a stale or
+    absent beat is visible *without talking to the worker* - which is the exact
+    case being tested for. 503 when stale, so an uptime monitor pointed here
+    actually pages someone.
+    """
+    from trustlens.shared.telemetry import Heartbeat
+
+    beat = await Heartbeat().read(container.cache)
+
+    if beat is None:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {
+            "status": "unknown",
+            "detail": (
+                "No heartbeat. Either the worker is not running, or it has not "
+                "completed a job since it started. Enqueue one to confirm."
+            ),
+        }
+
+    if not beat["healthy"]:
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+
+    return {"status": "ok" if beat["healthy"] else "stale", **beat}
+
+
 __all__ = ["router"]

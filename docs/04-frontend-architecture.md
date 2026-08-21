@@ -4,7 +4,7 @@ Next.js 15 (App Router) · React 19 · TypeScript (strict) · Tailwind CSS 4 · 
 
 ## 1. Organising principle: feature-sliced, not type-sliced
 
-The default `components/ · hooks/ · utils/` layout groups files by *what they are*. At ~50 components that
+The default `components/ · hooks/ · utils/` layout groups files by _what they are_. At ~50 components that
 becomes a directory where nothing related is adjacent and deleting a feature means hunting through six
 folders. TrustLens groups by **feature** — everything a feature needs lives in one folder — and reserves
 type-based folders for genuinely global things.
@@ -130,14 +130,14 @@ apps/web/
 
 ## 3. Rendering strategy per surface
 
-| Surface | Strategy | Why |
-|---|---|---|
-| Marketing pages | Static (SSG) | No data, best possible Lighthouse score |
-| Public seller score page | **RSC + ISR (revalidate 300 s) + tag-based revalidation** | Must be shareable, crawlable, and fast; TTL matches the Redis score TTL |
-| Auth pages | Client components | Purely interactive |
-| Seller dashboard | RSC shell fetches initial data, client components hydrate mutations | Fast first paint, live updates via TanStack Query |
-| Verification wizards | Client | Camera, file input, polling — all browser APIs |
-| Admin tables | Client with server-side pagination | Heavy filtering/sorting is a server concern |
+| Surface                  | Strategy                                                            | Why                                                                     |
+| ------------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Marketing pages          | Static (SSG)                                                        | No data, best possible Lighthouse score                                 |
+| Public seller score page | **RSC + ISR (revalidate 300 s) + tag-based revalidation**           | Must be shareable, crawlable, and fast; TTL matches the Redis score TTL |
+| Auth pages               | Client components                                                   | Purely interactive                                                      |
+| Seller dashboard         | RSC shell fetches initial data, client components hydrate mutations | Fast first paint, live updates via TanStack Query                       |
+| Verification wizards     | Client                                                              | Camera, file input, polling — all browser APIs                          |
+| Admin tables             | Client with server-side pagination                                  | Heavy filtering/sorting is a server concern                             |
 
 > **WHY ISR on the public page rather than pure client fetching:** the buyer-facing score page is the
 > product's shop window. Server rendering makes it linkable in a WhatsApp/marketplace chat with a proper
@@ -160,13 +160,13 @@ field rename therefore breaks the **frontend type-check**, not production.
 
 Layering above the generated client:
 
-| Layer | Responsibility | Example |
-|---|---|---|
-| `packages/api-client` | Typed transport, generated | `client.GET("/api/v1/sellers/{id}")` |
-| `lib/api/interceptors.ts` | Auth refresh, error normalisation, request-id capture | 401 → refresh once → retry once → logout |
-| `features/*/api/*.api.ts` | Feature-specific request functions | `getTrustScore(sellerId)` |
-| `features/*/hooks/use*.ts` | TanStack Query hooks, cache keys, invalidation | `useTrustScore(sellerId)` |
-| Component | Rendering only | `<SignalBreakdown signals={data.signals} />` |
+| Layer                      | Responsibility                                        | Example                                      |
+| -------------------------- | ----------------------------------------------------- | -------------------------------------------- |
+| `packages/api-client`      | Typed transport, generated                            | `client.GET("/api/v1/sellers/{id}")`         |
+| `lib/api/interceptors.ts`  | Auth refresh, error normalisation, request-id capture | 401 → refresh once → retry once → logout     |
+| `features/*/api/*.api.ts`  | Feature-specific request functions                    | `getTrustScore(sellerId)`                    |
+| `features/*/hooks/use*.ts` | TanStack Query hooks, cache keys, invalidation        | `useTrustScore(sellerId)`                    |
+| Component                  | Rendering only                                        | `<SignalBreakdown signals={data.signals} />` |
 
 Query key factory (one place, prevents invalidation bugs):
 
@@ -177,7 +177,7 @@ export const qk = {
     history: (sellerId: string) => ['trust-score', sellerId, 'history'] as const,
   },
   verification: { identity: (id: string) => ['verification', 'identity', id] as const },
-  job:         { status: (jobId: string) => ['job', jobId] as const },
+  job: { status: (jobId: string) => ['job', jobId] as const },
 } as const;
 ```
 
@@ -186,19 +186,19 @@ export const qk = {
 Identity verification takes ~15–30 s. `useJobStatus(jobId)` polls `GET /api/v1/jobs/{id}` with
 `refetchInterval` that backs off (2 s → 5 s → 10 s), stops on a terminal status, and on success
 invalidates `qk.trustScore.current(...)`. The wizard shows per-stage progress
-(*uploading → reading CNIC → matching face → scoring*), which converts dead waiting time into visible
+(_uploading → reading CNIC → matching face → scoring_), which converts dead waiting time into visible
 progress — the difference between "it's broken" and "it's working" in a demo.
 
 ## 5. State management
 
 Four kinds of state, four tools — mixing them is the usual source of frontend mess.
 
-| Kind | Tool | Examples |
-|---|---|---|
-| Server state | **TanStack Query** | Scores, listings, appeals, admin tables |
-| URL state | **`nuqs` / searchParams** | Table filters, page, sort, tab — shareable and back-button correct |
-| Form state | **React Hook Form** | Every form |
-| Ephemeral client state | **Zustand** (small, sliced) | Sidebar open, active modal, wizard step |
+| Kind                   | Tool                        | Examples                                                           |
+| ---------------------- | --------------------------- | ------------------------------------------------------------------ |
+| Server state           | **TanStack Query**          | Scores, listings, appeals, admin tables                            |
+| URL state              | **`nuqs` / searchParams**   | Table filters, page, sort, tab — shareable and back-button correct |
+| Form state             | **React Hook Form**         | Every form                                                         |
+| Ephemeral client state | **Zustand** (small, sliced) | Sidebar open, active modal, wizard step                            |
 
 There is deliberately **no Redux and no global app store**. Nearly all TrustLens state is server state;
 a client store holding a copy of it would immediately drift.
@@ -225,6 +225,7 @@ packages/validation/src/
 ```
 
 Rules:
+
 - Client validation is **UX, not security**. The backend re-validates everything; the client just fails fast.
 - Multi-step wizards validate **per step** (`trigger(['field'])`) so a user is never told at step 4 that
   step 1 was wrong.
@@ -253,12 +254,12 @@ packages/ui/src/
 
 **Trust-score visual language** (a product decision, defined once so it can never drift):
 
-| Risk level | Score | Token | Rule |
-|---|---|---|---|
-| Low risk | 70–100 | `--tl-risk-low` (green) | Always paired with the word "Low risk" |
-| Medium risk | 40–69 | `--tl-risk-medium` (amber) | — |
-| High risk | 0–39 | `--tl-risk-high` (red) | — |
-| Unverified / insufficient data | — | `--tl-risk-unknown` (slate) | Never rendered as green |
+| Risk level                     | Score  | Token                       | Rule                                   |
+| ------------------------------ | ------ | --------------------------- | -------------------------------------- |
+| Low risk                       | 70–100 | `--tl-risk-low` (green)     | Always paired with the word "Low risk" |
+| Medium risk                    | 40–69  | `--tl-risk-medium` (amber)  | —                                      |
+| High risk                      | 0–39   | `--tl-risk-high` (red)      | —                                      |
+| Unverified / insufficient data | —      | `--tl-risk-unknown` (slate) | Never rendered as green                |
 
 Colour is **never the only carrier of meaning** — every badge carries text and an icon (WCAG 1.4.1), and
 all pairings meet 4.5:1 contrast. That matters here beyond compliance: a colour-blind buyer misreading
@@ -276,14 +277,14 @@ amber as green is a person about to be defrauded.
 
 ## 9. Error handling
 
-| Level | Mechanism |
-|---|---|
-| Route | `error.tsx` per route group with a retry action |
-| App | `global-error.tsx` |
-| Component | `<ErrorBoundary>` around independently-failing widgets (charts, breakdown) |
-| Request | `interceptors.ts` maps `application/problem+json` → `AppError {code, title, detail, requestId, fieldErrors}` |
-| Form | Field errors mapped from the problem's `errors[]` array onto RHF fields by name |
-| Toast | Non-blocking failures only |
+| Level     | Mechanism                                                                                                    |
+| --------- | ------------------------------------------------------------------------------------------------------------ |
+| Route     | `error.tsx` per route group with a retry action                                                              |
+| App       | `global-error.tsx`                                                                                           |
+| Component | `<ErrorBoundary>` around independently-failing widgets (charts, breakdown)                                   |
+| Request   | `interceptors.ts` maps `application/problem+json` → `AppError {code, title, detail, requestId, fieldErrors}` |
+| Form      | Field errors mapped from the problem's `errors[]` array onto RHF fields by name                              |
+| Toast     | Non-blocking failures only                                                                                   |
 
 Every user-visible error surfaces the `requestId` in small text. When a seller emails "verification
 failed", that string turns a 30-minute log hunt into a single query.

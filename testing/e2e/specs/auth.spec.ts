@@ -8,7 +8,14 @@ test.describe('authentication', () => {
     await page.getByRole('button', { name: /sign in/i }).click();
 
     // Identical message for a wrong password and a missing account.
-    await expect(page.getByRole('alert')).toContainText(/invalid email or password/i);
+    //
+    // Filtered rather than bare: Next renders an empty `role="alert"` route
+    // announcer on every page, so a bare getByRole('alert') matches two
+    // elements and trips Playwright's strict mode before it ever reads the
+    // message.
+    await expect(
+      page.getByRole('alert').filter({ hasText: /invalid email or password/i }),
+    ).toBeVisible();
   });
 
   test('signs a seller in and lands on the dashboard', async ({ page }) => {

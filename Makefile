@@ -124,3 +124,55 @@ ci: lint typecheck check-arch test ## Exactly what CI runs
 clean: ## Remove build artifacts and caches
 	rm -rf .turbo node_modules/.cache **/.next **/dist **/.pytest_cache **/.mypy_cache **/.ruff_cache
 	find . -type d -name __pycache__ -prune -exec rm -rf {} +
+
+# ── Production, locally ──────────────────────────────────────────────
+#
+# The whole product in production mode on one machine: built Next.js servers,
+# uvicorn with workers, migrations as a release step, health checks, restart
+# policies. This is the handover artifact - the students can run it on a
+# laptop, or point it at hosted Postgres/Redis/S3 later by editing URLs in
+# .env.production. Nothing here assumes a particular platform.
+.PHONY: prod-init prod-build prod-up prod-down prod-logs prod-ps prod-restart prod-nuke prod-check
+
+PROD_COMPOSE := docker compose -f docker/compose/docker-compose.prod.yml --env-file .env.production
+
+prod-init: ## Create .env.production with freshly generated secrets
+	@test ! -f .env.production || (echo "!! .env.production already exists - refusing to overwrite secrets" && exit 1)
+	cp .env.production.example .env.production
+	bash scripts/generate-keys.sh >> .env.production
+	@echo ""
+	@echo "==> .env.production created with real secrets."
+	@echo "==> NOW EDIT IT: change POSTGRES_PASSWORD and STORAGE_SECRET_ACCESS_KEY,"
+	@echo "    and make DATABASE_URL / DATABASE_URL_SYNC use the same password."
+	@echo "==> Then: make prod-up"
+
+prod-build: ## Build all four images (do this after changing any NEXT_PUBLIC_* value)
+	$(PROD_COMPOSE) build
+
+prod-up: ## Start the full production stack in the background
+	$(PROD_COMPOSE) up -d --build
+	@echo ""
+	@echo "  web    http://localhost:3000"
+	@echo "  admin  http://localhost:3001"
+	@echo "  api    http://localhost:8000/docs"
+	@echo "  mail   http://localhost:8025"
+	@echo ""
+	@echo "  make prod-check   verify every service is actually healthy"
+
+prod-down: ## Stop the stack (keeps data)
+	$(PROD_COMPOSE) down
+
+prod-nuke: ## Stop the stack AND delete all data. Irreversible.
+	$(PROD_COMPOSE) down -v
+
+prod-logs: ## Tail logs from every service
+	$(PROD_COMPOSE) logs -f --tail=100
+
+prod-ps: ## Show service status and health
+	$(PROD_COMPOSE) ps
+
+prod-restart: ## Restart the app services without touching the databases
+	$(PROD_COMPOSE) restart api worker web admin
+
+prod-check: ## Verify the running stack end to end
+	bash scripts/prod-check.sh

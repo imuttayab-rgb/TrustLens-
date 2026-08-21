@@ -1,3 +1,14 @@
-{ "name": "@trustlens/config-tailwind", "version": "0.1.0", "private": true,
-  "main": "./preset.js", "files": ["preset.js", "tokens.css"],
-  "dependencies": { "tailwindcss": "^3.4.14", "tailwindcss-animate": "^1.0.7" } }
+{
+  "name": "@trustlens/config-tailwind",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./preset.js",
+  "files": [
+    "preset.js",
+    "tokens.css"
+  ],
+  "dependencies": {
+    "tailwindcss": "^3.4.14",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}

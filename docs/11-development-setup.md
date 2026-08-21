@@ -2,15 +2,15 @@
 
 ## 1. Prerequisites
 
-| Tool | Version | Notes |
-|---|---|---|
-| Node.js | 20 LTS or 22 LTS | Pinned in `.nvmrc` |
-| pnpm | 9.x | `corepack enable && corepack prepare pnpm@latest --activate` |
-| Python | 3.12 | Pinned in `.python-version` |
-| uv | 0.5+ | `curl -LsSf https://astral.sh/uv/install.sh \| sh` |
-| Docker + Compose | 24+ | Runs Postgres, Redis, MinIO, MailHog |
-| Git | 2.40+ | |
-| Make | any | Cross-language task entry point |
+| Tool             | Version          | Notes                                                        |
+| ---------------- | ---------------- | ------------------------------------------------------------ |
+| Node.js          | 20 LTS or 22 LTS | Pinned in `.nvmrc`                                           |
+| pnpm             | 9.x              | `corepack enable && corepack prepare pnpm@latest --activate` |
+| Python           | 3.12             | Pinned in `.python-version`                                  |
+| uv               | 0.5+             | `curl -LsSf https://astral.sh/uv/install.sh \| sh`           |
+| Docker + Compose | 24+              | Runs Postgres, Redis, MinIO, MailHog                         |
+| Git              | 2.40+            |                                                              |
+| Make             | any              | Cross-language task entry point                              |
 
 System libraries needed by the worker only (Docker handles this; native installs need them):
 `libgl1`, `libglib2.0-0` for OpenCV.
@@ -45,26 +45,26 @@ pnpm husky install
 
 Local service URLs:
 
-| Service | URL | Credentials |
-|---|---|---|
-| Web | http://localhost:3000 | — |
-| API | http://localhost:8000 | — |
-| API docs (Swagger) | http://localhost:8000/docs | — |
-| Postgres | localhost:5432 | `trustlens` / `trustlens` |
-| Redis | localhost:6379 | — |
-| MinIO console | http://localhost:9001 | `minioadmin` / `minioadmin` |
-| MailHog (catches all outbound email) | http://localhost:8025 | — |
+| Service                              | URL                        | Credentials                 |
+| ------------------------------------ | -------------------------- | --------------------------- |
+| Web                                  | http://localhost:3000      | —                           |
+| API                                  | http://localhost:8000      | —                           |
+| API docs (Swagger)                   | http://localhost:8000/docs | —                           |
+| Postgres                             | localhost:5432             | `trustlens` / `trustlens`   |
+| Redis                                | localhost:6379             | —                           |
+| MinIO console                        | http://localhost:9001      | `minioadmin` / `minioadmin` |
+| MailHog (catches all outbound email) | http://localhost:8025      | —                           |
 
 Demo accounts seeded by `make seed-demo`:
 
-| Email | Password | Role |
-|---|---|---|
-| `admin@trustlens.dev` | `Admin!Passw0rd123` | ADMIN |
-| `reviewer@trustlens.dev` | `Review!Passw0rd123` | REVIEWER |
+| Email                       | Password             | Role                           |
+| --------------------------- | -------------------- | ------------------------------ |
+| `admin@trustlens.dev`       | `Admin!Passw0rd123`  | ADMIN                          |
+| `reviewer@trustlens.dev`    | `Review!Passw0rd123` | REVIEWER                       |
 | `seller.high@trustlens.dev` | `Seller!Passw0rd123` | SELLER — score ≈ 85 (LOW risk) |
-| `seller.mid@trustlens.dev` | `Seller!Passw0rd123` | SELLER — score ≈ 55 (MEDIUM) |
-| `seller.low@trustlens.dev` | `Seller!Passw0rd123` | SELLER — score ≈ 22 (HIGH) |
-| `buyer@trustlens.dev` | `Buyer!Passw0rd123` | BUYER |
+| `seller.mid@trustlens.dev`  | `Seller!Passw0rd123` | SELLER — score ≈ 55 (MEDIUM)   |
+| `seller.low@trustlens.dev`  | `Seller!Passw0rd123` | SELLER — score ≈ 22 (HIGH)     |
+| `buyer@trustlens.dev`       | `Buyer!Passw0rd123`  | BUYER                          |
 
 Three seeded sellers spanning all three bands exist so the demo, the E2E suite, and any UI work always
 have something meaningful to render without running the AI pipeline first.
@@ -89,7 +89,7 @@ returns a canned analysis, the console sender prints OTPs and emails to stdout.
 make build          # turbo run build (JS) + python -m build (packages)
 pnpm build          # JS only
 pnpm --filter web build
-docker compose -f infrastructure/compose/docker-compose.full.yml build
+docker compose -f docker/compose/docker-compose.full.yml build
 ```
 
 ## 5. Database
@@ -167,14 +167,14 @@ would otherwise race to run the same migration. See [16 — Deployment](16-deplo
 
 ## 10. Troubleshooting
 
-| Symptom | Cause | Fix |
-|---|---|---|
-| `ImportError: libGL.so.1` | OpenCV needs system GL libs | `apt install libgl1 libglib2.0-0`, or use the Docker worker |
-| DeepFace downloads weights on first run | Model weights are fetched lazily | Pre-warm in the Dockerfile; cache `~/.deepface` in a volume |
-| `port 5432 already in use` | A local Postgres is running | Stop it, or set `POSTGRES_PORT=5433` in `.env` |
-| Frontend types out of date | OpenAPI changed | `pnpm codegen` |
-| Jobs enqueue but never run | Worker not running / wrong Redis DB | `make dev-worker`; confirm `REDIS_URL` matches in both apps |
-| OTP/email never arrives | Console/MailHog sender in dev | Check worker stdout or http://localhost:8025 |
-| `alembic` sees no changes | Model not imported in `trustlens-db/models/__init__.py` | Add the import |
-| Turbo serves a stale build | Cache | `pnpm turbo run build --force` |
-| Playwright fails on first run | Browsers not installed | `pnpm exec playwright install --with-deps` |
+| Symptom                                 | Cause                                                   | Fix                                                         |
+| --------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------- |
+| `ImportError: libGL.so.1`               | OpenCV needs system GL libs                             | `apt install libgl1 libglib2.0-0`, or use the Docker worker |
+| DeepFace downloads weights on first run | Model weights are fetched lazily                        | Pre-warm in the Dockerfile; cache `~/.deepface` in a volume |
+| `port 5432 already in use`              | A local Postgres is running                             | Stop it, or set `POSTGRES_PORT=5433` in `.env`              |
+| Frontend types out of date              | OpenAPI changed                                         | `pnpm codegen`                                              |
+| Jobs enqueue but never run              | Worker not running / wrong Redis DB                     | `make dev-worker`; confirm `REDIS_URL` matches in both apps |
+| OTP/email never arrives                 | Console/MailHog sender in dev                           | Check worker stdout or http://localhost:8025                |
+| `alembic` sees no changes               | Model not imported in `trustlens-db/models/__init__.py` | Add the import                                              |
+| Turbo serves a stale build              | Cache                                                   | `pnpm turbo run build --force`                              |
+| Playwright fails on first run           | Browsers not installed                                  | `pnpm exec playwright install --with-deps`                  |

@@ -10,11 +10,7 @@
  * Ordering matters: losses first, largest first. "Why am I not higher" is the
  * question sellers actually ask.
  */
-import {
-  CATEGORY_LABELS,
-  type SignalCategory,
-  type SignalStatus,
-} from '@trustlens/constants';
+import { CATEGORY_LABELS, type SignalCategory, type SignalStatus } from '@trustlens/constants';
 import { AlertTriangle, Check, HelpCircle, Minus, X } from 'lucide-react';
 import { cn } from '../lib/cn';
 
@@ -123,10 +119,7 @@ function SignalItem({ signal }: { signal: SignalRow }) {
 
   return (
     <li className="flex items-start gap-3 py-4">
-      <span
-        className={cn('mt-0.5 rounded-full p-1.5', presentation.className)}
-        aria-hidden="true"
-      >
+      <span className={cn('mt-0.5 rounded-full p-1.5', presentation.className)} aria-hidden="true">
         <Icon className="h-4 w-4" strokeWidth={2.5} />
       </span>
 

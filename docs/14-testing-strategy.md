@@ -26,14 +26,14 @@ Coverage is a floor, not a goal. A 100%-covered `scoring_policy` that was never 
 
 Highest-value targets:
 
-| Target | Cases that must exist |
-|---|---|
-| `scoring_policy` | All PASS → 100 · all FAIL → 0 · `UNAVAILABLE` excluded from the denominator · hard cap applied on each critical failure · `available_weight < MIN` → `UNKNOWN` · rounding at band boundaries (39/40, 69/70) · weights that don't sum to 100 → error |
-| `risk_band_policy` | Exact boundary values, not just midpoints |
-| `freshness_policy` | Frozen clock at `valid_until` ± 1 s |
-| `device_linkage_policy` | 1, 2, 3, 10 accounts per device |
-| Value objects | `CnicNumber` format/checksum, `PhoneE164` normalisation, `Score` clamping, `Email` case folding |
-| Use cases | Happy path, each failure branch, event published, transaction rolled back on error |
+| Target                  | Cases that must exist                                                                                                                                                                                                                               |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scoring_policy`        | All PASS → 100 · all FAIL → 0 · `UNAVAILABLE` excluded from the denominator · hard cap applied on each critical failure · `available_weight < MIN` → `UNKNOWN` · rounding at band boundaries (39/40, 69/70) · weights that don't sum to 100 → error |
+| `risk_band_policy`      | Exact boundary values, not just midpoints                                                                                                                                                                                                           |
+| `freshness_policy`      | Frozen clock at `valid_until` ± 1 s                                                                                                                                                                                                                 |
+| `device_linkage_policy` | 1, 2, 3, 10 accounts per device                                                                                                                                                                                                                     |
+| Value objects           | `CnicNumber` format/checksum, `PhoneE164` normalisation, `Score` clamping, `Email` case folding                                                                                                                                                     |
+| Use cases               | Happy path, each failure branch, event published, transaction rolled back on error                                                                                                                                                                  |
 
 ```python
 def test_unavailable_signal_is_excluded_from_denominator():
@@ -61,16 +61,16 @@ hand-stubbed hooks.
 uses Postgres enums, partial unique indexes, `citext`, `inet`, `JSONB`, and partitioning, none of which
 SQLite models. A test suite that passes on SQLite and fails on Postgres has tested nothing useful.
 
-| Area | What is verified |
-|---|---|
-| Repositories | Real SQL round-trips, entity↔row mapping, soft-delete filtering, `deleted_at` partial-unique behaviour |
-| Constraints | `uq_trust_scores_current` really prevents two current scores; the override-reason CHECK really fires |
-| Migrations | Fresh DB → `upgrade head` → `downgrade base` → `upgrade head` with no error |
-| Transactions | A failing use case rolls back every write, including the outbox row |
-| Jobs | Enqueue → worker executes → DB state changes → cache invalidated |
-| Cache | Cache-aside hit/miss/invalidate paths against real Redis |
-| Rate limiting | Token bucket refills correctly across a simulated clock |
-| Adapters | Each real adapter passes the **same port contract suite** as its fake |
+| Area          | What is verified                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------ |
+| Repositories  | Real SQL round-trips, entity↔row mapping, soft-delete filtering, `deleted_at` partial-unique behaviour |
+| Constraints   | `uq_trust_scores_current` really prevents two current scores; the override-reason CHECK really fires   |
+| Migrations    | Fresh DB → `upgrade head` → `downgrade base` → `upgrade head` with no error                            |
+| Transactions  | A failing use case rolls back every write, including the outbox row                                    |
+| Jobs          | Enqueue → worker executes → DB state changes → cache invalidated                                       |
+| Cache         | Cache-aside hit/miss/invalidate paths against real Redis                                               |
+| Rate limiting | Token bucket refills correctly across a simulated clock                                                |
+| Adapters      | Each real adapter passes the **same port contract suite** as its fake                                  |
 
 The port contract suite is the mechanism that keeps fakes honest: `FakeOcrEngine` and `EasyOcrEngine` both
 run `OcrEngineContractTests`, so a unit test written against the fake means something about production.
@@ -109,13 +109,13 @@ recoverable by a redeploy.
 The AI components need a different kind of testing — they are probabilistic, so assertions are on
 **aggregate metrics**, not individual outputs.
 
-| Component | Test |
-|---|---|
-| OCR (`EasyOcrEngine`) | A fixture set of **synthetic** CNIC images (clean, blurred, rotated, glared). Assert field-extraction accuracy ≥ threshold, not exact strings |
+| Component                      | Test                                                                                                                                                                         |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| OCR (`EasyOcrEngine`)          | A fixture set of **synthetic** CNIC images (clean, blurred, rotated, glared). Assert field-extraction accuracy ≥ threshold, not exact strings                                |
 | Face match (`DeepFaceMatcher`) | Labelled same-person / different-person pairs from a public research dataset. Assert TPR/FPR at the configured threshold; assert the borderline band routes to manual review |
-| LLM analyzer | Recorded fixtures (VCR-style) for determinism in CI; a separate nightly job hits the live API and asserts structured-output schema conformance and label stability |
-| Scam classifier | Held-out test set; assert precision/recall ≥ the previous model version. **A model that regresses cannot be published** — the registry check is part of `apps/ml` CI |
-| Prompt changes | Golden-set regression: 50 labelled listings, assert agreement with expected labels ≥ baseline |
+| LLM analyzer                   | Recorded fixtures (VCR-style) for determinism in CI; a separate nightly job hits the live API and asserts structured-output schema conformance and label stability           |
+| Scam classifier                | Held-out test set; assert precision/recall ≥ the previous model version. **A model that regresses cannot be published** — the registry check is part of `apps/ml` CI         |
+| Prompt changes                 | Golden-set regression: 50 labelled listings, assert agreement with expected labels ≥ baseline                                                                                |
 
 All ML fixtures are synthetic or from public research datasets. **No real CNIC images ever enter the
 repository** ([10 §8](10-folder-structure.md)).
@@ -129,17 +129,17 @@ high-risk ([08 §9](08-trust-score-engine.md)).
 Playwright, Chromium + WebKit, against a full Docker Compose stack with `USE_FAKE_AI=true` (deterministic,
 fast, no keys, no cost).
 
-| Spec | Journey |
-|---|---|
-| `auth.spec.ts` | Register → verify email (via MailHog API) → login → logout |
+| Spec                          | Journey                                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `auth.spec.ts`                | Register → verify email (via MailHog API) → login → logout                                        |
 | `seller-verification.spec.ts` | Upload CNIC + selfie → job progress → confirm OCR fields → phone OTP → email → checklist complete |
-| `trust-score.spec.ts` | Score appears, breakdown expands, improvement list is ranked, history chart renders |
-| `public-score-page.spec.ts` | Anonymous visitor loads `/seller/{handle}`, sees score + reasons, no PII rendered |
-| `appeals.spec.ts` | Seller appeals → reviewer sees the case → resolves → seller is notified → score recomputed |
-| `admin-scoring.spec.ts` | Admin edits weights → simulates → sees the distribution delta → activates → scores recompute |
-| `public-api.spec.ts` | Create client + key in admin → call `/public/v1` with it → revoke → 410 |
-| `rbac.spec.ts` | A seller hitting `/admin` gets 403; a reviewer cannot see the scoring-model editor |
-| `a11y.spec.ts` | axe-core scan on every key page — zero critical violations |
+| `trust-score.spec.ts`         | Score appears, breakdown expands, improvement list is ranked, history chart renders               |
+| `public-score-page.spec.ts`   | Anonymous visitor loads `/seller/{handle}`, sees score + reasons, no PII rendered                 |
+| `appeals.spec.ts`             | Seller appeals → reviewer sees the case → resolves → seller is notified → score recomputed        |
+| `admin-scoring.spec.ts`       | Admin edits weights → simulates → sees the distribution delta → activates → scores recompute      |
+| `public-api.spec.ts`          | Create client + key in admin → call `/public/v1` with it → revoke → 410                           |
+| `rbac.spec.ts`                | A seller hitting `/admin` gets 403; a reviewer cannot see the scoring-model editor                |
+| `a11y.spec.ts`                | axe-core scan on every key page — zero critical violations                                        |
 
 Rules: E2E tests use `data-testid`, never CSS classes or text (both change constantly); each test seeds
 its own data and cleans up; no test depends on another's ordering; retries are capped at 1 so genuine
@@ -149,13 +149,13 @@ flakiness surfaces instead of being masked.
 
 k6, run before the final demo and before any public-API launch:
 
-| Scenario | Target |
-|---|---|
-| `GET /public/v1/sellers/{ref}/trust-score` — 100 VUs, 5 min | p95 < 150 ms, error rate < 0.1% |
-| Cache-miss storm — 100 VUs on 100 distinct sellers | p95 < 500 ms, no connection-pool exhaustion |
-| Login — 50 VUs | p95 < 400 ms (argon2 is intentionally slow; this validates the parameter choice) |
-| Upload intent — 20 VUs | p95 < 200 ms |
-| Job throughput — 200 identity jobs queued | Queue drains; no OOM in the worker |
+| Scenario                                                    | Target                                                                           |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `GET /public/v1/sellers/{ref}/trust-score` — 100 VUs, 5 min | p95 < 150 ms, error rate < 0.1%                                                  |
+| Cache-miss storm — 100 VUs on 100 distinct sellers          | p95 < 500 ms, no connection-pool exhaustion                                      |
+| Login — 50 VUs                                              | p95 < 400 ms (argon2 is intentionally slow; this validates the parameter choice) |
+| Upload intent — 20 VUs                                      | p95 < 200 ms                                                                     |
+| Job throughput — 200 identity jobs queued                   | Queue drains; no OOM in the worker                                               |
 
 The argon2 scenario matters: memory-hard hashing is a deliberate CPU cost, and load testing is how you
 discover that your parameters make login a DoS vector on a small Railway instance.
@@ -170,22 +170,22 @@ discover that your parameters make login a DoS vector on a small Railway instanc
 
 ## 10. Test data & fixtures
 
-| Kind | Source |
-|---|---|
-| Users/sellers | `factory-boy` factories in `trustlens-testing` |
-| CNIC images | **Generated synthetic** cards with fake names and numbers (`scripts/gen-test-cnic.py`) |
-| Selfies | Public consented face datasets, or generated faces |
-| Listings | A hand-labelled scam/genuine corpus in `apps/ml/data/labels/` |
-| API responses | VCR cassettes with keys and PII scrubbed |
+| Kind          | Source                                                                                 |
+| ------------- | -------------------------------------------------------------------------------------- |
+| Users/sellers | `factory-boy` factories in `trustlens-testing`                                         |
+| CNIC images   | **Generated synthetic** cards with fake names and numbers (`scripts/gen-test-cnic.py`) |
+| Selfies       | Public consented face datasets, or generated faces                                     |
+| Listings      | A hand-labelled scam/genuine corpus in `apps/ml/data/labels/`                          |
+| API responses | VCR cassettes with keys and PII scrubbed                                               |
 
 Never in fixtures: real CNIC numbers, real names, real phone numbers, real email addresses, live API keys.
 
 ## 11. Local vs CI
 
-| Command | Duration | When |
-|---|---|---|
-| `make test-unit` | < 30 s | Every save (watch mode) |
-| `make test` | ~3 min | Before pushing (pre-push runs the unit subset) |
-| `make test-e2e` | ~5 min | Before opening a PR against `main` |
-| Full CI | ~8 min | Every PR |
-| Nightly | ~25 min | E2E on both browsers, ZAP, live-LLM contract check, load smoke |
+| Command          | Duration | When                                                           |
+| ---------------- | -------- | -------------------------------------------------------------- |
+| `make test-unit` | < 30 s   | Every save (watch mode)                                        |
+| `make test`      | ~3 min   | Before pushing (pre-push runs the unit subset)                 |
+| `make test-e2e`  | ~5 min   | Before opening a PR against `main`                             |
+| Full CI          | ~8 min   | Every PR                                                       |
+| Nightly          | ~25 min  | E2E on both browsers, ZAP, live-LLM contract check, load smoke |

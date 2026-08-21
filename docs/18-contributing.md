@@ -52,22 +52,22 @@ The reviewer checks, in priority order:
 6. **Docs** — are `docs/` and `.env.example` updated if behaviour or config changed?
 
 Review etiquette: comment on the code, never the person; distinguish blocking issues from suggestions
-(prefix non-blocking ones with `nit:`); explain *why*, and suggest a concrete alternative; approve when
+(prefix non-blocking ones with `nit:`); explain _why_, and suggest a concrete alternative; approve when
 it is good enough to merge, not when it is what you would have written.
 
 Turnaround target: 24 hours. A PR that sits for three days is a merge conflict in waiting.
 
 ## 5. What needs extra scrutiny
 
-| Change | Extra requirement |
-|---|---|
-| Database migration | Read line by line; confirm `downgrade()` works; confirm expand/contract compliance |
-| Scoring weights or thresholds | Run `POST /admin/scoring-models/{id}/simulate` and attach the distribution delta to the PR |
-| Anything touching CNIC/selfie data | Explicit security review against [15](15-security.md); confirm no new logging of PII |
-| New public API endpoint or field | Confirm no PII; confirm the OpenAPI diff is non-breaking |
-| New dependency | Justify it in the PR: why not the stdlib, what is its maintenance status, what is its licence |
-| Prompt changes | Attach golden-set regression results |
-| New env var | Added to `.env.example`, [12](12-environment-variables.md), and every deployment environment |
+| Change                             | Extra requirement                                                                             |
+| ---------------------------------- | --------------------------------------------------------------------------------------------- |
+| Database migration                 | Read line by line; confirm `downgrade()` works; confirm expand/contract compliance            |
+| Scoring weights or thresholds      | Run `POST /admin/scoring-models/{id}/simulate` and attach the distribution delta to the PR    |
+| Anything touching CNIC/selfie data | Explicit security review against [15](15-security.md); confirm no new logging of PII          |
+| New public API endpoint or field   | Confirm no PII; confirm the OpenAPI diff is non-breaking                                      |
+| New dependency                     | Justify it in the PR: why not the stdlib, what is its maintenance status, what is its licence |
+| Prompt changes                     | Attach golden-set regression results                                                          |
+| New env var                        | Added to `.env.example`, [12](12-environment-variables.md), and every deployment environment  |
 
 ## 6. Issue conventions
 
@@ -95,7 +95,7 @@ because it is confidently wrong and someone will trust it.
 - Keep [01 §7 — Assumptions register](01-project-overview.md#7-assumptions-register) current. It is the
   fastest way for a supervisor to see what was inferred rather than specified, and to overrule any single
   inference cheaply.
-- Record every accepted change of direction as an ADR, so the final report can trace *why* the system
+- Record every accepted change of direction as an ADR, so the final report can trace _why_ the system
   looks the way it does — which is most of what a defence is about.
 
 ## 9. Definition of Ready (before starting an issue)

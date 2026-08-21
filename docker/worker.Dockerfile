@@ -30,6 +30,10 @@ COPY apps/worker/ apps/worker/
 # API's code out of the worker image (ADR-0003: the API must never carry the ML
 # stack, and the worker has no reason to carry the API).
 COPY apps/api/pyproject.toml apps/api/pyproject.toml
+# Same reason, added later: apps/ml is a workspace member too. It holds the
+# training code, which must never ship (the `nothing-imports-training-code`
+# contract), so only its manifest comes across.
+COPY apps/ml/pyproject.toml apps/ml/pyproject.toml
 RUN uv sync --no-dev --package trustlens-worker --extra "${AI_EXTRA}"
 
 # ── Model weights, baked ───────────────────────────────────────────────

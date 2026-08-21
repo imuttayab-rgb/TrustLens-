@@ -10,6 +10,7 @@ from fastapi.responses import RedirectResponse
 
 from trustlens.shared.config.settings import Settings, get_settings
 from trustlens.shared.logging import configure_logging, get_logger
+from trustlens.shared.telemetry import init_error_reporting
 from trustlens_api.api.public.v1.router import public_v1
 from trustlens_api.api.v1.router import api_v1, health
 from trustlens_api.container import build_container, close_container
@@ -49,6 +50,7 @@ TAGS = [
     {"name": "Trust Score", "description": "Scores, breakdowns, history and improvements."},
     {"name": "Jobs", "description": "Poll background work such as OCR and face matching."},
     {"name": "Public API", "description": "Partner-facing, API-key authenticated, PII-free."},
+    {"name": "Public Page", "description": "Anonymous buyer-facing reads. No key, no PII."},
     {"name": "Health", "description": "Liveness and readiness probes."},
 ]
 
@@ -69,6 +71,13 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         env=settings.env.value,
         version=settings.app_version,
         fake_ai=settings.ai.use_fake_ai,
+    )
+
+    init_error_reporting(
+        settings.observability,
+        environment=settings.env.value,
+        release=settings.app_version,
+        component="api",
     )
 
     app.state.container = await build_container(settings)
@@ -134,6 +143,12 @@ _PUBLIC_ROUTES = {
     "/api/v1/auth/forgot-password",
     "/api/v1/auth/reset-password",
     "/public/v1/status",
+    "/health/worker",
+    # The buyer-facing score read (P0-12). Anonymous by design - it is a page
+    # a buyer opens from a chat link, not an integration. PII-free by
+    # construction (it returns the partner API's projection) and IP rate
+    # limited in the handler.
+    "/api/v1/public/sellers/{seller_ref}/trust-score",
 }
 
 
@@ -144,8 +159,15 @@ def _assert_routes_are_guarded(app: FastAPI) -> None:
     authentication dependency. A forgotten `Depends(get_current_actor)` is one
     of the easiest and most damaging mistakes to make in a codebase this size,
     and review does not reliably catch it.
+
+    Routes are read through `iter_route_contexts` rather than by iterating
+    `app.routes` directly. Since FastAPI 0.141 an `include_router` call leaves
+    a deferred `_IncludedRouter` placeholder in `app.routes` instead of the
+    routes themselves, so the obvious loop walks 8 placeholders, finds one
+    real route, and reports everything as fine - which is exactly what this
+    check did, silently, until P0-12 added a route that depends on it.
     """
-    from fastapi.routing import APIRoute
+    from fastapi.routing import iter_route_contexts
 
     auth_markers = (
         "get_current_actor",
@@ -158,23 +180,35 @@ def _assert_routes_are_guarded(app: FastAPI) -> None:
     )
 
     unguarded: list[str] = []
-    for route in app.routes:
-        if not isinstance(route, APIRoute) or route.path in _PUBLIC_ROUTES:
+    checked = 0
+    for context in iter_route_contexts(app.routes):
+        path = getattr(context, "path", "")
+        dependant = getattr(context, "dependant", None)
+        if dependant is None or not path:
             continue
-        dependency_names = {
-            getattr(dep.call, "__name__", "") for dep in route.dependant.dependencies
-        }
+        checked += 1
+        if path in _PUBLIC_ROUTES:
+            continue
+        dependency_names = {getattr(dep.call, "__name__", "") for dep in dependant.dependencies}
         dependency_names |= {
             getattr(sub.call, "__name__", "")
-            for dep in route.dependant.dependencies
+            for dep in dependant.dependencies
             for sub in dep.dependencies
         }
-        flattened = " ".join(dependency_names) + " " + str(route.dependant.dependencies)
+        flattened = " ".join(dependency_names) + " " + str(dependant.dependencies)
         if not any(marker in flattened for marker in auth_markers):
-            unguarded.append(f"{next(iter(route.methods or ['GET']))} {route.path}")
+            methods = getattr(context, "methods", None) or ["GET"]
+            unguarded.append(f"{next(iter(methods))} {path}")
 
+    log.info("route_guard_checked", routes=checked, unguarded=len(unguarded))
     if unguarded:
-        log.warning("routes_without_explicit_auth_dependency", routes=unguarded)
+        log.error("routes_without_explicit_auth_dependency", routes=unguarded)
+        raise RuntimeError(
+            "Routes without an authentication dependency: "
+            + ", ".join(sorted(unguarded))
+            + ". Add an auth dependency, or add the path to _PUBLIC_ROUTES if it is "
+            "deliberately anonymous."
+        )
 
 
 app = create_app()

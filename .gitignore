@@ -10,6 +10,7 @@
 .env
 .env.*
 !.env.example
+!.env.production.example
 *.pem
 *.key
 *.p12
@@ -153,3 +154,9 @@ testing/data/real/
 # packages/api-client/src/schema.gen.ts  - CI checks it for drift (ADR-0005)
 # docs/api/openapi.json                  - the published API contract
 # pnpm-lock.yaml, uv.lock                - reproducible installs
+
+# Trained model artifacts and generated report figures. Regenerate with
+# `make -C apps/ml report`; a 50 MB corpus and a binary model do not belong
+# in git history any more than the CNIC images do.
+apps/ml/models/*.joblib
+apps/ml/reports/
