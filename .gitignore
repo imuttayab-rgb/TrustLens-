@@ -60,6 +60,9 @@ pip-wheel-metadata/
 .mypy_cache/
 .ruff_cache/
 .pytest_cache/
+# Prettier reads THIS file, not nested ones, so an unlisted tool cache makes
+# `pnpm format:check` fail on any machine that has run `make check-arch`.
+.import_linter_cache/
 .tox/
 .nox/
 .hypothesis/
