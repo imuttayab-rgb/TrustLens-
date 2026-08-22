@@ -1,2 +1,9 @@
 # Unit tests only: a slow pre-push hook gets bypassed, and a bypassed hook protects nothing.
-make typecheck && make test-unit
+# Make is convenient locally but is not installed by default on Windows/Git Bash.
+if command -v make >/dev/null 2>&1; then
+	make typecheck && make test-unit
+else
+	uv run mypy packages/py apps/api/src apps/worker/src &&
+		pnpm typecheck &&
+		uv run pytest -m "not integration and not slow"
+fi
