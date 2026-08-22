@@ -14,9 +14,9 @@ Task IDs are the same in both files. Tick a box here, tick it in `TASKS.md` too.
 
 |                         |                                     |
 | ----------------------- | ----------------------------------- |
-| Software track          | ~24 of 44 days done — **about 55%** |
+| Software track          | ~27 of 44 days done — **about 61%** |
 | Documentation track (D) | 0 of 9 days done — **0%**           |
-| **Whole FYP**           | **about 46%**                       |
+| **Whole FYP**           | **about 51%**                       |
 | Phases finished         | 0, 5, 6 — most of 2, 3 and 7        |
 | Phases untouched        | 10, 11, and Track D                 |
 
@@ -146,54 +146,59 @@ flows into a seller's trust score. Turning it on is gated on P7-02.
 
 ---
 
-## Stage 3 — Get it on the internet (Phase 9 + accounts, 3 days, Zohaib)
+## Stage 3 — Production ready, locally ✅ 22 Aug
 
-Steps 1–4 of `docs/20-go-live-plan.md` are done (Redis resilience, contract tests, ONNX
-adapters, slimmed image). Steps 5–6 are not. Nothing is deployed anywhere.
+**Scope changed 22 Aug, on the client's call.** The target is no longer "deployed
+to Fly.io" but "runs in production mode on any machine, so the students can host
+it wherever they like later". That is a better handover: a compose file does not
+expire the way a free tier does.
 
-**Provision:**
+- [x] **P9-11** `docker-compose.prod.yml` — the whole product in production mode:
+      built Next.js servers, uvicorn with workers, migrations as a release step,
+      health checks, restart policies, a memory limit sized from the measured
+      323 MB peak.
+- [x] **P9-12** `.env.production.example` — every setting, with copy-paste blocks for
+      Neon, Upstash, Cloudflare R2 and Resend. Every backing service is reached only
+      by a URL, so moving one to a managed provider is an edit, not a code change.
+- [x] **P9-13** `make prod-init / prod-up / prod-down / prod-logs / prod-check` and
+      `prod-start.bat` / `prod-stop.bat` for Windows.
+- [x] **P9-07** **Monitoring.** `shared/telemetry/` was a 0-byte file. Now: error
+      reporting that works with nothing configured (structured JSON logs) and adds
+      Sentry when a DSN is set, with PII scrubbed before anything leaves the machine.
+      Plus `GET /health/worker` — the check that catches a worker which is alive,
+      connected and consuming nothing, which no process-level probe can see.
+- [x] **P9-08** **Backups with a tested restore.** `db-backup.sh` verifies the dump is
+      readable and prunes old ones; `db-restore.sh --verify` restores into a scratch
+      database, counts what came back, and drops it.
+      **Verified 22 Aug: 41 tables and 9 user rows recovered.**
+- [x] **P11-02** `RUNBOOK.md` — start, stop, logs, health, common faults, backups,
+      rollback, database access, moving to a hosted service.
+- [x] **P9-14** 🚨 **The api, web and admin images could not build.** Three separate
+      causes: every workspace member's manifest has to be present for `uv` to resolve
+      (the same defect that had kept the worker image from ever building);
+      `output: 'standalone'` was missing from both Next configs, which the web
+      Dockerfile depends on; and the Dockerfile hardcoded `apps/web/server.js`, so the
+      admin image would have started the seller app.
+- [x] **P9-15** 🚨 **No `.dockerignore` existed.** The build context was **236 MB and
+      climbing** — `node_modules`, the virtualenv, `.next`, the 50 MB training corpus.
+      Worse, `.env.production` was inside it, so a `COPY . .` would have baked the
+      database password and JWT signing key into an image layer, where they survive
+      even if a later layer deletes the file. Context is now **3 MB**.
+- [x] **P8-05** Disposable-email detection — the local list went from 10 domains to
+      **149**. Local rather than an API on purpose: this feeds a scored signal, and a
+      third-party outage must not cost a seller points they cannot appeal.
+- [x] **P10-06b** `DEPLOYMENT.md` reframed — self-hosting first, the free-tier platform
+      walkthrough kept as one worked example rather than the plan.
 
-- [ ] **P9-01** Postgres (Neon), Redis (Upstash), storage (Cloudflare R2). All free tier.
-- [ ] **P8-01** Email via Resend (3,000/month free) — verification and notification templates.
-      _(The `ResendEmailSender` adapter is already written. This is an account, not code.)_
-- [ ] **P8-02** **SPF, DKIM, DMARC on the sending domain.** Test against Gmail, Outlook and
-      Yahoo. If verification emails land in spam, signup silently breaks and nothing errors.
-- [ ] **P8-06** Object storage: MinIO locally, R2 in production, signed URLs both ways.
+**Still open in this stage, and all of it needs accounts rather than code:**
 
-**Deploy:**
-
-- [ ] **P9-02** `apps/web` and `apps/admin` to Vercel with production env vars.
-- [ ] **P9-03** `apps/api` + `apps/worker` to Fly.io. ⚠️ **Decided by measurement:** the worker
-      peaks at **323 MB RAM**, so it needs a 512 MB instance — roughly **$3–4/month**, not
-      $0. Everything else fits a free tier.
-- [ ] **P9-04** Run migrations against production; seed **reference data only**, never demo data.
-- [ ] **P9-05** Custom domain, HTTPS, CORS, production secrets via `scripts/generate-keys.sh`.
-- [ ] **P9-06** Confirm CI is green and deploys on merge to `main`.
-
-**Prove it, then watch it:**
-
-- [ ] **P9-10** _(Step 6)_ Run the whole journey against the **public URLs**: register → verify
-      email → become seller → upload CNIC → score computed by the **real** engine → public
-      page renders → partner key reads a signed score → webhook fires.
-      _Done when:_ that sequence completes on the deployed system, not on localhost.
-- [ ] **P9-07** **Monitoring.** `shared/telemetry/__init__.py` is a **0-byte file** — there is
-      no error logging, no uptime check, no alerting. Sentry free tier + an uptime ping +
-      an email alert when the API is down.
-- [ ] **P9-08** **A backup with a tested restore.** Take one, restore it into a scratch
-      database, confirm it works. An untested backup is not a backup.
-
-**Remaining providers (code exists, needs switching on and proving):**
-
-- [ ] **P8-03** SMS OTP via Twilio trial — demo scale only. Document the PTA/carrier
-      registration constraint as a deployment limitation, not a defect.
-- [ ] **P8-04** IP/VPN detection via proxycheck.io or vpnapi.io free tier, with cache and a
-      **fail-open** path.
-- [ ] **P8-05** Disposable-email detection from a local domain list. _(A fallback list already
-      exists in `signal_collector.py` — replace it with the full list.)_
-- [ ] **P8-07** Verify the `purge_expired_media` cron **actually deletes** CNIC and selfie
-      images after the decision + appeal window. The cron is registered; confirm end to end.
-- [ ] **P8-08** Verify every provider degrades gracefully. A provider outage must produce
-      `UNAVAILABLE`, never a `FAIL` a seller cannot appeal.
+- [ ] **P8-01 / P8-02** Resend account + SPF, DKIM and DMARC on a real domain. The
+      adapter is written; without the DNS records mail is accepted and silently filed
+      as spam, so signup breaks with no error anywhere.
+- [ ] **P8-03** Twilio trial for SMS OTP. Console driver is the default and works.
+- [ ] **P8-04** IP/VPN detection API key. Offline heuristics are the default.
+- [ ] **P9-01 → P9-06** A public host, if and when the students want one. The stack is
+      ready; `DEPLOYMENT.md` Option B walks through one free-tier route.
 
 ---
 
@@ -245,8 +250,13 @@ Currently three Playwright specs, 169 lines total — auth, appeals, public scor
 
 - [ ] **P10-01** Raise domain test coverage; integration tests for each use case.
 - [ ] **P10-02** Playwright E2E: full seller journey, buyer lookup, admin review, appeal.
-- [ ] **P10-03** Security pass — OWASP basics, auth rate limiting and brute-force protection,
-      RBAC checks, PII leak scan on API responses.
+- [~] **P10-03** Security pass. **Automated checks done 22 Aug** — `make prod-security`
+  runs 16 of them against the live stack and all pass. It found one real gap, now
+  fixed: lockout was per-ACCOUNT, so one IP could spray one password across a
+  thousand addresses without moving any counter. **Left:** a manual RBAC review and
+  a dependency-vulnerability scan.
+  _Original wording:_ OWASP basics, auth rate limiting and brute-force protection,
+  RBAC checks, PII leak scan on API responses.
 - [ ] **P10-04** Load-test the public score endpoint. **Confirm the "score within seconds"
       claim with real p95 numbers** — or correct the claim (see D-02).
 - [ ] **P10-05** Cross-browser and cross-device: Chrome, Safari on iPhone, Chrome on Android.
@@ -263,8 +273,9 @@ Currently three Playwright specs, 169 lines total — auth, appeals, public scor
 
 - [ ] **P11-01** Transfer credentials and ownership — GitHub, Vercel, Fly, Neon, Upstash, R2,
       Twilio, Resend — documented in one place. _(`CREDENTIALS.dev.md` is a start.)_
-- [ ] **P11-02** Write `RUNBOOK.md` — how to start it, deploy it, roll back, read logs, reset
-      a password, and what to do when the job queue backs up.
+- [x] **P11-02** `RUNBOOK.md` — **done 22 Aug**, ahead of schedule. Start, stop, health,
+      logs, the faults that actually happen, backups, rollback, database access, and moving
+      a piece to a hosted service.
 - [ ] **P11-03** **Architecture walkthrough** with Haseeb and Muttayab: why ports and adapters,
       why deterministic scoring, why the worker is separate, how the score is computed.
       **They present this, not Zohaib.**
@@ -320,17 +331,17 @@ already built.
 
 Update this as boxes get ticked. It is the one line to show the students each week.
 
-| Stage | Title            |  Tasks | Done   | Owner             |
-| ----- | ---------------- | -----: | ------ | ----------------- |
-| 0     | Corrections      |      7 | **7**  | Zohaib ✅         |
-| 1     | Accuracy numbers |      7 | 0      | Students → Zohaib |
-| 2     | Scam classifier  |      9 | **7**  | Zohaib 🔴 data    |
-| 3     | Deploy           |     15 | 0      | Zohaib            |
-| 4     | Admin panel      |      8 | 0      | Zohaib            |
-| 5     | Seller leftovers |      4 | 0      | Zohaib            |
-| 6     | QA and demo      |      8 | 0      | Zohaib            |
-| 7     | Handover         |      6 | 0      | Both              |
-| D     | Report           |      9 | 0      | Students          |
-|       | **Total**        | **73** | **14** |                   |
+| Stage | Title            |  Tasks | Done   | Owner                    |
+| ----- | ---------------- | -----: | ------ | ------------------------ |
+| 0     | Corrections      |      7 | **7**  | Zohaib ✅                |
+| 1     | Accuracy numbers |      7 | 0      | Students → Zohaib        |
+| 2     | Scam classifier  |      9 | **7**  | Zohaib 🔴 data           |
+| 3     | Production local |     14 | **10** | Zohaib (4 need accounts) |
+| 4     | Admin panel      |      8 | 0      | Zohaib                   |
+| 5     | Seller leftovers |      4 | 0      | Zohaib                   |
+| 6     | QA and demo      |      8 | **1**  | Zohaib                   |
+| 7     | Handover         |      6 | **1**  | Both                     |
+| D     | Report           |      9 | 0      | Students                 |
+|       | **Total**        | **72** | **26** |                          |
 
 _Created 22 August 2026 · Sequenced by dependency, not by date · Scope: academic FYP_

@@ -24,9 +24,10 @@ from trustlens.core.application.use_cases.auth import (
     VerifyEmailCommand,
 )
 from trustlens.core.domain.enums import UserRole
-from trustlens.core.domain.errors import TokenInvalid
+from trustlens.core.domain.errors import RateLimitExceeded, TokenInvalid
 from trustlens.core.domain.policies import LoginThrottlePolicy, PasswordPolicy
 from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
+from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, RequestMeta, UowDep
 from trustlens_api.api.v1.schemas.auth import (
     ChangePasswordRequest,
@@ -43,6 +44,8 @@ from trustlens_api.api.v1.schemas.auth import (
 from trustlens_api.api.v1.schemas.common import MessageResponse, envelope
 from trustlens_api.container import Container
 from trustlens_api.core.cookies import clear_refresh_cookie, set_refresh_cookie
+
+log = get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -89,6 +92,48 @@ async def register(
     )
 
 
+async def _throttle_login_by_ip(container: Container, meta: RequestMeta) -> None:
+    """Per-IP login throttle, on top of the per-account lockout (P10-03).
+
+    `LoginThrottlePolicy` locks an ACCOUNT after repeated failures, which stops
+    someone grinding one password. It does nothing about the other shape of the
+    same attack: one IP trying one password against a thousand different
+    addresses. Every attempt hits an account that does not exist, so no counter
+    anywhere goes up, and a security scan of the login endpoint comes back
+    clean while the spray runs.
+
+    Counted on every attempt rather than only on failures, because at this
+    point we have not checked the credentials yet - and deciding whether to
+    count first would leak whether the account exists through response timing.
+
+    **Fails OPEN.** If Redis is unavailable this lets the request through: the
+    per-account lockout still applies, and a cache blip must not lock every
+    user out of the product. That is the opposite of the partner API's choice,
+    and deliberately so - there, refusing traffic protects cost; here, refusing
+    traffic IS the outage.
+    """
+    limits = container.settings.rate_limit
+    if not limits.enabled or meta.ip is None:
+        return
+
+    try:
+        allowed, _remaining, retry_after = await container.rate_limiter.hit(
+            f"login:ip:{meta.ip}",
+            limit=limits.login_ip_per_15min,
+            window_seconds=900,
+        )
+    except Exception:
+        log.warning("login_ip_throttle_unavailable_failing_open", ip=meta.ip)
+        return
+
+    if not allowed:
+        log.warning("login_ip_throttled", ip=meta.ip)
+        raise RateLimitExceeded(
+            "Too many sign-in attempts from this address. Try again shortly.",
+            retry_after=retry_after,
+        )
+
+
 @router.post("/login", summary="Sign in")
 async def login(
     body: LoginRequest,
@@ -97,6 +142,8 @@ async def login(
     uow: UowDep,
     meta: MetaDep,
 ) -> dict[str, Any]:
+    await _throttle_login_by_ip(container, meta)
+
     use_case = LoginUser(
         uow=uow,
         hasher=container.password_hasher,

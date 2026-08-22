@@ -11,10 +11,15 @@ FROM node:20-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
+# One install, shared by both images.
+#
+# Building web and admin separately used to run `pnpm install` twice - about
+# 20 minutes each on a slow connection. This stage is identical for both, so
+# Docker builds it once and reuses the layer.
 FROM base AS deps
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-# Both app manifests, not just the target: pnpm resolves the whole workspace
-# from the lockfile, and omitting one makes `--frozen-lockfile` fail.
+# BOTH app manifests, and packages/ in full: pnpm resolves the whole workspace
+# from the lockfile, and --frozen-lockfile fails if a declared member is absent.
 COPY apps/web/package.json apps/web/
 COPY apps/admin/package.json apps/admin/
 COPY packages/ packages/
@@ -22,8 +27,15 @@ RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
 ARG APP=web
-COPY --from=deps /app/node_modules ./node_modules
+
+# The WHOLE /app, not just /app/node_modules. pnpm writes a node_modules into
+# the root *and* into every workspace package - the per-package ones hold the
+# .bin symlinks - so copying only the root one produces `sh: next: not found`.
+COPY --from=deps /app ./
+# Source on top. COPY adds and overwrites; it does not delete, so every
+# node_modules from the stage above survives this.
 COPY . .
+
 # NEXT_PUBLIC_* values are inlined at build time, so they must be present here
 # and not only at run time. This is the single most common self-hosting
 # surprise: changing one later needs a rebuild, not a restart.
@@ -31,6 +43,11 @@ ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo run build --filter=@trustlens/${APP}
+
+# `public/` is optional in Next, and the admin app does not have one - but a
+# COPY of a missing path fails the build outright, with a checksum error that
+# never mentions the directory being optional.
+RUN mkdir -p apps/${APP}/public
 
 FROM base AS runtime
 ARG APP=web

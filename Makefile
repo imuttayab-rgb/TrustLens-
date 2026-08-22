@@ -132,7 +132,7 @@ clean: ## Remove build artifacts and caches
 # policies. This is the handover artifact - the students can run it on a
 # laptop, or point it at hosted Postgres/Redis/S3 later by editing URLs in
 # .env.production. Nothing here assumes a particular platform.
-.PHONY: prod-init prod-build prod-up prod-down prod-logs prod-ps prod-restart prod-nuke prod-check
+.PHONY: prod-init prod-build prod-up prod-down prod-logs prod-ps prod-restart prod-nuke prod-check prod-security prod-backup prod-backup-verify
 
 PROD_COMPOSE := docker compose -f docker/compose/docker-compose.prod.yml --env-file .env.production
 
@@ -176,3 +176,38 @@ prod-restart: ## Restart the app services without touching the databases
 
 prod-check: ## Verify the running stack end to end
 	bash scripts/prod-check.sh
+
+prod-security: ## Run the automated security checks against the running stack
+	bash scripts/security-check.sh
+
+prod-backup: ## Take a database backup
+	bash scripts/db-backup.sh --stack prod
+
+prod-backup-verify: ## Take a backup AND prove it restores
+	bash scripts/db-backup.sh --stack prod
+	bash scripts/db-restore.sh --verify --stack prod
+
+# ── Hosted split: frontends on Vercel, database on Neon ──────────────
+.PHONY: hosted-init hosted-up hosted-down hosted-logs hosted-migrate
+
+HOSTED_COMPOSE := docker compose -f docker/compose/docker-compose.hosted.yml --env-file .env.hosted
+
+hosted-init: ## Create .env.hosted from the template plus fresh secrets
+	@test ! -f .env.hosted || (echo "!! .env.hosted exists - refusing to overwrite secrets" && exit 1)
+	cp .env.hosted.example .env.hosted
+	bash scripts/generate-keys.sh >> .env.hosted
+	@echo ""
+	@echo "==> .env.hosted created. Now fill in: Neon URLs, the public API URL,"
+	@echo "    the Vercel URLs, and your Resend key. See ACCOUNTS.md."
+
+hosted-up: ## Start api + worker (+ redis) against Neon
+	$(HOSTED_COMPOSE) up -d --build
+
+hosted-down: ## Stop the self-hosted half
+	$(HOSTED_COMPOSE) down
+
+hosted-logs: ## Tail api and worker logs
+	$(HOSTED_COMPOSE) logs -f --tail=100
+
+hosted-migrate: ## Run migrations against Neon without starting anything else
+	$(HOSTED_COMPOSE) run --rm migrate

@@ -1,0 +1,82 @@
+# Build context exclusions.
+#
+# Without this file the context was 236 MB and climbing - node_modules, the
+# Python virtualenv, Next.js build output, the 50 MB training corpus and every
+# Docker layer cache, all uploaded to the daemon on every single build.
+#
+# Two consequences, and the second is the serious one:
+#
+#   1. Every build wasted minutes transferring files the Dockerfile discards.
+#   2. `.env.production` holds real secrets - database password, JWT signing
+#      key, storage credentials - and was inside the context. Any `COPY . .`
+#      would have baked them into an image layer, where they survive even if a
+#      later layer deletes the file. Images get shared; that is how secrets
+#      leak.
+#
+# Anything the build genuinely needs must NOT be listed here.
+
+# ── Secrets. Never in an image. ──────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.production.example
+*.pem
+*.key
+*.p12
+*.pfx
+secrets/
+
+# ── Dependencies, rebuilt inside the image ───────────────────────────
+node_modules
+**/node_modules
+.venv
+**/.venv
+__pycache__
+**/__pycache__
+*.pyc
+
+# ── Build output, regenerated inside the image ───────────────────────
+.next
+**/.next
+dist
+**/dist
+build
+**/build
+*.tsbuildinfo
+**/*.tsbuildinfo
+
+# ── Tool caches ──────────────────────────────────────────────────────
+.turbo
+**/.turbo
+.mypy_cache
+.ruff_cache
+.pytest_cache
+.import_linter_cache
+.git
+.github
+.husky
+.vscode
+.idea
+
+# ── Data and artifacts ───────────────────────────────────────────────
+# The training corpus is ~50 MB and the model is rebuilt by apps/ml, not by a
+# container. Backups and reports have no business in an image at all.
+apps/ml/datasets
+apps/ml/reports
+apps/ml/models
+backups/
+coverage/
+htmlcov/
+.coverage
+test-results/
+playwright-report/
+**/test-results
+**/playwright-report
+
+# ── Docs and local scripts ───────────────────────────────────────────
+docs/
+*.md
+!apps/ml/README.md
+*.pdf
+*.bat
+testing/

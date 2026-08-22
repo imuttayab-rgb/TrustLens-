@@ -51,7 +51,7 @@ Three consequences, and they save real time:
 | 6     | Public marketplace API                | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs  | Zohaib |
 | 7     | ML scam classifier                    | 4      | `[~]` pipeline + baseline shipped; **blocked on local ads**  | Zohaib |
 | 8     | Real integrations                     | 4      | `[ ]`                                                        |        |
-| 9     | Deployment                            | 3      | `[ ]`                                                        |        |
+| 9     | Production ready (local)              | 3      | `[~]` stack, monitoring, backups done; hosting is optional   | Zohaib |
 | 10    | QA & demo readiness                   | 4      | `[ ]`                                                        |        |
 | 11    | Handover & training                   | 3      | `[ ]`                                                        |        |
 |       | **Software total**                    | **44** |                                                              |        |
@@ -696,8 +696,111 @@ software track can substitute for them, and they gate the accuracy numbers the r
       _Done 13 Aug._ A supervisor (`trustlens_worker/supervisor.py`) now owns the ARQ run loop and reconnects with bounded backoff, and it is the container entrypoint instead of `arq` itself - PID 1 returning is exactly how the queue stopped being consumed with nothing to show for it. It owns SIGTERM too, so a deliberate stop is not mistaken for an outage and "recovered" from. `restart: unless-stopped` stays as the outer net for what the loop cannot catch (OOM, bad deploy, host reboot); on its own it was never enough, since restarting reloads the OCR and face models from disk to recover from a blip that lasted milliseconds.
       _Verified two ways:_ against live infrastructure — `docker stop trustlens-redis`, wait, `docker start`, and the worker resumed processing a real `notifications.send_email` job with no intervention; and by driving the loop with a connection that refuses twice before succeeding, since arq 0.28 turned out to survive a _brief_ stop on its own and the live test alone would not have exercised the retry path. 10 tests.
 
-- [ ] **P9-07** **Basic monitoring** — fill the empty `shared/telemetry/`: structured error logging (Sentry free tier), uptime check, and an alert to your email when the API is down.
-- [ ] **P9-08** **Backups with a tested restore.** Take a backup, restore it into a scratch database, confirm it works. _An untested backup is not a backup._
+> ### Scope change, 22 August 2026 — production ready **locally**
+>
+> **Decided by the client.** The target is no longer "deployed to a named host"
+> but "runs in production mode on any machine, so the students can host it
+> wherever they like, later or never".
+>
+> That is the better handover. A compose file does not expire the way a free
+> tier does, and the students can demo from a laptop with no account, no card
+> and no internet. Every backing service is addressed only by a URL in
+> `.env.production`, so moving one to Neon, Upstash, R2 or Resend is an edit,
+> not a code change. `DEPLOYMENT.md` keeps the free-tier walkthrough as one
+> worked example rather than as the plan.
+
+- [x] **P9-11** **The whole product, production mode, one command.**
+      _Done 22 Aug._ `docker-compose.prod.yml`: web, admin, api, worker, Postgres,
+      Redis, MinIO and Mailpit, with health checks, restart policies, migrations as a
+      separate release job (so two replicas cannot race on the same migration), and a
+      memory limit sized from the measured 323 MB worker peak. `make prod-up`, or
+      `prod-start.bat` on Windows.
+
+- [x] **P9-12** **`.env.production.example`** — every setting, with copy-paste blocks for
+      Neon, Upstash, Cloudflare R2 and Resend, and the two traps written down: Neon's
+      free tier sleeps after 5 minutes, and `NEXT_PUBLIC_*` values are compiled into the
+      browser bundle, so changing one needs a rebuild rather than a restart.
+      Rewritten to **pure ASCII** after the box-drawing characters were corrupted by a
+      plain `cp` on Windows and Docker Compose then refused to parse the file. An env
+      file that breaks when copied is a bad handover artifact.
+
+- [x] **P9-13** **`make prod-check`** — verifies what a user experiences, not whether
+      containers exist. The API can be listening while the database is unreachable, and
+      the worker can be running while consuming nothing.
+
+- [x] **P9-07** **Monitoring.** _Done 22 Aug._ `shared/telemetry/` had been a **0-byte
+      file**, so the system had no way to tell anyone it was broken. Now: structured JSON
+      logs always (a complete setup for a laptop), Sentry when a DSN is set, and PII
+      scrubbed before anything leaves the machine — this system holds CNIC numbers and
+      selfies, and error reporting must not be the thing that leaks them.
+      The addition that matters is **`GET /health/worker`**. A worker can be alive,
+      connected and consuming nothing: every process-level probe says healthy,
+      `restart: unless-stopped` sees nothing to restart, and the only symptom is
+      verifications that never finish. The worker now writes a heartbeat to Redis after
+      each job, and that endpoint returns 503 when it goes stale, so an uptime monitor
+      actually fires.
+
+- [x] **P9-08** **Backups with a tested restore.** _Done and verified 22 Aug._
+      `db-backup.sh` reads the real credentials rather than assuming defaults, refuses to
+      call a truncated dump a backup, verifies the table of contents is readable, and
+      prunes old files so a backup policy cannot fill the disk the database is on.
+      `db-restore.sh --verify` restores into a scratch database, counts what came back,
+      and drops it — **41 tables and 9 user rows recovered**, measured, not asserted.
+      The first version of that check counted tables in the wrong database and reported
+      a perfectly good dump as a total failure, which is worth recording: a backup
+      verifier that cries wolf gets switched off.
+
+- [x] **P9-14** 🚨 **The api, web and admin images could not build. Any of them.**
+      _Found 22 Aug by building them, which nothing had ever done._ Three separate
+      causes, one theme — nobody had run the command: 1. `uv` resolves the whole workspace before installing any part of it, so every
+      member's manifest must be in the build context. The API image copied four. This
+      is the same defect that had kept the worker image from ever building, and
+      `apps/ml` had just made it worse. 2. `output: 'standalone'` was missing from both Next configs. `web.Dockerfile`
+      copies `.next/standalone`, which Next does not emit without it. 3. The Dockerfile hardcoded `apps/web/server.js` despite taking an `APP` build
+      arg, so the admin image would have started the seller app. 4. pnpm writes a `node_modules` into the root **and** into every workspace
+      package; a separate deps stage copied only the root one, and the build died
+      with `sh: next: not found`.
+
+- [x] **P9-15** 🚨 **There was no `.dockerignore`, and secrets were in the build context.**
+      _Found 22 Aug._ The context was **236 MB and climbing** — `node_modules`, the
+      virtualenv, `.next`, the 50 MB training corpus, every tool cache — uploaded to the
+      daemon on every build.
+      The size was the visible problem. The real one was that **`.env.production` was
+      inside it**: the database password, the JWT signing key and the storage
+      credentials. Any `COPY . .` would have baked them into an image layer, where they
+      survive even if a later layer deletes the file, and images get shared. Context is
+      now **3 MB**.
+
+- [x] **P11-02** **`RUNBOOK.md`.** _Done 22 Aug, ahead of Phase 11._ Start, stop, health,
+      logs, the faults that actually happen, backups, rollback, database access, and how
+      to move a piece to a hosted service. Written for someone with no knowledge of the
+      codebase, because that is who will be running it.
+
+- [x] **P8-05** **Disposable-email detection.** _Done 22 Aug._ The local list went from
+      10 domains to **149**. Local rather than an API on purpose: this feeds a scored
+      signal, so a third party being slow or down would either stall a verification or
+      cost a seller points for a reason they cannot appeal. A slightly stale list is a
+      far better failure mode than a lookup that hangs.
+
+- [x] **P8-07** **The media-retention job actually deletes.** _Verified 22 Aug._ The cron
+      was registered and the code read correctly, but nothing had ever checked that the
+      object leaves storage **and** the row is marked — two separate failures with the
+      same symptom, which is none. Four tests now cover it, including that one
+      unreachable object does not halt the sweep (otherwise a single orphaned key blocks
+      every later deletion forever) and that a row is never marked deleted when the
+      object could not be removed (which would leave it on disk but invisible).
+
+- [x] **P10-03b** **Automated security checks.** `scripts/security-check.sh` runs against
+      the live stack: anonymous access is refused where it should be, no CNIC/email/phone
+      appears in a public payload, errors carry no stack traces, security headers are
+      present, the server software is not advertised, repeated failed logins are
+      throttled, and `.env.production` is neither tracked by git nor inside the Docker
+      build context.
+
+- [x] ~~**P9-07** Basic monitoring~~ — superseded by the P9-07 entry above.
+      _Original wording:_ fill the empty `shared/telemetry/`: structured error logging (Sentry free tier), uptime check, and an alert to your email when the API is down.
+- [x] ~~**P9-08** Backups with a tested restore~~ — superseded by the entry above.
+      _Original wording:_ Take a backup, restore it into a scratch database, confirm it works. _An untested backup is not a backup._
       _Done when:_ the full seller journey works on the public URL, not just localhost.
 
 ---

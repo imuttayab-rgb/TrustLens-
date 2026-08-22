@@ -61,6 +61,19 @@ defects found along the way, is [`TASKS.md`](TASKS.md).
 
 ## Quick start
 
+**Production mode** — the whole product in containers, the way it is handed over:
+
+```bash
+make prod-init     # first run: creates .env.production with real secrets
+make prod-up       # build and start everything
+make prod-check    # verify it is actually serving
+```
+
+Windows: double-click **`prod-start.bat`**. Day-to-day operation is in
+[`RUNBOOK.md`](RUNBOOK.md).
+
+**Development mode** — hot reload, run from source.
+
 Windows, one click: run **`start.bat`** (and `stop.bat` to shut it down).
 
 Everywhere else:

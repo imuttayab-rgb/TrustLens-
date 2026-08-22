@@ -1,14 +1,75 @@
-# Deployment — click by click
+# Deployment
 
-Goal: TrustLens live on public URLs, with **real** OCR and face matching, at
-**$0/month**.
+There are two ways to run TrustLens, and **the first one is the default**.
 
-Work through this top to bottom. Each part ends with **"Save this"** — a value
-you copy somewhere safe. The last section says what to hand back to me and, just
-as importantly, **what not to paste into chat**.
+---
+
+## Option A — run it yourself, anywhere (recommended)
+
+The whole product runs in production mode from one compose file. No accounts,
+no platform, no card. A laptop, a college server, a rented VPS — the same
+command works on all of them.
+
+```bash
+make prod-init     # first time only: creates .env.production with real secrets
+make prod-up       # build and start everything
+make prod-check    # confirm it is actually serving
+```
+
+Windows: double-click **`prod-start.bat`**.
+
+Day-to-day operation — starting, stopping, logs, backups, rollback, common
+faults — is in **[`RUNBOOK.md`](RUNBOOK.md)**.
+
+**Why this is the default.** The system is being handed to students who may
+choose a host later, or never, and demo it from a laptop. Tying the project to
+one platform's free tier would mean re-learning deployment the day that tier
+changes its terms. A compose file does not expire.
+
+### Putting it on the public internet
+
+Same stack. Three changes:
+
+1. Set every URL in `.env.production` to real `https://` hostnames, and make
+   `SECURITY_CORS_ORIGINS` match.
+2. Run `make prod-build` — `NEXT_PUBLIC_*` values are compiled into the browser
+   bundle, so a restart is not enough.
+3. Put a reverse proxy with TLS in front (Caddy is two lines; nginx works too).
+   The containers speak plain HTTP on purpose — terminate TLS at the proxy.
+
+### Moving one piece to a managed service
+
+Every backing service is addressed only by a URL in `.env.production`. Change
+it, stop the local container, done — no code change, no rebuild.
+
+| Piece    | Change                                                     | Then                 |
+| -------- | ---------------------------------------------------------- | -------------------- |
+| Postgres | `DATABASE_URL`, `DATABASE_URL_SYNC`, `DB_SSL_REQUIRE=true` | `--scale postgres=0` |
+| Redis    | `REDIS_URL`, `REDIS_QUEUE_URL`                             | `--scale redis=0`    |
+| Storage  | `STORAGE_ENDPOINT_URL` + keys                              | `--scale minio=0`    |
+| Email    | `EMAIL_PROVIDER=resend` + `RESEND_API_KEY`                 | `--scale mailpit=0`  |
+
+Copy-paste values for Neon, Upstash, Cloudflare R2 and Resend are at the bottom
+of `.env.production.example`.
+
+**Sizing, measured rather than guessed:** the API image is 311 MB, the worker
+1.16 GB, and the worker peaks at **323 MB RAM** with both AI engines resident.
+That last number is the one that decides hosting — it does not fit a 256 MB
+instance, so the worker needs 512 MB. Everything else is comfortable.
+
+---
+
+## Option B — the free-tier hosted setup, click by click
+
+Everything below is one specific way to do Option A's "public internet" step,
+using free tiers that existed in August 2026. It still works, and the research
+in it is worth keeping — but it is **an example, not the plan**. Free tiers
+change; the compose file does not.
 
 Budget about **2 hours** the first time. Oracle is the slow part; everything
 else is a few minutes each.
+
+Each part ends with **"Save this"** — a value you copy somewhere safe.
 
 ---
 

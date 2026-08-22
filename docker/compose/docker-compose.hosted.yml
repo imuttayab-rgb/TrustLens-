@@ -1,0 +1,199 @@
+# The pieces you still self-host when the database is on Neon and the
+# frontends are on Vercel.
+#
+#   make hosted-up
+#
+# ── What runs where ──────────────────────────────────────────────────
+#
+#   web, admin   → Vercel          (apps/*/vercel.json)
+#   Postgres     → Neon            (DATABASE_URL)
+#   api, worker  → HERE            ← this file
+#   Redis        → here, or Upstash
+#   Storage      → here, or Cloudflare R2
+#
+# ── Why api and worker cannot go to Vercel ───────────────────────────
+#
+# Vercel runs functions, not processes. The worker is a long-lived ARQ
+# consumer that holds ~323 MB of OCR and face-matching models in memory and
+# takes ~2 seconds per document; there is nothing to deploy it into. The API
+# could in principle run as functions, but it shares a container image and a
+# process model with the worker, and splitting them would mean two deployment
+# stories for one codebase.
+#
+# So this file is the irreducible part: one small always-on host. A 512 MB
+# instance is enough, which is roughly $3-4/month.
+#
+# ── A separate file, not an override ─────────────────────────────────
+#
+# `docker-compose.prod.yml` has `depends_on: postgres: service_healthy` on the
+# api, worker and migrate services. Scaling postgres to zero there does not
+# remove that condition - it makes those three wait forever for a container
+# that will never start. Hence a file that simply does not have the dependency.
+name: trustlens-hosted
+
+x-backend-env: &backend-env
+  ENV: ${ENV:-staging}
+  # Neon. Note the asymmetry, which is not a typo:
+  #   DATABASE_URL       - asyncpg, TLS comes from DB_SSL_REQUIRE
+  #   DATABASE_URL_SYNC  - psycopg, TLS must be IN the URL (?sslmode=require)
+  # Alembic reads the sync URL verbatim and nothing injects TLS into it. The
+  # settings validator refuses to start if these disagree.
+  DATABASE_URL: ${DATABASE_URL:?point this at Neon}
+  DATABASE_URL_SYNC: ${DATABASE_URL_SYNC:?point this at Neon, with ?sslmode=require}
+  DB_SSL_REQUIRE: ${DB_SSL_REQUIRE:-true}
+  # Neon's free tier closes idle connections and sleeps the compute after five
+  # minutes. A small pool that recycles often survives that far better than a
+  # large one holding dead handles.
+  DB_POOL_SIZE: ${DB_POOL_SIZE:-5}
+  DB_POOL_RECYCLE: ${DB_POOL_RECYCLE:-300}
+
+  REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+  REDIS_QUEUE_URL: ${REDIS_QUEUE_URL:-redis://redis:6379/1}
+  STORAGE_ENDPOINT_URL: ${STORAGE_ENDPOINT_URL}
+  STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID}
+  STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY}
+  STORAGE_REGION: ${STORAGE_REGION:-us-east-1}
+  STORAGE_BUCKET_DOCUMENTS: ${STORAGE_BUCKET_DOCUMENTS:-trustlens-documents}
+  STORAGE_BUCKET_LISTINGS: ${STORAGE_BUCKET_LISTINGS:-trustlens-listings}
+
+  SECURITY_JWT_PRIVATE_KEY: ${SECURITY_JWT_PRIVATE_KEY:?run scripts/generate-keys.sh}
+  SECURITY_JWT_PUBLIC_KEY: ${SECURITY_JWT_PUBLIC_KEY:?run scripts/generate-keys.sh}
+  SECURITY_JWT_ALGORITHM: ${SECURITY_JWT_ALGORITHM:-EdDSA}
+  SECURITY_JWT_ISSUER: ${SECURITY_JWT_ISSUER:?set to the PUBLIC api url}
+  SECURITY_JWT_AUDIENCE: ${SECURITY_JWT_AUDIENCE:-trustlens-web}
+  SECURITY_OTP_PEPPER: ${SECURITY_OTP_PEPPER:?run scripts/generate-keys.sh}
+  SECURITY_TOKEN_PEPPER: ${SECURITY_TOKEN_PEPPER:?run scripts/generate-keys.sh}
+  SECURITY_ENCRYPTION_KEY: ${SECURITY_ENCRYPTION_KEY:?run scripts/generate-keys.sh}
+  SECURITY_RESPONSE_SIGNING_SECRET: ${SECURITY_RESPONSE_SIGNING_SECRET:-}
+
+  # Both MUST list the Vercel URLs. The browser calls the API from
+  # https://<app>.vercel.app, and the API answers 400 to a Host it does not
+  # know and blocks the request at CORS if the Origin is not listed - two
+  # different failures that both look like "the site is broken".
+  SECURITY_CORS_ORIGINS: ${SECURITY_CORS_ORIGINS:?list the Vercel URLs}
+  SECURITY_TRUSTED_HOSTS: ${SECURITY_TRUSTED_HOSTS:?list the public api hostname}
+  # Behind a reverse proxy or a platform load balancer, or every request looks
+  # like it came from the proxy - which breaks rate limiting and the NETWORK signal.
+  SECURITY_TRUSTED_PROXY_COUNT: ${SECURITY_TRUSTED_PROXY_COUNT:-1}
+
+  WEB_BASE_URL: ${WEB_BASE_URL:?the public web url, used in email links}
+  USE_FAKE_AI: ${USE_FAKE_AI:-true}
+  OCR_ENGINE: ${OCR_ENGINE:-rapidocr}
+  FACE_ENGINE: ${FACE_ENGINE:-insightface}
+  EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
+  EMAIL_FROM: ${EMAIL_FROM:-no-reply@trustlens.local}
+  RESEND_API_KEY: ${RESEND_API_KEY:-}
+  SMTP_HOST: ${SMTP_HOST:-mailpit}
+  SMTP_PORT: ${SMTP_PORT:-1025}
+  SMTP_USER: ${SMTP_USER:-}
+  SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+  SMTP_TLS: ${SMTP_TLS:-false}
+  EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-TrustLens}
+  SMS_PROVIDER: ${SMS_PROVIDER:-console}
+  IP_INTEL_PROVIDER: ${IP_INTEL_PROVIDER:-offline}
+  IP_INTEL_API_KEY: ${IP_INTEL_API_KEY:-}
+  RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+  RATE_LIMIT_LOGIN_IP_PER_15MIN: ${RATE_LIMIT_LOGIN_IP_PER_15MIN:-30}
+  LOG_FORMAT: ${LOG_FORMAT:-json}
+  LOG_LEVEL: ${LOG_LEVEL:-INFO}
+  SENTRY_DSN: ${SENTRY_DSN:-}
+
+services:
+  # Delete this and point REDIS_URL at Upstash to drop it. Keep the two
+  # database indexes distinct: flushing the cache must never drop a queued
+  # verification job a user was already told had been accepted.
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes', '--save', '60', '1']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # Local object storage. Delete this and point STORAGE_ENDPOINT_URL at
+  # Cloudflare R2 when you want it off the machine.
+  minio:
+    image: minio/minio:latest
+    restart: unless-stopped
+    environment:
+      MINIO_ROOT_USER: ${STORAGE_ACCESS_KEY_ID:?set STORAGE_ACCESS_KEY_ID}
+      MINIO_ROOT_PASSWORD: ${STORAGE_SECRET_ACCESS_KEY:?set STORAGE_SECRET_ACCESS_KEY}
+    volumes:
+      - miniodata:/data
+    ports:
+      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio: { condition: service_healthy }
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 '${STORAGE_ACCESS_KEY_ID}' '${STORAGE_SECRET_ACCESS_KEY}';
+      mc mb --ignore-existing local/trustlens-documents;
+      mc mb --ignore-existing local/trustlens-listings;
+      mc anonymous set none local/trustlens-documents;
+      mc anonymous set none local/trustlens-listings;
+      echo 'buckets ready (private)';
+      "
+
+  # Local mail sink. Only started with EMAIL_PROVIDER=smtp pointing at it -
+  # set Gmail or Resend and this just sits idle, or delete it.
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - '${MAILPIT_UI_PORT:-8025}:8025'
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
+  migrate:
+    image: trustlens-api:latest
+    build:
+      context: ../..
+      dockerfile: docker/api.Dockerfile
+    environment: *backend-env
+    entrypoint: ['sh', '/app/docker/entrypoints/migrate.sh']
+    restart: 'no'
+
+  api:
+    image: trustlens-api:latest
+    build:
+      context: ../..
+      dockerfile: docker/api.Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *backend-env
+      WEB_CONCURRENCY: ${API_WORKERS:-2}
+    ports:
+      - '${API_PORT:-8000}:8000'
+    depends_on:
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+
+  worker:
+    image: trustlens-worker:latest
+    build:
+      context: ../..
+      dockerfile: docker/worker.Dockerfile
+    restart: unless-stopped
+    environment: *backend-env
+    depends_on:
+      redis: { condition: service_healthy }
+      migrate: { condition: service_completed_successfully }
+    mem_limit: ${WORKER_MEM_LIMIT:-768m}
+
+volumes:
+  redisdata:
+  miniodata:

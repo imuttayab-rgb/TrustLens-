@@ -35,7 +35,16 @@ x-postgres-env: &postgres-env
 
 # Shared by api, worker and the migrate job so the three cannot drift apart.
 x-backend-env: &backend-env
-  ENV: production
+  # Taken from .env.production, not hardcoded.
+  #
+  # `ENV=production` turns on a hardening validator that REFUSES to boot
+  # without TLS to the database, real AI engines, and live API-key prefixes.
+  # Those are right for a public deployment and wrong for a laptop, so the
+  # local stack runs as `staging` - production *mode* (built assets, uvicorn
+  # workers, migrations as a release step) without claiming to be a public
+  # production system. Flip it to `production` when you actually deploy, and
+  # the validator will tell you exactly what still needs setting.
+  ENV: ${ENV:-staging}
   DATABASE_URL: ${DATABASE_URL}
   DATABASE_URL_SYNC: ${DATABASE_URL_SYNC}
   REDIS_URL: ${REDIS_URL}
@@ -49,8 +58,18 @@ x-backend-env: &backend-env
   SECURITY_TOKEN_PEPPER: ${SECURITY_TOKEN_PEPPER:?run scripts/generate-keys.sh >> .env.production}
   SECURITY_ENCRYPTION_KEY: ${SECURITY_ENCRYPTION_KEY:?run scripts/generate-keys.sh >> .env.production}
   SECURITY_RESPONSE_SIGNING_SECRET: ${SECURITY_RESPONSE_SIGNING_SECRET:-}
+  SECURITY_JWT_ALGORITHM: ${SECURITY_JWT_ALGORITHM:-EdDSA}
+  SECURITY_JWT_ISSUER: ${SECURITY_JWT_ISSUER:?set SECURITY_JWT_ISSUER in .env.production}
+  SECURITY_JWT_AUDIENCE: ${SECURITY_JWT_AUDIENCE:-trustlens-web}
   WEB_BASE_URL: ${WEB_BASE_URL:-http://localhost:3000}
   SECURITY_CORS_ORIGINS: ${SECURITY_CORS_ORIGINS:-http://localhost:3000,http://localhost:3001}
+  # `api` is the service name on the compose network. The web container
+  # server-renders through http://api:8000, so that Host header has to be
+  # allowed or TrustedHostMiddleware answers 400 - and the buyer page then
+  # renders not-found for every seller, with a perfectly healthy API.
+  SECURITY_TRUSTED_HOSTS: ${SECURITY_TRUSTED_HOSTS:-localhost,127.0.0.1,api,web,admin}
+  RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+  RATE_LIMIT_LOGIN_IP_PER_15MIN: ${RATE_LIMIT_LOGIN_IP_PER_15MIN:-30}
   USE_FAKE_AI: ${USE_FAKE_AI:-true}
   OCR_ENGINE: ${OCR_ENGINE:-rapidocr}
   FACE_ENGINE: ${FACE_ENGINE:-insightface}
@@ -149,6 +168,12 @@ services:
   # ── Release step ───────────────────────────────────────────────────
 
   migrate:
+    # The SAME image as the api service, not a second build of the same
+    # Dockerfile. Without an explicit tag compose names it `trustlens-migrate`
+    # and builds it separately - two identical 311 MB images, twice the build
+    # time, and a startup that fails with "No such image" whenever the stack is
+    # brought up with --no-build.
+    image: trustlens-api:latest
     build:
       context: ../..
       dockerfile: docker/api.Dockerfile
@@ -164,6 +189,7 @@ services:
   # ── Application ────────────────────────────────────────────────────
 
   api:
+    image: trustlens-api:latest
     build:
       context: ../..
       dockerfile: docker/api.Dockerfile
@@ -179,6 +205,7 @@ services:
       migrate: { condition: service_completed_successfully }
 
   worker:
+    image: trustlens-worker:latest
     build:
       context: ../..
       dockerfile: docker/worker.Dockerfile
@@ -197,6 +224,7 @@ services:
     mem_limit: ${WORKER_MEM_LIMIT:-768m}
 
   web:
+    image: trustlens-web:latest
     build:
       context: ../..
       dockerfile: docker/web.Dockerfile
@@ -215,6 +243,7 @@ services:
       api: { condition: service_started }
 
   admin:
+    image: trustlens-admin:latest
     build:
       context: ../..
       dockerfile: docker/web.Dockerfile

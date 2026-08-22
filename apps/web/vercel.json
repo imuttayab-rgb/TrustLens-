@@ -1,0 +1,10 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "cd ../.. && pnpm turbo run build --filter=@trustlens/web",
+  "installCommand": "cd ../.. && pnpm install --frozen-lockfile",
+  "outputDirectory": ".next",
+  "ignoreCommand": "npx turbo-ignore @trustlens/web",
+  "regions": ["bom1"],
+  "github": { "silent": true }
+}

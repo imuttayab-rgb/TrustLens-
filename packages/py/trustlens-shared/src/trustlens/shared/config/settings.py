@@ -85,7 +85,50 @@ class DatabaseSettings(_Base):
                 "DATABASE_URL must use the asyncpg driver "
                 "(postgresql+asyncpg://). A sync driver blocks the event loop."
             )
+        # Managed providers hand you a libpq URL, and pasting it verbatim is
+        # the obvious thing to do. asyncpg does not understand `sslmode` and
+        # fails at connection time with an error that names neither the
+        # parameter nor the driver, so it reads as "the database is down".
+        # TLS for the async engine comes from DB_SSL_REQUIRE instead.
+        libpq_only = [p for p in ("sslmode=", "channel_binding=") if p in v]
+        if libpq_only:
+            names = " and ".join(p.rstrip("=") for p in libpq_only)
+            raise ValueError(
+                f"DATABASE_URL contains `{names}`, which asyncpg does not accept. "
+                "Neon and most managed providers hand you a libpq string with these "
+                "in it. Strip everything after the `?` for this variable and set "
+                "DB_SSL_REQUIRE=true instead; keep `?sslmode=require` on "
+                "DATABASE_URL_SYNC, which uses psycopg and does need it."
+            )
         return v
+
+    @field_validator("database_url_sync")
+    @classmethod
+    def _sync_is_sync(cls, v: str) -> str:
+        if v.startswith("postgresql+asyncpg://"):
+            raise ValueError(
+                "DATABASE_URL_SYNC must NOT use asyncpg - Alembic runs synchronously. "
+                "Use postgresql+psycopg://"
+            )
+        return v
+
+    @model_validator(mode="after")
+    def _tls_reaches_migrations_too(self) -> DatabaseSettings:
+        """Alembic reads DATABASE_URL_SYNC verbatim; nothing injects TLS into it.
+
+        So a remote database configured with DB_SSL_REQUIRE=true is reached
+        over TLS by the app and, unless `sslmode` is in the sync URL, in
+        plaintext by the migration step - or refused outright, since managed
+        providers reject unencrypted connections. Either way the failure
+        surfaces during a release, which is the worst time to find it.
+        """
+        if self.db_ssl_require and "sslmode=" not in self.database_url_sync:
+            raise ValueError(
+                "DB_SSL_REQUIRE is true but DATABASE_URL_SYNC has no `sslmode`. "
+                "Alembic uses that URL as given, so migrations would not be encrypted. "
+                "Append `?sslmode=require` to DATABASE_URL_SYNC."
+            )
+        return self
 
 
 class RedisSettings(_Base):
@@ -307,7 +350,17 @@ class RateLimitSettings(_Base):
     enabled: bool = True
     anon_per_minute: int = 60
     user_per_minute: int = 300
+    #: Per-ACCOUNT soft limit, feeding LoginThrottlePolicy.
     login_per_15min: int = 5
+    #: Per-IP login limit. A separate number, not a multiple of the one above,
+    #: because it answers a different attack: one address trying one password
+    #: against a thousand different email addresses. Every attempt there hits
+    #: an account that does not exist, so no per-account counter ever moves.
+    #:
+    #: 30 in 15 minutes is generous for a real person - who fails twice, not
+    #: thirty times - while still being low enough to make spraying pointless.
+    #: Raise it if the product ends up behind a shared NAT with many users.
+    login_ip_per_15min: int = 30
     public_api_free_per_minute: int = 60
     public_api_partner_per_minute: int = 600
     #: Public API fails CLOSED (protects cost and data); auth fails OPEN
