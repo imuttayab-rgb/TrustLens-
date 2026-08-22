@@ -8,10 +8,11 @@ adding a route cannot silently inherit a wider grant than it needs.
 
 from __future__ import annotations
 
+import dataclasses
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 
 from trustlens.core.application.use_cases.admin import (
@@ -23,7 +24,9 @@ from trustlens.core.application.use_cases.admin import (
     ListReviewQueue,
 )
 from trustlens.core.domain.entities import AuthenticatedActor, ReviewCase
-from trustlens.core.domain.errors import PermissionDenied
+from trustlens.core.domain.enums import RiskLevel
+from trustlens.core.domain.errors import EntityNotFound, PermissionDenied
+from trustlens.db.queries import SellerAdminQueries
 from trustlens_api.api.deps import (
     ActorDep,
     ContainerDep,
@@ -32,9 +35,28 @@ from trustlens_api.api.deps import (
     UowDep,
     require_permissions,
 )
-from trustlens_api.api.v1.schemas.common import envelope
+from trustlens_api.api.v1.schemas.common import PageMeta, Schema, envelope
 
 router = APIRouter(prefix="/admin", tags=["admin"])
+
+
+class SellerSearchModel(Schema):
+    id: UUID
+    handle: str
+    display_name: str
+    email: str
+    city: str | None
+    identity_status: str
+    phone_status: str
+    email_status: str
+    is_flagged: bool
+    score: int | None
+    risk_level: str | None
+    updated_at: Any
+
+
+class SellerDetailModel(SellerSearchModel):
+    score_history: list[dict[str, Any]]
 
 
 class ReviewCaseModel(BaseModel):
@@ -91,6 +113,66 @@ def _to_model(case: ReviewCase) -> ReviewCaseModel:
         decision=case.decision,
         decision_note=case.decision_note,
     )
+
+
+@router.get(
+    "/sellers",
+    summary="Search sellers",
+    dependencies=[Depends(require_permissions("seller:read:any"))],
+)
+async def search_sellers(
+    uow: UowDep,
+    page: PageDep,
+    meta: MetaDep,
+    search: str | None = Query(default=None, max_length=120),
+    risk_level: RiskLevel | None = Query(default=None, alias="riskLevel"),
+    flagged: bool | None = Query(default=None),
+) -> dict[str, Any]:
+    bounded_search = search.strip() if search else None
+    rows, total = await SellerAdminQueries(uow.session).search(
+        search=bounded_search,
+        risk_level=risk_level,
+        flagged=flagged,
+        limit=page.per_page,
+        offset=page.offset,
+    )
+    return envelope(
+        [SellerSearchModel(**dataclasses.asdict(row)).model_dump(by_alias=True) for row in rows],
+        request_id=meta.request_id,
+        pagination=PageMeta.build(page=page.page, per_page=page.per_page, total=total),
+    )
+
+
+@router.get(
+    "/sellers/{seller_id}",
+    summary="Get seller details",
+    dependencies=[Depends(require_permissions("seller:read:any"))],
+)
+async def get_seller_detail(
+    seller_id: UUID,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    row = await SellerAdminQueries(uow.session).get(seller_id)
+    if row is None:
+        raise EntityNotFound("seller", seller_id)
+    history = await uow.trust_scores.list_history(seller_id, limit=20)
+    detail = SellerDetailModel(
+        **dataclasses.asdict(row),
+        score_history=[
+            {
+                "id": score.id,
+                "score": int(score.score),
+                "riskLevel": score.risk_level.value,
+                "modelVersion": score.scoring_model_version,
+                "trigger": score.trigger.value,
+                "computedAt": score.computed_at,
+                "manualOverride": score.is_manual_override,
+            }
+            for score in history
+        ],
+    )
+    return envelope(detail.model_dump(by_alias=True), request_id=meta.request_id)
 
 
 @router.get(

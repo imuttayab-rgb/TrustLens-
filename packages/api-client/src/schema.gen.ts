@@ -251,6 +251,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/sellers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Search sellers */
+    get: operations['search_sellers_api_v1_admin_sellers_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/sellers/{seller_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get seller details */
+    get: operations['get_seller_detail_api_v1_admin_sellers__seller_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/sellers/{seller_id}/trust-score/override': {
     parameters: {
       query?: never;
@@ -876,6 +910,35 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/health/worker': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Is the worker still consuming jobs?
+     * @description The check that catches the failure nothing else does (P9-07).
+     *
+     *     A worker process can be alive, connected, and consuming nothing. Every
+     *     process-level probe reports healthy, `restart: unless-stopped` sees nothing
+     *     to restart, and the only symptom is verifications that never finish.
+     *
+     *     This reads the heartbeat the worker writes after each job, so a stale or
+     *     absent beat is visible *without talking to the worker* - which is the exact
+     *     case being tested for. 503 when stale, so an uptime monitor pointed here
+     *     actually pages someone.
+     */
+    get: operations['worker_health_worker_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/public/v1/sellers/lookup': {
     parameters: {
       query?: never;
@@ -1218,6 +1281,11 @@ export interface components {
       /** Overridescore */
       overrideScore?: number | null;
     };
+    /**
+     * RiskLevel
+     * @enum {string}
+     */
+    RiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
     /** SetStatusRequest */
     SetStatusRequest: {
       /**
@@ -1843,6 +1911,80 @@ export interface operations {
         'application/json': components['schemas']['DecideReviewRequest'];
       };
     };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  search_sellers_api_v1_admin_sellers_get: {
+    parameters: {
+      query?: {
+        search?: string | null;
+        riskLevel?: components['schemas']['RiskLevel'] | null;
+        flagged?: boolean | null;
+        page?: number;
+        perPage?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_seller_detail_api_v1_admin_sellers__seller_id__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        seller_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
     responses: {
       /** @description Successful Response */
       200: {
@@ -3243,6 +3385,28 @@ export interface operations {
     };
   };
   ready_health_ready_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+    };
+  };
+  worker_health_worker_get: {
     parameters: {
       query?: never;
       header?: never;

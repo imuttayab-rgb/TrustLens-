@@ -690,6 +690,11 @@
         "title": "ResolveAppealRequest",
         "type": "object"
       },
+      "RiskLevel": {
+        "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"],
+        "title": "RiskLevel",
+        "type": "string"
+      },
       "SetStatusRequest": {
         "properties": {
           "status": {
@@ -1901,6 +1906,187 @@
           }
         },
         "summary": "Record a decision on a case",
+        "tags": ["admin"]
+      }
+    },
+    "/api/v1/admin/sellers": {
+      "get": {
+        "operationId": "search_sellers_api_v1_admin_sellers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Search"
+            }
+          },
+          {
+            "in": "query",
+            "name": "riskLevel",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/RiskLevel"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Risklevel"
+            }
+          },
+          {
+            "in": "query",
+            "name": "flagged",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Flagged"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 10000,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "perPage",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Perpage",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Search Sellers Api V1 Admin Sellers Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search sellers",
+        "tags": ["admin"]
+      }
+    },
+    "/api/v1/admin/sellers/{seller_id}": {
+      "get": {
+        "operationId": "get_seller_detail_api_v1_admin_sellers__seller_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Seller Detail Api V1 Admin Sellers  Seller Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get seller details",
         "tags": ["admin"]
       }
     },
@@ -4170,6 +4356,28 @@
           }
         },
         "summary": "Readiness probe",
+        "tags": ["Health"]
+      }
+    },
+    "/health/worker": {
+      "get": {
+        "description": "The check that catches the failure nothing else does (P9-07).\n\nA worker process can be alive, connected, and consuming nothing. Every\nprocess-level probe reports healthy, `restart: unless-stopped` sees nothing\nto restart, and the only symptom is verifications that never finish.\n\nThis reads the heartbeat the worker writes after each job, so a stale or\nabsent beat is visible *without talking to the worker* - which is the exact\ncase being tested for. 503 when stale, so an uptime monitor pointed here\nactually pages someone.",
+        "operationId": "worker_health_worker_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Worker Health Worker Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Is the worker still consuming jobs?",
         "tags": ["Health"]
       }
     },
