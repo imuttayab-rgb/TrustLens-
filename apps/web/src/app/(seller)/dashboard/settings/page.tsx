@@ -2,14 +2,23 @@
 
 import { api } from '@/lib/api/client';
 import { useApiForm } from '@/lib/forms/use-api-form';
-import { qk } from '@/lib/api/query-keys';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
-import { Alert, Button, Card, CardContent, CardDescription, CardHeader, CardTitle, Field, Input, Spinner } from '@trustlens/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  Field,
+  Input,
+  Spinner,
+} from '@trustlens/ui';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -73,7 +82,7 @@ export default function SettingsPage() {
     mutationFn: async () => {
       const result = await api.GET('/api/v1/auth/me/export');
       if (result.error) throw toApiError(result.error);
-      
+
       const blob = new Blob([JSON.stringify(result.data, null, 2)], { type: 'application/json' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -81,7 +90,7 @@ export default function SettingsPage() {
       a.download = `trustlens-export-${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       window.URL.revokeObjectURL(url);
-    }
+    },
   });
 
   // Delete Account Form
@@ -90,7 +99,9 @@ export default function SettingsPage() {
   });
   const delApi = useApiForm(delForm.setError);
   const onDeleteSubmit = delForm.handleSubmit(async (values) => {
-    if (!confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')) {
+    if (
+      !confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')
+    ) {
       return;
     }
     const ok = await delApi.submit(async () => {
@@ -120,15 +131,21 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <form onSubmit={(e) => void onPasswordSubmit(e)} className="space-y-4">
-            <Field htmlFor="currentPassword" label="Current password" error={pwForm.formState.errors.currentPassword?.message}>
+            <Field
+              htmlFor="currentPassword"
+              label="Current password"
+              error={pwForm.formState.errors.currentPassword?.message}
+            >
               <Input type="password" {...pwForm.register('currentPassword')} />
             </Field>
-            <Field htmlFor="newPassword" label="New password" error={pwForm.formState.errors.newPassword?.message}>
+            <Field
+              htmlFor="newPassword"
+              label="New password"
+              error={pwForm.formState.errors.newPassword?.message}
+            >
               <Input type="password" {...pwForm.register('newPassword')} />
             </Field>
-            {pwApi.formError && (
-              <Alert tone="error">{pwApi.formError.message}</Alert>
-            )}
+            {pwApi.formError && <Alert tone="error">{pwApi.formError.message}</Alert>}
             <Button type="submit" disabled={pwForm.formState.isSubmitting}>
               {pwForm.formState.isSubmitting ? 'Changing...' : 'Change Password'}
             </Button>
@@ -139,9 +156,7 @@ export default function SettingsPage() {
       <Card>
         <CardHeader>
           <CardTitle>Active Sessions</CardTitle>
-          <CardDescription>
-            Devices currently signed in to your account.
-          </CardDescription>
+          <CardDescription>Devices currently signed in to your account.</CardDescription>
         </CardHeader>
         <CardContent>
           {sessionsLoading ? (
@@ -153,16 +168,21 @@ export default function SettingsPage() {
                   <div>
                     <p className="font-medium">
                       {session.userAgent || 'Unknown device'}
-                      {session.isCurrent && <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">This device</span>}
+                      {session.isCurrent && (
+                        <span className="ml-2 rounded bg-primary/10 px-2 py-0.5 text-xs text-primary">
+                          This device
+                        </span>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      IP: {session.ipAddress || 'Unknown'} · Signed in {formatDistanceToNow(new Date(session.createdAt))} ago
+                      IP: {session.ipAddress || 'Unknown'} · Signed in{' '}
+                      {formatDistanceToNow(new Date(session.createdAt))} ago
                     </p>
                   </div>
                   {!session.isCurrent && (
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => revokeSession.mutate(session.id)}
                       disabled={revokeSession.isPending}
                     >
@@ -186,26 +206,33 @@ export default function SettingsPage() {
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-medium">Export Data</h3>
-            <p className="text-sm text-muted-foreground mb-3">
+            <p className="mb-3 text-sm text-muted-foreground">
               Download a machine-readable (JSON) archive of your account data and seller profile.
             </p>
-            <Button variant="outline" onClick={() => exportData.mutate()} disabled={exportData.isPending}>
+            <Button
+              variant="outline"
+              onClick={() => exportData.mutate()}
+              disabled={exportData.isPending}
+            >
               {exportData.isPending ? 'Preparing export...' : 'Export Data'}
             </Button>
           </div>
-          
+
           <div className="border-t border-border pt-6">
             <h3 className="font-medium text-destructive">Delete Account</h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              Permanently delete your account, listings, and verification data. This action is irreversible.
+            <p className="mb-4 text-sm text-muted-foreground">
+              Permanently delete your account, listings, and verification data. This action is
+              irreversible.
             </p>
             <form onSubmit={(e) => void onDeleteSubmit(e)} className="space-y-4">
-              <Field htmlFor="password" label="Confirm password to delete" error={delForm.formState.errors.password?.message}>
+              <Field
+                htmlFor="password"
+                label="Confirm password to delete"
+                error={delForm.formState.errors.password?.message}
+              >
                 <Input type="password" {...delForm.register('password')} />
               </Field>
-              {delApi.formError && (
-                <Alert tone="error">{delApi.formError.message}</Alert>
-              )}
+              {delApi.formError && <Alert tone="error">{delApi.formError.message}</Alert>}
               <Button type="submit" variant="destructive" disabled={delForm.formState.isSubmitting}>
                 {delForm.formState.isSubmitting ? 'Deleting...' : 'Delete My Account'}
               </Button>

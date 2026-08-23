@@ -10,7 +10,6 @@ import { cn } from '@trustlens/utils';
 import { registerSchema, type RegisterInput } from '@trustlens/validation';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 export function RegisterForm({ className }: { className?: string }) {

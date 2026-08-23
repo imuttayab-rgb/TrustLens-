@@ -1,8 +1,8 @@
 'use client';
 
 import { uploadFile } from '@/lib/upload';
-import { Alert, Button, Spinner } from '@trustlens/ui';
-import { Camera, Plus, Trash2, XCircle } from 'lucide-react';
+import { Alert, Spinner } from '@trustlens/ui';
+import { Camera, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { useAddListingImage, useListingImages } from '../hooks/use-listings';
@@ -32,6 +32,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
     try {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
+        if (!file) continue;
         if (images.length + i >= 5) break;
 
         const fileId = await uploadFile('LISTING_IMAGE', file);
@@ -39,7 +40,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
 
         if (result.isDuplicate) {
           setDuplicateWarning(
-            'One of your images appears to be a near-duplicate of an image you have already uploaded. Duplicate images do not improve your listing score.'
+            'One of your images appears to be a near-duplicate of an image you have already uploaded. Duplicate images do not improve your listing score.',
           );
         }
       }
@@ -65,8 +66,16 @@ export function ListingImages({ listingId }: { listingId: string }) {
         </p>
       </div>
 
-      {error && <Alert tone="error" title="Upload failed">{error}</Alert>}
-      {duplicateWarning && <Alert tone="warning" title="Duplicate detected">{duplicateWarning}</Alert>}
+      {error && (
+        <Alert tone="error" title="Upload failed">
+          {error}
+        </Alert>
+      )}
+      {duplicateWarning && (
+        <Alert tone="warning" title="Duplicate detected">
+          {duplicateWarning}
+        </Alert>
+      )}
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         {images.map((img) => (
