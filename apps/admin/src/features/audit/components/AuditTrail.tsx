@@ -53,7 +53,7 @@ export function AuditTrail() {
   const params: AuditLogParams = {
     ...(filters.action ? { action: filters.action } : {}),
     ...(filters.entityType ? { entityType: filters.entityType } : {}),
-    limit: filters.limit,
+    ...(filters.limit !== undefined ? { limit: filters.limit } : {}),
   };
   const { data, error, isPending, isFetching } = useAuditLogs(params);
   const entries = data?.data ?? [];
@@ -121,7 +121,9 @@ export function AuditTrail() {
       ) : (
         <Card>
           <CardContent className="overflow-x-auto p-0">
-            <table className={`w-full min-w-[820px] text-left text-sm${isFetching ? ' opacity-60' : ''}`}>
+            <table
+              className={`w-full min-w-[820px] text-left text-sm${isFetching ? 'opacity-60' : ''}`}
+            >
               <thead className="border-b border-border/70 bg-muted/30 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr>
                   <th className="px-4 py-3 font-medium">When</th>
@@ -129,7 +131,7 @@ export function AuditTrail() {
                   <th className="px-4 py-3 font-medium">Entity</th>
                   <th className="px-4 py-3 font-medium">Actor</th>
                   <th className="px-4 py-3 font-medium">IP</th>
-                  <th className="px-4 py-3 font-medium w-8" />
+                  <th className="w-8 px-4 py-3 font-medium" />
                 </tr>
               </thead>
               <tbody>
@@ -137,10 +139,10 @@ export function AuditTrail() {
                   <>
                     <tr
                       key={entry.id}
-                      className="border-b border-border/50 last:border-0 hover:bg-muted/20 cursor-pointer"
+                      className="cursor-pointer border-b border-border/50 last:border-0 hover:bg-muted/20"
                       onClick={() => setExpanded((prev) => (prev === entry.id ? null : entry.id))}
                     >
-                      <td className="px-4 py-3 tabular-nums text-muted-foreground whitespace-nowrap">
+                      <td className="whitespace-nowrap px-4 py-3 tabular-nums text-muted-foreground">
                         <span title={new Date(entry.occurredAt).toLocaleString()}>
                           {relativeTime(entry.occurredAt)}
                         </span>
@@ -163,9 +165,7 @@ export function AuditTrail() {
                           <span className="text-muted-foreground">system</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {entry.ip ?? '—'}
-                      </td>
+                      <td className="px-4 py-3 text-xs text-muted-foreground">{entry.ip ?? '—'}</td>
                       <td className="px-4 py-3 text-center">
                         <span
                           className="text-xs text-primary"
@@ -213,8 +213,8 @@ export function AuditTrail() {
       )}
 
       <p className="text-xs text-muted-foreground">
-        Showing {entries.length} entr{entries.length === 1 ? 'y' : 'ies'} · Audit log is
-        append-only and cannot be edited.
+        Showing {entries.length} entr{entries.length === 1 ? 'y' : 'ies'} · Audit log is append-only
+        and cannot be edited.
       </p>
     </section>
   );
