@@ -158,6 +158,7 @@ class WorkerSettings:
         func(maintenance.lookup_phone, name="contact.lookup_phone"),
         func(maintenance.purge_expired_media, name="maintenance.purge_expired_media"),
         func(maintenance.publish_outbox, name="maintenance.publish_outbox"),
+        func(maintenance.purge_account, name="accounts.purge"),
         func(webhooks.deliver_webhook, name="webhooks.deliver"),
         func(webhooks.retry_pending_webhooks, name="webhooks.retry_pending"),
     ]

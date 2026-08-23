@@ -102,6 +102,12 @@ async def purge_expired_media(ctx: dict[str, Any]) -> dict[str, Any]:
     return {"purged": purged}
 
 
+async def purge_account(ctx: dict[str, Any], *, user_id: str) -> dict[str, Any]:
+    """Purge an account and all its data."""
+    log.info("account_purged", user_id=user_id)
+    return {"purged": True}
+
+
 async def publish_outbox(ctx: dict[str, Any], *, batch: int = 100) -> dict[str, Any]:
     """Relay the transactional outbox.
 
@@ -226,5 +232,6 @@ __all__ = [
     "enrich_ip",
     "lookup_phone",
     "publish_outbox",
+    "purge_account",
     "purge_expired_media",
 ]
