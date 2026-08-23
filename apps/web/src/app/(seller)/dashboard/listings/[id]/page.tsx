@@ -2,6 +2,7 @@
 
 import {
   ListingForm,
+  ListingImages,
   ListingRiskPanel,
   useAnalyseListing,
   useDeleteListing,
@@ -76,6 +77,10 @@ export default function ListingDetailPage() {
               onSubmit={(payload) => update.mutateAsync(payload)}
               submitLabel="Save changes"
             />
+          </div>
+
+          <div className="mt-10">
+            <ListingImages listingId={id} />
           </div>
 
           <div className="mt-10 border-t border-border pt-6">

@@ -101,8 +101,8 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
   }));
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
-      <header className="flex flex-col items-center gap-4 text-center">
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
+      <header className="flex flex-col items-center gap-3 text-center">
         <ScoreGauge
           score={score.score}
           riskLevel={score.riskLevel}
@@ -113,14 +113,16 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
               : undefined
           }
         />
-        <h1 className="text-2xl font-bold">{handle}</h1>
-        <RiskBadge riskLevel={score.riskLevel} />
-        <p className="text-sm text-muted-foreground">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold sm:text-2xl">{handle}</h1>
+          <RiskBadge riskLevel={score.riskLevel} />
+        </div>
+        <p className="text-xs text-muted-foreground sm:text-sm">
           Last checked {formatDateTime(score.computedAt)} · scoring model {score.modelVersion}
         </p>
       </header>
 
-      <Card className="mt-10">
+      <Card className="mt-8">
         <CardHeader>
           <CardTitle>Why this score</CardTitle>
         </CardHeader>
@@ -129,12 +131,12 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         </CardContent>
       </Card>
 
-      <Card className="mt-6">
+      <Card className="mt-4">
         <CardHeader>
           <CardTitle>Checks completed</CardTitle>
         </CardHeader>
         <CardContent>
-          <dl className="grid gap-3 sm:grid-cols-3">
+          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {Object.entries(score.verifications).map(([key, value]) => (
               <div key={key} className="rounded-lg border border-border p-3">
                 <dt className="text-sm capitalize text-muted-foreground">{key}</dt>
@@ -145,11 +147,15 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         </CardContent>
       </Card>
 
-      <section className="mt-10 text-sm text-muted-foreground">
-        <p>
-          A Trust Score is an assessment based on the checks listed above, not a guarantee. Always
-          meet in a public place, inspect goods before paying, and never send money in advance to
-          someone you have not met.
+      <section className="mt-8 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">About Trust Scores</p>
+        <p className="mt-1">
+          A Trust Score reflects verified identity, contact, device and listing checks — not a
+          personal endorsement. Always inspect goods before paying. Never send advance payment to
+          someone you have not met in person.
+        </p>
+        <p className="mt-2 text-xs">
+          Powered by TrustLens · Scores refresh automatically when new verifications complete.
         </p>
       </section>
     </main>

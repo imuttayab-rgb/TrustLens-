@@ -11,6 +11,7 @@ from typing import Any
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, status
+from pydantic import Field
 
 from trustlens.core.application.use_cases.listings import (
     CreateListing,
@@ -27,12 +28,18 @@ from trustlens.core.application.use_cases.listings import (
 )
 from trustlens.core.domain.entities import Listing
 from trustlens_api.api.deps import ContainerDep, MetaDep, SellerDep, UowDep, require_permissions
-from trustlens_api.api.v1.schemas.common import JobAccepted, PageMeta, envelope
+from trustlens_api.api.v1.schemas.common import JobAccepted, PageMeta, Schema, envelope
 from trustlens_api.api.v1.schemas.listing import (
     ListingAnalysisResponse,
     ListingResponse,
     ListingWriteRequest,
 )
+
+
+class ListingImageRequest(Schema):
+    """Reference to a file already uploaded via /files/upload-intent."""
+
+    file_id: UUID = Field(description="The file_id returned by /files/upload-intent")
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
@@ -222,6 +229,163 @@ async def analyse_listing(
         JobAccepted(job_id=job_id, poll_url=f"/api/v1/jobs/{job_id}"),
         request_id=meta.request_id,
     )
+
+
+@router.post(
+    "/{listing_id}/images",
+    status_code=status.HTTP_201_CREATED,
+    summary="Add an image to a listing",
+    description=(
+        "Associates an already-uploaded file (obtained via /files/upload-intent "
+        "with purpose=LISTING_IMAGE) with this listing and computes a perceptual "
+        "hash for duplicate detection. A warning is returned if a near-identical "
+        "image already exists in this seller's listings (Hamming distance ≤ 5)."
+    ),
+    dependencies=[Depends(require_permissions("listing:write:self"))],
+)
+async def add_listing_image(
+    listing_id: UUID,
+    body: "ListingImageRequest",
+    seller: SellerDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[Any, Any]:
+    import hashlib
+    from io import BytesIO
+
+    import imagehash
+    from PIL import Image
+
+    from trustlens.core.domain.entities import ListingImage
+    from trustlens.core.domain.errors import EntityNotFound, ValidationError
+
+    # Ownership check: the listing must belong to this seller.
+    listing = await GetListing(uow=uow).execute(listing_id=listing_id, seller_id=seller.id)
+    if listing is None:
+        raise EntityNotFound("listing", listing_id)
+
+    # Max 5 images per listing.
+    count = await uow.listings.count_images(listing_id)
+    if count >= 5:
+        raise ValidationError("A listing may have at most 5 images.", field="fileId")
+
+    # Validate the file exists and belongs to this user.
+    stored_file = await uow.files.get(body.file_id)
+    if stored_file is None or stored_file.owner_user_id != seller.user_id:
+        raise EntityNotFound("file", body.file_id)
+    if stored_file.purpose.value != "LISTING_IMAGE":
+        raise ValidationError(
+            "File must have been uploaded with purpose=LISTING_IMAGE.", field="fileId"
+        )
+
+    # Download the image bytes to compute perceptual hash.
+    # This is the only case where bytes pass through the API: the payload is
+    # at most 10 MB, the hash computation is CPU-cheap, and the alternative
+    # (a separate worker job) would add a round trip for a feature sellers see
+    # immediately.
+    phash_bytes: bytes | None = None
+    sha256_bytes: bytes | None = None
+    width: int | None = None
+    height: int | None = None
+    duplicate_of: str | None = None
+
+    try:
+        raw = await container.storage.get(
+            bucket=stored_file.bucket,
+            object_key=stored_file.object_key,
+        )
+        sha256_bytes = hashlib.sha256(raw).digest()
+        img = Image.open(BytesIO(raw)).convert("RGB")
+        width, height = img.size
+        phash = imagehash.dhash(img, hash_size=8)
+        phash_bytes = phash.hash.tobytes()
+
+        # Duplicate detection across this seller's images.
+        dupe = await uow.listings.find_near_duplicate_hash(
+            phash_bytes,
+            seller_id=seller.id,
+        )
+        if dupe is not None:
+            duplicate_of = str(dupe.id)
+    except Exception:
+        # Hash failure is non-fatal: the image is still stored and associated.
+        # The hash column stays None, and find_near_duplicate_hash skips None rows.
+        pass
+
+    now = container.clock.now()
+    image = ListingImage(
+        id=container.ids.new(),
+        listing_id=listing_id,
+        file_id=body.file_id,
+        position=count,  # append to end
+        created_at=now,
+        width=width,
+        height=height,
+        perceptual_hash=phash_bytes,
+        sha256=sha256_bytes,
+        is_primary=(count == 0),
+    )
+    await uow.listings.create_image(image)
+    await uow.commit()
+
+    return envelope(
+        {
+            "imageId": str(image.id),
+            "position": image.position,
+            "isPrimary": image.is_primary,
+            "width": width,
+            "height": height,
+            "isDuplicate": duplicate_of is not None,
+            "duplicateOf": duplicate_of,
+        },
+        request_id=meta.request_id,
+    )
+
+
+@router.get(
+    "/{listing_id}/images",
+    summary="List images for a listing",
+    dependencies=[Depends(require_permissions("listing:write:self"))],
+)
+async def list_listing_images(
+    listing_id: UUID,
+    seller: SellerDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[Any, Any]:
+    from trustlens.core.domain.errors import EntityNotFound
+
+    listing = await GetListing(uow=uow).execute(listing_id=listing_id, seller_id=seller.id)
+    if listing is None:
+        raise EntityNotFound("listing", listing_id)
+
+    images = await uow.listings.list_images(listing_id)
+    ttl = container.settings.storage.storage_presign_ttl_seconds
+
+    result = []
+    for img in images:
+        stored = await uow.files.get(img.file_id)
+        url = None
+        if stored:
+            url = await container.storage.presign_download(
+                bucket=stored.bucket,
+                object_key=stored.object_key,
+                ttl_seconds=ttl,
+            )
+        result.append(
+            {
+                "imageId": str(img.id),
+                "position": img.position,
+                "isPrimary": img.is_primary,
+                "width": img.width,
+                "height": img.height,
+                "url": url,
+            }
+        )
+
+    return envelope(result, request_id=meta.request_id)
 
 
 __all__ = ["router"]

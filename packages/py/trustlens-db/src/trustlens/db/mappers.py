@@ -270,6 +270,21 @@ def to_listing_analysis(row: m.ListingAnalysisModel) -> ent.ListingAnalysis:
     )
 
 
+def to_listing_image(row: m.ListingImageModel) -> ent.ListingImage:
+    return ent.ListingImage(
+        id=row.id,
+        listing_id=row.listing_id,
+        file_id=row.file_id,
+        position=row.position,
+        created_at=row.created_at,
+        width=row.width,
+        height=row.height,
+        perceptual_hash=row.perceptual_hash,
+        sha256=row.sha256,
+        is_primary=row.is_primary,
+    )
+
+
 def to_signal_definition(row: m.SignalDefinitionModel) -> ent.SignalDefinition:
     return ent.SignalDefinition(
         id=row.id,

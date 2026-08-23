@@ -31,6 +31,7 @@ from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, RequestMeta, UowDep
 from trustlens_api.api.v1.schemas.auth import (
     ChangePasswordRequest,
+    DeleteAccountRequest,
     ForgotPasswordRequest,
     LoginRequest,
     LoginResponse,
@@ -422,6 +423,97 @@ async def list_sessions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str
         request_id=meta.request_id,
     )
 
+
+@router.delete("/sessions/{session_id}", summary="Revoke a specific session")
+async def revoke_session(
+    session_id: str,
+    actor: ActorDep,
+    uow: UowDep,
+    meta: MetaDep,
+    container: ContainerDep,
+) -> dict[str, Any]:
+    from uuid import UUID
+    assert actor.user_id is not None
+    
+    try:
+        family_uuid = UUID(session_id)
+    except ValueError:
+        from trustlens.core.domain.errors import ValidationError
+        raise ValidationError("Invalid session ID", field="sessionId")
+
+    # In trustlens-db, we don't have a direct method to get a session by family_id to check owner
+    # But revoke_all_for_user allows revoking all except one.
+    # We can just revoke all sessions with this family_id where the user is the owner.
+    # Wait, the repo has `revoke_family` but it doesn't take user_id.
+    # Let's just fetch active sessions for the user and see if this family_id is in them.
+    tokens = await uow.refresh_tokens.list_active_for_user(actor.user_id)
+    if not any(t.family_id == family_uuid for t in tokens):
+        from trustlens.core.domain.errors import EntityNotFound
+        raise EntityNotFound("session", family_uuid)
+
+    await uow.refresh_tokens.revoke_family(
+        family_uuid, at=container.clock.now(), reason="USER_REVOKED"
+    )
+    await uow.commit()
+
+    return envelope(
+        MessageResponse(message="Session revoked.").model_dump(by_alias=True),
+        request_id=meta.request_id,
+    )
+
+@router.get("/me/export", summary="Export your data")
+async def export_data(
+    actor: ActorDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    user = await uow.users.get(actor.user_id)
+    seller = await uow.sellers.get_by_user(actor.user_id)
+    return envelope(
+        {
+            "user": user,
+            "seller_profile": seller,
+            "message": "Data export complete. Additional logs can be requested via support.",
+        },
+        request_id=meta.request_id,
+    )
+
+
+@router.delete("/me", summary="Delete your account")
+async def delete_account(
+    body: DeleteAccountRequest,
+    actor: ActorDep,
+    uow: UowDep,
+    meta: MetaDep,
+    container: ContainerDep,
+    response: Response,
+) -> dict[str, Any]:
+    from trustlens.core.domain.errors import InvalidCredentials
+
+    assert actor.user_id is not None
+    current_hash = await uow.users.get_password_hash(actor.user_id)
+    if current_hash is None or not container.password_hasher.verify(
+        body.password, current_hash
+    ):
+        raise InvalidCredentials
+
+    user = await uow.users.get(actor.user_id)
+    assert user is not None
+    
+    # Soft delete the user
+    # Or queue an account deletion task
+    await container.queue.enqueue("accounts.purge", user_id=str(actor.user_id))
+    
+    # Revoke all sessions and clear cookie
+    await uow.refresh_tokens.revoke_all_for_user(actor.user_id, at=container.clock.now(), reason="ACCOUNT_DELETED")
+    await uow.commit()
+    clear_refresh_cookie(response, container.settings)
+
+    return envelope(
+        MessageResponse(message="Account deletion initiated. Your data will be purged.").model_dump(by_alias=True),
+        request_id=meta.request_id,
+    )
 
 # ── helpers ──────────────────────────────────────────────────────────
 

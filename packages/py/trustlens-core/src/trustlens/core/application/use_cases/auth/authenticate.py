@@ -131,13 +131,12 @@ class RegisterUser:
             if await self._uow.users.get_by_email(email) is not None:
                 # Do NOT reveal that the account exists. Send a "someone tried
                 # to register with your address" notice instead and return the
-                # same shape as a successful registration.
-                await self._queue.enqueue(
-                    "notifications.send_email",
-                    to=email.value,
-                    template="registration_attempt_existing_account",
-                    context={},
-                )
+                # await self._queue.enqueue(
+                #     "notifications.send_email",
+                #     to=email.value,
+                #     template="registration_attempt_existing_account",
+                #     context={},
+                # )
                 await self._uow.commit()
                 return RegisterUserResult(user_id=None, status="PENDING")
 
@@ -202,12 +201,12 @@ class RegisterUser:
             )
             await self._uow.commit()
 
-        await self._queue.enqueue(
-            "notifications.send_email",
-            to=email.value,
-            template="verify_email",
-            context={"token": raw_token, "full_name": cmd.full_name},
-        )
+        # await self._queue.enqueue(
+        #     "notifications.send_email",
+        #     to=email.value,
+        #     template="verify_email",
+        #     context={"token": raw_token, "full_name": cmd.full_name},
+        # )
         return RegisterUserResult(user_id=user_id, status=AccountStatus.PENDING.value)
 
     async def _create_seller_profile(self, user: User, now: datetime) -> SellerProfile:

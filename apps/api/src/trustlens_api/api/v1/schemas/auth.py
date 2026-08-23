@@ -93,8 +93,13 @@ class SessionSummary(Schema):
     is_current: bool = False
 
 
+class DeleteAccountRequest(Schema):
+    password: str = Field(min_length=1, max_length=128)
+
+
 __all__ = [
     "ChangePasswordRequest",
+    "DeleteAccountRequest",
     "ForgotPasswordRequest",
     "LoginRequest",
     "LoginResponse",

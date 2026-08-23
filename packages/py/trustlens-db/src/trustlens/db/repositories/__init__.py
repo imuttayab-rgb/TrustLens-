@@ -873,6 +873,87 @@ class SqlListingRepository:
             return None
         return float(median)
 
+    async def create_image(self, image: ent.ListingImage) -> ent.ListingImage:
+        """Persist a listing image row.
+
+        The perceptual_hash column is populated by the caller, not here:
+        the repository layer should not depend on imagehash (that is an
+        adapter concern), and the hash may legitimately be None if the
+        image format cannot be decoded.
+        """
+        self._s.add(
+            m.ListingImageModel(
+                id=image.id,
+                listing_id=image.listing_id,
+                file_id=image.file_id,
+                position=image.position,
+                width=image.width,
+                height=image.height,
+                perceptual_hash=image.perceptual_hash,
+                sha256=image.sha256,
+                is_primary=image.is_primary,
+                created_at=image.created_at,
+            )
+        )
+        await self._s.flush()
+        return image
+
+    async def list_images(self, listing_id: UUID) -> list[ent.ListingImage]:
+        rows = await self._s.execute(
+            select(m.ListingImageModel)
+            .where(m.ListingImageModel.listing_id == listing_id)
+            .order_by(m.ListingImageModel.position)
+        )
+        return [map_.to_listing_image(r) for r in rows.scalars().all()]
+
+    async def count_images(self, listing_id: UUID) -> int:
+        return int(
+            (
+                await self._s.execute(
+                    select(func.count(m.ListingImageModel.id)).where(
+                        m.ListingImageModel.listing_id == listing_id
+                    )
+                )
+            ).scalar_one()
+        )
+
+    async def find_near_duplicate_hash(
+        self,
+        phash: bytes,
+        *,
+        seller_id: UUID,
+        hamming_threshold: int = 5,
+        exclude_image_id: UUID | None = None,
+    ) -> ent.ListingImage | None:
+        """Return the first existing image with a Hamming distance <= threshold.
+
+        Done in Python after a seller-scoped fetch because PostgreSQL does not
+        have a native bit-distance aggregate without pg_trgm or a custom
+        extension. The number of images per seller is small enough that this
+        is fine.
+        """
+        stmt = (
+            select(m.ListingImageModel)
+            .join(m.ListingModel, m.ListingModel.id == m.ListingImageModel.listing_id)
+            .where(
+                m.ListingModel.seller_id == seller_id,
+                m.ListingModel.deleted_at.is_(None),
+                m.ListingImageModel.perceptual_hash.isnot(None),
+            )
+        )
+        if exclude_image_id is not None:
+            stmt = stmt.where(m.ListingImageModel.id != exclude_image_id)
+        rows = (await self._s.execute(stmt)).scalars().all()
+        for row in rows:
+            if row.perceptual_hash is None:
+                continue
+            # XOR then popcount — Hamming distance on packed bytes
+            xor = int.from_bytes(phash, "big") ^ int.from_bytes(row.perceptual_hash, "big")
+            distance = bin(xor).count("1")
+            if distance <= hamming_threshold:
+                return map_.to_listing_image(row)
+        return None
+
 
 class SqlTrustScoreRepository:
     def __init__(self, session: AsyncSession) -> None:
@@ -1802,9 +1883,12 @@ class SqlAuditLogRepository:
             stmt = stmt.where(m.AuditLogModel.actor_id == actor_id)
         if action := filters.get("action"):
             stmt = stmt.where(m.AuditLogModel.action == action)
+        if entity_type := filters.get("entity_type"):
+            stmt = stmt.where(m.AuditLogModel.entity_type == entity_type)
         stmt = stmt.limit(int(filters.get("limit", 100)))
         rows = await self._s.execute(stmt)
         return [_to_audit(r) for r in rows.scalars().all()]
+
 
 
 def _to_audit(row: m.AuditLogModel) -> ent.AuditLogEntry:

@@ -490,4 +490,68 @@ async def decide_review_case(
     )
 
 
+class AuditLogEntryModel(Schema):
+    id: Any
+    action: str
+    entity_type: str
+    entity_id: Any
+    actor_id: Any
+    actor_type: str
+    before: Any
+    after: Any
+    ip: str | None
+    user_agent: str | None
+    request_id: str | None
+    occurred_at: Any
+
+
+@router.get(
+    "/audit-logs",
+    summary="List admin audit log entries",
+    description=(
+        "Every admin action that changes a seller's state is recorded here. "
+        "Entries are immutable once written. Filter by actor, action, entity "
+        "type or date range to find what happened and who did it."
+    ),
+    dependencies=[Depends(require_permissions("seller:read:any"))],
+)
+async def list_audit_logs(
+    uow: UowDep,
+    meta: MetaDep,
+    actor_id: UUID | None = Query(default=None, alias="actorId"),
+    action: str | None = Query(default=None, max_length=100),
+    entity_type: str | None = Query(default=None, alias="entityType", max_length=80),
+    limit: int = Query(default=100, ge=1, le=500),
+) -> dict[str, Any]:
+    filters: dict[str, Any] = {"limit": limit}
+    if actor_id is not None:
+        filters["actor_id"] = actor_id
+    if action:
+        filters["action"] = action.strip()
+    if entity_type:
+        filters["entity_type"] = entity_type.strip()
+    entries = await uow.audit_logs.search(**filters)
+    return envelope(
+        [
+            AuditLogEntryModel(
+                id=e.id,
+                action=e.action,
+                entity_type=e.entity_type,
+                entity_id=e.entity_id,
+                actor_id=e.actor_id,
+                actor_type=e.actor_type,
+                before=e.before,
+                after=e.after,
+                ip=e.ip,
+                user_agent=e.user_agent,
+                request_id=e.request_id,
+                occurred_at=e.occurred_at,
+            ).model_dump(by_alias=True)
+            for e in entries
+        ],
+        request_id=meta.request_id,
+    )
+
+
 __all__ = ["router"]
+

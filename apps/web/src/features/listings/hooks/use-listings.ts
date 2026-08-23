@@ -143,3 +143,55 @@ export function useAnalyseListing() {
     onSuccess: invalidate,
   });
 }
+
+export interface ListingImage {
+  imageId: string;
+  position: number;
+  isPrimary: boolean;
+  width: number | null;
+  height: number | null;
+  url: string | null;
+}
+
+export interface AddListingImageResponse {
+  imageId: string;
+  position: number;
+  isPrimary: boolean;
+  width: number | null;
+  height: number | null;
+  isDuplicate: boolean;
+  duplicateOf: string | null;
+}
+
+export function useListingImages(listingId: string | null) {
+  return useQuery<ListingImage[]>({
+    queryKey: [...qk.listing.byId(listingId ?? 'none'), 'images'],
+    enabled: Boolean(listingId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/listings/{listing_id}/images', {
+        params: { path: { listing_id: listingId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: ListingImage[] }).data;
+    },
+  });
+}
+
+export function useAddListingImage(listingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (fileId: string) => {
+      const result = await api.POST('/api/v1/listings/{listing_id}/images', {
+        params: { path: { listing_id: listingId } },
+        body: { fileId },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: AddListingImageResponse }).data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...qk.listing.byId(listingId), 'images'],
+      });
+    },
+  });
+}

@@ -1,4 +1,5 @@
 export { ListingForm } from './components/ListingForm';
+export { ListingImages } from './components/ListingImages';
 export { ListingRiskPanel } from './components/ListingRiskPanel';
 export {
   useAnalyseListing,
