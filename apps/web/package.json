@@ -20,6 +20,7 @@
     "@trustlens/ui": "workspace:*",
     "@trustlens/utils": "workspace:*",
     "@trustlens/validation": "workspace:*",
+    "date-fns": "^4.4.0",
     "lucide-react": "^0.454.0",
     "next": "^15.0.3",
     "react": "^19.0.0",

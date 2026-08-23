@@ -15,7 +15,6 @@ import { useForm } from 'react-hook-form';
 
 export function RegisterForm({ className }: { className?: string }) {
   const router = useRouter();
-  const [done, setDone] = useState<string | null>(null);
 
   const {
     register,
@@ -52,30 +51,9 @@ export function RegisterForm({ className }: { className?: string }) {
     });
 
     if (ok) {
-      setDone(values.email);
-      router.refresh();
+      router.push('/login');
     }
   });
-
-  if (done) {
-    return (
-      <div className={cn('space-y-4', className)}>
-        <Alert tone="success" title="Check your email">
-          We sent a confirmation link to <strong>{done}</strong>. Open it to activate your account.
-        </Alert>
-        <p className="text-sm text-muted-foreground">
-          Nothing arrived? Check your spam folder, or{' '}
-          <Link
-            href="/login"
-            className="font-medium text-primary underline-offset-4 hover:underline"
-          >
-            sign in
-          </Link>{' '}
-          to resend it.
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form
