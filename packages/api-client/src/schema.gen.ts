@@ -4,3517 +4,3721 @@
  */
 
 export interface paths {
-  '/api/v1/admin/appeals': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/appeals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The appeal queue */
+        get: operations["list_appeal_queue_api_v1_admin_appeals_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** The appeal queue */
-    get: operations['list_appeal_queue_api_v1_admin_appeals_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/appeals/{appeal_id}/claim': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/appeals/{appeal_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Claim an appeal before working on it */
+        post: operations["claim_appeal_api_v1_admin_appeals__appeal_id__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Claim an appeal before working on it */
-    post: operations['claim_appeal_api_v1_admin_appeals__appeal_id__claim_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/appeals/{appeal_id}/messages': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/appeals/{appeal_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reply or add an internal note */
+        post: operations["add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Reply or add an internal note */
-    post: operations['add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/appeals/{appeal_id}/resolve': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/appeals/{appeal_id}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Resolve an appeal
+         * @description Approving corrects the evidence and enqueues a rescore; it never writes a score directly (ADR-0002). An override is admin-only, needs a written reason, and is recorded in the audit log.
+         */
+        post: operations["resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Resolve an appeal
-     * @description Approving corrects the evidence and enqueues a rescore; it never writes a score directly (ADR-0002). An override is admin-only, needs a written reason, and is recorded in the audit log.
-     */
-    post: operations['resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/partners': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/dashboard/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get admin seller summary */
+        get: operations["get_dashboard_summary_api_v1_admin_dashboard_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Every partner, with usage against quota */
-    get: operations['list_partners_api_v1_admin_partners_get'];
-    put?: never;
-    /**
-     * Register a partner
-     * @description Created as PENDING. Approve it before issuing a key.
-     */
-    post: operations['register_partner_api_v1_admin_partners_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/partners/keys/{key_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/partners": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every partner, with usage against quota */
+        get: operations["list_partners_api_v1_admin_partners_get"];
+        put?: never;
+        /**
+         * Register a partner
+         * @description Created as PENDING. Approve it before issuing a key.
+         */
+        post: operations["register_partner_api_v1_admin_partners_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    post?: never;
-    /**
-     * Revoke a key immediately
-     * @description No overlap. Use this when a key has leaked.
-     */
-    delete: operations['revoke_key_api_v1_admin_partners_keys__key_id__delete'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/partners/keys/{key_id}/rotate': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/partners/keys/{key_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Revoke a key immediately
+         * @description No overlap. Use this when a key has leaked.
+         */
+        delete: operations["revoke_key_api_v1_admin_partners_keys__key_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Rotate a key
-     * @description Issues a replacement and expires the old key after a 24-hour overlap, so the partner can redeploy without an outage. Use revoke instead when a key is known to be compromised.
-     */
-    post: operations['rotate_key_api_v1_admin_partners_keys__key_id__rotate_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/partners/scopes': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/partners/keys/{key_id}/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate a key
+         * @description Issues a replacement and expires the old key after a 24-hour overlap, so the partner can redeploy without an outage. Use revoke instead when a key is known to be compromised.
+         */
+        post: operations["rotate_key_api_v1_admin_partners_keys__key_id__rotate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Scopes a key can be granted */
-    get: operations['list_scopes_api_v1_admin_partners_scopes_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/partners/{client_id}/keys': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/partners/scopes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Scopes a key can be granted */
+        get: operations["list_scopes_api_v1_admin_partners_scopes_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Keys held by a partner */
-    get: operations['list_keys_api_v1_admin_partners__client_id__keys_get'];
-    put?: never;
-    /**
-     * Issue a key
-     * @description The response contains the only copy of the key that will ever exist. It is argon2-hashed before storage, so it cannot be shown again - a lost key is rotated, not recovered.
-     */
-    post: operations['issue_key_api_v1_admin_partners__client_id__keys_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/partners/{client_id}/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/partners/{client_id}/keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Keys held by a partner */
+        get: operations["list_keys_api_v1_admin_partners__client_id__keys_get"];
+        put?: never;
+        /**
+         * Issue a key
+         * @description The response contains the only copy of the key that will ever exist. It is argon2-hashed before storage, so it cannot be shown again - a lost key is rotated, not recovered.
+         */
+        post: operations["issue_key_api_v1_admin_partners__client_id__keys_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Approve, suspend or reinstate a partner
-     * @description Suspending stops all of a partner's traffic at once, without having to hunt down every key they hold.
-     */
-    post: operations['set_partner_status_api_v1_admin_partners__client_id__status_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/review-cases': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/partners/{client_id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Approve, suspend or reinstate a partner
+         * @description Suspending stops all of a partner's traffic at once, without having to hunt down every key they hold.
+         */
+        post: operations["set_partner_status_api_v1_admin_partners__client_id__status_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** The review queue */
-    get: operations['list_review_cases_api_v1_admin_review_cases_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/review-cases/{case_id}/claim': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/review-cases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The review queue */
+        get: operations["list_review_cases_api_v1_admin_review_cases_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Claim a case before working on it
-     * @description Claiming is what stops two reviewers deciding the same case differently. A case already assigned to someone else is refused.
-     */
-    post: operations['claim_review_case_api_v1_admin_review_cases__case_id__claim_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/review-cases/{case_id}/decide': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/review-cases/{case_id}/claim": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Claim a case before working on it
+         * @description Claiming is what stops two reviewers deciding the same case differently. A case already assigned to someone else is refused.
+         */
+        post: operations["claim_review_case_api_v1_admin_review_cases__case_id__claim_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Record a decision on a case
-     * @description Records a verdict and enqueues a rescore. It never writes a score directly - the scoring policy stays the only thing that produces a number (ADR-0002). The decision and its reason are audit-logged in the same transaction.
-     */
-    post: operations['decide_review_case_api_v1_admin_review_cases__case_id__decide_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/sellers': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/review-cases/{case_id}/decide": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Record a decision on a case
+         * @description Records a verdict and enqueues a rescore. It never writes a score directly - the scoring policy stays the only thing that produces a number (ADR-0002). The decision and its reason are audit-logged in the same transaction.
+         */
+        post: operations["decide_review_case_api_v1_admin_review_cases__case_id__decide_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Search sellers */
-    get: operations['search_sellers_api_v1_admin_sellers_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/sellers/{seller_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/scoring-models": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List scoring model versions */
+        get: operations["list_scoring_models_api_v1_admin_scoring_models_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Get seller details */
-    get: operations['get_seller_detail_api_v1_admin_sellers__seller_id__get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/admin/sellers/{seller_id}/trust-score/override': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/scoring-models/{model_id}/activate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Activate a scoring model version */
+        post: operations["activate_scoring_model_api_v1_admin_scoring_models__model_id__activate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Override a computed score (ADMIN only)
-     * @description Writes a NEW score row marked as a manual override. The computed score it replaces stays in history, a written reason is mandatory (enforced by a database CHECK), and the action is audit-logged.
-     */
-    post: operations['override_score_api_v1_admin_sellers__seller_id__trust_score_override_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/appeals': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/sellers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Search sellers */
+        get: operations["search_sellers_api_v1_admin_sellers_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Own appeals
-     * @description Reviewer-only internal notes are never included.
-     */
-    get: operations['list_own_appeals_api_v1_appeals_get'];
-    put?: never;
-    /** Appeal a trust score */
-    post: operations['submit_appeal_api_v1_appeals_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/appeals/{appeal_id}/messages': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/sellers/{seller_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get seller details */
+        get: operations["get_seller_detail_api_v1_admin_sellers__seller_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Reply on an appeal */
-    post: operations['add_own_message_api_v1_appeals__appeal_id__messages_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/appeals/{appeal_id}/withdraw': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/sellers/{seller_id}/identity-review": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Review identity evidence */
+        get: operations["get_identity_review_api_v1_admin_sellers__seller_id__identity_review_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Withdraw an appeal
-     * @description Without this the one-open-appeal limit becomes a trap: a seller who appeals in haste could not appeal properly until a reviewer got to it.
-     */
-    post: operations['withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/change-password': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/admin/sellers/{seller_id}/trust-score/override": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Override a computed score (ADMIN only)
+         * @description Writes a NEW score row marked as a manual override. The computed score it replaces stays in history, a written reason is mandatory (enforced by a database CHECK), and the action is audit-logged.
+         */
+        post: operations["override_score_api_v1_admin_sellers__seller_id__trust_score_override_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Change your password */
-    post: operations['change_password_api_v1_auth_change_password_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/forgot-password': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/appeals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Own appeals
+         * @description Reviewer-only internal notes are never included.
+         */
+        get: operations["list_own_appeals_api_v1_appeals_get"];
+        put?: never;
+        /** Appeal a trust score */
+        post: operations["submit_appeal_api_v1_appeals_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Request a password reset
-     * @description Always returns 202, whether or not the address exists. Revealing which addresses are registered would make this a phishing target list.
-     */
-    post: operations['forgot_password_api_v1_auth_forgot_password_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/login': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/appeals/{appeal_id}/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reply on an appeal */
+        post: operations["add_own_message_api_v1_appeals__appeal_id__messages_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Sign in */
-    post: operations['login_api_v1_auth_login_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/logout': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/appeals/{appeal_id}/withdraw": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Withdraw an appeal
+         * @description Without this the one-open-appeal limit becomes a trap: a seller who appeals in haste could not appeal properly until a reviewer got to it.
+         */
+        post: operations["withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Sign out of this session */
-    post: operations['logout_api_v1_auth_logout_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/logout-all': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/change-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Change your password */
+        post: operations["change_password_api_v1_auth_change_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Sign out of every session */
-    post: operations['logout_all_api_v1_auth_logout_all_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/refresh': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/forgot-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request a password reset
+         * @description Always returns 202, whether or not the address exists. Revealing which addresses are registered would make this a phishing target list.
+         */
+        post: operations["forgot_password_api_v1_auth_forgot_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Rotate the session
-     * @description Exchanges the refresh cookie for a new access token and a new refresh token. Presenting an already-rotated token revokes the whole token family - a stolen token is therefore self-limiting.
-     */
-    post: operations['refresh_api_v1_auth_refresh_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/register': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/login": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign in */
+        post: operations["login_api_v1_auth_login_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Register a new account
-     * @description Creates a PENDING account and emails a verification link. Responds identically whether or not the address is already registered, so the endpoint cannot be used to enumerate users.
-     */
-    post: operations['register_api_v1_auth_register_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/reset-password': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign out of this session */
+        post: operations["logout_api_v1_auth_logout_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Complete a password reset */
-    post: operations['reset_password_api_v1_auth_reset_password_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/sessions': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/logout-all": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Sign out of every session */
+        post: operations["logout_all_api_v1_auth_logout_all_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List active sessions */
-    get: operations['list_sessions_api_v1_auth_sessions_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/auth/verify-email': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rotate the session
+         * @description Exchanges the refresh cookie for a new access token and a new refresh token. Presenting an already-rotated token revokes the whole token family - a stolen token is therefore self-limiting.
+         */
+        post: operations["refresh_api_v1_auth_refresh_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Confirm an email address */
-    post: operations['verify_email_api_v1_auth_verify_email_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/files/upload-intent': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/register": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register a new account
+         * @description Creates a PENDING account and emails a verification link. Responds identically whether or not the address is already registered, so the endpoint cannot be used to enumerate users.
+         */
+        post: operations["register_api_v1_auth_register_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Get a presigned upload URL
-     * @description Returns a short-lived presigned URL. The client uploads directly to object storage; bytes never pass through the API.
-     */
-    post: operations['upload_intent_api_v1_files_upload_intent_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/jobs/{job_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/reset-password": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Complete a password reset */
+        post: operations["reset_password_api_v1_auth_reset_password_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Poll a background job */
-    get: operations['get_job_api_v1_jobs__job_id__get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/listings': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List active sessions */
+        get: operations["list_sessions_api_v1_auth_sessions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** List your listings */
-    get: operations['list_listings_api_v1_listings_get'];
-    put?: never;
-    /** Create a listing */
-    post: operations['create_listing_api_v1_listings_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/listings/{listing_id}': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/auth/verify-email": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm an email address */
+        post: operations["verify_email_api_v1_auth_verify_email_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Read one of your listings */
-    get: operations['get_listing_api_v1_listings__listing_id__get'];
-    /** Update a listing */
-    put: operations['update_listing_api_v1_listings__listing_id__put'];
-    post?: never;
-    /** Remove a listing */
-    delete: operations['delete_listing_api_v1_listings__listing_id__delete'];
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/listings/{listing_id}/analyse': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/files/upload-intent": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Get a presigned upload URL
+         * @description Returns a short-lived presigned URL. The client uploads directly to object storage; bytes never pass through the API.
+         */
+        post: operations["upload_intent_api_v1_files_upload_intent_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Re-run analysis on a listing */
-    post: operations['analyse_listing_api_v1_listings__listing_id__analyse_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/me': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Poll a background job */
+        get: operations["get_job_api_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Current user */
-    get: operations['get_me_api_v1_me_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/me/become-seller': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/listings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List your listings */
+        get: operations["list_listings_api_v1_listings_get"];
+        put?: never;
+        /** Create a listing */
+        post: operations["create_listing_api_v1_listings_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Upgrade a buyer account to also be a seller */
-    post: operations['become_seller_api_v1_me_become_seller_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/public/sellers/{seller_ref}/trust-score': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/listings/{listing_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Read one of your listings */
+        get: operations["get_listing_api_v1_listings__listing_id__get"];
+        /** Update a listing */
+        put: operations["update_listing_api_v1_listings__listing_id__put"];
+        post?: never;
+        /** Remove a listing */
+        delete: operations["delete_listing_api_v1_listings__listing_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Buyer-facing score for the public seller page (no auth)
-     * @description Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.
-     *
-     *     Marketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.
-     */
-    get: operations['get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/sellers/me': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/listings/{listing_id}/analyse": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Re-run analysis on a listing */
+        post: operations["analyse_listing_api_v1_listings__listing_id__analyse_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Own seller profile */
-    get: operations['get_my_seller_api_v1_sellers_me_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    /** Update own seller profile */
-    patch: operations['update_my_seller_api_v1_sellers_me_patch'];
-    trace?: never;
-  };
-  '/api/v1/sellers/{seller_id}/trust-score': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Current user */
+        get: operations["get_me_api_v1_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get the current trust score with its full breakdown
-     * @description Returns the score, the risk band, and one entry per evaluated signal with its status, points, machine reason code and human explanation. This is the explainability contract: nothing is recomputed to answer this call.
-     */
-    get: operations['get_trust_score_api_v1_sellers__seller_id__trust_score_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/sellers/{seller_id}/trust-score/history': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/me/become-seller": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Upgrade a buyer account to also be a seller */
+        post: operations["become_seller_api_v1_me_become_seller_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Score history
-     * @description Scores are append-only, so history is a first-class read rather than a reconstruction.
-     */
-    get: operations['get_history_api_v1_sellers__seller_id__trust_score_history_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/sellers/{seller_id}/trust-score/improvements': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/public/sellers/{seller_ref}/trust-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Buyer-facing score for the public seller page (no auth)
+         * @description Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.
+         *
+         *     Marketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.
+         */
+        get: operations["get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Ranked list of what would raise this score
-     * @description The unearned points, ordered by how many are recoverable, each with the concrete action that would earn them.
-     */
-    get: operations['get_improvements_api_v1_sellers__seller_id__trust_score_improvements_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/sellers/{seller_id}/trust-score/recompute': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/sellers/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Own seller profile */
+        get: operations["get_my_seller_api_v1_sellers_me_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update own seller profile */
+        patch: operations["update_my_seller_api_v1_sellers_me_patch"];
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Queue a recomputation
-     * @description Enqueues a scoring job. Rate-limited and debounced: a burst of requests collapses into a single computation.
-     */
-    post: operations['recompute_api_v1_sellers__seller_id__trust_score_recompute_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/verification/device': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/sellers/{seller_id}/trust-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the current trust score with its full breakdown
+         * @description Returns the score, the risk band, and one entry per evaluated signal with its status, points, machine reason code and human explanation. This is the explainability contract: nothing is recomputed to answer this call.
+         */
+        get: operations["get_trust_score_api_v1_sellers__seller_id__trust_score_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Submit a device fingerprint */
-    post: operations['submit_device_api_v1_verification_device_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/verification/identity': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/sellers/{seller_id}/trust-score/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Score history
+         * @description Scores are append-only, so history is a first-class read rather than a reconstruction.
+         */
+        get: operations["get_history_api_v1_sellers__seller_id__trust_score_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Identity verification status */
-    get: operations['identity_status_api_v1_verification_identity_get'];
-    put?: never;
-    /**
-     * Submit CNIC and selfie for verification
-     * @description Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).
-     */
-    post: operations['submit_identity_api_v1_verification_identity_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/verification/phone/request-otp': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/sellers/{seller_id}/trust-score/improvements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ranked list of what would raise this score
+         * @description The unearned points, ordered by how many are recoverable, each with the concrete action that would earn them.
+         */
+        get: operations["get_improvements_api_v1_sellers__seller_id__trust_score_improvements_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Send a phone verification code */
-    post: operations['request_otp_api_v1_verification_phone_request_otp_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/verification/phone/verify-otp': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/sellers/{seller_id}/trust-score/recompute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queue a recomputation
+         * @description Enqueues a scoring job. Rate-limited and debounced: a burst of requests collapses into a single computation.
+         */
+        post: operations["recompute_api_v1_sellers__seller_id__trust_score_recompute_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /** Confirm a phone verification code */
-    post: operations['verify_otp_api_v1_verification_phone_verify_otp_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/api/v1/verification/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/verification/device": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Submit a device fingerprint */
+        post: operations["submit_device_api_v1_verification_device_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** All verification checks in one call */
-    get: operations['verification_status_api_v1_verification_status_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/health/live': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/verification/identity": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Identity verification status */
+        get: operations["identity_status_api_v1_verification_identity_get"];
+        put?: never;
+        /**
+         * Submit CNIC and selfie for verification
+         * @description Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).
+         */
+        post: operations["submit_identity_api_v1_verification_identity_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Liveness probe */
-    get: operations['live_health_live_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/health/ready': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/verification/phone/request-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Send a phone verification code */
+        post: operations["request_otp_api_v1_verification_phone_request_otp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /** Readiness probe */
-    get: operations['ready_health_ready_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/health/worker': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/verification/phone/verify-otp": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Confirm a phone verification code */
+        post: operations["verify_otp_api_v1_verification_phone_verify_otp_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Is the worker still consuming jobs?
-     * @description The check that catches the failure nothing else does (P9-07).
-     *
-     *     A worker process can be alive, connected, and consuming nothing. Every
-     *     process-level probe reports healthy, `restart: unless-stopped` sees nothing
-     *     to restart, and the only symptom is verifications that never finish.
-     *
-     *     This reads the heartbeat the worker writes after each job, so a stale or
-     *     absent beat is visible *without talking to the worker* - which is the exact
-     *     case being tested for. 503 when stale, so an uptime monitor pointed here
-     *     actually pages someone.
-     */
-    get: operations['worker_health_worker_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/public/v1/sellers/lookup': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/api/v1/verification/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All verification checks in one call */
+        get: operations["verification_status_api_v1_verification_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    get?: never;
-    put?: never;
-    /**
-     * Look up several sellers at once
-     * @description Up to 50 references per request.
-     */
-    post: operations['batch_lookup_public_v1_sellers_lookup_post'];
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/public/v1/sellers/{seller_ref}/trust-score': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/health/live": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Liveness probe */
+        get: operations["live_health_live_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Get a seller's trust score
-     * @description `seller_ref` may be a TrustLens id, a handle, or `{marketplaceSlug}:{yourSellerId}` if you registered the seller through this API.
-     *
-     *     Responses are cached for 5 minutes and carry an ETag. Scores change rarely, so a well-behaved client polling this endpoint costs one Redis read.
-     */
-    get: operations['get_trust_score_public_v1_sellers__seller_ref__trust_score_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
-  '/public/v1/status': {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
+    "/health/ready": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Readiness probe */
+        get: operations["ready_health_ready_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
     };
-    /**
-     * Service status and current scoring model
-     * @description No authentication required. Useful as an integration smoke test.
-     */
-    get: operations['public_status_public_v1_status_get'];
-    put?: never;
-    post?: never;
-    delete?: never;
-    options?: never;
-    head?: never;
-    patch?: never;
-    trace?: never;
-  };
+    "/health/worker": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Is the worker still consuming jobs?
+         * @description The check that catches the failure nothing else does (P9-07).
+         *
+         *     A worker process can be alive, connected, and consuming nothing. Every
+         *     process-level probe reports healthy, `restart: unless-stopped` sees nothing
+         *     to restart, and the only symptom is verifications that never finish.
+         *
+         *     This reads the heartbeat the worker writes after each job, so a stale or
+         *     absent beat is visible *without talking to the worker* - which is the exact
+         *     case being tested for. 503 when stale, so an uptime monitor pointed here
+         *     actually pages someone.
+         */
+        get: operations["worker_health_worker_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/v1/sellers/lookup": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Look up several sellers at once
+         * @description Up to 50 references per request.
+         */
+        post: operations["batch_lookup_public_v1_sellers_lookup_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/v1/sellers/{seller_ref}/trust-score": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a seller's trust score
+         * @description `seller_ref` may be a TrustLens id, a handle, or `{marketplaceSlug}:{yourSellerId}` if you registered the seller through this API.
+         *
+         *     Responses are cached for 5 minutes and carry an ETag. Scores change rarely, so a well-behaved client polling this endpoint costs one Redis read.
+         */
+        get: operations["get_trust_score_public_v1_sellers__seller_ref__trust_score_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/public/v1/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Service status and current scoring model
+         * @description No authentication required. Useful as an integration smoke test.
+         */
+        get: operations["public_status_public_v1_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
-  schemas: {
-    /** AppealMessageRequest */
-    AppealMessageRequest: {
-      /** Body */
-      body: string;
-      /**
-       * Isinternal
-       * @description Reviewer-only note. Rejected for seller accounts.
-       * @default false
-       */
-      isInternal: boolean;
+    schemas: {
+        /** AppealMessageRequest */
+        AppealMessageRequest: {
+            /** Body */
+            body: string;
+            /**
+             * Isinternal
+             * @description Reviewer-only note. Rejected for seller accounts.
+             * @default false
+             */
+            isInternal: boolean;
+        };
+        /** BatchLookupRequest */
+        BatchLookupRequest: {
+            /** Sellerrefs */
+            sellerRefs: string[];
+        };
+        /** BatchLookupResponse */
+        BatchLookupResponse: {
+            /** Notfound */
+            notFound?: string[];
+            /** Results */
+            results: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** BecomeSellerRequest */
+        BecomeSellerRequest: {
+            /** Businesstype */
+            businessType?: string | null;
+            /** City */
+            city?: string | null;
+            /** Countrycode */
+            countryCode?: string | null;
+            /** Displayname */
+            displayName: string;
+        };
+        /** ChangePasswordRequest */
+        ChangePasswordRequest: {
+            /** Currentpassword */
+            currentPassword: string;
+            /** Newpassword */
+            newPassword: string;
+        };
+        /** DecideReviewRequest */
+        DecideReviewRequest: {
+            /** Approve */
+            approve: boolean;
+            /**
+             * Note
+             * @description Why this decision was made. Mandatory because a human verdict changes someone's Trust Score and must stay explainable to them.
+             */
+            note: string;
+        };
+        /** DeviceFingerprintRequest */
+        DeviceFingerprintRequest: {
+            /** Fingerprint */
+            fingerprint: string;
+            /** Languages */
+            languages?: string | null;
+            /** Screenresolution */
+            screenResolution?: string | null;
+            /** Timezone */
+            timezone?: string | null;
+            /** Useragent */
+            userAgent?: string | null;
+        };
+        /** ForgotPasswordRequest */
+        ForgotPasswordRequest: {
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IssueKeyRequest */
+        IssueKeyRequest: {
+            /** Expiresindays */
+            expiresInDays?: number | null;
+            /** Name */
+            name: string;
+            /** Scopes */
+            scopes?: string[];
+        };
+        /**
+         * ListingWriteRequest
+         * @description Create or replace a listing.
+         *
+         *     Every field here is attacker-controlled - a seller writes it and an LLM
+         *     later reads it. The length caps are the first line of defence: they bound
+         *     what can be pushed into a prompt at all. The second line is that the
+         *     analyser's verdict can only move one bounded signal (ADR-0002).
+         */
+        ListingWriteRequest: {
+            /** Category */
+            category?: string | null;
+            /** City */
+            city?: string | null;
+            /** Condition */
+            condition?: string | null;
+            /** Countrycode */
+            countryCode?: string | null;
+            /** Currency */
+            currency?: string | null;
+            /** Description */
+            description: string;
+            /** Price */
+            price?: number | null;
+            /** Title */
+            title: string;
+        };
+        /** LoginRequest */
+        LoginRequest: {
+            /** Devicefingerprint */
+            deviceFingerprint?: string | null;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Password */
+            password: string;
+        };
+        /** OverrideScoreRequest */
+        OverrideScoreRequest: {
+            /** Reason */
+            reason: string;
+            /** Score */
+            score: number;
+        };
+        /** PublicReasonModel */
+        PublicReasonModel: {
+            /**
+             * Category
+             * @description Signal family: IDENTITY | PHONE | EMAIL | DEVICE | NETWORK | BEHAVIOUR | LISTING. Names the kind of check, never what was checked, so it carries no PII.
+             * @default
+             */
+            category: string;
+            /**
+             * Code
+             * @description Stable reason code. Switch on this, not on `text`.
+             */
+            code: string;
+            /**
+             * Impact
+             * @description POSITIVE | NEGATIVE | NEUTRAL
+             */
+            impact: string;
+            /**
+             * Text
+             * @description Buyer-readable explanation.
+             */
+            text: string;
+        };
+        /** PublicScoreResponse */
+        PublicScoreResponse: {
+            /** Computedat */
+            computedAt: string;
+            /**
+             * Confidence
+             * @description How much evidence the score is based on.
+             */
+            confidence: number;
+            /** Expiresat */
+            expiresAt: string;
+            /** Modelversion */
+            modelVersion: string;
+            /** Reasons */
+            reasons: components["schemas"]["PublicReasonModel"][];
+            /** Risklabel */
+            riskLabel: string;
+            /**
+             * Risklevel
+             * @description LOW | MEDIUM | HIGH | UNKNOWN
+             */
+            riskLevel: string;
+            /** Score */
+            score: number;
+            /** Sellerref */
+            sellerRef: string;
+            /**
+             * Unavailablesignals
+             * @description Checks that could not be performed. These are excluded from the score rather than counted as failures.
+             */
+            unavailableSignals?: string[];
+            /**
+             * Verifications
+             * @description Per-check status: identity, phone, email.
+             */
+            verifications: {
+                [key: string]: string;
+            };
+        };
+        /** PublicStatusResponse */
+        PublicStatusResponse: {
+            /** Apiversion */
+            apiVersion: string;
+            /** Scoringmodelversion */
+            scoringModelVersion: string;
+            /** Status */
+            status: string;
+        };
+        /** RegisterPartnerRequest */
+        RegisterPartnerRequest: {
+            /** Contactemail */
+            contactEmail: string;
+            /** Contactname */
+            contactName?: string | null;
+            /**
+             * Monthlyquota
+             * @default 10000
+             */
+            monthlyQuota: number;
+            /** Name */
+            name: string;
+            /**
+             * Ratelimittier
+             * @default free
+             */
+            rateLimitTier: string;
+            /** Slug */
+            slug: string;
+        };
+        /** RegisterRequest */
+        RegisterRequest: {
+            /**
+             * Acceptedterms
+             * @description Must be true; recorded in `consents`.
+             */
+            acceptedTerms: boolean;
+            /**
+             * Asseller
+             * @default false
+             */
+            asSeller: boolean;
+            /**
+             * Email
+             * Format: email
+             */
+            email: string;
+            /** Fullname */
+            fullName: string;
+            /** Password */
+            password: string;
+        };
+        /** RequestOtpRequest */
+        RequestOtpRequest: {
+            /**
+             * Phonenumber
+             * @description E.164 format, e.g. +923001234567
+             */
+            phoneNumber: string;
+        };
+        /** ResetPasswordRequest */
+        ResetPasswordRequest: {
+            /** Password */
+            password: string;
+            /** Token */
+            token: string;
+        };
+        /** ResolveAppealRequest */
+        ResolveAppealRequest: {
+            /**
+             * Decision
+             * @description RECOMPUTE corrects the evidence and re-runs scoring; OVERRIDE is admin-only and expires; REJECT closes it with an explanation.
+             */
+            decision: string;
+            /** Note */
+            note: string;
+            /** Overridescore */
+            overrideScore?: number | null;
+        };
+        /**
+         * RiskLevel
+         * @enum {string}
+         */
+        RiskLevel: "LOW" | "MEDIUM" | "HIGH" | "UNKNOWN";
+        /** SetStatusRequest */
+        SetStatusRequest: {
+            /**
+             * Status
+             * @description PENDING | ACTIVE | SUSPENDED
+             */
+            status: string;
+        };
+        /** SubmitAppealRequest */
+        SubmitAppealRequest: {
+            /** Reason */
+            reason: string;
+            /** Reasoncategory */
+            reasonCategory: string;
+            /**
+             * Trustscoreid
+             * Format: uuid
+             * @description The specific computation being appealed. Required: a score is recomputed on every signal change, so 'my score is wrong' is not reviewable by the time a human reads it.
+             */
+            trustScoreId: string;
+        };
+        /** SubmitIdentityRequest */
+        SubmitIdentityRequest: {
+            /** Biometricconsent */
+            biometricConsent: boolean;
+            /**
+             * Cnicbackfileid
+             * Format: uuid
+             */
+            cnicBackFileId: string;
+            /**
+             * Cnicfrontfileid
+             * Format: uuid
+             */
+            cnicFrontFileId: string;
+            /**
+             * Selfiefileid
+             * Format: uuid
+             */
+            selfieFileId: string;
+        };
+        /** UpdateSellerRequest */
+        UpdateSellerRequest: {
+            /** Bio */
+            bio?: string | null;
+            /** Businesstype */
+            businessType?: string | null;
+            /** City */
+            city?: string | null;
+            /** Countrycode */
+            countryCode?: string | null;
+            /** Displayname */
+            displayName?: string | null;
+        };
+        /** UploadIntentRequest */
+        UploadIntentRequest: {
+            /** Contenttype */
+            contentType: string;
+            /** Filename */
+            filename?: string | null;
+            /**
+             * Purpose
+             * @description CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE
+             */
+            purpose: string;
+            /** Sizebytes */
+            sizeBytes: number;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Context */
+            ctx?: Record<string, never>;
+            /** Input */
+            input?: unknown;
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+        };
+        /** VerifyEmailRequest */
+        VerifyEmailRequest: {
+            /** Token */
+            token: string;
+        };
+        /** VerifyOtpRequest */
+        VerifyOtpRequest: {
+            /** Code */
+            code: string;
+        };
     };
-    /** BatchLookupRequest */
-    BatchLookupRequest: {
-      /** Sellerrefs */
-      sellerRefs: string[];
-    };
-    /** BatchLookupResponse */
-    BatchLookupResponse: {
-      /** Notfound */
-      notFound?: string[];
-      /** Results */
-      results: {
-        [key: string]: unknown;
-      }[];
-    };
-    /** BecomeSellerRequest */
-    BecomeSellerRequest: {
-      /** Businesstype */
-      businessType?: string | null;
-      /** City */
-      city?: string | null;
-      /** Countrycode */
-      countryCode?: string | null;
-      /** Displayname */
-      displayName: string;
-    };
-    /** ChangePasswordRequest */
-    ChangePasswordRequest: {
-      /** Currentpassword */
-      currentPassword: string;
-      /** Newpassword */
-      newPassword: string;
-    };
-    /** DecideReviewRequest */
-    DecideReviewRequest: {
-      /** Approve */
-      approve: boolean;
-      /**
-       * Note
-       * @description Why this decision was made. Mandatory because a human verdict changes someone's Trust Score and must stay explainable to them.
-       */
-      note: string;
-    };
-    /** DeviceFingerprintRequest */
-    DeviceFingerprintRequest: {
-      /** Fingerprint */
-      fingerprint: string;
-      /** Languages */
-      languages?: string | null;
-      /** Screenresolution */
-      screenResolution?: string | null;
-      /** Timezone */
-      timezone?: string | null;
-      /** Useragent */
-      userAgent?: string | null;
-    };
-    /** ForgotPasswordRequest */
-    ForgotPasswordRequest: {
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-    };
-    /** HTTPValidationError */
-    HTTPValidationError: {
-      /** Detail */
-      detail?: components['schemas']['ValidationError'][];
-    };
-    /** IssueKeyRequest */
-    IssueKeyRequest: {
-      /** Expiresindays */
-      expiresInDays?: number | null;
-      /** Name */
-      name: string;
-      /** Scopes */
-      scopes?: string[];
-    };
-    /**
-     * ListingWriteRequest
-     * @description Create or replace a listing.
-     *
-     *     Every field here is attacker-controlled - a seller writes it and an LLM
-     *     later reads it. The length caps are the first line of defence: they bound
-     *     what can be pushed into a prompt at all. The second line is that the
-     *     analyser's verdict can only move one bounded signal (ADR-0002).
-     */
-    ListingWriteRequest: {
-      /** Category */
-      category?: string | null;
-      /** City */
-      city?: string | null;
-      /** Condition */
-      condition?: string | null;
-      /** Countrycode */
-      countryCode?: string | null;
-      /** Currency */
-      currency?: string | null;
-      /** Description */
-      description: string;
-      /** Price */
-      price?: number | null;
-      /** Title */
-      title: string;
-    };
-    /** LoginRequest */
-    LoginRequest: {
-      /** Devicefingerprint */
-      deviceFingerprint?: string | null;
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-      /** Password */
-      password: string;
-    };
-    /** OverrideScoreRequest */
-    OverrideScoreRequest: {
-      /** Reason */
-      reason: string;
-      /** Score */
-      score: number;
-    };
-    /** PublicReasonModel */
-    PublicReasonModel: {
-      /**
-       * Category
-       * @description Signal family: IDENTITY | PHONE | EMAIL | DEVICE | NETWORK | BEHAVIOUR | LISTING. Names the kind of check, never what was checked, so it carries no PII.
-       * @default
-       */
-      category: string;
-      /**
-       * Code
-       * @description Stable reason code. Switch on this, not on `text`.
-       */
-      code: string;
-      /**
-       * Impact
-       * @description POSITIVE | NEGATIVE | NEUTRAL
-       */
-      impact: string;
-      /**
-       * Text
-       * @description Buyer-readable explanation.
-       */
-      text: string;
-    };
-    /** PublicScoreResponse */
-    PublicScoreResponse: {
-      /** Computedat */
-      computedAt: string;
-      /**
-       * Confidence
-       * @description How much evidence the score is based on.
-       */
-      confidence: number;
-      /** Expiresat */
-      expiresAt: string;
-      /** Modelversion */
-      modelVersion: string;
-      /** Reasons */
-      reasons: components['schemas']['PublicReasonModel'][];
-      /** Risklabel */
-      riskLabel: string;
-      /**
-       * Risklevel
-       * @description LOW | MEDIUM | HIGH | UNKNOWN
-       */
-      riskLevel: string;
-      /** Score */
-      score: number;
-      /** Sellerref */
-      sellerRef: string;
-      /**
-       * Unavailablesignals
-       * @description Checks that could not be performed. These are excluded from the score rather than counted as failures.
-       */
-      unavailableSignals?: string[];
-      /**
-       * Verifications
-       * @description Per-check status: identity, phone, email.
-       */
-      verifications: {
-        [key: string]: string;
-      };
-    };
-    /** PublicStatusResponse */
-    PublicStatusResponse: {
-      /** Apiversion */
-      apiVersion: string;
-      /** Scoringmodelversion */
-      scoringModelVersion: string;
-      /** Status */
-      status: string;
-    };
-    /** RegisterPartnerRequest */
-    RegisterPartnerRequest: {
-      /** Contactemail */
-      contactEmail: string;
-      /** Contactname */
-      contactName?: string | null;
-      /**
-       * Monthlyquota
-       * @default 10000
-       */
-      monthlyQuota: number;
-      /** Name */
-      name: string;
-      /**
-       * Ratelimittier
-       * @default free
-       */
-      rateLimitTier: string;
-      /** Slug */
-      slug: string;
-    };
-    /** RegisterRequest */
-    RegisterRequest: {
-      /**
-       * Acceptedterms
-       * @description Must be true; recorded in `consents`.
-       */
-      acceptedTerms: boolean;
-      /**
-       * Asseller
-       * @default false
-       */
-      asSeller: boolean;
-      /**
-       * Email
-       * Format: email
-       */
-      email: string;
-      /** Fullname */
-      fullName: string;
-      /** Password */
-      password: string;
-    };
-    /** RequestOtpRequest */
-    RequestOtpRequest: {
-      /**
-       * Phonenumber
-       * @description E.164 format, e.g. +923001234567
-       */
-      phoneNumber: string;
-    };
-    /** ResetPasswordRequest */
-    ResetPasswordRequest: {
-      /** Password */
-      password: string;
-      /** Token */
-      token: string;
-    };
-    /** ResolveAppealRequest */
-    ResolveAppealRequest: {
-      /**
-       * Decision
-       * @description RECOMPUTE corrects the evidence and re-runs scoring; OVERRIDE is admin-only and expires; REJECT closes it with an explanation.
-       */
-      decision: string;
-      /** Note */
-      note: string;
-      /** Overridescore */
-      overrideScore?: number | null;
-    };
-    /**
-     * RiskLevel
-     * @enum {string}
-     */
-    RiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
-    /** SetStatusRequest */
-    SetStatusRequest: {
-      /**
-       * Status
-       * @description PENDING | ACTIVE | SUSPENDED
-       */
-      status: string;
-    };
-    /** SubmitAppealRequest */
-    SubmitAppealRequest: {
-      /** Reason */
-      reason: string;
-      /** Reasoncategory */
-      reasonCategory: string;
-      /**
-       * Trustscoreid
-       * Format: uuid
-       * @description The specific computation being appealed. Required: a score is recomputed on every signal change, so 'my score is wrong' is not reviewable by the time a human reads it.
-       */
-      trustScoreId: string;
-    };
-    /** SubmitIdentityRequest */
-    SubmitIdentityRequest: {
-      /** Biometricconsent */
-      biometricConsent: boolean;
-      /**
-       * Cnicbackfileid
-       * Format: uuid
-       */
-      cnicBackFileId: string;
-      /**
-       * Cnicfrontfileid
-       * Format: uuid
-       */
-      cnicFrontFileId: string;
-      /**
-       * Selfiefileid
-       * Format: uuid
-       */
-      selfieFileId: string;
-    };
-    /** UpdateSellerRequest */
-    UpdateSellerRequest: {
-      /** Bio */
-      bio?: string | null;
-      /** Businesstype */
-      businessType?: string | null;
-      /** City */
-      city?: string | null;
-      /** Countrycode */
-      countryCode?: string | null;
-      /** Displayname */
-      displayName?: string | null;
-    };
-    /** UploadIntentRequest */
-    UploadIntentRequest: {
-      /** Contenttype */
-      contentType: string;
-      /** Filename */
-      filename?: string | null;
-      /**
-       * Purpose
-       * @description CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE
-       */
-      purpose: string;
-      /** Sizebytes */
-      sizeBytes: number;
-    };
-    /** ValidationError */
-    ValidationError: {
-      /** Context */
-      ctx?: Record<string, never>;
-      /** Input */
-      input?: unknown;
-      /** Location */
-      loc: (string | number)[];
-      /** Message */
-      msg: string;
-      /** Error Type */
-      type: string;
-    };
-    /** VerifyEmailRequest */
-    VerifyEmailRequest: {
-      /** Token */
-      token: string;
-    };
-    /** VerifyOtpRequest */
-    VerifyOtpRequest: {
-      /** Code */
-      code: string;
-    };
-  };
-  responses: never;
-  parameters: never;
-  requestBodies: never;
-  headers: never;
-  pathItems: never;
+    responses: never;
+    parameters: never;
+    requestBodies: never;
+    headers: never;
+    pathItems: never;
 }
 export type $defs = Record<string, never>;
 export interface operations {
-  list_appeal_queue_api_v1_admin_appeals_get: {
-    parameters: {
-      query?: {
-        status?: string | null;
-        /** @description Include withdrawn and decided appeals. Off by default: a queue is work. */
-        includeResolved?: boolean;
-        page?: number;
-        perPage?: number;
-      };
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  claim_appeal_api_v1_admin_appeals__appeal_id__claim_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        appeal_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        appeal_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AppealMessageRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        appeal_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ResolveAppealRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_partners_api_v1_admin_partners_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  register_partner_api_v1_admin_partners_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RegisterPartnerRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  revoke_key_api_v1_admin_partners_keys__key_id__delete: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        key_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  rotate_key_api_v1_admin_partners_keys__key_id__rotate_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        key_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_scopes_api_v1_admin_partners_scopes_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_keys_api_v1_admin_partners__client_id__keys_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        client_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  issue_key_api_v1_admin_partners__client_id__keys_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        client_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['IssueKeyRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  set_partner_status_api_v1_admin_partners__client_id__status_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        client_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SetStatusRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_review_cases_api_v1_admin_review_cases_get: {
-    parameters: {
-      query?: {
-        page?: number;
-        perPage?: number;
-      };
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  claim_review_case_api_v1_admin_review_cases__case_id__claim_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        case_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  decide_review_case_api_v1_admin_review_cases__case_id__decide_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        case_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['DecideReviewRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  search_sellers_api_v1_admin_sellers_get: {
-    parameters: {
-      query?: {
-        search?: string | null;
-        riskLevel?: components['schemas']['RiskLevel'] | null;
-        flagged?: boolean | null;
-        page?: number;
-        perPage?: number;
-      };
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_seller_detail_api_v1_admin_sellers__seller_id__get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  override_score_api_v1_admin_sellers__seller_id__trust_score_override_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['OverrideScoreRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_own_appeals_api_v1_appeals_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  submit_appeal_api_v1_appeals_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SubmitAppealRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  add_own_message_api_v1_appeals__appeal_id__messages_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        appeal_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['AppealMessageRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        appeal_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  change_password_api_v1_auth_change_password_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ChangePasswordRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  forgot_password_api_v1_auth_forgot_password_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ForgotPasswordRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  login_api_v1_auth_login_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['LoginRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  logout_api_v1_auth_logout_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: {
-        tl_rt?: string | null;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  logout_all_api_v1_auth_logout_all_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  refresh_api_v1_auth_refresh_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: {
-        tl_rt?: string | null;
-      };
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  register_api_v1_auth_register_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RegisterRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  reset_password_api_v1_auth_reset_password_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ResetPasswordRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_sessions_api_v1_auth_sessions_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  verify_email_api_v1_auth_verify_email_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VerifyEmailRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  upload_intent_api_v1_files_upload_intent_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UploadIntentRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_job_api_v1_jobs__job_id__get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        job_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  list_listings_api_v1_listings_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-        offset?: number;
-      };
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  create_listing_api_v1_listings_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ListingWriteRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_listing_api_v1_listings__listing_id__get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        listing_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  update_listing_api_v1_listings__listing_id__put: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        listing_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['ListingWriteRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  delete_listing_api_v1_listings__listing_id__delete: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path: {
-        listing_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      204: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content?: never;
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  analyse_listing_api_v1_listings__listing_id__analyse_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        listing_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_me_api_v1_me_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  become_seller_api_v1_me_become_seller_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['BecomeSellerRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      201: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'If-None-Match'?: string | null;
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_ref: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': unknown;
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_my_seller_api_v1_sellers_me_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  update_my_seller_api_v1_sellers_me_patch: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['UpdateSellerRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_trust_score_api_v1_sellers__seller_id__trust_score_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_history_api_v1_sellers__seller_id__trust_score_history_get: {
-    parameters: {
-      query?: {
-        limit?: number;
-      };
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_improvements_api_v1_sellers__seller_id__trust_score_improvements_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  recompute_api_v1_sellers__seller_id__trust_score_recompute_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_id: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  submit_device_api_v1_verification_device_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['DeviceFingerprintRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  identity_status_api_v1_verification_identity_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  submit_identity_api_v1_verification_identity_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SubmitIdentityRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      202: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  request_otp_api_v1_verification_phone_request_otp_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['RequestOtpRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  verify_otp_api_v1_verification_phone_verify_otp_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['VerifyOtpRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  verification_status_api_v1_verification_status_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  live_health_live_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-    };
-  };
-  ready_health_ready_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-    };
-  };
-  worker_health_worker_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': {
-            [key: string]: unknown;
-          };
-        };
-      };
-    };
-  };
-  batch_lookup_public_v1_sellers_lookup_post: {
-    parameters: {
-      query?: never;
-      header?: {
-        'x-device-fingerprint'?: string | null;
-      };
-      path?: never;
-      cookie?: never;
-    };
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['BatchLookupRequest'];
-      };
-    };
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['BatchLookupResponse'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  get_trust_score_public_v1_sellers__seller_ref__trust_score_get: {
-    parameters: {
-      query?: never;
-      header?: {
-        'If-None-Match'?: string | null;
-        'x-device-fingerprint'?: string | null;
-      };
-      path: {
-        seller_ref: string;
-      };
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicScoreResponse'];
-        };
-      };
-      /** @description Validation Error */
-      422: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['HTTPValidationError'];
-        };
-      };
-    };
-  };
-  public_status_public_v1_status_get: {
-    parameters: {
-      query?: never;
-      header?: never;
-      path?: never;
-      cookie?: never;
-    };
-    requestBody?: never;
-    responses: {
-      /** @description Successful Response */
-      200: {
-        headers: {
-          [name: string]: unknown;
-        };
-        content: {
-          'application/json': components['schemas']['PublicStatusResponse'];
-        };
-      };
-    };
-  };
+    list_appeal_queue_api_v1_admin_appeals_get: {
+        parameters: {
+            query?: {
+                status?: string | null;
+                /** @description Include withdrawn and decided appeals. Off by default: a queue is work. */
+                includeResolved?: boolean;
+                page?: number;
+                perPage?: number;
+            };
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_appeal_api_v1_admin_appeals__appeal_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                appeal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_reviewer_message_api_v1_admin_appeals__appeal_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                appeal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppealMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    resolve_appeal_api_v1_admin_appeals__appeal_id__resolve_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                appeal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResolveAppealRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_dashboard_summary_api_v1_admin_dashboard_summary_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_partners_api_v1_admin_partners_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_partner_api_v1_admin_partners_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterPartnerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    revoke_key_api_v1_admin_partners_keys__key_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    rotate_key_api_v1_admin_partners_keys__key_id__rotate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                key_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_scopes_api_v1_admin_partners_scopes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_keys_api_v1_admin_partners__client_id__keys_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    issue_key_api_v1_admin_partners__client_id__keys_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IssueKeyRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_partner_status_api_v1_admin_partners__client_id__status_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                client_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetStatusRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_review_cases_api_v1_admin_review_cases_get: {
+        parameters: {
+            query?: {
+                page?: number;
+                perPage?: number;
+            };
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    claim_review_case_api_v1_admin_review_cases__case_id__claim_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    decide_review_case_api_v1_admin_review_cases__case_id__decide_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                case_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DecideReviewRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_scoring_models_api_v1_admin_scoring_models_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    activate_scoring_model_api_v1_admin_scoring_models__model_id__activate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                model_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    search_sellers_api_v1_admin_sellers_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                riskLevel?: components["schemas"]["RiskLevel"] | null;
+                flagged?: boolean | null;
+                page?: number;
+                perPage?: number;
+            };
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_seller_detail_api_v1_admin_sellers__seller_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_identity_review_api_v1_admin_sellers__seller_id__identity_review_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    override_score_api_v1_admin_sellers__seller_id__trust_score_override_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OverrideScoreRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_own_appeals_api_v1_appeals_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_appeal_api_v1_appeals_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitAppealRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_own_message_api_v1_appeals__appeal_id__messages_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                appeal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AppealMessageRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    withdraw_appeal_api_v1_appeals__appeal_id__withdraw_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                appeal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    change_password_api_v1_auth_change_password_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ChangePasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    forgot_password_api_v1_auth_forgot_password_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ForgotPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    login_api_v1_auth_login_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LoginRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_api_v1_auth_logout_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                tl_rt?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    logout_all_api_v1_auth_logout_all_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    refresh_api_v1_auth_refresh_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: {
+                tl_rt?: string | null;
+            };
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    register_api_v1_auth_register_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RegisterRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_password_api_v1_auth_reset_password_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ResetPasswordRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_sessions_api_v1_auth_sessions_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_email_api_v1_auth_verify_email_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyEmailRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    upload_intent_api_v1_files_upload_intent_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UploadIntentRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_api_v1_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_listings_api_v1_listings_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+                offset?: number;
+            };
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_listing_api_v1_listings_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListingWriteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_listing_api_v1_listings__listing_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                listing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_listing_api_v1_listings__listing_id__put: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                listing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListingWriteRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_listing_api_v1_listings__listing_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                listing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    analyse_listing_api_v1_listings__listing_id__analyse_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                listing_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_me_api_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    become_seller_api_v1_me_become_seller_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BecomeSellerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_public_trust_score_api_v1_public_sellers__seller_ref__trust_score_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-None-Match"?: string | null;
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_my_seller_api_v1_sellers_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_my_seller_api_v1_sellers_me_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdateSellerRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_trust_score_api_v1_sellers__seller_id__trust_score_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_history_api_v1_sellers__seller_id__trust_score_history_get: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_improvements_api_v1_sellers__seller_id__trust_score_improvements_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    recompute_api_v1_sellers__seller_id__trust_score_recompute_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_device_api_v1_verification_device_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DeviceFingerprintRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    identity_status_api_v1_verification_identity_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_identity_api_v1_verification_identity_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SubmitIdentityRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_otp_api_v1_verification_phone_request_otp_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RequestOtpRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verify_otp_api_v1_verification_phone_verify_otp_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VerifyOtpRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    verification_status_api_v1_verification_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    live_health_live_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    ready_health_ready_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    worker_health_worker_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+        };
+    };
+    batch_lookup_public_v1_sellers_lookup_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-device-fingerprint"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BatchLookupRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BatchLookupResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_trust_score_public_v1_sellers__seller_ref__trust_score_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "If-None-Match"?: string | null;
+                "x-device-fingerprint"?: string | null;
+            };
+            path: {
+                seller_ref: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicScoreResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    public_status_public_v1_status_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PublicStatusResponse"];
+                };
+            };
+        };
+    };
 }

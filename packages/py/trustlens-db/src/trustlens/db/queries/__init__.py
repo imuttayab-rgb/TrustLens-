@@ -28,6 +28,16 @@ class SellerSearchRow:
     updated_at: object
 
 
+@dataclass(frozen=True, slots=True)
+class SellerAdminSummary:
+    total: int
+    low: int
+    medium: int
+    high: int
+    unknown: int
+    flagged: int
+
+
 class SellerAdminQueries:
     """Single-query seller list for the admin panel."""
 
@@ -116,5 +126,30 @@ class SellerAdminQueries:
         ).first()
         return SellerSearchRow(*row) if row else None
 
+    async def summary(self) -> SellerAdminSummary:
+        base = self._statement(search=None, risk_level=None, flagged=None).subquery()
+        rows = (
+            await self._session.execute(
+                select(base.c.risk_level, func.count()).group_by(base.c.risk_level)
+            )
+        ).all()
+        counts = {
+            str(risk.value if risk is not None else "UNKNOWN"): int(count) for risk, count in rows
+        }
+        return SellerAdminSummary(
+            total=sum(counts.values()),
+            low=counts.get(RiskLevel.LOW.value, 0),
+            medium=counts.get(RiskLevel.MEDIUM.value, 0),
+            high=counts.get(RiskLevel.HIGH.value, 0),
+            unknown=counts.get("UNKNOWN", 0),
+            flagged=int(
+                (
+                    await self._session.execute(
+                        select(func.count()).select_from(base).where(base.c.is_flagged.is_(True))
+                    )
+                ).scalar_one()
+            ),
+        )
 
-__all__ = ["SellerAdminQueries", "SellerSearchRow"]
+
+__all__ = ["SellerAdminQueries", "SellerAdminSummary", "SellerSearchRow"]

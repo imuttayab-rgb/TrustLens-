@@ -77,3 +77,6 @@ export function useDecideCase() {
     onSuccess: refresh,
   });
 }
+
+export { useIdentityReview } from './use-identity-review';
+export type { IdentityReview, IdentityReviewDocument } from './use-identity-review';

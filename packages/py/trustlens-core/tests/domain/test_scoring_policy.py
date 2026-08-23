@@ -333,6 +333,28 @@ def test_model_whose_weights_do_not_sum_to_100_is_rejected(
         ScoringPolicy(broken, definitions)
 
 
+def test_model_with_disabled_weights_validates_against_enabled_weights_only(
+    model: ScoringModel,
+) -> None:
+    disabled = ScoringWeight(
+        id=uuid.uuid4(),
+        scoring_model_id=model.id,
+        signal_definition_id=model.weights[0].signal_definition_id,
+        signal_code=model.weights[0].signal_code,
+        weight=10.0,
+        is_enabled=False,
+    )
+    valid = ScoringModel(
+        **{
+            **{field: getattr(model, field) for field in model.__slots__},
+            "weights": (*model.weights, disabled),
+        }
+    )
+
+    valid.validate()
+    assert valid.total_weight == 100.0
+
+
 # ── Explainability ───────────────────────────────────────────────────
 
 

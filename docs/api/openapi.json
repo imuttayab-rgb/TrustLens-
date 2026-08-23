@@ -16,7 +16,9 @@
             "type": "boolean"
           }
         },
-        "required": ["body"],
+        "required": [
+          "body"
+        ],
         "title": "AppealMessageRequest",
         "type": "object"
       },
@@ -33,7 +35,9 @@
             "type": "array"
           }
         },
-        "required": ["sellerRefs"],
+        "required": [
+          "sellerRefs"
+        ],
         "title": "BatchLookupRequest",
         "type": "object"
       },
@@ -56,7 +60,9 @@
             "type": "array"
           }
         },
-        "required": ["results"],
+        "required": [
+          "results"
+        ],
         "title": "BatchLookupResponse",
         "type": "object"
       },
@@ -107,7 +113,9 @@
             "type": "string"
           }
         },
-        "required": ["displayName"],
+        "required": [
+          "displayName"
+        ],
         "title": "BecomeSellerRequest",
         "type": "object"
       },
@@ -127,7 +135,10 @@
             "type": "string"
           }
         },
-        "required": ["currentPassword", "newPassword"],
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
         "title": "ChangePasswordRequest",
         "type": "object"
       },
@@ -145,7 +156,10 @@
             "type": "string"
           }
         },
-        "required": ["approve", "note"],
+        "required": [
+          "approve",
+          "note"
+        ],
         "title": "DecideReviewRequest",
         "type": "object"
       },
@@ -206,7 +220,9 @@
             "title": "Useragent"
           }
         },
-        "required": ["fingerprint"],
+        "required": [
+          "fingerprint"
+        ],
         "title": "DeviceFingerprintRequest",
         "type": "object"
       },
@@ -219,7 +235,9 @@
             "type": "string"
           }
         },
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "title": "ForgotPasswordRequest",
         "type": "object"
       },
@@ -265,7 +283,9 @@
             "type": "array"
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "IssueKeyRequest",
         "type": "object"
       },
@@ -360,7 +380,10 @@
             "type": "string"
           }
         },
-        "required": ["title", "description"],
+        "required": [
+          "title",
+          "description"
+        ],
         "title": "ListingWriteRequest",
         "type": "object"
       },
@@ -391,7 +414,10 @@
             "type": "string"
           }
         },
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "title": "LoginRequest",
         "type": "object"
       },
@@ -411,7 +437,10 @@
             "type": "integer"
           }
         },
-        "required": ["score", "reason"],
+        "required": [
+          "score",
+          "reason"
+        ],
         "title": "OverrideScoreRequest",
         "type": "object"
       },
@@ -440,7 +469,11 @@
             "type": "string"
           }
         },
-        "required": ["code", "impact", "text"],
+        "required": [
+          "code",
+          "impact",
+          "text"
+        ],
         "title": "PublicReasonModel",
         "type": "object"
       },
@@ -540,7 +573,11 @@
             "type": "string"
           }
         },
-        "required": ["status", "scoringModelVersion", "apiVersion"],
+        "required": [
+          "status",
+          "scoringModelVersion",
+          "apiVersion"
+        ],
         "title": "PublicStatusResponse",
         "type": "object"
       },
@@ -585,7 +622,11 @@
             "type": "string"
           }
         },
-        "required": ["name", "slug", "contactEmail"],
+        "required": [
+          "name",
+          "slug",
+          "contactEmail"
+        ],
         "title": "RegisterPartnerRequest",
         "type": "object"
       },
@@ -620,7 +661,12 @@
             "type": "string"
           }
         },
-        "required": ["email", "password", "fullName", "acceptedTerms"],
+        "required": [
+          "email",
+          "password",
+          "fullName",
+          "acceptedTerms"
+        ],
         "title": "RegisterRequest",
         "type": "object"
       },
@@ -635,7 +681,9 @@
             "type": "string"
           }
         },
-        "required": ["phoneNumber"],
+        "required": [
+          "phoneNumber"
+        ],
         "title": "RequestOtpRequest",
         "type": "object"
       },
@@ -655,7 +703,10 @@
             "type": "string"
           }
         },
-        "required": ["token", "password"],
+        "required": [
+          "token",
+          "password"
+        ],
         "title": "ResetPasswordRequest",
         "type": "object"
       },
@@ -686,12 +737,20 @@
             "title": "Overridescore"
           }
         },
-        "required": ["decision", "note"],
+        "required": [
+          "decision",
+          "note"
+        ],
         "title": "ResolveAppealRequest",
         "type": "object"
       },
       "RiskLevel": {
-        "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"],
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "UNKNOWN"
+        ],
         "title": "RiskLevel",
         "type": "string"
       },
@@ -703,7 +762,9 @@
             "type": "string"
           }
         },
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "title": "SetStatusRequest",
         "type": "object"
       },
@@ -726,7 +787,11 @@
             "type": "string"
           }
         },
-        "required": ["trustScoreId", "reasonCategory", "reason"],
+        "required": [
+          "trustScoreId",
+          "reasonCategory",
+          "reason"
+        ],
         "title": "SubmitAppealRequest",
         "type": "object"
       },
@@ -753,7 +818,12 @@
             "type": "string"
           }
         },
-        "required": ["cnicFrontFileId", "cnicBackFileId", "selfieFileId", "biometricConsent"],
+        "required": [
+          "cnicFrontFileId",
+          "cnicBackFileId",
+          "selfieFileId",
+          "biometricConsent"
+        ],
         "title": "SubmitIdentityRequest",
         "type": "object"
       },
@@ -856,7 +926,11 @@
             "type": "integer"
           }
         },
-        "required": ["purpose", "contentType", "sizeBytes"],
+        "required": [
+          "purpose",
+          "contentType",
+          "sizeBytes"
+        ],
         "title": "UploadIntentRequest",
         "type": "object"
       },
@@ -892,7 +966,11 @@
             "type": "string"
           }
         },
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError",
         "type": "object"
       },
@@ -906,7 +984,9 @@
             "type": "string"
           }
         },
-        "required": ["token"],
+        "required": [
+          "token"
+        ],
         "title": "VerifyEmailRequest",
         "type": "object"
       },
@@ -921,7 +1001,9 @@
             "type": "string"
           }
         },
-        "required": ["code"],
+        "required": [
+          "code"
+        ],
         "title": "VerifyOtpRequest",
         "type": "object"
       }
@@ -1032,7 +1114,9 @@
           }
         },
         "summary": "The appeal queue",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/appeals/{appeal_id}/claim": {
@@ -1091,7 +1175,9 @@
           }
         },
         "summary": "Claim an appeal before working on it",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/appeals/{appeal_id}/messages": {
@@ -1160,7 +1246,9 @@
           }
         },
         "summary": "Reply or add an internal note",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/appeals/{appeal_id}/resolve": {
@@ -1230,7 +1318,60 @@
           }
         },
         "summary": "Resolve an appeal",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
+      }
+    },
+    "/api/v1/admin/dashboard/summary": {
+      "get": {
+        "operationId": "get_dashboard_summary_api_v1_admin_dashboard_summary_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Dashboard Summary Api V1 Admin Dashboard Summary Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get admin seller summary",
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/partners": {
@@ -1279,7 +1420,9 @@
           }
         },
         "summary": "Every partner, with usage against quota",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       },
       "post": {
         "description": "Created as PENDING. Approve it before issuing a key.",
@@ -1337,7 +1480,9 @@
           }
         },
         "summary": "Register a partner",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/keys/{key_id}": {
@@ -1397,7 +1542,9 @@
           }
         },
         "summary": "Revoke a key immediately",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/keys/{key_id}/rotate": {
@@ -1457,7 +1604,9 @@
           }
         },
         "summary": "Rotate a key",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/scopes": {
@@ -1506,7 +1655,9 @@
           }
         },
         "summary": "Scopes a key can be granted",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/{client_id}/keys": {
@@ -1565,7 +1716,9 @@
           }
         },
         "summary": "Keys held by a partner",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       },
       "post": {
         "description": "The response contains the only copy of the key that will ever exist. It is argon2-hashed before storage, so it cannot be shown again - a lost key is rotated, not recovered.",
@@ -1633,7 +1786,9 @@
           }
         },
         "summary": "Issue a key",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/{client_id}/status": {
@@ -1703,7 +1858,9 @@
           }
         },
         "summary": "Approve, suspend or reinstate a partner",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/review-cases": {
@@ -1776,7 +1933,9 @@
           }
         },
         "summary": "The review queue",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/review-cases/{case_id}/claim": {
@@ -1836,7 +1995,9 @@
           }
         },
         "summary": "Claim a case before working on it",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/review-cases/{case_id}/decide": {
@@ -1906,7 +2067,121 @@
           }
         },
         "summary": "Record a decision on a case",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/scoring-models": {
+      "get": {
+        "operationId": "list_scoring_models_api_v1_admin_scoring_models_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Scoring Models Api V1 Admin Scoring Models Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List scoring model versions",
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/scoring-models/{model_id}/activate": {
+      "post": {
+        "operationId": "activate_scoring_model_api_v1_admin_scoring_models__model_id__activate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "model_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Model Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Activate Scoring Model Api V1 Admin Scoring Models  Model Id  Activate Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Activate a scoring model version",
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers": {
@@ -2028,7 +2303,9 @@
           }
         },
         "summary": "Search sellers",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}": {
@@ -2087,7 +2364,70 @@
           }
         },
         "summary": "Get seller details",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/sellers/{seller_id}/identity-review": {
+      "get": {
+        "operationId": "get_identity_review_api_v1_admin_sellers__seller_id__identity_review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Identity Review Api V1 Admin Sellers  Seller Id  Identity Review Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review identity evidence",
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}/trust-score/override": {
@@ -2157,7 +2497,9 @@
           }
         },
         "summary": "Override a computed score (ADMIN only)",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/appeals": {
@@ -2207,7 +2549,9 @@
           }
         },
         "summary": "Own appeals",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       },
       "post": {
         "operationId": "submit_appeal_api_v1_appeals_post",
@@ -2264,7 +2608,9 @@
           }
         },
         "summary": "Appeal a trust score",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/appeals/{appeal_id}/messages": {
@@ -2333,7 +2679,9 @@
           }
         },
         "summary": "Reply on an appeal",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/appeals/{appeal_id}/withdraw": {
@@ -2393,7 +2741,9 @@
           }
         },
         "summary": "Withdraw an appeal",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/auth/change-password": {
@@ -2452,7 +2802,9 @@
           }
         },
         "summary": "Change your password",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/forgot-password": {
@@ -2512,7 +2864,9 @@
           }
         },
         "summary": "Request a password reset",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/login": {
@@ -2571,7 +2925,9 @@
           }
         },
         "summary": "Sign in",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/logout": {
@@ -2636,7 +2992,9 @@
           }
         },
         "summary": "Sign out of this session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/logout-all": {
@@ -2685,7 +3043,9 @@
           }
         },
         "summary": "Sign out of every session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/refresh": {
@@ -2751,7 +3111,9 @@
           }
         },
         "summary": "Rotate the session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/register": {
@@ -2811,7 +3173,9 @@
           }
         },
         "summary": "Register a new account",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/reset-password": {
@@ -2870,7 +3234,9 @@
           }
         },
         "summary": "Complete a password reset",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/sessions": {
@@ -2919,7 +3285,9 @@
           }
         },
         "summary": "List active sessions",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/verify-email": {
@@ -2978,7 +3346,9 @@
           }
         },
         "summary": "Confirm an email address",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/files/upload-intent": {
@@ -3038,7 +3408,9 @@
           }
         },
         "summary": "Get a presigned upload URL",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/jobs/{job_id}": {
@@ -3096,7 +3468,9 @@
           }
         },
         "summary": "Poll a background job",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       }
     },
     "/api/v1/listings": {
@@ -3168,7 +3542,9 @@
           }
         },
         "summary": "List your listings",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "post": {
         "operationId": "create_listing_api_v1_listings_post",
@@ -3225,7 +3601,9 @@
           }
         },
         "summary": "Create a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/listings/{listing_id}": {
@@ -3259,7 +3637,9 @@
           }
         },
         "summary": "Remove a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "get": {
         "operationId": "get_listing_api_v1_listings__listing_id__get",
@@ -3316,7 +3696,9 @@
           }
         },
         "summary": "Read one of your listings",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "put": {
         "operationId": "update_listing_api_v1_listings__listing_id__put",
@@ -3383,7 +3765,9 @@
           }
         },
         "summary": "Update a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/listings/{listing_id}/analyse": {
@@ -3442,7 +3826,9 @@
           }
         },
         "summary": "Re-run analysis on a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/me": {
@@ -3491,7 +3877,9 @@
           }
         },
         "summary": "Current user",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/become-seller": {
@@ -3550,7 +3938,9 @@
           }
         },
         "summary": "Upgrade a buyer account to also be a seller",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/public/sellers/{seller_ref}/trust-score": {
@@ -3623,7 +4013,9 @@
           }
         },
         "summary": "Buyer-facing score for the public seller page (no auth)",
-        "tags": ["Public Page"]
+        "tags": [
+          "Public Page"
+        ]
       }
     },
     "/api/v1/sellers/me": {
@@ -3672,7 +4064,9 @@
           }
         },
         "summary": "Own seller profile",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       },
       "patch": {
         "operationId": "update_my_seller_api_v1_sellers_me_patch",
@@ -3729,7 +4123,9 @@
           }
         },
         "summary": "Update own seller profile",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score": {
@@ -3789,7 +4185,9 @@
           }
         },
         "summary": "Get the current trust score with its full breakdown",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score/history": {
@@ -3861,7 +4259,9 @@
           }
         },
         "summary": "Score history",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score/improvements": {
@@ -3921,7 +4321,9 @@
           }
         },
         "summary": "Ranked list of what would raise this score",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score/recompute": {
@@ -3981,7 +4383,9 @@
           }
         },
         "summary": "Queue a recomputation",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/verification/device": {
@@ -4040,7 +4444,9 @@
           }
         },
         "summary": "Submit a device fingerprint",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/identity": {
@@ -4089,7 +4495,9 @@
           }
         },
         "summary": "Identity verification status",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       },
       "post": {
         "description": "Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).",
@@ -4147,7 +4555,9 @@
           }
         },
         "summary": "Submit CNIC and selfie for verification",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/phone/request-otp": {
@@ -4206,7 +4616,9 @@
           }
         },
         "summary": "Send a phone verification code",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/phone/verify-otp": {
@@ -4265,7 +4677,9 @@
           }
         },
         "summary": "Confirm a phone verification code",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/status": {
@@ -4314,7 +4728,9 @@
           }
         },
         "summary": "All verification checks in one call",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/health/live": {
@@ -4335,7 +4751,9 @@
           }
         },
         "summary": "Liveness probe",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/health/ready": {
@@ -4356,7 +4774,9 @@
           }
         },
         "summary": "Readiness probe",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/health/worker": {
@@ -4378,7 +4798,9 @@
           }
         },
         "summary": "Is the worker still consuming jobs?",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/public/v1/sellers/lookup": {
@@ -4436,7 +4858,9 @@
           }
         },
         "summary": "Look up several sellers at once",
-        "tags": ["Public API"]
+        "tags": [
+          "Public API"
+        ]
       }
     },
     "/public/v1/sellers/{seller_ref}/trust-score": {
@@ -4509,7 +4933,9 @@
           }
         },
         "summary": "Get a seller's trust score",
-        "tags": ["Public API"]
+        "tags": [
+          "Public API"
+        ]
       }
     },
     "/public/v1/status": {
@@ -4529,7 +4955,9 @@
           }
         },
         "summary": "Service status and current scoring model",
-        "tags": ["Public API"]
+        "tags": [
+          "Public API"
+        ]
       }
     }
   },

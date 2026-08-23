@@ -1,6 +1,7 @@
 'use client';
 
 import { useReviewQueue } from '@/features/review';
+import { useAdminSummary } from '@/features/sellers';
 import { useSession } from '@/lib/auth/use-session';
 import { Card, CardContent, Spinner } from '@trustlens/ui';
 import Link from 'next/link';
@@ -8,6 +9,7 @@ import Link from 'next/link';
 export default function AdminOverviewPage() {
   const { data: user } = useSession();
   const { data: cases, isPending } = useReviewQueue();
+  const { data: summary } = useAdminSummary();
 
   const open = (cases ?? []).filter((c) => c.status === 'QUEUED').length;
   const claimed = (cases ?? []).filter((c) => c.status === 'ASSIGNED').length;
@@ -39,6 +41,25 @@ export default function AdminOverviewPage() {
               <CardContent className="pt-6">
                 <p className={`text-3xl font-bold tabular-nums ${stat.tone}`}>{stat.value}</p>
                 <p className="mt-1 text-sm text-muted-foreground">{stat.label}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {summary && (
+        <div className="mt-6 grid gap-4 sm:grid-cols-5">
+          {[
+            { label: 'All sellers', value: summary.totalSellers },
+            { label: 'Low risk', value: summary.lowRisk },
+            { label: 'Medium risk', value: summary.mediumRisk },
+            { label: 'High risk', value: summary.highRisk },
+            { label: 'Flagged', value: summary.flagged },
+          ].map((stat) => (
+            <Card key={stat.label}>
+              <CardContent className="pt-5">
+                <p className="text-2xl font-bold tabular-nums">{stat.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{stat.label}</p>
               </CardContent>
             </Card>
           ))}

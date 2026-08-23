@@ -26,6 +26,9 @@ from trustlens_api.main import _PUBLIC_ROUTES, _assert_routes_are_guarded, creat
 
 BUYER_PATH = "/api/v1/public/sellers/{seller_ref}/trust-score"
 PARTNER_PATH = "/public/v1/sellers/{seller_ref}/trust-score"
+ADMIN_SELLERS_PATH = "/api/v1/admin/sellers"
+ADMIN_SUMMARY_PATH = "/api/v1/admin/dashboard/summary"
+ADMIN_MODELS_PATH = "/api/v1/admin/scoring-models"
 
 AUTH_MARKERS = (
     "get_current_actor",
@@ -77,6 +80,17 @@ def test_partner_route_still_requires_a_key(app: FastAPI) -> None:
     flattened = str(dependant.dependencies)
     assert "require_scope" in flattened or "get_api_client" in flattened
     assert PARTNER_PATH not in _PUBLIC_ROUTES
+
+
+@pytest.mark.api
+@pytest.mark.parametrize(
+    "path",
+    [ADMIN_SELLERS_PATH, ADMIN_SUMMARY_PATH, ADMIN_MODELS_PATH],
+)
+def test_admin_read_routes_are_registered_and_protected(app: FastAPI, path: str) -> None:
+    context = _context(app, path)
+    assert "require_permissions" in str(context.dependant.dependencies)
+    assert path not in _PUBLIC_ROUTES
 
 
 @pytest.mark.api
