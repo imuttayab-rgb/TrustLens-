@@ -59,7 +59,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
   return (
     <div className="space-y-4 rounded-lg border border-border p-4">
       <div>
-        <h3 className="font-semibold">Listing Images</h3>
+        <h3 className="font-semibold">Photos</h3>
         <p className="text-sm text-muted-foreground">
           Upload up to 5 images. The first image will be the primary image. Good photos increase
           buyer trust.

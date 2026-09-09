@@ -13,10 +13,13 @@ export function ListingForm({
   listing,
   onSubmit,
   submitLabel,
+  onSuccess,
 }: {
   listing?: Listing | undefined;
   onSubmit: (payload: ListingPayload) => Promise<Listing>;
   submitLabel: string;
+  /** Overrides the default "navigate to the listing's detail page" behaviour. */
+  onSuccess?: (listing: Listing) => void;
 }) {
   const router = useRouter();
 
@@ -54,8 +57,12 @@ export function ListingForm({
       });
     });
     if (ok && created) {
-      router.push(`/dashboard/listings/${(created as Listing).id}`);
-      router.refresh();
+      if (onSuccess) {
+        onSuccess(created);
+      } else {
+        router.push(`/dashboard/listings/${(created as Listing).id}`);
+        router.refresh();
+      }
     }
   });
 

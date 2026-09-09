@@ -28,13 +28,13 @@ export default function ListingDetailPage() {
   if (isPending) {
     return (
       <div className="flex min-h-[40dvh] items-center justify-center">
-        <Spinner label="Loading listing" />
+        <Spinner label="Loading" />
       </div>
     );
   }
 
   if (!listing) {
-    return <Alert tone="error" title="This listing could not be found." />;
+    return <Alert tone="error" title="This item could not be found." />;
   }
 
   const removed = listing.status === 'REMOVED';
@@ -42,7 +42,7 @@ export default function ListingDetailPage() {
   return (
     <div className="mx-auto max-w-2xl">
       <Link href="/dashboard/listings" className="text-sm text-muted-foreground hover:underline">
-        ← Back to listings
+        ← Back to selling
       </Link>
       <h1 className="mt-2 truncate text-2xl font-bold">{listing.title}</h1>
 
@@ -64,12 +64,16 @@ export default function ListingDetailPage() {
       </Card>
 
       {removed ? (
-        <Alert tone="warning" title="This listing has been removed" className="mt-6">
+        <Alert tone="warning" title="This item has been removed" className="mt-6">
           Removed listings are kept so the Trust Score they contributed to can still be explained
           and appealed. They can no longer be edited.
         </Alert>
       ) : (
         <>
+          <div className="mt-10">
+            <ListingImages listingId={id} />
+          </div>
+
           <h2 className="mt-10 text-lg font-semibold">Edit</h2>
           <div className="mt-4">
             <ListingForm
@@ -79,14 +83,10 @@ export default function ListingDetailPage() {
             />
           </div>
 
-          <div className="mt-10">
-            <ListingImages listingId={id} />
-          </div>
-
           <div className="mt-10 border-t border-border pt-6">
             {confirmingDelete ? (
               <div className="space-y-3">
-                <Alert tone="warning" title="Remove this listing?">
+                <Alert tone="warning" title="Remove this item?">
                   Your Trust Score will be recalculated without it.
                 </Alert>
                 <div className="flex gap-2">
@@ -111,7 +111,7 @@ export default function ListingDetailPage() {
               </div>
             ) : (
               <Button variant="ghost" onClick={() => setConfirmingDelete(true)}>
-                Remove this listing
+                Remove this item
               </Button>
             )}
           </div>

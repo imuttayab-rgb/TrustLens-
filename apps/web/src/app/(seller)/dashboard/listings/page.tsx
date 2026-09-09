@@ -21,23 +21,25 @@ export default function ListingsPage() {
     <>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Your listings</h1>
+          <h1 className="text-2xl font-bold">Your selling</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every listing is analysed for scam patterns, and the result feeds your Trust Score.
+            Everything you sell is analysed for scam patterns, and the result feeds your Trust
+            Score.
           </p>
         </div>
         <Button asChild>
-          <Link href="/dashboard/listings/new">Add a listing</Link>
+          <Link href="/dashboard/listings/new">Sell something</Link>
         </Button>
       </div>
 
       {isPending ? (
         <div className="mt-10 flex justify-center">
-          <Spinner label="Loading your listings" />
+          <Spinner label="Loading" />
         </div>
       ) : !data || data.items.length === 0 ? (
-        <Alert tone="info" title="No listings yet" className="mt-8">
-          Add one to have it checked. Sellers with no listings cannot earn the listing points.
+        <Alert tone="info" title="You're not selling anything yet" className="mt-8">
+          Sell your first item to have it checked. Sellers with nothing for sale cannot earn the
+          listing points.
         </Alert>
       ) : (
         <ul className="mt-8 space-y-3">
