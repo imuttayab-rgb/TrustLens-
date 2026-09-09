@@ -458,7 +458,7 @@ class Settings(_Base):
     @property
     def expose_docs(self) -> bool:
         """Swagger for the internal API is disabled once deployed."""
-        return not self.is_production
+        return not self.env.is_deployed
 
 
 @lru_cache(maxsize=1)

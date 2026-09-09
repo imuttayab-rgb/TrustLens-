@@ -35,7 +35,9 @@ from trustlens.core.domain.enums import (
 )
 from trustlens.core.domain.errors import (
     AccountLocked,
+    AccountNotActive,
     ConflictError,
+    EmailNotVerified,
     InvalidCredentials,
     MfaRequired,
     TokenInvalid,
@@ -143,11 +145,10 @@ class RegisterUser:
                 id=user_id,
                 email=email,
                 full_name=cmd.full_name.strip(),
-                status=AccountStatus.ACTIVE,
+                status=AccountStatus.PENDING,
                 primary_role=UserRole.SELLER if cmd.as_seller else UserRole.BUYER,
                 roles=frozenset({UserRole.SELLER if cmd.as_seller else UserRole.BUYER}),
                 created_at=now,
-                email_verified_at=now,
             )
             await self._uow.users.create(user=user, password_hash=self._hasher.hash(cmd.password))
 
@@ -158,7 +159,6 @@ class RegisterUser:
                     email=email,
                     created_at=now,
                     is_primary=True,
-                    verified_at=now,
                 )
             )
 
@@ -201,13 +201,13 @@ class RegisterUser:
             )
             await self._uow.commit()
 
-        # await self._queue.enqueue(
-        #     "notifications.send_email",
-        #     to=email.value,
-        #     template="verify_email",
-        #     context={"token": raw_token, "full_name": cmd.full_name},
-        # )
-        return RegisterUserResult(user_id=user_id, status=AccountStatus.ACTIVE.value)
+        await self._queue.enqueue(
+            "notifications.send_email",
+            to=email.value,
+            template="verify_email",
+            context={"token": raw_token, "full_name": cmd.full_name},
+        )
+        return RegisterUserResult(user_id=user_id, status=AccountStatus.PENDING.value)
 
     async def _create_seller_profile(self, user: User, now: datetime) -> SellerProfile:
         handle = await self._unique_handle(user.full_name)
@@ -332,10 +332,10 @@ class LoginUser:
                 await self._uow.commit()
                 raise InvalidCredentials
 
-            # if not user.is_email_verified:
-            #     raise EmailNotVerified
-            # if user.status != AccountStatus.ACTIVE:
-            #     raise AccountNotActive(f"This account is {user.status.value.lower()}.")
+            if not user.is_email_verified:
+                raise EmailNotVerified
+            if user.status != AccountStatus.ACTIVE:
+                raise AccountNotActive(f"This account is {user.status.value.lower()}.")
 
             if self._hasher.needs_rehash(password_hash):
                 # Transparently upgrade to current argon2 parameters on a
