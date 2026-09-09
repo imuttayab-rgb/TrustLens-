@@ -39,6 +39,7 @@ if TYPE_CHECKING:
         Notification,
         OtpCode,
         PhoneNumber,
+        PublicListingSummary,
         RefreshToken,
         ReviewCase,
         ScoringModel,
@@ -212,6 +213,17 @@ class ListingRepository(Protocol):
     ) -> list[ListingAnalysis]: ...
 
     async def category_median_price(self, category: str, *, currency: str) -> float | None: ...
+
+    async def search_public(
+        self,
+        *,
+        category: str | None = None,
+        q: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> list[PublicListingSummary]: ...
+
+    async def count_public(self, *, category: str | None = None, q: str | None = None) -> int: ...
 
 
 @runtime_checkable

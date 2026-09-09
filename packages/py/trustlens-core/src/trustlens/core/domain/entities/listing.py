@@ -101,4 +101,26 @@ class Listing:
         return self.latest_analysis is not None
 
 
-__all__ = ["Listing", "ListingAnalysis", "ListingImage", "ScamLabel"]
+@dataclass(frozen=True, slots=True)
+class PublicListingSummary:
+    """What an anonymous buyer sees in the catalog/search results.
+
+    Deliberately thin: no description, no seller contact details, no
+    analysis internals - just enough to decide whether to open the listing.
+    Only ever built from an ACTIVE listing (see BrowsePublicListings).
+    """
+
+    id: UUID
+    title: str
+    price: float | None
+    currency: str | None
+    category: str | None
+    city: str | None
+    created_at: datetime
+    seller_id: UUID
+    seller_handle: str
+    seller_display_name: str
+    primary_image_file_id: UUID | None = None
+
+
+__all__ = ["Listing", "ListingAnalysis", "ListingImage", "PublicListingSummary", "ScamLabel"]

@@ -753,6 +753,76 @@ class SqlListingRepository:
             ).scalar_one()
         )
 
+    def _public_query_base(self, *, category: str | None, q: str | None) -> Select[Any]:
+        stmt = (
+            select(m.ListingModel, m.SellerProfile).join(
+                m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id
+            )
+        ).where(
+            m.ListingModel.status == e.ListingStatus.ACTIVE,
+            m.ListingModel.deleted_at.is_(None),
+            m.SellerProfile.deleted_at.is_(None),
+        )
+        if category is not None:
+            stmt = stmt.where(m.ListingModel.category == category)
+        if q:
+            # The trigram GIN index on `title` (ix_listings_title_trgm) makes
+            # this ILIKE cheap even without a leading anchor.
+            stmt = stmt.where(m.ListingModel.title.ilike(f"%{q}%"))
+        return stmt
+
+    async def search_public(
+        self,
+        *,
+        category: str | None = None,
+        q: str | None = None,
+        limit: int = 20,
+        offset: int = 0,
+    ) -> list[ent.PublicListingSummary]:
+        stmt = (
+            self._public_query_base(category=category, q=q)
+            .order_by(m.ListingModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        rows = (await self._s.execute(stmt)).all()
+        listing_ids = [listing.id for listing, _seller in rows]
+        primary_images = await self._primary_image_ids(listing_ids)
+
+        return [
+            ent.PublicListingSummary(
+                id=listing.id,
+                title=listing.title,
+                price=float(listing.price) if listing.price is not None else None,
+                currency=listing.currency,
+                category=listing.category,
+                city=listing.city,
+                created_at=listing.created_at,
+                seller_id=seller.id,
+                seller_handle=seller.handle,
+                seller_display_name=seller.display_name,
+                primary_image_file_id=primary_images.get(listing.id),
+            )
+            for listing, seller in rows
+        ]
+
+    async def count_public(self, *, category: str | None = None, q: str | None = None) -> int:
+        stmt = select(func.count()).select_from(
+            self._public_query_base(category=category, q=q).subquery()
+        )
+        return int((await self._s.execute(stmt)).scalar_one())
+
+    async def _primary_image_ids(self, listing_ids: list[UUID]) -> dict[UUID, UUID]:
+        if not listing_ids:
+            return {}
+        rows = await self._s.execute(
+            select(m.ListingImageModel.listing_id, m.ListingImageModel.file_id).where(
+                m.ListingImageModel.listing_id.in_(listing_ids),
+                m.ListingImageModel.is_primary.is_(True),
+            )
+        )
+        return dict(rows.tuples())
+
     async def add(self, listing: ent.Listing) -> ent.Listing:
         self._s.add(
             m.ListingModel(
@@ -1888,7 +1958,6 @@ class SqlAuditLogRepository:
         stmt = stmt.limit(int(filters.get("limit", 100)))
         rows = await self._s.execute(stmt)
         return [_to_audit(r) for r in rows.scalars().all()]
-
 
 
 def _to_audit(row: m.AuditLogModel) -> ent.AuditLogEntry:

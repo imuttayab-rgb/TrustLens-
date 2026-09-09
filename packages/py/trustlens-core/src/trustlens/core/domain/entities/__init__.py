@@ -13,6 +13,7 @@ from trustlens.core.domain.entities.listing import (
     Listing,
     ListingAnalysis,
     ListingImage,
+    PublicListingSummary,
     ScamLabel,
 )
 from trustlens.core.domain.entities.seller import Marketplace, SellerProfile
@@ -75,6 +76,7 @@ __all__ = [
     "OtpCode",
     "Permission",
     "PhoneNumber",
+    "PublicListingSummary",
     "RefreshToken",
     "ReviewCase",
     "Role",

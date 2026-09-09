@@ -4204,6 +4204,113 @@
         "tags": ["Me"]
       }
     },
+    "/api/v1/public/listings": {
+      "get": {
+        "description": "Powers the marketplace browse/search page. Anonymous, and rate limited per IP. Only ACTIVE listings are ever returned - a listing still being analysed, flagged, or removed never appears here.",
+        "operationId": "browse_public_listings_api_v1_public_listings_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Browse Public Listings Api V1 Public Listings Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Browse and search active listings (no auth)",
+        "tags": ["Public Page"]
+      }
+    },
     "/api/v1/public/sellers/{seller_ref}/trust-score": {
       "get": {
         "description": "Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.\n\nMarketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.",
