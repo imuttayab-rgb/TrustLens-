@@ -1,12 +1,22 @@
-"""Current-user and seller-profile endpoints."""
+"""Current-user, seller-profile and favorites endpoints."""
 
 from __future__ import annotations
 
 import dataclasses
 from typing import Any
+from uuid import UUID
 
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
+from trustlens.core.application.use_cases.favorites import (
+    AddFavorite,
+    AddFavoriteCommand,
+    ListFavoriteIds,
+    ListFavorites,
+    ListFavoritesQuery,
+    RemoveFavorite,
+    RemoveFavoriteCommand,
+)
 from trustlens.core.domain.entities import SellerProfile, TrustScore
 from trustlens.core.domain.enums import UserRole, VerificationStatus
 from trustlens.core.domain.errors import ConflictError, EntityNotFound, ValidationError
@@ -18,8 +28,10 @@ from trustlens.core.domain.policies import (
 )
 from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
+from trustlens_api.api.v1.routers._public_listing_presentation import to_public_listing_response
 from trustlens_api.api.v1.schemas.auth import UserSummary
-from trustlens_api.api.v1.schemas.common import envelope
+from trustlens_api.api.v1.schemas.common import PageMeta, envelope
+from trustlens_api.api.v1.schemas.favorite import AddFavoriteRequest, FavoriteIdsResponse
 from trustlens_api.api.v1.schemas.seller import (
     BecomeSellerRequest,
     SellerResponse,
@@ -195,6 +207,83 @@ def _seller_response(seller: SellerProfile, score: TrustScore | None = None) -> 
         is_flagged=seller.is_flagged,
         score=int(score.score) if score else None,
         risk_level=score.risk_level.value if score else None,
+    )
+
+
+# ── Favorites ────────────────────────────────────────────────────────
+# A saved listing, not a scored signal - any signed-in user (buyer or
+# seller) may save one, same as `/me` itself asks nothing about role.
+
+
+@router.post(
+    "/me/favorites",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Save a listing",
+)
+async def add_favorite(
+    body: AddFavoriteRequest,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+) -> None:
+    assert actor.user_id is not None
+    await AddFavorite(uow=uow, clock=container.clock, ids=container.ids).execute(
+        AddFavoriteCommand(user_id=actor.user_id, listing_id=body.listing_id)
+    )
+
+
+@router.delete(
+    "/me/favorites/{listing_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Unsave a listing",
+)
+async def remove_favorite(listing_id: UUID, actor: ActorDep, uow: UowDep) -> None:
+    assert actor.user_id is not None
+    await RemoveFavorite(uow=uow).execute(
+        RemoveFavoriteCommand(user_id=actor.user_id, listing_id=listing_id)
+    )
+
+
+@router.get("/me/favorites", summary="List saved listings")
+async def list_favorites(
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+    limit: int = Query(default=20, ge=1, le=50),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    page = await ListFavorites(uow=uow).execute(
+        ListFavoritesQuery(user_id=actor.user_id, limit=limit, offset=offset)
+    )
+    responses = [await to_public_listing_response(item, container, uow) for item in page.items]
+
+    return envelope(
+        [item.model_dump(by_alias=True) for item in responses],
+        request_id=meta.request_id,
+        pagination=PageMeta.build(
+            page=(page.offset // page.limit) + 1,
+            per_page=page.limit,
+            total=page.total,
+        ),
+    )
+
+
+@router.get(
+    "/me/favorites/ids",
+    summary="Listing ids the current user has saved",
+    description=(
+        "Unpaginated on purpose - meant for hydrating 'already saved' state "
+        "on a page of catalog cards in one call, not for display."
+    ),
+)
+async def list_favorite_ids(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
+    assert actor.user_id is not None
+    ids = await ListFavoriteIds(uow=uow).execute(actor.user_id)
+    return envelope(
+        FavoriteIdsResponse(listing_ids=sorted(ids)).model_dump(by_alias=True),
+        request_id=meta.request_id,
     )
 
 

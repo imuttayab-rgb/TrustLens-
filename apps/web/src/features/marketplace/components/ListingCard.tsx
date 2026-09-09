@@ -1,10 +1,24 @@
+'use client';
+
 import { LISTING_CATEGORY_LABELS } from '@trustlens/constants';
-import { ImageOff } from 'lucide-react';
+import { cn } from '@trustlens/utils';
+import { Heart, ImageOff } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import type { PublicListing } from '../hooks/use-public-listings';
 
-export function ListingCard({ listing }: { listing: PublicListing }) {
+export function ListingCard({
+  listing,
+  favorited,
+  onToggleFavorite,
+  togglingFavorite,
+}: {
+  listing: PublicListing;
+  /** Omit entirely (rather than passing false) to hide the heart button. */
+  favorited?: boolean;
+  onToggleFavorite?: () => void;
+  togglingFavorite?: boolean;
+}) {
   return (
     <Link
       href={`/seller/${encodeURIComponent(listing.sellerHandle)}`}
@@ -23,6 +37,28 @@ export function ListingCard({ listing }: { listing: PublicListing }) {
           <div className="flex h-full w-full items-center justify-center text-muted-foreground">
             <ImageOff className="h-8 w-8 opacity-30" aria-hidden="true" />
           </div>
+        )}
+
+        {onToggleFavorite && (
+          <button
+            type="button"
+            aria-label={favorited ? 'Remove from favorites' : 'Save to favorites'}
+            aria-pressed={favorited}
+            disabled={togglingFavorite}
+            onClick={(event) => {
+              // The card itself is a Link to the seller page - the heart must
+              // not also trigger that navigation.
+              event.preventDefault();
+              event.stopPropagation();
+              onToggleFavorite();
+            }}
+            className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110 disabled:pointer-events-none disabled:opacity-60"
+          >
+            <Heart
+              className={cn('h-4 w-4', favorited && 'fill-current text-destructive')}
+              aria-hidden="true"
+            />
+          </button>
         )}
       </div>
       <div className="space-y-1 p-3">

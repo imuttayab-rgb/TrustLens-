@@ -764,6 +764,34 @@ class ListingAnalysisModel(Base):
 
 
 # ═══════════════════════════════════════════════════════════════════
+#  Buyer interactions
+# ═══════════════════════════════════════════════════════════════════
+
+
+class FavoriteModel(Base):
+    """A buyer's saved listing.
+
+    A plain bookmark, not scored evidence - unlike a listing or a
+    verification decision, unfavoriting is a real delete rather than
+    something worth retaining. No soft delete, no updated_at.
+    """
+
+    __tablename__ = "favorites"
+
+    id: Mapped[UUID] = uuid_pk()
+    user_id: Mapped[UUID] = uuid_fk("users.id")
+    listing_id: Mapped[UUID] = uuid_fk("listings.id")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix_favorites_user_created", "user_id", "created_at"),
+        Index("uq_favorites_user_listing", "user_id", "listing_id", unique=True),
+    )
+
+
+# ═══════════════════════════════════════════════════════════════════
 #  Scoring
 # ═══════════════════════════════════════════════════════════════════
 
@@ -1293,6 +1321,7 @@ __all__ = [
     "ConsentModel",
     "DeviceModel",
     "EmailAddressModel",
+    "FavoriteModel",
     "IdentityDocumentModel",
     "IdentityVerificationModel",
     "IpAddressModel",

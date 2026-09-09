@@ -18,6 +18,7 @@ if TYPE_CHECKING:
         ConsentRepository,
         DeviceRepository,
         EmailAddressRepository,
+        FavoriteRepository,
         FileRepository,
         IdentityRepository,
         JobRunRepository,
@@ -75,6 +76,7 @@ class UnitOfWork(Protocol):
     email_addresses: EmailAddressRepository
     devices: DeviceRepository
     listings: ListingRepository
+    favorites: FavoriteRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository

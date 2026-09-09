@@ -81,6 +81,7 @@ class SqlAlchemyUnitOfWork:
         self.email_addresses = repo.SqlEmailRepository(s)
         self.devices = repo.SqlDeviceRepository(s)
         self.listings = repo.SqlListingRepository(s)
+        self.favorites = repo.SqlFavoriteRepository(s)
         self.trust_scores = repo.SqlTrustScoreRepository(s)
         self.scoring_models = repo.SqlScoringModelRepository(s)
         self.appeals = repo.SqlAppealRepository(s)
@@ -136,6 +137,7 @@ class SqlAlchemyUnitOfWork:
     email_addresses: Any
     devices: Any
     listings: Any
+    favorites: Any
     trust_scores: Any
     scoring_models: Any
     appeals: Any

@@ -10,6 +10,7 @@ from trustlens.core.domain.entities.appeal import (
     ReviewCase,
 )
 from trustlens.core.domain.entities.listing import (
+    Favorite,
     Listing,
     ListingAnalysis,
     ListingImage,
@@ -62,6 +63,7 @@ __all__ = [
     "Device",
     "DeviceLink",
     "EmailAddress",
+    "Favorite",
     "IdentityDocument",
     "IdentityVerification",
     "IpReputation",

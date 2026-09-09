@@ -30,6 +30,7 @@ if TYPE_CHECKING:
         Device,
         DeviceLink,
         EmailAddress,
+        Favorite,
         IdentityDocument,
         IdentityVerification,
         IpReputation,
@@ -224,6 +225,30 @@ class ListingRepository(Protocol):
     ) -> list[PublicListingSummary]: ...
 
     async def count_public(self, *, category: str | None = None, q: str | None = None) -> int: ...
+
+
+@runtime_checkable
+class FavoriteRepository(Protocol):
+    async def add(self, favorite: Favorite) -> Favorite: ...
+
+    async def remove(self, *, user_id: UUID, listing_id: UUID) -> None: ...
+
+    async def exists(self, *, user_id: UUID, listing_id: UUID) -> bool: ...
+
+    async def list_ids_for_user(self, user_id: UUID) -> frozenset[UUID]:
+        """Every listing id this user has favorited, unpaginated.
+
+        Used to hydrate a page of catalog cards with "already saved" state
+        in one query rather than one per card - a buyer's favorites list is
+        small enough that this is cheap.
+        """
+        ...
+
+    async def list_favorite_listings(
+        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[PublicListingSummary]: ...
+
+    async def count_for_user(self, user_id: UUID) -> int: ...
 
 
 @runtime_checkable
@@ -445,6 +470,7 @@ __all__ = [
     "ConsentRepository",
     "DeviceRepository",
     "EmailAddressRepository",
+    "FavoriteRepository",
     "FileRepository",
     "IdentityRepository",
     "JobRunRepository",

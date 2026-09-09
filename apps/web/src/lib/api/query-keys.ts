@@ -25,4 +25,8 @@ export const qk = {
   verification: { status: ['verification', 'status'] as const },
   job: { status: (jobId: string) => ['job', jobId] as const },
   appeal: { mine: ['appeals', 'mine'] as const },
+  favorite: {
+    ids: ['favorites', 'ids'] as const,
+    list: (limit: number, offset: number) => ['favorites', 'list', limit, offset] as const,
+  },
 } as const;

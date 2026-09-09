@@ -1,6 +1,19 @@
 {
   "components": {
     "schemas": {
+      "AddFavoriteRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "listingId": {
+            "format": "uuid",
+            "title": "Listingid",
+            "type": "string"
+          }
+        },
+        "required": ["listingId"],
+        "title": "AddFavoriteRequest",
+        "type": "object"
+      },
       "AppealMessageRequest": {
         "properties": {
           "body": {
@@ -4201,6 +4214,192 @@
           }
         },
         "summary": "Upgrade a buyer account to also be a seller",
+        "tags": ["Me"]
+      }
+    },
+    "/api/v1/me/favorites": {
+      "get": {
+        "operationId": "list_favorites_api_v1_me_favorites_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Favorites Api V1 Me Favorites Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List saved listings",
+        "tags": ["Me"]
+      },
+      "post": {
+        "operationId": "add_favorite_api_v1_me_favorites_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddFavoriteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save a listing",
+        "tags": ["Me"]
+      }
+    },
+    "/api/v1/me/favorites/ids": {
+      "get": {
+        "description": "Unpaginated on purpose - meant for hydrating 'already saved' state on a page of catalog cards in one call, not for display.",
+        "operationId": "list_favorite_ids_api_v1_me_favorites_ids_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Favorite Ids Api V1 Me Favorites Ids Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listing ids the current user has saved",
+        "tags": ["Me"]
+      }
+    },
+    "/api/v1/me/favorites/{listing_id}": {
+      "delete": {
+        "operationId": "remove_favorite_api_v1_me_favorites__listing_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsave a listing",
         "tags": ["Me"]
       }
     },

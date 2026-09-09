@@ -16,45 +16,15 @@ from trustlens.core.application.use_cases.listings import (
     BrowsePublicListings,
     BrowsePublicListingsQuery,
 )
-from trustlens.core.domain.entities import PublicListingSummary
 from trustlens.core.domain.errors import RateLimitExceeded
 from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ContainerDep, MetaDep, UowDep
+from trustlens_api.api.v1.routers._public_listing_presentation import to_public_listing_response
 from trustlens_api.api.v1.schemas.common import PageMeta, envelope
-from trustlens_api.api.v1.schemas.public_listing import PublicListingResponse
 
 log = get_logger(__name__)
 
 router = APIRouter(tags=["Public Page"])
-
-
-async def _image_url(container: ContainerDep, uow: UowDep, file_id: Any) -> str | None:
-    if file_id is None:
-        return None
-    stored = await uow.files.get(file_id)
-    if stored is None:
-        return None
-    ttl = container.settings.storage.storage_presign_ttl_seconds
-    return await container.storage.presign_download(
-        bucket=stored.bucket, object_key=stored.object_key, ttl_seconds=ttl
-    )
-
-
-async def _to_response(
-    item: PublicListingSummary, container: ContainerDep, uow: UowDep
-) -> PublicListingResponse:
-    return PublicListingResponse(
-        id=item.id,
-        title=item.title,
-        price=item.price,
-        currency=item.currency,
-        category=item.category,
-        city=item.city,
-        created_at=item.created_at,
-        seller_handle=item.seller_handle,
-        seller_display_name=item.seller_display_name,
-        image_url=await _image_url(container, uow, item.primary_image_file_id),
-    )
 
 
 @router.get(
@@ -80,7 +50,7 @@ async def browse_public_listings(
     page = await BrowsePublicListings(uow=uow).execute(
         BrowsePublicListingsQuery(category=category, q=q, limit=limit, offset=offset)
     )
-    items = [await _to_response(item, container, uow) for item in page.items]
+    items = [await to_public_listing_response(item, container, uow) for item in page.items]
 
     return envelope(
         [item.model_dump(by_alias=True) for item in items],

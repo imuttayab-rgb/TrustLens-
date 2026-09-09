@@ -123,4 +123,26 @@ class PublicListingSummary:
     primary_image_file_id: UUID | None = None
 
 
-__all__ = ["Listing", "ListingAnalysis", "ListingImage", "PublicListingSummary", "ScamLabel"]
+@dataclass(frozen=True, slots=True)
+class Favorite:
+    """A buyer's saved listing - a bookmark, not scored evidence.
+
+    Unlike a listing or a verification decision, removing one is a real
+    delete: there is no appeal, audit trail or trust-score input that
+    depends on a favorite ever having existed.
+    """
+
+    id: UUID
+    user_id: UUID
+    listing_id: UUID
+    created_at: datetime
+
+
+__all__ = [
+    "Favorite",
+    "Listing",
+    "ListingAnalysis",
+    "ListingImage",
+    "PublicListingSummary",
+    "ScamLabel",
+]

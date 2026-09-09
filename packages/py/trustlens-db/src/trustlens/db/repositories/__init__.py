@@ -787,41 +787,15 @@ class SqlListingRepository:
         )
         rows = (await self._s.execute(stmt)).all()
         listing_ids = [listing.id for listing, _seller in rows]
-        primary_images = await self._primary_image_ids(listing_ids)
+        primary_images = await _primary_image_ids(self._s, listing_ids)
 
-        return [
-            ent.PublicListingSummary(
-                id=listing.id,
-                title=listing.title,
-                price=float(listing.price) if listing.price is not None else None,
-                currency=listing.currency,
-                category=listing.category,
-                city=listing.city,
-                created_at=listing.created_at,
-                seller_id=seller.id,
-                seller_handle=seller.handle,
-                seller_display_name=seller.display_name,
-                primary_image_file_id=primary_images.get(listing.id),
-            )
-            for listing, seller in rows
-        ]
+        return [_to_public_summary(listing, seller, primary_images) for listing, seller in rows]
 
     async def count_public(self, *, category: str | None = None, q: str | None = None) -> int:
         stmt = select(func.count()).select_from(
             self._public_query_base(category=category, q=q).subquery()
         )
         return int((await self._s.execute(stmt)).scalar_one())
-
-    async def _primary_image_ids(self, listing_ids: list[UUID]) -> dict[UUID, UUID]:
-        if not listing_ids:
-            return {}
-        rows = await self._s.execute(
-            select(m.ListingImageModel.listing_id, m.ListingImageModel.file_id).where(
-                m.ListingImageModel.listing_id.in_(listing_ids),
-                m.ListingImageModel.is_primary.is_(True),
-            )
-        )
-        return dict(rows.tuples())
 
     async def add(self, listing: ent.Listing) -> ent.Listing:
         self._s.add(
@@ -1023,6 +997,115 @@ class SqlListingRepository:
             if distance <= hamming_threshold:
                 return map_.to_listing_image(row)
         return None
+
+
+async def _primary_image_ids(session: AsyncSession, listing_ids: list[UUID]) -> dict[UUID, UUID]:
+    """Shared by the public catalog and favorites reads - both project a
+    listing down to its primary image in one batched query rather than one
+    per row."""
+    if not listing_ids:
+        return {}
+    rows = await session.execute(
+        select(m.ListingImageModel.listing_id, m.ListingImageModel.file_id).where(
+            m.ListingImageModel.listing_id.in_(listing_ids),
+            m.ListingImageModel.is_primary.is_(True),
+        )
+    )
+    return dict(rows.tuples())
+
+
+def _to_public_summary(
+    listing: m.ListingModel, seller: m.SellerProfile, primary_images: dict[UUID, UUID]
+) -> ent.PublicListingSummary:
+    return ent.PublicListingSummary(
+        id=listing.id,
+        title=listing.title,
+        price=float(listing.price) if listing.price is not None else None,
+        currency=listing.currency,
+        category=listing.category,
+        city=listing.city,
+        created_at=listing.created_at,
+        seller_id=seller.id,
+        seller_handle=seller.handle,
+        seller_display_name=seller.display_name,
+        primary_image_file_id=primary_images.get(listing.id),
+    )
+
+
+class SqlFavoriteRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, favorite: ent.Favorite) -> ent.Favorite:
+        self._s.add(
+            m.FavoriteModel(
+                id=favorite.id,
+                user_id=favorite.user_id,
+                listing_id=favorite.listing_id,
+                created_at=favorite.created_at,
+            )
+        )
+        await self._s.flush()
+        return favorite
+
+    async def remove(self, *, user_id: UUID, listing_id: UUID) -> None:
+        await self._s.execute(
+            delete(m.FavoriteModel).where(
+                m.FavoriteModel.user_id == user_id, m.FavoriteModel.listing_id == listing_id
+            )
+        )
+
+    async def exists(self, *, user_id: UUID, listing_id: UUID) -> bool:
+        row = (
+            await self._s.execute(
+                select(m.FavoriteModel.id).where(
+                    m.FavoriteModel.user_id == user_id, m.FavoriteModel.listing_id == listing_id
+                )
+            )
+        ).first()
+        return row is not None
+
+    async def list_ids_for_user(self, user_id: UUID) -> frozenset[UUID]:
+        rows = await self._s.execute(
+            select(m.FavoriteModel.listing_id).where(m.FavoriteModel.user_id == user_id)
+        )
+        return frozenset(rows.scalars().all())
+
+    async def list_favorite_listings(
+        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[ent.PublicListingSummary]:
+        stmt = (
+            select(m.ListingModel, m.SellerProfile, m.FavoriteModel.created_at)
+            .join(m.FavoriteModel, m.FavoriteModel.listing_id == m.ListingModel.id)
+            .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
+            .where(
+                m.FavoriteModel.user_id == user_id,
+                m.ListingModel.deleted_at.is_(None),
+                m.SellerProfile.deleted_at.is_(None),
+            )
+            .order_by(m.FavoriteModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        rows = (await self._s.execute(stmt)).all()
+        listing_ids = [listing.id for listing, _seller, _favorited_at in rows]
+        primary_images = await _primary_image_ids(self._s, listing_ids)
+
+        return [
+            _to_public_summary(listing, seller, primary_images)
+            for listing, seller, _favorited_at in rows
+        ]
+
+    async def count_for_user(self, user_id: UUID) -> int:
+        return int(
+            (
+                await self._s.execute(
+                    select(func.count())
+                    .select_from(m.FavoriteModel)
+                    .where(m.FavoriteModel.user_id == user_id)
+                )
+            ).scalar_one()
+        )
 
 
 class SqlTrustScoreRepository:

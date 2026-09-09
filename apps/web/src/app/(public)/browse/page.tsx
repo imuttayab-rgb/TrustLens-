@@ -1,6 +1,13 @@
 'use client';
 
-import { ListingCard, usePublicListings } from '@/features/marketplace';
+import {
+  ListingCard,
+  useAddFavorite,
+  useFavoriteIds,
+  usePublicListings,
+  useRemoveFavorite,
+} from '@/features/marketplace';
+import { useSession } from '@/lib/auth/use-session';
 import {
   LISTING_CATEGORIES,
   LISTING_CATEGORY_LABELS,
@@ -36,6 +43,23 @@ export default function BrowsePage() {
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   });
+
+  const { data: session } = useSession();
+  const { data: favoriteIds } = useFavoriteIds();
+  const addFavorite = useAddFavorite();
+  const removeFavorite = useRemoveFavorite();
+
+  function toggleFavorite(listingId: string) {
+    if (!session) {
+      router.push('/login');
+      return;
+    }
+    if (favoriteIds?.has(listingId)) {
+      removeFavorite.mutate(listingId);
+    } else {
+      addFavorite.mutate(listingId);
+    }
+  }
 
   function updateParams(next: { category?: string | null; q?: string | null; page?: number }) {
     const params = new URLSearchParams(searchParams.toString());
@@ -135,7 +159,16 @@ export default function BrowsePage() {
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
               {data.items.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
+                <ListingCard
+                  key={listing.id}
+                  listing={listing}
+                  favorited={favoriteIds?.has(listing.id) ?? false}
+                  onToggleFavorite={() => toggleFavorite(listing.id)}
+                  togglingFavorite={
+                    (addFavorite.isPending && addFavorite.variables === listing.id) ||
+                    (removeFavorite.isPending && removeFavorite.variables === listing.id)
+                  }
+                />
               ))}
             </div>
 
