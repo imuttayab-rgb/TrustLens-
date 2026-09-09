@@ -11,15 +11,16 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useJobStatus } from '../hooks/use-job-status';
 import { CaptureTips, ImageCapture } from './ImageCapture';
+import { SelfieCapture } from './SelfieCapture';
 
 type Slot = 'cnicFront' | 'cnicBack' | 'selfie';
 
-const SLOTS: {
-  key: Slot;
+const DOCUMENT_SLOTS: {
+  key: 'cnicFront' | 'cnicBack';
   purpose: string;
   label: string;
   hint: string;
-  facing: 'environment' | 'user';
+  facing: 'environment';
 }[] = [
   {
     key: 'cnicFront',
@@ -35,14 +36,9 @@ const SLOTS: {
     hint: 'The side with your address and expiry date',
     facing: 'environment',
   },
-  {
-    key: 'selfie',
-    purpose: 'SELFIE',
-    label: 'Selfie',
-    hint: 'Face the camera in good light, no sunglasses or hat',
-    facing: 'user',
-  },
 ];
+
+const SLOTS = [...DOCUMENT_SLOTS, { key: 'selfie' as const, purpose: 'SELFIE', label: 'Selfie' }];
 
 export function IdentityVerification() {
   const router = useRouter();
@@ -173,7 +169,7 @@ export function IdentityVerification() {
     <div className="space-y-6">
       <CaptureTips />
 
-      {SLOTS.map((slot) => (
+      {DOCUMENT_SLOTS.map((slot) => (
         <ImageCapture
           key={slot.key}
           id={slot.key}
@@ -186,6 +182,15 @@ export function IdentityVerification() {
           disabled={submitting}
         />
       ))}
+
+      <SelfieCapture
+        id="selfie"
+        label="Selfie"
+        value={files.selfie}
+        onChange={(file) => setFiles((f) => ({ ...f, selfie: file }))}
+        progress={progress.selfie ?? null}
+        disabled={submitting}
+      />
 
       <Card>
         <CardContent className="pt-6">
