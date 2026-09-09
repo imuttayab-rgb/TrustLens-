@@ -51,9 +51,10 @@ prefix 32 web    pnpm --filter @trustlens/web dev &
 prefix 33 admin  pnpm --filter @trustlens/admin dev &
 
 echo ""
-echo "  web    http://localhost:3000"
-echo "  admin  http://localhost:3001"
-echo "  api    http://localhost:8000/docs"
-echo "  mail   http://localhost:8025"
+echo "  web     http://localhost:3000"
+echo "  browse  http://localhost:3000/browse"
+echo "  admin   http://localhost:3001"
+echo "  api     http://localhost:8000/docs"
+echo "  mail    http://localhost:8025"
 echo ""
 wait

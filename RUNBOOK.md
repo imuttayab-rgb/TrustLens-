@@ -26,13 +26,14 @@ make prod-check    # confirm it is actually serving
 
 ### What you get
 
-|                 |                            |
-| --------------- | -------------------------- |
-| Seller app      | http://localhost:3000      |
-| Admin panel     | http://localhost:3001      |
-| API docs        | http://localhost:8000/docs |
-| Email inbox     | http://localhost:8025      |
-| Storage console | http://localhost:9001      |
+|                 |                              |
+| --------------- | ---------------------------- |
+| Seller app      | http://localhost:3000        |
+| Browse listings | http://localhost:3000/browse |
+| Admin panel     | http://localhost:3001        |
+| API docs        | http://localhost:8000/docs   |
+| Email inbox     | http://localhost:8025        |
+| Storage console | http://localhost:9001        |
 
 Demo logins are in [`CREDENTIALS.dev.md`](CREDENTIALS.dev.md).
 

@@ -13,13 +13,14 @@ Everything here belongs to the **demo seed**, which runs only in development.
 
 ## Where things run
 
-| What            | URL                        | Notes                                      |
-| --------------- | -------------------------- | ------------------------------------------ |
-| Seller site     | http://localhost:3000      | Register, verify, upload, see your score   |
-| Admin panel     | http://localhost:3001      | Review queue, appeals, partners            |
-| API docs        | http://localhost:8000/docs | Swagger, every endpoint                    |
-| **Email inbox** | http://localhost:8025      | **Mailpit — all outgoing mail lands here** |
-| File storage    | http://localhost:9001      | MinIO console                              |
+| What            | URL                          | Notes                                         |
+| --------------- | ---------------------------- | --------------------------------------------- |
+| Seller site     | http://localhost:3000        | Register, verify, upload, see your score      |
+| Browse listings | http://localhost:3000/browse | Public catalog: search, categories, favorites |
+| Admin panel     | http://localhost:3001        | Review queue, appeals, partners               |
+| API docs        | http://localhost:8000/docs   | Swagger, every endpoint                       |
+| **Email inbox** | http://localhost:8025        | **Mailpit — all outgoing mail lands here**    |
+| File storage    | http://localhost:9001        | MinIO console                                 |
 
 ---
 
@@ -97,8 +98,12 @@ return deterministic made-up results, so the whole system runs offline with no
 API keys. Real engines are `OCR_ENGINE=rapidocr` and `FACE_ENGINE=insightface`,
 which need the `onnx` extra installed.
 
-**The public buyer page currently 404s.** `/seller/{handle}` needs an API key
-the web app does not yet hold. Known, tracked as **P0-12**, still undecided.
+**Favorites live under the seller dashboard, even for the buyer account.**
+`buyer@trustlens.dev` has no seller profile, but `RequireSession` only checks
+for a signed-in user, not a seller one - so it can still reach
+`/dashboard/favorites` after saving a listing from `/browse`. Its other nav
+items ("Selling", "Score") are seller-only and will not work for it; that gap
+predates this feature and is not fixed here.
 
 ---
 

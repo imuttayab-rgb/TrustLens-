@@ -45,15 +45,16 @@ pnpm husky install
 
 Local service URLs:
 
-| Service                              | URL                        | Credentials                 |
-| ------------------------------------ | -------------------------- | --------------------------- |
-| Web                                  | http://localhost:3000      | —                           |
-| API                                  | http://localhost:8000      | —                           |
-| API docs (Swagger)                   | http://localhost:8000/docs | —                           |
-| Postgres                             | localhost:5432             | `trustlens` / `trustlens`   |
-| Redis                                | localhost:6379             | —                           |
-| MinIO console                        | http://localhost:9001      | `minioadmin` / `minioadmin` |
-| MailHog (catches all outbound email) | http://localhost:8025      | —                           |
+| Service                              | URL                          | Credentials                 |
+| ------------------------------------ | ---------------------------- | --------------------------- |
+| Web                                  | http://localhost:3000        | —                           |
+| Browse listings (public catalog)     | http://localhost:3000/browse | —                           |
+| API                                  | http://localhost:8000        | —                           |
+| API docs (Swagger)                   | http://localhost:8000/docs   | —                           |
+| Postgres                             | localhost:5432               | `trustlens` / `trustlens`   |
+| Redis                                | localhost:6379               | —                           |
+| MinIO console                        | http://localhost:9001        | `minioadmin` / `minioadmin` |
+| MailHog (catches all outbound email) | http://localhost:8025        | —                           |
 
 Demo accounts seeded by `make seed-demo`:
 

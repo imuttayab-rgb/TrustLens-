@@ -75,10 +75,15 @@ bash scripts/prod-check.sh
 echo.
 echo   ============================================================
 echo     Seller app     http://localhost:3000
+echo     Browse listings http://localhost:3000/browse
 echo     Admin panel    http://localhost:3001
-echo     API docs       http://localhost:8000/docs
 echo     Email inbox    http://localhost:8025
 echo   ============================================================
+echo.
+echo     API docs are OFF in this mode (ENV=staging in .env.production
+echo     closes /docs the same way a real deploy would - see
+echo     packages/py/trustlens-shared/.../config/settings.py:expose_docs).
+echo     For Swagger, run start.bat instead.
 echo.
 echo     Demo logins are in CREDENTIALS.dev.md
 echo     Stop everything with prod-stop.bat

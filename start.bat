@@ -141,6 +141,7 @@ echo   Started. Next.js takes ~30s to compile.
 echo  ============================================
 echo.
 echo   Seller site   http://localhost:3000
+echo   Browse        http://localhost:3000/browse
 echo   Admin panel   http://localhost:3001
 echo   API docs      http://localhost:8000/docs
 echo   Email inbox   http://localhost:8025
