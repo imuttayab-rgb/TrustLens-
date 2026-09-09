@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TrustLens, Explained Simply — TrustLens</title>
+<style>
+:root{--fg:#1a2028;--muted:#5b6672;--bg:#ffffff;--line:#e2e8f0;--accent:#0E7490;
+      --code-bg:#f6f8fa;--th:#f1f5f9;--note:#f0f9ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 32px 96px}
+h1{font-size:2.1rem;line-height:1.2;margin:0 0 .6em;padding-bottom:.35em;border-bottom:3px solid var(--accent)}
+h2{font-size:1.55rem;margin:2.2em 0 .7em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.2rem;margin:1.8em 0 .5em;color:var(--accent)}
+h4{font-size:1.02rem;margin:1.4em 0 .4em}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+table{border-collapse:collapse;width:100%;margin:1.1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:600}
+tr:nth-child(even) td{background:#fafbfc}
+code{background:var(--code-bg);padding:.15em .4em;border-radius:4px;font-size:.86em;
+     font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+blockquote{margin:1.2em 0;padding:.9em 1.2em;background:var(--note);
+           border-left:4px solid var(--accent);border-radius:0 8px 8px 0}
+blockquote > :first-child{margin-top:0} blockquote > :last-child{margin-bottom:0}
+ul,ol{padding-left:1.5em}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;margin:.8em 0;display:block}
+.mermaid-figure{margin:1.6em 0;padding:20px;border:1px solid var(--line);border-radius:10px;
+                background:#fcfdfe;overflow-x:auto;text-align:center}
+.mermaid-figure svg{max-width:100%;height:auto}
+.docnav{background:var(--th);border:1px solid var(--line);border-radius:10px;
+        padding:12px 18px;margin-bottom:32px;font-size:.9rem}
+.docnav a{margin-right:18px;font-weight:600;text-decoration:none}
+.center{text-align:center}
+.center h1,.center h2,.center h3{border:0;text-align:center}
+.pagebreak{border-top:1px dashed var(--line);margin:44px 0}
+.toc-note{background:var(--note);border:1px solid var(--line);border-radius:8px;padding:14px 18px;font-size:.92rem}
+@media print{
+  .pagebreak{page-break-after:always;border:0;margin:0}
+  .docnav{display:none}
+  body{font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  h1,h2,h3{page-break-after:avoid}
+  pre,.mermaid-figure,img{page-break-inside:avoid}
+  /* A figure taller than the page cannot break, so cap it and let the browser scale it
+     proportionally instead of slicing it across two pages. */
+  img{max-height:210mm;width:auto}
+  .mermaid-figure{padding:8px}
+  .mermaid-figure svg{max-height:205mm}
+  /* On screen tables scroll sideways (display:block). For print that stops Chromium
+     paginating them, so a long table gets pushed whole onto the next page and leaves a
+     blank one behind. Restore real table layout, let rows flow across pages, and repeat
+     the header row on each page a table spans. */
+  table{display:table;width:100%;overflow:visible;font-size:8.5pt}
+  thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+  th,td{padding:5px 7px}
+}
+</style>
+</head>
+<body>
+<div class="docnav"><strong>TrustLens:</strong> <a href="00-Handover.html">Handover</a><a href="01-Simple-Guide.html">Simple Guide</a><a href="02-Index.html">Index</a><a href="03-SRS.html">Srs</a><a href="04-SDD.html">Sdd</a><a href="05-Test-Cases.html">Test Cases</a><a href="06-User-Manual.html">User Manual</a><a href="07-Thesis.html">Thesis</a></div><div class="wrap"><h1>TrustLens, Explained Simply</h1>
+<p>A plain-language guide to what TrustLens is, how it works, and the questions a viva panel is likely
+to ask about it. Written so that Haseeb and Muttayab can explain the project fluently without leaning
+on jargon, and so a non-technical committee member can follow along.</p>
+<hr>
+<h2>1. What is this project, in one paragraph?</h2>
+<p>TrustLens is a website that answers one question for an online shopper: <strong>"Can I trust this
+seller?"</strong> A seller signs up, proves who they are (an ID card check, a phone check, an email check),
+and lists their products. TrustLens turns all of that proof into one number from 0 to 100 — the
+Trust Score — plus a plain-English explanation of why the number is what it is. A buyer sees the
+score and the reasons before they ever hand over money.</p>
+<h2>2. What real-world problem does it solve?</h2>
+<p>Buying from a stranger on an online marketplace (an OLX-style site, a rental listing, a used-car ad)
+is a leap of faith. Scammers exploit exactly the same five tricks over and over: a fake profile, a
+stolen product photo, a throwaway phone number that stops answering after payment, a fresh email
+address created five minutes ago, and a price that's "too good to be true." A buyer has no easy way
+to check any of this before paying. TrustLens checks all five, automatically, and shows the result as
+one honest number instead of five separate mysteries.</p>
+<h2>3. What happens when a seller verifies themselves — step by step</h2>
+<div class="mermaid-figure"><svg id="mmd0_1788177301678" width="100%" xmlns="http://www.w3.org/2000/svg" class="flowchart" style="max-width: 276px;" viewBox="0 0 276 782" role="graphics-document document" aria-roledescription="flowchart-v2"><style>#mmd0_1788177301678{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;fill:#333;}@keyframes edge-animation-frame{from{stroke-dashoffset:0;}}@keyframes dash{to{stroke-dashoffset:0;}}#mmd0_1788177301678 .edge-animation-slow{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 50s linear infinite;stroke-linecap:round;}#mmd0_1788177301678 .edge-animation-fast{stroke-dasharray:9,5!important;stroke-dashoffset:900;animation:dash 20s linear infinite;stroke-linecap:round;}#mmd0_1788177301678 .error-icon{fill:#552222;}#mmd0_1788177301678 .error-text{fill:#552222;stroke:#552222;}#mmd0_1788177301678 .edge-thickness-normal{stroke-width:1px;}#mmd0_1788177301678 .edge-thickness-thick{stroke-width:3.5px;}#mmd0_1788177301678 .edge-pattern-solid{stroke-dasharray:0;}#mmd0_1788177301678 .edge-thickness-invisible{stroke-width:0;fill:none;}#mmd0_1788177301678 .edge-pattern-dashed{stroke-dasharray:3;}#mmd0_1788177301678 .edge-pattern-dotted{stroke-dasharray:2;}#mmd0_1788177301678 .marker{fill:#333333;stroke:#333333;}#mmd0_1788177301678 .marker.cross{stroke:#333333;}#mmd0_1788177301678 svg{font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:16px;}#mmd0_1788177301678 p{margin:0;}#mmd0_1788177301678 .label{font-family:"trebuchet ms",verdana,arial,sans-serif;color:#333;}#mmd0_1788177301678 .cluster-label text{fill:#333;}#mmd0_1788177301678 .cluster-label span{color:#333;}#mmd0_1788177301678 .cluster-label span p{background-color:transparent;}#mmd0_1788177301678 .label text,#mmd0_1788177301678 span{fill:#333;color:#333;}#mmd0_1788177301678 .node rect,#mmd0_1788177301678 .node circle,#mmd0_1788177301678 .node ellipse,#mmd0_1788177301678 .node polygon,#mmd0_1788177301678 .node path{fill:#ECECFF;stroke:#9370DB;stroke-width:1px;}#mmd0_1788177301678 .rough-node .label text,#mmd0_1788177301678 .node .label text,#mmd0_1788177301678 .image-shape .label,#mmd0_1788177301678 .icon-shape .label{text-anchor:middle;}#mmd0_1788177301678 .node .katex path{fill:#000;stroke:#000;stroke-width:1px;}#mmd0_1788177301678 .rough-node .label,#mmd0_1788177301678 .node .label,#mmd0_1788177301678 .image-shape .label,#mmd0_1788177301678 .icon-shape .label{text-align:center;}#mmd0_1788177301678 .node.clickable{cursor:pointer;}#mmd0_1788177301678 .root .anchor path{fill:#333333!important;stroke-width:0;stroke:#333333;}#mmd0_1788177301678 .arrowheadPath{fill:#333333;}#mmd0_1788177301678 .edgePaths .path{stroke:#333333;stroke-width:1px;}#mmd0_1788177301678 .flowchart-link{stroke:#333333;fill:none;}#mmd0_1788177301678 .edgeLabel{background-color:rgba(232,232,232, 0.8);text-align:center;}#mmd0_1788177301678 .edgeLabel p{background-color:rgba(232,232,232, 0.8);}#mmd0_1788177301678 .edgeLabel rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mmd0_1788177301678 .labelBkg{background-color:rgba(232, 232, 232, 0.5);}#mmd0_1788177301678 .cluster rect{fill:#ffffde;stroke:#aaaa33;stroke-width:1px;}#mmd0_1788177301678 .cluster text{fill:#333;}#mmd0_1788177301678 .cluster span{color:#333;}#mmd0_1788177301678 .node .collapsed-indicator{fill:#aaaa33;stroke:none;opacity:0.6;}#mmd0_1788177301678 .node .collapsed-separator{stroke:#aaaa33;stroke-width:0.75px;}#mmd0_1788177301678 div.mermaidTooltip{position:absolute;text-align:center;max-width:200px;padding:2px;font-family:"trebuchet ms",verdana,arial,sans-serif;font-size:12px;background:hsl(80, 100%, 96.2745098039%);border:1px solid #aaaa33;border-radius:2px;pointer-events:none;z-index:100;}#mmd0_1788177301678 .flowchartTitleText{text-anchor:middle;font-size:18px;fill:#333;}#mmd0_1788177301678 rect.text{fill:none;stroke-width:0;}#mmd0_1788177301678 .icon-shape,#mmd0_1788177301678 .image-shape{background-color:rgba(232,232,232, 0.8);text-align:center;}#mmd0_1788177301678 .icon-shape p,#mmd0_1788177301678 .image-shape p{background-color:rgba(232,232,232, 0.8);padding:2px;}#mmd0_1788177301678 .icon-shape .label rect,#mmd0_1788177301678 .image-shape .label rect{opacity:0.5;background-color:rgba(232,232,232, 0.8);fill:rgba(232,232,232, 0.8);}#mmd0_1788177301678 .label-icon{display:inline-block;height:1em;overflow:visible;vertical-align:-0.125em;}#mmd0_1788177301678 .node .label-icon path{fill:currentColor;stroke:revert;stroke-width:revert;}#mmd0_1788177301678 .node .neo-node{stroke:#9370DB;}#mmd0_1788177301678 [data-look="neo"].node rect,#mmd0_1788177301678 [data-look="neo"].cluster rect,#mmd0_1788177301678 [data-look="neo"].node polygon{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mmd0_1788177301678 [data-look="neo"].swimlane.cluster rect{filter:none;}#mmd0_1788177301678 [data-look="neo"].node path{stroke:#9370DB;stroke-width:1px;}#mmd0_1788177301678 [data-look="neo"].node .outer-path{filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mmd0_1788177301678 [data-look="neo"].node .neo-line path{stroke:#9370DB;filter:none;}#mmd0_1788177301678 [data-look="neo"].node circle{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mmd0_1788177301678 [data-look="neo"].node circle .state-start{fill:#000000;}#mmd0_1788177301678 [data-look="neo"].icon-shape .icon{fill:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mmd0_1788177301678 [data-look="neo"].icon-shape .icon-neo path{stroke:#9370DB;filter:drop-shadow(1px 2px 2px rgba(185, 185, 185, 1));}#mmd0_1788177301678 :root{--mermaid-font-family:"trebuchet ms",verdana,arial,sans-serif;}</style><g><marker id="mmd0_1788177301678_flowchart-v2-pointEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 0 L 10 5 L 0 10 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="mmd0_1788177301678_flowchart-v2-pointStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="4.5" refY="5" markerUnits="userSpaceOnUse" markerWidth="8" markerHeight="8" orient="auto"><path d="M 0 5 L 10 10 L 10 0 z" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></path></marker><marker id="mmd0_1788177301678_flowchart-v2-pointEnd-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="11.5" refY="7" markerUnits="userSpaceOnUse" markerWidth="10.5" markerHeight="14" orient="auto"><path d="M 0 0 L 11.5 7 L 0 14 z" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></path></marker><marker id="mmd0_1788177301678_flowchart-v2-pointStart-margin" class="marker flowchart-v2" viewBox="0 0 11.5 14" refX="1" refY="7" markerUnits="userSpaceOnUse" markerWidth="11.5" markerHeight="14" orient="auto"><polygon points="0,7 11.5,14 11.5,0" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></polygon></marker><marker id="mmd0_1788177301678_flowchart-v2-circleEnd" class="marker flowchart-v2" viewBox="0 0 10 10" refX="11" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="mmd0_1788177301678_flowchart-v2-circleStart" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-1" refY="5" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 1; stroke-dasharray: 1, 0;"></circle></marker><marker id="mmd0_1788177301678_flowchart-v2-circleEnd-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refY="5" refX="12.25" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="mmd0_1788177301678_flowchart-v2-circleStart-margin" class="marker flowchart-v2" viewBox="0 0 10 10" refX="-2" refY="5" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="14" orient="auto"><circle cx="5" cy="5" r="5" class="arrowMarkerPath" style="stroke-width: 0; stroke-dasharray: 1, 0;"></circle></marker><marker id="mmd0_1788177301678_flowchart-v2-crossEnd" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="12" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="mmd0_1788177301678_flowchart-v2-crossStart" class="marker cross flowchart-v2" viewBox="0 0 11 11" refX="-1" refY="5.2" markerUnits="userSpaceOnUse" markerWidth="11" markerHeight="11" orient="auto"><path d="M 1,1 l 9,9 M 10,1 l -9,9" class="arrowMarkerPath" style="stroke-width: 2; stroke-dasharray: 1, 0;"></path></marker><marker id="mmd0_1788177301678_flowchart-v2-crossEnd-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="17.7" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5;"></path></marker><marker id="mmd0_1788177301678_flowchart-v2-crossStart-margin" class="marker cross flowchart-v2" viewBox="0 0 15 15" refX="-3.5" refY="7.5" markerUnits="userSpaceOnUse" markerWidth="12" markerHeight="12" orient="auto"><path d="M 1,1 L 14,14 M 1,14 L 14,1" class="arrowMarkerPath" style="stroke-width: 2.5; stroke-dasharray: 1, 0;"></path></marker><g class="root"><g class="clusters"></g><g class="edgePaths"><path d="M138,86L138,90.167C138,94.333,138,102.667,138,110.333C138,118,138,125,138,128.5L138,132" id="mmd0_1788177301678-L_A_B_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_A_B_0" data-points="W3sieCI6MTM4LCJ5Ijo4Nn0seyJ4IjoxMzgsInkiOjExMX0seyJ4IjoxMzgsInkiOjEzNn1d" data-look="classic" marker-end="url(#mmd0_1788177301678_flowchart-v2-pointEnd)"></path><path d="M138,214L138,218.167C138,222.333,138,230.667,138,238.333C138,246,138,253,138,256.5L138,260" id="mmd0_1788177301678-L_B_C_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_B_C_0" data-points="W3sieCI6MTM4LCJ5IjoyMTR9LHsieCI6MTM4LCJ5IjoyMzl9LHsieCI6MTM4LCJ5IjoyNjR9XQ==" data-look="classic" marker-end="url(#mmd0_1788177301678_flowchart-v2-pointEnd)"></path><path d="M138,342L138,346.167C138,350.333,138,358.667,138,366.333C138,374,138,381,138,384.5L138,388" id="mmd0_1788177301678-L_C_D_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_C_D_0" data-points="W3sieCI6MTM4LCJ5IjozNDJ9LHsieCI6MTM4LCJ5IjozNjd9LHsieCI6MTM4LCJ5IjozOTJ9XQ==" data-look="classic" marker-end="url(#mmd0_1788177301678_flowchart-v2-pointEnd)"></path><path d="M138,470L138,474.167C138,478.333,138,486.667,138,494.333C138,502,138,509,138,512.5L138,516" id="mmd0_1788177301678-L_D_E_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_D_E_0" data-points="W3sieCI6MTM4LCJ5Ijo0NzB9LHsieCI6MTM4LCJ5Ijo0OTV9LHsieCI6MTM4LCJ5Ijo1MjB9XQ==" data-look="classic" marker-end="url(#mmd0_1788177301678_flowchart-v2-pointEnd)"></path><path d="M138,622L138,626.167C138,630.333,138,638.667,138,646.333C138,654,138,661,138,664.5L138,668" id="mmd0_1788177301678-L_E_F_0" class=" edge-thickness-normal edge-pattern-solid edge-thickness-normal edge-pattern-solid flowchart-link" style=";" data-edge="true" data-et="edge" data-id="L_E_F_0" data-points="W3sieCI6MTM4LCJ5Ijo2MjJ9LHsieCI6MTM4LCJ5Ijo2NDd9LHsieCI6MTM4LCJ5Ijo2NzJ9XQ==" data-look="classic" marker-end="url(#mmd0_1788177301678_flowchart-v2-pointEnd)"></path></g><g class="edgeLabels"><g class="edgeLabel"><g class="label" data-id="L_A_B_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_B_C_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_C_D_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_D_E_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g><g class="edgeLabel"><g class="label" data-id="L_E_F_0" transform="translate(0, 0)"><foreignObject width="0" height="0"><div xmlns="http://www.w3.org/1999/xhtml" class="labelBkg" style="display: table-cell; white-space: nowrap; line-height: 1.5; max-width: 200px; text-align: center;"><span class="edgeLabel "></span></div></foreignObject></g></g></g><g class="nodes"><g class="node default  " id="mmd0_1788177301678-flowchart-A-0" data-look="classic" transform="translate(138, 47)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>Seller uploads their ID card and a selfie</p></span></div></foreignObject></g></g><g class="node default  " id="mmd0_1788177301678-flowchart-B-1" data-look="classic" transform="translate(138, 175)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>The system reads the ID card automatically</p></span></div></foreignObject></g></g><g class="node default  " id="mmd0_1788177301678-flowchart-C-3" data-look="classic" transform="translate(138, 303)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>The system compares the selfie to the ID photo</p></span></div></foreignObject></g></g><g class="node default  " id="mmd0_1788177301678-flowchart-D-5" data-look="classic" transform="translate(138, 431)"><rect class="basic label-container" style="" x="-130" y="-39" width="260" height="78"></rect><g class="label" style="" transform="translate(-100, -24)"><rect></rect><foreignObject width="200" height="48"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>A phone code and an email link confirm contact details</p></span></div></foreignObject></g></g><g class="node default  " id="mmd0_1788177301678-flowchart-E-7" data-look="classic" transform="translate(138, 571)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>A number from 0 to 100 is calculated from every check</p></span></div></foreignObject></g></g><g class="node default  " id="mmd0_1788177301678-flowchart-F-9" data-look="classic" transform="translate(138, 723)"><rect class="basic label-container" style="" x="-130" y="-51" width="260" height="102"></rect><g class="label" style="" transform="translate(-100, -36)"><rect></rect><foreignObject width="200" height="72"><div xmlns="http://www.w3.org/1999/xhtml" style="display: table; white-space: break-spaces; line-height: 1.5; max-width: 200px; text-align: center; width: 200px;"><span class="nodeLabel "><p>The seller sees exactly which checks helped or hurt their score</p></span></div></foreignObject></g></g></g></g></g><defs><filter id="mmd0_1788177301678-drop-shadow" height="130%" width="130%"><feDropShadow dx="4" dy="4" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs><defs><filter id="mmd0_1788177301678-drop-shadow-small" height="150%" width="150%"><feDropShadow dx="2" dy="2" stdDeviation="0" flood-opacity="0.06" flood-color="#000000"></feDropShadow></filter></defs></svg></div>
+<ul>
+<li><strong>Step A — upload:</strong> the seller takes a photo of their national ID card and a selfie. Why this
+step exists: without proof of a real, matching identity, every other check in the system is
+meaningless — someone could still be lying about who they are.</li>
+<li><strong>Step B — read the ID card:</strong> a computer-vision tool reads the text off the card (name, ID
+number, dates) the same way a human eye would, just automatically and instantly.</li>
+<li><strong>Step C — compare faces:</strong> the system checks whether the selfie is the same person as the photo
+on the card. This is the single hardest check for a scammer to fake, which is why it's worth the
+most points.</li>
+<li><strong>Step D — phone and email:</strong> a text-message code and an email link confirm the seller actually
+controls that phone number and inbox, not a throwaway one.</li>
+<li><strong>Step E — calculate the score:</strong> every completed check contributes points. Nothing about the
+score is guessed — it's added up from real evidence, the same way every time.</li>
+<li><strong>Step F — explain the score:</strong> the seller (and any buyer looking them up) sees exactly which
+checks passed, which didn't, and — for the seller — what to fix to improve it.</li>
+</ul>
+<h2>4. The three main parts of the system, explained with a restaurant analogy</h2>
+<p>Think of TrustLens like a restaurant:</p>
+<table>
+<thead>
+<tr>
+<th>Restaurant part</th>
+<th>TrustLens equivalent</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>The dining room</strong> (what customers see and interact with)</td>
+<td><strong>Frontend</strong> (the website)</td>
+<td>Where sellers upload documents and buyers see the score</td>
+</tr>
+<tr>
+<td><strong>The kitchen</strong> (where the actual cooking happens, out of sight)</td>
+<td><strong>Backend + background workers</strong></td>
+<td>Where ID cards get read, faces get compared, and the score gets calculated</td>
+</tr>
+<tr>
+<td><strong>The recipe book and pantry inventory</strong> (the source of truth for what's true)</td>
+<td><strong>Database</strong></td>
+<td>Stores every seller, every check result, and every score ever computed, permanently</td>
+</tr>
+</tbody></table>
+<p>A customer never sees the kitchen directly — they just see the dining room and get their food. A
+buyer never sees the ID-reading or face-comparing happen — they just see the finished Trust Score.
+And just like a restaurant keeps a recipe book so the same dish tastes the same every time, TrustLens
+keeps a rulebook (the scoring rules) in its database so the same evidence always produces the same
+score.</p>
+<h2>5. The technology stack, explained one by one</h2>
+<table>
+<thead>
+<tr>
+<th>Technology</th>
+<th>What is it?</th>
+<th>Why did we use it?</th>
+<th>What would happen without it?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Next.js / React</strong></td>
+<td>A framework for building interactive websites</td>
+<td>It's what the proposal specified, and it lets the same website work well on both desktop and mobile browsers</td>
+<td>We'd have to hand-build page routing and re-render logic that Next.js already provides — much more work for the same result</td>
+</tr>
+<tr>
+<td><strong>Tailwind CSS</strong></td>
+<td>A way of styling a website by combining small utility classes instead of writing custom CSS files</td>
+<td>Faster to build a consistent look across many screens</td>
+<td>Every screen's styling would drift slightly, and simple design changes would take much longer</td>
+</tr>
+<tr>
+<td><strong>Python + FastAPI</strong></td>
+<td>The backend programming language and web framework</td>
+<td>The proposal specifies Python (it's also the natural fit for AI/ML code); FastAPI is fast, modern, and automatically generates API documentation</td>
+<td>We'd need a separate framework for API docs and lose FastAPI's built-in request validation</td>
+</tr>
+<tr>
+<td><strong>PostgreSQL</strong></td>
+<td>The database that stores everything permanently</td>
+<td>The proposal specifies it; it's a mature, reliable, free database that handles complex data relationships well</td>
+<td>A weaker database might lose data under concurrent access or lack the safety checks TrustLens relies on (like "a seller can only ever have one current score")</td>
+</tr>
+<tr>
+<td><strong>Redis</strong></td>
+<td>A very fast, temporary, in-memory data store</td>
+<td>Used as a cache (so repeated score lookups are instant) and as the to-do list for background jobs</td>
+<td>Every score lookup would have to hit the slower main database every single time</td>
+</tr>
+<tr>
+<td><strong>OpenAI / Claude API</strong></td>
+<td>A large language model that can read text and understand it</td>
+<td>Used to read a product listing and flag suspicious language (like "pay now, hurry, no refunds")</td>
+<td>The system would only be able to catch scam patterns a programmer manually thought to write rules for</td>
+</tr>
+<tr>
+<td><strong>OpenCV + EasyOCR (or the lighter RapidOCR)</strong></td>
+<td>Computer-vision libraries that read text out of an image</td>
+<td>This is what "reads" the ID card automatically</td>
+<td>A human staff member would have to manually type out every ID card — completely unworkable at scale</td>
+</tr>
+<tr>
+<td><strong>DeepFace (or the lighter InsightFace)</strong></td>
+<td>A face-recognition library</td>
+<td>This is what compares the selfie to the ID photo</td>
+<td>There would be no automatic way to confirm the person uploading is the person on the ID</td>
+</tr>
+<tr>
+<td><strong>A custom-trained scam-listing classifier</strong></td>
+<td>A small machine-learning model trained specifically on TrustLens's own labelled examples of scam vs. genuine listings</td>
+<td>The LLM alone is a general-purpose tool; a purpose-trained model can specialise on marketplace-scam patterns specifically</td>
+<td>We'd rely entirely on the general-purpose LLM, with no way to measure or improve accuracy on this exact task over time</td>
+</tr>
+<tr>
+<td><strong>Docker</strong></td>
+<td>A way to package and run software in a consistent, portable container</td>
+<td>Lets the whole system run identically on any machine, including a lab computer with no internet, for the demo</td>
+<td>Setting up the exact right versions of Python, Node, Postgres, and Redis by hand on every machine would be fragile and slow</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p><strong>Note for the viva — "why not the more famous alternative?"</strong> A panel may ask why not
+Django/Angular/MongoDB. Short answer: the proposal specified this exact stack, and within it every
+individual choice (FastAPI over Flask/Django, PostgreSQL over MongoDB) was made because the data
+has real structure and real relationships — a seller has exactly one current score, a score has
+many signal results, an appeal points at one specific score — which a relational database enforces
+and a document database does not.</p>
+</blockquote>
+<h2>6. The core "brain" of the system — the Trust Score engine</h2>
+<p>Think of the scoring engine as a strict, honest teacher grading a test with 14 questions worth
+different amounts of points (100 points total). A few important rules make the grading fair:</p>
+<ul>
+<li><strong>AI never grades the test — it only supplies answers.</strong> The face-comparison tool and the
+listing-reading AI produce <em>evidence</em> (a similarity number, a suspicion label), but a separate,
+simple, and completely predictable rulebook is what turns evidence into points. This matters
+because if a seller disagrees with their score, humans can check the rulebook and see exactly why
+— an AI "just trust me" answer wouldn't be defensible.</li>
+<li><strong>If a question couldn't be asked, it doesn't count against you.</strong> If the AI that reads listings
+is temporarily down, that question is skipped entirely — not marked wrong. The final score is
+scaled to only the questions that were actually asked.</li>
+<li><strong>Some questions are so important that failing them caps your grade, no matter how well you did on
+everything else.</strong> If the face-match check clearly fails, the seller can score at most 25 out of
+100, even if every other check passed — because an unproven identity should never look "trustworthy"
+on paper.</li>
+<li><strong>Not enough evidence yet is a different answer from "you failed."</strong> A brand-new seller who hasn't
+completed any checks gets an honest "unknown" status, shown in neutral grey — never red (which
+would wrongly imply proven fraud) and never green (which would wrongly imply proven trust).</li>
+</ul>
+<h2>7. How we keep the system safe and fair</h2>
+<ul>
+<li><strong>A seller's ID number and biometric face data are encrypted</strong>, and the raw ID card images are
+automatically deleted 90 days after a decision is made — TrustLens keeps only what it needs to
+explain a score, not the sensitive documents themselves forever.</li>
+<li><strong>A borderline face-match result goes to a human, not an automatic rejection.</strong> Face-recognition
+technology is known to be slightly less accurate for some demographic groups, so instead of a hard
+automatic "fail" near the decision boundary, TrustLens routes those cases to a human reviewer.</li>
+<li><strong>A seller who disagrees with their score can appeal it</strong>, and a human reviewer looks at the exact
+same evidence the system saw before deciding.</li>
+<li><strong>We do not perform real government ID verification.</strong> There is no public way for a student project
+to check an ID card against Pakistan's national database (NADRA), and we say so honestly rather
+than implying a stronger guarantee than the system actually provides.</li>
+</ul>
+<h2>8. Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Plain-English meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Trust Score</td>
+<td>The 0–100 number TrustLens gives a seller</td>
+</tr>
+<tr>
+<td>Risk band</td>
+<td>The score translated into LOW / MEDIUM / HIGH / UNKNOWN risk</td>
+</tr>
+<tr>
+<td>Signal</td>
+<td>One individual check (e.g. "is the phone number verified?")</td>
+</tr>
+<tr>
+<td>OCR</td>
+<td>The computer reading text out of a photo</td>
+</tr>
+<tr>
+<td>Face match</td>
+<td>The computer comparing two photos to see if they're the same person</td>
+</tr>
+<tr>
+<td>API</td>
+<td>A way for other websites (like a marketplace) to ask TrustLens for a seller's score automatically</td>
+</tr>
+<tr>
+<td>Backend</td>
+<td>The part of the system that does the actual work, out of sight of the user</td>
+</tr>
+<tr>
+<td>Worker</td>
+<td>A background process that does slow work (like reading an ID card) without making the website wait</td>
+</tr>
+<tr>
+<td>Appeal</td>
+<td>A seller formally asking a human to review their score</td>
+</tr>
+<tr>
+<td>Hard cap</td>
+<td>A rule that limits the maximum possible score when something critical failed</td>
+</tr>
+</tbody></table>
+<h2>9. Likely viva questions and honest answers</h2>
+<ol>
+<li><p><strong>"How is this different from a marketplace that already has OTP/phone verification, like OLX?"</strong>
+OTP alone only proves someone controls a phone number — it says nothing about whether their
+identity is real, whether their listing is suspicious, or whether they're running multiple
+accounts from one device. TrustLens combines seven independent signals into one explainable
+score; OTP is one of the seven, not the whole product.</p>
+</li>
+<li><p><strong>"Did you validate real-world OCR and face-match accuracy?"</strong>
+Honestly, not yet. We built and tested both engine pairs (a heavier, well-established pair and a
+lighter ONNX-based pair) against synthetic test images and confirmed both work correctly in
+isolation. We have not yet run either against real, consented CNIC photographs, because collecting
+that dataset ethically takes real time and is explicitly the students' own current task.</p>
+</li>
+<li><p><strong>"What's the biggest weakness in the current system?"</strong>
+The custom-trained scam-listing classifier. It scores very well (0.906 F1) on its own training
+data, but when we manually checked it against real Pakistani marketplace scam listings, it only
+caught 1 of 7. That's because its training data is English job-advert scam text, not local
+marketplace listings. We found this ourselves by deliberately testing across different data
+sources — and specifically because of that result, the classifier is <strong>not yet turned on</strong> as a
+live scoring input.</p>
+</li>
+<li><p><strong>"Why didn't you build your own OCR/face-recognition models from scratch?"</strong>
+Training a competitive OCR or face-recognition model from scratch requires enormous labelled
+datasets and compute far beyond an FYP's scope. Using established, well-tested pretrained models
+behind our own interfaces lets us focus our own engineering effort on what's actually novel here:
+combining multiple signals into one explainable, appealable score.</p>
+</li>
+<li><p><strong>"Can a seller game the system?"</strong>
+Every signal is independently checked and cross-referenced (e.g. one CNIC number reused across
+several accounts is detected even though the number itself stays encrypted), and critical checks
+apply hard caps that a weighted average alone can't paper over. It's not un-gameable, but it's
+deliberately not a system where passing one easy check can hide failing a hard one.</p>
+</li>
+<li><p><strong>"Why is the score explainable instead of just having the AI say 'trust this seller: 74%'?"</strong>
+Because a seller has a right to know exactly why they got the score they did, and to appeal a
+specific, reproducible decision. An AI's raw opinion changes if you ask it twice and can't be
+defended in an appeal. Our score is built from a fixed, versioned rulebook applied to stored
+evidence — the same inputs always produce the same output, and every point is traceable.</p>
+</li>
+<li><p><strong>"What happens if the AI listing-analysis service goes down?"</strong>
+That signal is marked "unavailable" and excluded from both the numerator and denominator of the
+score — it is never silently treated as a failure. A seller's score is never punished for an
+outage that wasn't their fault.</p>
+</li>
+<li><p><strong>"Is the admin panel finished?"</strong>
+No, and we say so directly: the identity/appeal review queue and scoring-model management work
+end-to-end, but seller search, seller detail pages, and the audit-log viewer are still open work.</p>
+</li>
+<li><p><strong>"Is the system deployed publicly?"</strong>
+Not yet. It runs fully and correctly locally via Docker, and the deployment plan (Vercel + Fly.io</p>
+<ul>
+<li>free-tier managed databases, chosen to cost $0/month) is designed and partly rehearsed, but the
+actual public deployment hasn't happened yet.</li>
+</ul>
+</li>
+<li><p><strong>"How do you handle a face-match result that's borderline, not clearly pass or fail?"</strong>
+It goes to a human reviewer instead of an automatic decision. This is a deliberate design choice
+because face-matching technology is known to have uneven accuracy across some demographic groups,
+and an automatic hard "fail" in that uncertain zone would be unfair.</p>
+</li>
+<li><p><strong>"What's stored about a seller's ID card, and for how long?"</strong>
+The raw images are stored encrypted and privately, and automatically deleted 90 days after a
+final decision. The extracted ID number and birth date are also encrypted at rest and never
+returned in full by any API — only the last 4 digits of the ID number, if shown at all.</p>
+</li>
+<li><p><strong>"Why PostgreSQL and not a NoSQL database?"</strong>
+The data has strict, enforceable relationships that matter for correctness — a seller must have
+exactly one current score, an override must always carry a reason, one CNIC must be detectable
+across multiple accounts. A relational database enforces these as real constraints; a document
+database would leave them as things a developer has to remember to check.</p>
+</li>
+<li><p><strong>"How did you test the scoring logic itself?"</strong>
+It's isolated as pure, dependency-free code specifically so it can be unit-tested exhaustively —
+every signal passing, every signal failing, a signal being unavailable, the exact score at a risk
+-band boundary (39 vs. 40), and every hard-cap scenario are all individually tested.</p>
+</li>
+<li><p><strong>"What would you do differently if you started over?"</strong>
+Two honest answers: collect real CNIC/face test images from week one instead of leaving it as a
+student task that's still outstanding late in the project, and label a small real target-domain
+dataset for the scam classifier before training the first version, rather than discovering the
+English-job-advert mismatch after training.</p>
+</li>
+<li><p><strong>"Why is nothing deployed publicly yet, this late in the project?"</strong>
+Deployment was deliberately sequenced after the core product worked correctly locally, because a
+half-working public demo is worse for a viva than a fully-working local one — and the free-tier
+hosting research (proving the whole stack can run at $0/month) took real engineering time of its
+own, documented in the go-live plan.</p>
+</li>
+</ol>
+</div>
+</body></html>

@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>User Manual — TrustLens</title>
+<style>
+:root{--fg:#1a2028;--muted:#5b6672;--bg:#ffffff;--line:#e2e8f0;--accent:#0E7490;
+      --code-bg:#f6f8fa;--th:#f1f5f9;--note:#f0f9ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 32px 96px}
+h1{font-size:2.1rem;line-height:1.2;margin:0 0 .6em;padding-bottom:.35em;border-bottom:3px solid var(--accent)}
+h2{font-size:1.55rem;margin:2.2em 0 .7em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.2rem;margin:1.8em 0 .5em;color:var(--accent)}
+h4{font-size:1.02rem;margin:1.4em 0 .4em}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+table{border-collapse:collapse;width:100%;margin:1.1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:600}
+tr:nth-child(even) td{background:#fafbfc}
+code{background:var(--code-bg);padding:.15em .4em;border-radius:4px;font-size:.86em;
+     font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+blockquote{margin:1.2em 0;padding:.9em 1.2em;background:var(--note);
+           border-left:4px solid var(--accent);border-radius:0 8px 8px 0}
+blockquote > :first-child{margin-top:0} blockquote > :last-child{margin-bottom:0}
+ul,ol{padding-left:1.5em}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;margin:.8em 0;display:block}
+.mermaid-figure{margin:1.6em 0;padding:20px;border:1px solid var(--line);border-radius:10px;
+                background:#fcfdfe;overflow-x:auto;text-align:center}
+.mermaid-figure svg{max-width:100%;height:auto}
+.docnav{background:var(--th);border:1px solid var(--line);border-radius:10px;
+        padding:12px 18px;margin-bottom:32px;font-size:.9rem}
+.docnav a{margin-right:18px;font-weight:600;text-decoration:none}
+.center{text-align:center}
+.center h1,.center h2,.center h3{border:0;text-align:center}
+.pagebreak{border-top:1px dashed var(--line);margin:44px 0}
+.toc-note{background:var(--note);border:1px solid var(--line);border-radius:8px;padding:14px 18px;font-size:.92rem}
+@media print{
+  .pagebreak{page-break-after:always;border:0;margin:0}
+  .docnav{display:none}
+  body{font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  h1,h2,h3{page-break-after:avoid}
+  pre,.mermaid-figure,img{page-break-inside:avoid}
+  /* A figure taller than the page cannot break, so cap it and let the browser scale it
+     proportionally instead of slicing it across two pages. */
+  img{max-height:210mm;width:auto}
+  .mermaid-figure{padding:8px}
+  .mermaid-figure svg{max-height:205mm}
+  /* On screen tables scroll sideways (display:block). For print that stops Chromium
+     paginating them, so a long table gets pushed whole onto the next page and leaves a
+     blank one behind. Restore real table layout, let rows flow across pages, and repeat
+     the header row on each page a table spans. */
+  table{display:table;width:100%;overflow:visible;font-size:8.5pt}
+  thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+  th,td{padding:5px 7px}
+}
+</style>
+</head>
+<body>
+<div class="docnav"><strong>TrustLens:</strong> <a href="00-Handover.html">Handover</a><a href="01-Simple-Guide.html">Simple Guide</a><a href="02-Index.html">Index</a><a href="03-SRS.html">Srs</a><a href="04-SDD.html">Sdd</a><a href="05-Test-Cases.html">Test Cases</a><a href="06-User-Manual.html">User Manual</a><a href="07-Thesis.html">Thesis</a></div><div class="wrap"><h1>User Manual</h1>
+<p><strong>TrustLens — AI-Powered Seller Trust Verification System for Online Marketplaces</strong></p>
+<hr>
+<h2>Important notice — please read first</h2>
+<p>TrustLens checks whether a seller's identity documents are internally consistent and whether a
+selfie matches the photo on those documents. <strong>It does not verify a seller's identity against any
+government database</strong> (there is no public NADRA API available for this purpose), and it does not
+guarantee that a seller is honest, only that certain independent checks passed or failed. Always use
+your own judgement in addition to a Trust Score before making a payment. TrustLens processes national
+identity documents and biometric face data — you must give explicit consent before uploading them,
+and you may request export or deletion of your data at any time (see §8).</p>
+<hr>
+<h2>1. What TrustLens does</h2>
+<p>TrustLens gives you one number from 0 to 100 — the <strong>Trust Score</strong> — for an online marketplace
+seller, along with a risk band (LOW / MEDIUM / HIGH / UNKNOWN) and the specific reasons behind it.
+Sellers earn the score by completing identity, phone, email, and device checks; buyers use it to
+decide whether to trust a seller before paying.</p>
+<p><img src="screenshots/01-landing.png" alt="TrustLens landing page"></p>
+<p><em>The landing page shows a worked example of a full Trust Score breakdown, so you can see exactly what
+you'll get before creating an account.</em></p>
+<h2>2. Before you begin</h2>
+<table>
+<thead>
+<tr>
+<th>You need</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>A modern browser</td>
+<td>Chrome, Firefox, Safari, or Edge — desktop or mobile</td>
+</tr>
+<tr>
+<td>An email address</td>
+<td>Verification is required before you can sign in</td>
+</tr>
+<tr>
+<td>A phone number</td>
+<td>For OTP verification (a seller-only requirement)</td>
+</tr>
+<tr>
+<td>Your CNIC (front and back) and a clear selfie</td>
+<td>For seller identity verification only — buyers never need this</td>
+</tr>
+<tr>
+<td>Image files under 10 MB, JPEG/PNG/WEBP</td>
+<td>Larger files or other formats are rejected before upload completes</td>
+</tr>
+</tbody></table>
+<p>You do <strong>not</strong> need an account to look up a seller's score as a buyer — see §5.</p>
+<h2>3. Getting started — creating an account</h2>
+<ol>
+<li>Go to the TrustLens homepage and click <strong>Get verified</strong> (to register as a seller) or <strong>Check a
+seller</strong> (to look someone up without an account).</li>
+<li>Fill in your full name, email, and a password of at least 12 characters.</li>
+<li>Choose whether you want to sell (and earn a Trust Score) or just browse as a buyer.</li>
+<li>Accept the terms and privacy policy, then click <strong>Create account</strong>.</li>
+</ol>
+<p><img src="screenshots/02-register.png" alt="Registration form"></p>
+<ol start="5">
+<li>Check your email for a verification link. <strong>You cannot sign in until you click it</strong> — this is
+intentional, not a bug, and it's one of the checks that contributes to a seller's score.</li>
+<li>Return to TrustLens and sign in with your email and password.</li>
+</ol>
+<p><img src="screenshots/03-login.png" alt="Sign-in form"></p>
+<h2>4. The seller dashboard</h2>
+<p>Once signed in as a seller, your dashboard is where everything starts.</p>
+<p><img src="screenshots/04-seller-dashboard.png" alt="Seller dashboard"></p>
+<p>From here you can start verification, add listings, and see your current Trust Score.</p>
+<h2>5. Completing verification</h2>
+<h3>5.1 The checklist</h3>
+<p>Open <strong>Verification</strong> from your dashboard to see all four checks and how many points each is worth.</p>
+<p><img src="screenshots/05-verification-checklist.png" alt="Verification checklist"></p>
+<h3>5.2 Identity verification (worth the most points)</h3>
+<ol>
+<li>Read and accept the biometric-processing consent notice — this is required by law and by design,
+since your face and ID data are sensitive.</li>
+<li>Upload a clear photo of the <strong>front</strong> of your CNIC, the <strong>back</strong> of your CNIC, and a <strong>selfie</strong>
+taken facing the camera in good light.</li>
+<li>Wait while the system reads your CNIC and compares your selfie to the photo on it — this takes
+roughly 15–30 seconds. Don't close the tab; a progress indicator shows the current stage.</li>
+<li>Review the details the system read off your CNIC. If anything was misread, correct it before
+confirming.</li>
+<li>You'll be notified of the result. If your selfie is a close-but-not-certain match, a human
+reviewer checks it manually rather than an automatic system deciding — this can take longer but is
+there to be fair to you.</li>
+</ol>
+<p><strong>Caveats:</strong></p>
+<ul>
+<li>An expired CNIC is rejected as a distinct failure from a blurry-photo failure — check the expiry
+date before uploading.</li>
+<li>Your uploaded CNIC and selfie images are automatically deleted 90 days after a final decision. The
+score itself, and the fact that you were verified, are kept — just not the raw images.</li>
+<li>If your identity check fails, your overall score is capped low regardless of your other checks,
+since identity is the hardest signal to fake and the most important one to get right.</li>
+</ul>
+<h3>5.3 Phone verification</h3>
+<ol>
+<li>Enter your phone number.</li>
+<li>You'll receive a 6-digit code by SMS. Enter it within a few minutes.</li>
+<li>You get up to 5 attempts per code, and up to 3 new codes per hour — this limit exists to stop the
+feature being used to spam SMS costs onto TrustLens, not to inconvenience you.</li>
+</ol>
+<p><strong>Caveat:</strong> an internet-routed (VOIP) number is treated less favourably than a real mobile SIM,
+because throwaway VOIP numbers are a known scam pattern.</p>
+<h3>5.4 Email verification</h3>
+<p>Your login email is verified automatically as part of registration (§3). You can optionally add a
+second business email under Settings.</p>
+<p><strong>Caveat:</strong> email addresses from known temporary/disposable-email providers score lower — use an
+address you actually control long-term.</p>
+<h3>5.5 Device and network (automatic — nothing to do)</h3>
+<p>TrustLens quietly records information about your device and connection each time you sign in. You
+can review what's linked to your account under <strong>Settings → Devices</strong>. If you regularly use a VPN,
+your score may show a network warning — this is not automatically treated as fraud, but it is shown
+transparently.</p>
+<h2>6. Your Trust Score</h2>
+<p>Open <strong>Score</strong> from your dashboard at any time to see your current score, its risk band, and a full
+breakdown.</p>
+<p><img src="screenshots/06-trust-score-low-risk.png" alt="Trust Score — a fully verified seller"></p>
+<p><em>A fully-verified seller: every check passed, and the score sits in the LOW-risk (green) band.</em></p>
+<p><img src="screenshots/07-trust-score-medium-risk.png" alt="Trust Score — a partially verified seller"></p>
+<p><em>A partially-verified seller: some checks are still outstanding or failed, landing in the
+MEDIUM-risk (amber) band, with the exact reasons listed.</em></p>
+<p><img src="screenshots/08-trust-score-high-risk.png" alt="Trust Score — a capped score"></p>
+<p><em>When a critical check (like identity) fails, the score is deliberately capped — the page states this
+plainly rather than showing a confusingly low number with no explanation, and tells you exactly which
+check to fix.</em></p>
+<p>Under <strong>How to raise your score</strong>, you'll see the specific unearned points ranked by value, with the
+action that would earn each one — this is the fastest way to see what to do next.</p>
+<h3>Appealing a score</h3>
+<p>If you believe a specific check is wrong, scroll to the bottom of your Trust Score page and click
+<strong>Appeal this score</strong>. State your reason; a human reviewer will look at the same evidence the system
+saw (not just take your word for it) and either recompute your score, correct it, or explain why it
+stands. You can have at most one open appeal at a time, and up to three in any 30-day period.</p>
+<h2>7. Looking up a seller as a buyer</h2>
+<p>You do not need an account for this.</p>
+<ol>
+<li>Visit <code>trustlens.app/seller/{their-handle}</code> (a seller can share this link with you directly, or you
+can search on the <strong>Check a seller</strong> page).</li>
+<li>You'll see their score, risk band, and the specific reasons — the same explanation a seller sees
+about their own score, minus anything private.</li>
+</ol>
+<p><img src="screenshots/09-public-seller-page.png" alt="Public seller page — the buyer's view"></p>
+<p>This page also works correctly on a phone:</p>
+<p><img src="screenshots/13-mobile-public-page.png" alt="Public seller page on a mobile screen"></p>
+<p><strong>If a seller isn't on TrustLens at all</strong>, the page tells you plainly that there's no record for
+them — it never invents or implies a score for a seller who hasn't gone through verification.</p>
+<h2>8. Account settings, data export, and deletion</h2>
+<p>Under <strong>Settings</strong>, you can change your password, review and sign out individual devices/sessions,
+and request an export or deletion of your data. Deleting your account removes your personal
+information and documents, but — to protect other buyers — an anonymised record that you once had a
+particular risk history is retained, so a banned scammer cannot simply delete their account and start
+over with a clean slate.</p>
+<h2>9. For staff (reviewers and admins)</h2>
+<p><img src="screenshots/11-admin-login.png" alt="Staff sign-in"></p>
+<p>Reviewers and admins sign in separately and see a queue of pending identity reviews and flagged
+sellers, ordered by priority and age.</p>
+<p><img src="screenshots/12-admin-reviews-queue.png" alt="Admin review queue"></p>
+<p>A reviewer can approve or reject an identity submission (with a reason) and resolve appeals. Only an
+admin can directly override a Trust Score, and only with a written reason — this is a deliberate
+separation of duties, not a missing feature. <strong>As of this manual, only the review queue and
+scoring-model management screens are complete; seller search, seller detail pages, and the audit-log
+viewer are still being built.</strong></p>
+<h2>10. Troubleshooting</h2>
+<p>Error messages below are reproduced as the system actually shows them, not paraphrased.</p>
+<table>
+<thead>
+<tr>
+<th>What you see</th>
+<th>What it means</th>
+<th>What to do</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>EMAIL_NOT_VERIFIED</code> on sign-in</td>
+<td>You haven't clicked the verification link sent to your email yet</td>
+<td>Check your inbox (and spam folder), click the link, then try signing in again</td>
+</tr>
+<tr>
+<td>A generic "invalid email or password" on login</td>
+<td>Either your credentials are wrong, or the account doesn't exist — TrustLens intentionally doesn't say which, to protect your privacy</td>
+<td>Double-check your details; use "forgot password" if needed</td>
+</tr>
+<tr>
+<td>"Too many attempts, try again later"</td>
+<td>You've hit a rate limit (e.g. too many login attempts, too many OTP codes requested)</td>
+<td>Wait for the stated time before retrying — this is a security protection, not an error</td>
+</tr>
+<tr>
+<td>CNIC upload rejected immediately</td>
+<td>The file failed a format/size check before it was even processed</td>
+<td>Use a JPEG, PNG, or WEBP file under 10 MB — and make sure the file actually is an image, not renamed</td>
+</tr>
+<tr>
+<td>"The submitted ID has expired"</td>
+<td>Your CNIC's expiry date has passed</td>
+<td>Upload a currently valid CNIC</td>
+</tr>
+<tr>
+<td>"The selfie does not clearly match the photo on the submitted ID"</td>
+<td>The face-match check failed</td>
+<td>Retake your selfie in good, even lighting, facing the camera directly, with your face unobstructed</td>
+</tr>
+<tr>
+<td>Your case is "under manual review" for longer than expected</td>
+<td>Your face-match result was borderline and was deliberately routed to a human reviewer rather than an automatic decision</td>
+<td>This is working as intended — it typically resolves within one business day</td>
+</tr>
+<tr>
+<td>"Not enough checks have been completed to judge this seller" (score shown as UNKNOWN)</td>
+<td>The seller (possibly you) hasn't completed enough verification yet for a score to be meaningful</td>
+<td>This is not a bad score — it's an honest "not enough evidence yet" state</td>
+</tr>
+<tr>
+<td>A public seller page says there's no record for that seller</td>
+<td>The seller you searched for has never enrolled with TrustLens</td>
+<td>TrustLens can only score sellers who have gone through its verification process</td>
+</tr>
+</tbody></table>
+<h2>11. Frequently asked questions</h2>
+<p><strong>Is a high Trust Score a guarantee the seller is honest?</strong>
+No. It means several independent checks passed. Still use your own judgement, especially for
+high-value transactions.</p>
+<p><strong>Why did my score go down without me doing anything?</strong>
+Scores are recalculated automatically whenever something relevant changes — for example, if your
+CNIC's expiry date passes, or a scoring rule is updated by an admin. Check your score breakdown for
+the specific reason.</p>
+<p><strong>Can I see exactly why I lost points?</strong>
+Yes — every point, earned or not, has a stated reason. That's the entire point of the design.</p>
+<p><strong>Why does the system need my selfie AND my ID photo?</strong>
+The selfie confirms that the person uploading the documents is the person shown on them — without it,
+anyone could upload someone else's ID.</p>
+<p><strong>What happens to my ID photos after I'm verified?</strong>
+They're stored encrypted and privately, and automatically deleted 90 days after your verification
+decision is finalised. Your verification <em>status</em> is kept; the raw images are not.</p>
+<p><strong>Can a marketplace check my score automatically?</strong>
+Yes — that's what the public API is for. A marketplace partner can look up your score
+programmatically, using the same public information a buyer would see (no private data).</p>
+<p><strong>Why is a VPN treated as a negative signal? I use one for privacy.</strong>
+Using a VPN is not itself treated as proof of fraud — it's one signal among many, shown transparently,
+and it does not by itself cap your score the way a failed identity check does.</p>
+<h2>12. Glossary</h2>
+<table>
+<thead>
+<tr>
+<th>Term</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Trust Score</td>
+<td>The 0–100 number TrustLens gives a seller</td>
+</tr>
+<tr>
+<td>Risk band</td>
+<td>LOW / MEDIUM / HIGH / UNKNOWN, derived from the score</td>
+</tr>
+<tr>
+<td>Signal</td>
+<td>One individual check contributing to the score</td>
+</tr>
+<tr>
+<td>OTP</td>
+<td>The one-time code sent to verify a phone number</td>
+</tr>
+<tr>
+<td>Appeal</td>
+<td>A formal request for a human to review a specific score</td>
+</tr>
+<tr>
+<td>Handle</td>
+<td>A seller's public URL slug, e.g. <code>ayesha-traders</code></td>
+</tr>
+</tbody></table>
+</div>
+</body></html>

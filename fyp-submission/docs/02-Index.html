@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Documentation Index — TrustLens</title>
+<style>
+:root{--fg:#1a2028;--muted:#5b6672;--bg:#ffffff;--line:#e2e8f0;--accent:#0E7490;
+      --code-bg:#f6f8fa;--th:#f1f5f9;--note:#f0f9ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 32px 96px}
+h1{font-size:2.1rem;line-height:1.2;margin:0 0 .6em;padding-bottom:.35em;border-bottom:3px solid var(--accent)}
+h2{font-size:1.55rem;margin:2.2em 0 .7em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.2rem;margin:1.8em 0 .5em;color:var(--accent)}
+h4{font-size:1.02rem;margin:1.4em 0 .4em}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+table{border-collapse:collapse;width:100%;margin:1.1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:600}
+tr:nth-child(even) td{background:#fafbfc}
+code{background:var(--code-bg);padding:.15em .4em;border-radius:4px;font-size:.86em;
+     font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+blockquote{margin:1.2em 0;padding:.9em 1.2em;background:var(--note);
+           border-left:4px solid var(--accent);border-radius:0 8px 8px 0}
+blockquote > :first-child{margin-top:0} blockquote > :last-child{margin-bottom:0}
+ul,ol{padding-left:1.5em}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;margin:.8em 0;display:block}
+.mermaid-figure{margin:1.6em 0;padding:20px;border:1px solid var(--line);border-radius:10px;
+                background:#fcfdfe;overflow-x:auto;text-align:center}
+.mermaid-figure svg{max-width:100%;height:auto}
+.docnav{background:var(--th);border:1px solid var(--line);border-radius:10px;
+        padding:12px 18px;margin-bottom:32px;font-size:.9rem}
+.docnav a{margin-right:18px;font-weight:600;text-decoration:none}
+.center{text-align:center}
+.center h1,.center h2,.center h3{border:0;text-align:center}
+.pagebreak{border-top:1px dashed var(--line);margin:44px 0}
+.toc-note{background:var(--note);border:1px solid var(--line);border-radius:8px;padding:14px 18px;font-size:.92rem}
+@media print{
+  .pagebreak{page-break-after:always;border:0;margin:0}
+  .docnav{display:none}
+  body{font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  h1,h2,h3{page-break-after:avoid}
+  pre,.mermaid-figure,img{page-break-inside:avoid}
+  /* A figure taller than the page cannot break, so cap it and let the browser scale it
+     proportionally instead of slicing it across two pages. */
+  img{max-height:210mm;width:auto}
+  .mermaid-figure{padding:8px}
+  .mermaid-figure svg{max-height:205mm}
+  /* On screen tables scroll sideways (display:block). For print that stops Chromium
+     paginating them, so a long table gets pushed whole onto the next page and leaves a
+     blank one behind. Restore real table layout, let rows flow across pages, and repeat
+     the header row on each page a table spans. */
+  table{display:table;width:100%;overflow:visible;font-size:8.5pt}
+  thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+  th,td{padding:5px 7px}
+}
+</style>
+</head>
+<body>
+<div class="docnav"><strong>TrustLens:</strong> <a href="00-Handover.html">Handover</a><a href="01-Simple-Guide.html">Simple Guide</a><a href="02-Index.html">Index</a><a href="03-SRS.html">Srs</a><a href="04-SDD.html">Sdd</a><a href="05-Test-Cases.html">Test Cases</a><a href="06-User-Manual.html">User Manual</a><a href="07-Thesis.html">Thesis</a></div><div class="wrap"><h1>Documentation Index</h1>
+<p>This is the table of contents for the TrustLens FYP documentation package. Start with
+<code>00-Handover.md</code> if you haven't already — it's the one file meant to be read in full before anything
+else.</p>
+<h2>1. What each document answers</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Answers the question</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><a href="00-Handover.html">00-Handover.md</a></td>
+<td>What's in this package, and what do I still need to do before submitting?</td>
+</tr>
+<tr>
+<td><a href="01-Simple-Guide.html">01-Simple-Guide.md</a></td>
+<td>What is TrustLens, in plain language, and what will the viva panel ask?</td>
+</tr>
+<tr>
+<td><a href="02-Index.html">02-Index.md</a></td>
+<td>This document — where do I find X?</td>
+</tr>
+<tr>
+<td><a href="03-SRS.html">03-SRS.md</a></td>
+<td>What must the system do? (IEEE 830)</td>
+</tr>
+<tr>
+<td><a href="04-SDD.html">04-SDD.md</a></td>
+<td>How is the system built? (IEEE 1016)</td>
+</tr>
+<tr>
+<td><a href="05-Test-Cases.html">05-Test-Cases.md</a></td>
+<td>What was actually tested, and what's the real defect log? (IEEE 829)</td>
+</tr>
+<tr>
+<td><a href="06-User-Manual.html">06-User-Manual.md</a></td>
+<td>How does an end user actually use the finished product?</td>
+</tr>
+<tr>
+<td><a href="07-Thesis.html">07-Thesis.md</a></td>
+<td>The full submission manuscript — front matter, 8 chapters, references, appendices</td>
+</tr>
+</tbody></table>
+<h2>2. Generated artefacts — which one to actually submit</h2>
+<table>
+<thead>
+<tr>
+<th>Artefact</th>
+<th>What it's for</th>
+<th>Is this the submission copy?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>pdf/*.pdf</code></td>
+<td>Page-numbered PDFs of every document above, generated from the HTML build</td>
+<td>Convenience copies for reading/printing/email — <strong>not</strong> the thesis submission copy</td>
+</tr>
+<tr>
+<td><code>*.html</code> (via <code>build_html.py</code>)</td>
+<td>Browser-viewable editions with diagrams inlined as SVG</td>
+<td>For reading only</td>
+</tr>
+<tr>
+<td><code>screenshots/*.png</code></td>
+<td>The real captured screenshots referenced throughout</td>
+<td>Source assets, embedded into the Markdown/HTML/PDF/DOCX</td>
+</tr>
+<tr>
+<td><code>diagrams/*.png</code></td>
+<td>Every Mermaid diagram, pre-rendered to print-quality PNG</td>
+<td>Used inside the Word thesis, where live Mermaid can't render</td>
+</tr>
+<tr>
+<td><strong><code>Project_Thesis.docx</code></strong></td>
+<td>The bound Word document — A4, Times New Roman, 1.5 spacing, binding margin, roman-then-arabic pagination, auto-updating Table of Contents field</td>
+<td><strong>Yes — this is the actual submission copy</strong>, after you update its Table of Contents field in Word (press F9)</td>
+</tr>
+</tbody></table>
+<p>If in doubt: the file with <code>.docx</code> in its name, after you've opened it in Word and updated the Table
+of Contents, is what gets submitted. Everything else is a reading aid.</p>
+<h2>3. Screenshot gallery</h2>
+<p>Real screenshots captured from the running local application, grouped by area — unretouched, including
+the small red "N · 1 Issue" badge visible in a couple of them, which is Next.js's own development-mode
+indicator and not part of the product's actual interface (it does not appear in a production build).
+Full-size originals are in <code>screenshots/</code>; the same images are embedded with captions in <code>06-User-Manual.md</code> and
+<code>07-Thesis.md</code> §7.1.</p>
+<h3>Public / marketing</h3>
+<p><img src="screenshots/01-landing.png" alt="Landing page"></p>
+<p><em>The landing page — a worked example of a Trust Score breakdown is shown before a visitor even
+registers, stating the product's core claim directly.</em></p>
+<h3>Account creation and sign-in</h3>
+<p><img src="screenshots/02-register.png" alt="Registration"> <img src="screenshots/03-login.png" alt="Login"></p>
+<p><em>Registration and sign-in — minimal fields, the password policy stated inline, and an explicit
+seller/buyer choice at signup.</em></p>
+<h3>The seller journey</h3>
+<p><img src="screenshots/04-seller-dashboard.png" alt="Seller dashboard"></p>
+<p><em>A signed-in seller's overview — the entry point to verification, listings, and the Trust Score.</em></p>
+<p><img src="screenshots/05-verification-checklist.png" alt="Verification checklist"></p>
+<p><em>The four-check verification checklist (identity, phone, email, device), each showing the points
+it's worth.</em></p>
+<h3>The Trust Score, across all three risk bands</h3>
+<p><img src="screenshots/06-trust-score-low-risk.png" alt="Trust Score — low risk">
+<img src="screenshots/07-trust-score-medium-risk.png" alt="Trust Score — medium risk">
+<img src="screenshots/08-trust-score-high-risk.png" alt="Trust Score — high risk, capped"></p>
+<p><em>The same page rendering three genuinely different sellers from the demo seed data — a fully-verified
+seller (LOW), a partially-verified one (MEDIUM), and one with a failed critical check and a visibly
+capped score (HIGH). Note the appeals section at the bottom of this same page in the high-risk
+capture — appeals are not a separate screen in the current build.</em></p>
+<h3>The buyer's view</h3>
+<p><img src="screenshots/09-public-seller-page.png" alt="Public seller page"></p>
+<p><em>The anonymous, no-account-required public score page — the screen a buyer actually sees, and the
+one the entire product exists to produce.</em></p>
+<p><img src="screenshots/13-mobile-public-page.png" alt="Public seller page, mobile viewport"></p>
+<p><em>The same page at a 390px mobile viewport width — this is the screen shown in the live demo, and it
+must remain legible at this size.</em></p>
+<h3>Staff / admin</h3>
+<p><img src="screenshots/11-admin-login.png" alt="Admin login">
+<img src="screenshots/12-admin-reviews-queue.png" alt="Admin review queue"></p>
+<p><em>Staff sign-in and the identity/appeal review queue — the part of the admin panel that is complete
+and working end-to-end. See <code>05-Test-Cases.md</code> §6 (DEF-09) for what's still unbuilt in the rest of
+the admin panel.</em></p>
+<p><strong>If any image above renders as a broken link:</strong> these are real captures taken from a running local
+instance during this documentation pass, not generated mockups. If one is missing, check
+<code>06-User-Manual.md</code>'s own notes for that screen — a small number of screens may be noted there as
+not independently captured (e.g. because a route turned out not to exist separately from another
+page already shown).</p>
+<h2>4. Reading order</h2>
+<table>
+<thead>
+<tr>
+<th>If you are...</th>
+<th>Read in this order</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>An evaluator / supervisor</strong></td>
+<td><code>00-Handover.md</code> → <code>01-Simple-Guide.md</code> → <code>07-Thesis.md</code> → dip into <code>03</code>/<code>04</code>/<code>05</code> for detail as questions come up</td>
+</tr>
+<tr>
+<td><strong>An incoming developer taking over the codebase</strong></td>
+<td><code>01-Simple-Guide.md</code> → <code>04-SDD.md</code> → <code>03-SRS.md</code> → the engineering docs in <code>docs/</code> (architecture, folder structure, dev setup) in the repo root, which this package summarises but does not replace</td>
+</tr>
+<tr>
+<td><strong>An end user of the finished product</strong></td>
+<td><code>06-User-Manual.md</code> only</td>
+</tr>
+</tbody></table>
+<h2>5. Viewing diagrams</h2>
+<p>Every diagram in this package is written as Mermaid code (<code>```mermaid</code> fences) directly inside the
+Markdown source. They will <strong>not</strong> render as pictures in a plain-text editor or an unconfigured
+preview:</p>
+<ul>
+<li><strong>GitHub</strong> renders Mermaid natively in any <code>.md</code> file.</li>
+<li><strong>VS Code</strong> renders it with the "Markdown Preview Mermaid Support" extension installed.</li>
+<li><strong>The HTML build</strong> (<code>pdf/</code> and the <code>.html</code> set) has every diagram pre-rendered to inline SVG — this
+is the reliable fallback if your viewer doesn't support Mermaid.</li>
+<li><strong>The Word thesis</strong> uses the pre-rendered PNGs in <code>diagrams/</code>, since Word cannot render Mermaid at
+all.</li>
+</ul>
+<p>Every diagram in this package was render-tested against real <code>mermaid.js</code> before being shipped —
+see the QA note at the bottom of <code>00-Handover.md</code>'s revision history if you need to re-validate after
+an edit.</p>
+<h2>6. Rebuilding the documents</h2>
+<pre><code class="language-bash">python build_html.py --docs-dir fyp-submission/docs --project-name "TrustLens"
+python render_diagrams_png.py --docs-dir fyp-submission/docs
+node build_thesis_docx.js --src fyp-submission/docs/07-Thesis.md --out fyp-submission/docs/Project_Thesis.docx
+python build_pdf.py --docs-dir fyp-submission/docs --footer "TrustLens FYP -- Minhaj University Lahore"
+python make_package.py --docs-dir fyp-submission/docs --project-slug TrustLens
+</code></pre>
+<p>Run in this exact order — each step depends on the one before it. Full script options: pass <code>--help</code>
+to any of them.</p>
+<h2>7. Live status</h2>
+<table>
+<thead>
+<tr>
+<th>Document</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>00 – Handover</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>01 – Simple Guide</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>02 – Index</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>03 – SRS</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>04 – SDD</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>05 – Test Cases</td>
+<td>Complete — <strong>26 of 51 specified test cases executed (~51%)</strong>, honestly marked; see its banner</td>
+</tr>
+<tr>
+<td>06 – User Manual</td>
+<td>Complete</td>
+</tr>
+<tr>
+<td>07 – Thesis</td>
+<td>Complete — front matter, 8 chapters, references, 4 appendices</td>
+</tr>
+<tr>
+<td>Screenshots</td>
+<td>Captured from a real running local instance</td>
+</tr>
+<tr>
+<td>Diagrams</td>
+<td>All render-tested against <code>mermaid.js</code> before shipping</td>
+</tr>
+<tr>
+<td>Word thesis (<code>.docx</code>)</td>
+<td>Generated — <strong>update its Table of Contents field in Word before submitting</strong></td>
+</tr>
+</tbody></table>
+<p><strong>Open items before final submission</strong> (from <code>REMAINING.md</code> in the project root, Track D): collecting
+real CNIC/face test images for accuracy validation, completing the admin panel, implementing MFA, and
+rehearsing the viva. None of these block this documentation package from being complete and honest as
+of today — they are the project's own next steps, not gaps in what's described here.</p>
+</div>
+</body></html>

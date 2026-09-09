@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Handover Note — TrustLens</title>
+<style>
+:root{--fg:#1a2028;--muted:#5b6672;--bg:#ffffff;--line:#e2e8f0;--accent:#0E7490;
+      --code-bg:#f6f8fa;--th:#f1f5f9;--note:#f0f9ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);
+     font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 32px 96px}
+h1{font-size:2.1rem;line-height:1.2;margin:0 0 .6em;padding-bottom:.35em;border-bottom:3px solid var(--accent)}
+h2{font-size:1.55rem;margin:2.2em 0 .7em;padding-bottom:.3em;border-bottom:1px solid var(--line)}
+h3{font-size:1.2rem;margin:1.8em 0 .5em;color:var(--accent)}
+h4{font-size:1.02rem;margin:1.4em 0 .4em}
+p{margin:.7em 0}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line);margin:2.4em 0}
+table{border-collapse:collapse;width:100%;margin:1.1em 0;font-size:.9rem;display:block;overflow-x:auto}
+th,td{border:1px solid var(--line);padding:8px 11px;text-align:left;vertical-align:top}
+th{background:var(--th);font-weight:600}
+tr:nth-child(even) td{background:#fafbfc}
+code{background:var(--code-bg);padding:.15em .4em;border-radius:4px;font-size:.86em;
+     font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+pre{background:var(--code-bg);border:1px solid var(--line);border-radius:8px;padding:14px 16px;overflow-x:auto}
+pre code{background:none;padding:0;font-size:.84rem;line-height:1.5}
+blockquote{margin:1.2em 0;padding:.9em 1.2em;background:var(--note);
+           border-left:4px solid var(--accent);border-radius:0 8px 8px 0}
+blockquote > :first-child{margin-top:0} blockquote > :last-child{margin-bottom:0}
+ul,ol{padding-left:1.5em}
+img{max-width:100%;height:auto;border:1px solid var(--line);border-radius:8px;margin:.8em 0;display:block}
+.mermaid-figure{margin:1.6em 0;padding:20px;border:1px solid var(--line);border-radius:10px;
+                background:#fcfdfe;overflow-x:auto;text-align:center}
+.mermaid-figure svg{max-width:100%;height:auto}
+.docnav{background:var(--th);border:1px solid var(--line);border-radius:10px;
+        padding:12px 18px;margin-bottom:32px;font-size:.9rem}
+.docnav a{margin-right:18px;font-weight:600;text-decoration:none}
+.center{text-align:center}
+.center h1,.center h2,.center h3{border:0;text-align:center}
+.pagebreak{border-top:1px dashed var(--line);margin:44px 0}
+.toc-note{background:var(--note);border:1px solid var(--line);border-radius:8px;padding:14px 18px;font-size:.92rem}
+@media print{
+  .pagebreak{page-break-after:always;border:0;margin:0}
+  .docnav{display:none}
+  body{font-size:11pt}
+  .wrap{max-width:none;padding:0}
+  h1,h2,h3{page-break-after:avoid}
+  pre,.mermaid-figure,img{page-break-inside:avoid}
+  /* A figure taller than the page cannot break, so cap it and let the browser scale it
+     proportionally instead of slicing it across two pages. */
+  img{max-height:210mm;width:auto}
+  .mermaid-figure{padding:8px}
+  .mermaid-figure svg{max-height:205mm}
+  /* On screen tables scroll sideways (display:block). For print that stops Chromium
+     paginating them, so a long table gets pushed whole onto the next page and leaves a
+     blank one behind. Restore real table layout, let rows flow across pages, and repeat
+     the header row on each page a table spans. */
+  table{display:table;width:100%;overflow:visible;font-size:8.5pt}
+  thead{display:table-header-group}
+  tr{page-break-inside:avoid}
+  th,td{padding:5px 7px}
+}
+</style>
+</head>
+<body>
+<div class="docnav"><strong>TrustLens:</strong> <a href="00-Handover.html">Handover</a><a href="01-Simple-Guide.html">Simple Guide</a><a href="02-Index.html">Index</a><a href="03-SRS.html">Srs</a><a href="04-SDD.html">Sdd</a><a href="05-Test-Cases.html">Test Cases</a><a href="06-User-Manual.html">User Manual</a><a href="07-Thesis.html">Thesis</a></div><div class="wrap"><h1>Handover Note</h1>
+<p><strong>TrustLens — FYP Documentation Package</strong>
+For: Haseeb Ur Rehman (2022F-mulbsswe-043) and Muhammad Muttayab (2022F-mulbsswe-012)
+Prepared by: Zohaib Khan (contracted developer) · 2026-08-31</p>
+<p>This package documents TrustLens as it actually exists today, for your 8th-semester FYP submission
+to Mam Misbha and the FYP evaluation committee at the School of Software Engineering, Minhaj
+University Lahore. Read this note first — it's the only file in the package meant to be read in full
+in one sitting; everything else you'll dip into as needed.</p>
+<h2>What's inside</h2>
+<table>
+<thead>
+<tr>
+<th>File / folder</th>
+<th>What it's for</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>01-Simple-Guide.md</code></td>
+<td>Plain-language explanation of the whole project, plus 15 likely viva questions with honest answers. <strong>Read this together before your viva</strong>, even if you skip everything else</td>
+</tr>
+<tr>
+<td><code>02-Index.md</code></td>
+<td>This folder's own table of contents, reading paths, and the screenshot gallery</td>
+</tr>
+<tr>
+<td><code>03-SRS.md</code></td>
+<td>Software Requirements Specification (IEEE 830) — what the system must do</td>
+</tr>
+<tr>
+<td><code>04-SDD.md</code></td>
+<td>Software Design Document (IEEE 1016) — how it's built, with 20+ diagrams</td>
+</tr>
+<tr>
+<td><code>05-Test-Cases.md</code></td>
+<td>Test Documentation (IEEE 829) — what was actually tested vs. only planned, and the real defect log</td>
+</tr>
+<tr>
+<td><code>06-User-Manual.md</code></td>
+<td>How to use the finished product, with real screenshots</td>
+</tr>
+<tr>
+<td><code>07-Thesis.md</code></td>
+<td>The full thesis manuscript — front matter, 8 chapters, references, appendices</td>
+</tr>
+<tr>
+<td><code>screenshots/</code></td>
+<td>The real captured screenshots used throughout the package</td>
+</tr>
+<tr>
+<td><code>diagrams/</code></td>
+<td>Rendered PNG versions of every Mermaid diagram (used inside the Word thesis)</td>
+</tr>
+<tr>
+<td><code>pdf/</code></td>
+<td>Page-numbered PDF edition of every document above, for reading and printing</td>
+</tr>
+<tr>
+<td><code>Project_Thesis.docx</code></td>
+<td><strong>The actual submission copy</strong> — a bound Word document (A4, Times New Roman, binding margin, roman-then-arabic pagination)</td>
+</tr>
+</tbody></table>
+<h2>Do these things before you submit</h2>
+<ol>
+<li><strong>Open <code>Project_Thesis.docx</code> in Word, click into the Table of Contents, and press F9 → "Update
+entire table."</strong> No script can compute real page numbers — that only happens inside Word, once,
+by you.</li>
+<li><strong>Read <code>05-Test-Cases.md</code>'s banner at the very top before you write or say anything about testing
+in your report or viva.</strong> It states plainly how many test cases were actually executed vs. only
+specified. Do not round that number up.</li>
+<li><strong>Sign the certificate-of-approval and declaration pages</strong> in the thesis front matter — they have
+real signature-line blocks, left blank intentionally.</li>
+<li><strong>Check your institution's exact required wording</strong> on the certificate/declaration pages against
+what's here — this was written from the standard FYP submission form, not a copy of a signed
+institutional template.</li>
+<li><strong>Read <code>05-Test-Cases.md</code> §6, the defect log, in full.</strong> Two of the fifteen logged defects are
+still open (MFA is unimplemented; the admin panel is incomplete) — know these before a panel
+member finds them for you.</li>
+<li><strong>Rehearse <code>01-Simple-Guide.md</code> §9's viva questions out loud</strong>, especially the ones about the scam
+classifier's real accuracy and the fact that nothing is deployed publicly yet. Panels ask the
+uncomfortable question; a fluent honest answer defends better than a confident evasive one.</li>
+</ol>
+<h2>Do NOT do these things</h2>
+<ul>
+<li><strong>Do not hand-edit any generated file</strong> (<code>docs/pdf/*.pdf</code>, <code>docs/diagrams/*.png</code>) — they're
+regenerated from the Markdown sources. Edit the <code>.md</code> file and rebuild.</li>
+<li><strong>Do not submit the browser-print PDF of the thesis.</strong> <code>pdf/07-Thesis.pdf</code> is a reading/email
+convenience copy. The actual submission copy is <code>Project_Thesis.docx</code>, exported to PDF from Word
+<em>after</em> you've updated the Table of Contents.</li>
+<li><strong>Do not present "51 test cases specified" as "51 test cases passed."</strong> They are different numbers,
+stated separately on purpose in <code>05-Test-Cases.md</code>.</li>
+<li><strong>Do not claim the system is deployed publicly.</strong> It is not, as of this document. Say so plainly if
+asked — the deployment plan is designed and partly rehearsed, not live.</li>
+<li><strong>Do not claim validated real-world OCR/face-match accuracy.</strong> No consented real CNIC/selfie test
+set has been collected yet — that's still an open item, and it's yours to close (see below).</li>
+</ul>
+<h2>Honest status, without spin</h2>
+<p>The software is genuinely built and working end-to-end for the core journey: a seller can register,
+verify email, sign in, complete identity/phone/email/device checks, see an explainable Trust Score
+with a full breakdown, appeal it, have a reviewer decide, and see it recompute. A buyer can look up
+that score with no account. The engineering is solid — 330 automated tests pass, static analysis is
+clean, and the codebase follows a deliberately layered, testable architecture. Two real gaps remain
+open and are documented plainly rather than hidden: the admin panel is functionally incomplete
+(only the review queue and scoring-model tuning work end-to-end), and MFA for staff accounts is
+designed but not implemented. We have <strong>not</strong> independently validated OCR/face-match accuracy
+against real documents, and the custom scam classifier is measurably weak on real target-domain text
+(1 of 7 real scam ads caught in a manual check) — which is exactly why it is not yet wired into live
+scoring. None of this was hidden while writing this package; all of it is written up in
+<code>05-Test-Cases.md</code> and the SDD's honest-limitations sections, because a report that states its real
+gaps plainly is more credible to a supervisor than one that doesn't have any.</p>
+<p><strong>One more thing found live while building this package, worth knowing before your viva:</strong> simply
+signing in and browsing between the three demo seller accounts silently overwrites their intended
+LOW/MEDIUM/HIGH score spread with a uniform capped HIGH score, because a routine device-fingerprint
+check triggers a real score recomputation and the demo seed never stored a selfie file for any of
+them. It's logged as DEF-14 in <code>05-Test-Cases.md</code> §6 and is not yet fixed — <strong>rehearse your demo
+account switching carefully</strong>, or you may find all three sellers showing the same score live in
+front of the panel. The scores were restored for this package's own screenshots; they will corrupt
+again the next time someone clicks through all three accounts unless DEF-14 is actually fixed.</p>
+<p><strong>What's still yours to do, per <code>REMAINING.md</code> Track D in the project root:</strong> collect the real CNIC
+and face test images (this is explicitly a student task, not an engineering one — see <code>REMAINING.md</code>
+Stage 1), rehearse the architecture walkthrough and viva defence, and write and present the final
+deck. This documentation package supplies the technical content, diagrams, and measured numbers for
+your report; you write and defend it, because you're the ones at the viva.</p>
+</div>
+</body></html>
