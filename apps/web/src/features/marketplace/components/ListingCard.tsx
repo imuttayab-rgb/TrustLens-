@@ -70,9 +70,24 @@ export function ListingCard({
         </p>
         <p className="truncate text-xs text-muted-foreground">
           {listing.category ? LISTING_CATEGORY_LABELS[listing.category] : 'Uncategorised'}
-          {listing.city ? ` · ${listing.city}` : ''}
+          {listing.area
+            ? ` · ${listing.area}, ${listing.city}`
+            : listing.city
+              ? ` · ${listing.city}`
+              : ''}
         </p>
         <p className="truncate text-xs text-muted-foreground">by {listing.sellerDisplayName}</p>
+        {listing.latitude !== null && listing.longitude !== null && (
+          <a
+            href={`https://www.google.com/maps?q=${listing.latitude},${listing.longitude}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(event) => event.stopPropagation()}
+            className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+          >
+            View on map
+          </a>
+        )}
       </div>
     </Link>
   );

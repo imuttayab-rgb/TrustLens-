@@ -208,3 +208,96 @@ export const LISTING_CATEGORY_LABELS: Record<ListingCategory, string> = {
   services: 'Services',
   other: 'Other',
 };
+
+// ── Location (city / area) ──────────────────────────────────────────
+
+/**
+ * City -> area, the same two-step picker OLX Pakistan uses instead of a
+ * free-text city field: "Lahore" alone does not narrow a buyer's search
+ * meaningfully in a city of 13 million people, and free text produced the
+ * same "Lahore" / "lahore" / "LHR" fragmentation category slugs were built
+ * to avoid (see LISTING_CATEGORIES above).
+ *
+ * Coverage is the ten largest cities with their well-known
+ * neighbourhoods/towns, not exhaustive - "Other" is always offered as an
+ * escape hatch so a real location is never blocked by a missing entry.
+ */
+export const PAKISTAN_LOCATIONS = {
+  Lahore: [
+    'Gulberg',
+    'DHA',
+    'Johar Town',
+    'Model Town',
+    'Bahria Town',
+    'Askari',
+    'Cantt',
+    'Iqbal Town',
+    'Township',
+    'Wapda Town',
+    'Garden Town',
+    'Faisal Town',
+    'Allama Iqbal Town',
+    'Shalimar',
+    'Other',
+  ],
+  Karachi: [
+    'Clifton',
+    'DHA',
+    'Gulshan-e-Iqbal',
+    'North Nazimabad',
+    'Malir',
+    'Korangi',
+    'Saddar',
+    'Gulistan-e-Johar',
+    'PECHS',
+    'Nazimabad',
+    'Federal B Area',
+    'Bahadurabad',
+    'Other',
+  ],
+  Islamabad: [
+    'F-6',
+    'F-7',
+    'F-8',
+    'F-10',
+    'F-11',
+    'G-9',
+    'G-10',
+    'G-11',
+    'E-11',
+    'Bahria Town',
+    'DHA',
+    'Blue Area',
+    'Other',
+  ],
+  Rawalpindi: [
+    'Saddar',
+    'Bahria Town',
+    'DHA',
+    'Satellite Town',
+    'Chaklala',
+    'Westridge',
+    'Gulraiz',
+    'Other',
+  ],
+  Faisalabad: ['Madina Town', 'Peoples Colony', 'D Ground', 'Gulberg', 'Samanabad', 'Other'],
+  Multan: ['Cantt', 'Gulgasht Colony', 'Shah Rukn-e-Alam', 'Bosan Road', 'Other'],
+  Peshawar: ['Hayatabad', 'University Town', 'Cantt', 'Gulbahar', 'Other'],
+  Quetta: ['Cantt', 'Satellite Town', 'Jinnah Town', 'Other'],
+  Gujranwala: ['Model Town', 'Satellite Town', 'Civil Lines', 'Other'],
+  Sialkot: ['Cantt', 'Model Town', 'Paris Road', 'Other'],
+  Other: ['Other'],
+} as const;
+
+export const PAKISTAN_CITIES = Object.keys(
+  PAKISTAN_LOCATIONS,
+) as (keyof typeof PAKISTAN_LOCATIONS)[];
+
+export type PakistanCity = (typeof PAKISTAN_CITIES)[number];
+
+export function areasForCity(city: string | null | undefined): readonly string[] {
+  if (city && city in PAKISTAN_LOCATIONS) {
+    return PAKISTAN_LOCATIONS[city as PakistanCity];
+  }
+  return PAKISTAN_LOCATIONS.Other;
+}

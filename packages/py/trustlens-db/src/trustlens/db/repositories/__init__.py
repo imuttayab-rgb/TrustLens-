@@ -753,7 +753,16 @@ class SqlListingRepository:
             ).scalar_one()
         )
 
-    def _public_query_base(self, *, category: str | None, q: str | None) -> Select[Any]:
+    def _public_query_base(
+        self,
+        *,
+        category: str | None,
+        q: str | None,
+        city: str | None = None,
+        area: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+    ) -> Select[Any]:
         stmt = (
             select(m.ListingModel, m.SellerProfile).join(
                 m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id
@@ -769,31 +778,66 @@ class SqlListingRepository:
             # The trigram GIN index on `title` (ix_listings_title_trgm) makes
             # this ILIKE cheap even without a leading anchor.
             stmt = stmt.where(m.ListingModel.title.ilike(f"%{q}%"))
+        if city:
+            stmt = stmt.where(m.ListingModel.city == city)
+        if area:
+            stmt = stmt.where(m.ListingModel.area == area)
+        if min_price is not None:
+            stmt = stmt.where(m.ListingModel.price >= min_price)
+        if max_price is not None:
+            stmt = stmt.where(m.ListingModel.price <= max_price)
         return stmt
+
+    def _order_by(self, stmt: Select[Any], sort: str) -> Select[Any]:
+        if sort == "price_asc":
+            # NULLS LAST: a listing with no price is not "cheapest".
+            return stmt.order_by(m.ListingModel.price.is_(None), m.ListingModel.price.asc())
+        if sort == "price_desc":
+            return stmt.order_by(m.ListingModel.price.is_(None), m.ListingModel.price.desc())
+        return stmt.order_by(m.ListingModel.created_at.desc())
 
     async def search_public(
         self,
         *,
         category: str | None = None,
         q: str | None = None,
+        city: str | None = None,
+        area: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+        sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
     ) -> list[ent.PublicListingSummary]:
-        stmt = (
-            self._public_query_base(category=category, q=q)
-            .order_by(m.ListingModel.created_at.desc())
-            .limit(limit)
-            .offset(offset)
+        stmt = self._public_query_base(
+            category=category, q=q, city=city, area=area, min_price=min_price, max_price=max_price
         )
+        stmt = self._order_by(stmt, sort).limit(limit).offset(offset)
         rows = (await self._s.execute(stmt)).all()
         listing_ids = [listing.id for listing, _seller in rows]
         primary_images = await _primary_image_ids(self._s, listing_ids)
 
         return [_to_public_summary(listing, seller, primary_images) for listing, seller in rows]
 
-    async def count_public(self, *, category: str | None = None, q: str | None = None) -> int:
+    async def count_public(
+        self,
+        *,
+        category: str | None = None,
+        q: str | None = None,
+        city: str | None = None,
+        area: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+    ) -> int:
         stmt = select(func.count()).select_from(
-            self._public_query_base(category=category, q=q).subquery()
+            self._public_query_base(
+                category=category,
+                q=q,
+                city=city,
+                area=area,
+                min_price=min_price,
+                max_price=max_price,
+            ).subquery()
         )
         return int((await self._s.execute(stmt)).scalar_one())
 
@@ -812,6 +856,9 @@ class SqlListingRepository:
                 category=listing.category,
                 condition=listing.condition,
                 city=listing.city,
+                area=listing.area,
+                latitude=listing.latitude,
+                longitude=listing.longitude,
                 country_code=listing.country_code,
                 external_url=listing.external_url,
                 posted_at=listing.posted_at,
@@ -833,6 +880,15 @@ class SqlListingRepository:
                 price=listing.price.amount if listing.price else None,
                 currency=listing.price.currency if listing.price else None,
                 category=listing.category,
+                condition=listing.condition,
+                # city/area/lat/lng/country_code were silently dropped here
+                # before - the column existed, `add()` wrote it, but `update()`
+                # never did, so editing a listing's location did nothing.
+                city=listing.city,
+                area=listing.area,
+                latitude=listing.latitude,
+                longitude=listing.longitude,
+                country_code=listing.country_code,
                 status=listing.status,
                 latest_analysis_id=(
                     listing.latest_analysis.id if listing.latest_analysis else None
@@ -1024,11 +1080,14 @@ def _to_public_summary(
         currency=listing.currency,
         category=listing.category,
         city=listing.city,
+        area=listing.area,
         created_at=listing.created_at,
         seller_id=seller.id,
         seller_handle=seller.handle,
         seller_display_name=seller.display_name,
         primary_image_file_id=primary_images.get(listing.id),
+        latitude=float(listing.latitude) if listing.latitude is not None else None,
+        longitude=float(listing.longitude) if listing.longitude is not None else None,
     )
 
 

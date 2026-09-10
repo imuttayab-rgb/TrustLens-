@@ -219,6 +219,9 @@ export const listingSchema = z.object({
   // so a phone was never compared against other phones.
   category: z.enum(LISTING_CATEGORIES).optional(),
   city: z.string().max(80).optional(),
+  area: z.string().max(120).optional(),
+  latitude: z.coerce.number().min(-90).max(90).optional(),
+  longitude: z.coerce.number().min(-180).max(180).optional(),
 });
 export type ListingInput = z.infer<typeof listingSchema>;
 

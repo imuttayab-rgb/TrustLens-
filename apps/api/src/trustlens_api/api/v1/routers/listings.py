@@ -27,6 +27,7 @@ from trustlens.core.application.use_cases.listings import (
     UpdateListingCommand,
 )
 from trustlens.core.domain.entities import Listing
+from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ContainerDep, MetaDep, SellerDep, UowDep, require_permissions
 from trustlens_api.api.v1.schemas.common import JobAccepted, PageMeta, Schema, envelope
 from trustlens_api.api.v1.schemas.listing import (
@@ -40,6 +41,9 @@ class ListingImageRequest(Schema):
     """Reference to a file already uploaded via /files/upload-intent."""
 
     file_id: UUID = Field(description="The file_id returned by /files/upload-intent")
+
+
+log = get_logger(__name__)
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
@@ -76,6 +80,9 @@ def _to_response(listing: Listing) -> ListingResponse:
         category=listing.category,
         condition=listing.condition,
         city=listing.city,
+        area=listing.area,
+        latitude=listing.latitude,
+        longitude=listing.longitude,
         country_code=listing.country_code,
         updated_at=listing.updated_at,
         analysis=analysis,
@@ -91,6 +98,9 @@ def _to_input(body: ListingWriteRequest) -> ListingInput:
         category=body.category,
         condition=body.condition,
         city=body.city,
+        area=body.area,
+        latitude=body.latitude,
+        longitude=body.longitude,
         country_code=body.country_code,
     )
 
@@ -245,7 +255,7 @@ async def analyse_listing(
 )
 async def add_listing_image(
     listing_id: UUID,
-    body: "ListingImageRequest",
+    body: ListingImageRequest,
     seller: SellerDep,
     container: ContainerDep,
     uow: UowDep,
@@ -311,7 +321,7 @@ async def add_listing_image(
     except Exception:
         # Hash failure is non-fatal: the image is still stored and associated.
         # The hash column stays None, and find_near_duplicate_hash skips None rows.
-        pass
+        log.warning("listing_image_hash_failed", listing_id=str(listing_id), exc_info=True)
 
     now = container.clock.now()
     image = ListingImage(

@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 import type { ListingCategory } from '@trustlens/constants';
 
+export type SortOrder = 'newest' | 'price_asc' | 'price_desc';
+
 export interface PublicListing {
   id: string;
   title: string;
@@ -13,15 +15,23 @@ export interface PublicListing {
   currency: string | null;
   category: ListingCategory | null;
   city: string | null;
+  area: string | null;
   createdAt: string;
   sellerHandle: string;
   sellerDisplayName: string;
   imageUrl: string | null;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface BrowseListingsParams {
   category?: ListingCategory | null;
   q?: string | null;
+  city?: string | null;
+  area?: string | null;
+  minPrice?: number | null;
+  maxPrice?: number | null;
+  sort?: SortOrder;
   limit?: number;
   offset?: number;
 }
@@ -34,14 +44,41 @@ export interface BrowseListingsParams {
 export function usePublicListings({
   category = null,
   q = null,
+  city = null,
+  area = null,
+  minPrice = null,
+  maxPrice = null,
+  sort = 'newest',
   limit = 20,
   offset = 0,
 }: BrowseListingsParams = {}) {
   return useQuery<{ items: PublicListing[]; total: number }>({
-    queryKey: qk.listing.public(category, q, limit, offset),
+    queryKey: qk.listing.public({
+      category,
+      q,
+      city,
+      area,
+      minPrice,
+      maxPrice,
+      sort,
+      limit,
+      offset,
+    }),
     queryFn: async () => {
       const result = await api.GET('/api/v1/public/listings', {
-        params: { query: { category, q, limit, offset } },
+        params: {
+          query: {
+            category,
+            q,
+            city,
+            area,
+            min_price: minPrice,
+            max_price: maxPrice,
+            sort,
+            limit,
+            offset,
+          },
+        },
       });
       if (result.error) throw toApiError(result.error);
       const body = result.data as {

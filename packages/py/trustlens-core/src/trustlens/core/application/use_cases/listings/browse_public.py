@@ -14,6 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from trustlens.core.domain.entities import PublicListingSummary
+from trustlens.core.domain.errors import ValidationError
 from trustlens.core.domain.ports import UnitOfWork
 from trustlens.core.domain.value_objects import validate_category
 
@@ -23,11 +24,21 @@ from trustlens.core.domain.value_objects import validate_category
 #: matter as a cost attack.
 MAX_QUERY_CHARS = 200
 
+#: A fixed vocabulary, not a free sort expression - the repository maps each
+#: one to a specific ORDER BY, so there is no column name for a client to
+#: smuggle through here.
+SORT_ORDERS = frozenset({"newest", "price_asc", "price_desc"})
+
 
 @dataclass(frozen=True, slots=True)
 class BrowsePublicListingsQuery:
     category: str | None = None
     q: str | None = None
+    city: str | None = None
+    area: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    sort: str = "newest"
     limit: int = 20
     offset: int = 0
 
@@ -50,18 +61,49 @@ class BrowsePublicListings:
         category = validate_category(query.category)
         q = query.q.strip() if query.q else None
         q = q[:MAX_QUERY_CHARS] if q else None
+        city = query.city.strip() if query.city else None
+        area = query.area.strip() if query.area else None
+
+        if query.sort not in SORT_ORDERS:
+            raise ValidationError("Choose a valid sort order.", field="sort")
+        if query.min_price is not None and query.min_price < 0:
+            raise ValidationError("Minimum price cannot be negative.", field="minPrice")
+        if query.max_price is not None and query.max_price < 0:
+            raise ValidationError("Maximum price cannot be negative.", field="maxPrice")
+        if (
+            query.min_price is not None
+            and query.max_price is not None
+            and query.min_price > query.max_price
+        ):
+            raise ValidationError("Minimum price cannot exceed maximum price.", field="minPrice")
 
         async with self._uow:
             items = await self._uow.listings.search_public(
-                category=category, q=q, limit=limit, offset=offset
+                category=category,
+                q=q,
+                city=city,
+                area=area,
+                min_price=query.min_price,
+                max_price=query.max_price,
+                sort=query.sort,
+                limit=limit,
+                offset=offset,
             )
-            total = await self._uow.listings.count_public(category=category, q=q)
+            total = await self._uow.listings.count_public(
+                category=category,
+                q=q,
+                city=city,
+                area=area,
+                min_price=query.min_price,
+                max_price=query.max_price,
+            )
 
         return PublicListingPage(items=tuple(items), total=total, limit=limit, offset=offset)
 
 
 __all__ = [
     "MAX_QUERY_CHARS",
+    "SORT_ORDERS",
     "BrowsePublicListings",
     "BrowsePublicListingsQuery",
     "PublicListingPage",

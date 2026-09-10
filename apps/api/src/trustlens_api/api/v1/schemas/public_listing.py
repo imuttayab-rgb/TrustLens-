@@ -20,10 +20,13 @@ class PublicListingResponse(Schema):
     currency: str | None = None
     category: str | None = None
     city: str | None = None
+    area: str | None = None
     created_at: datetime
     seller_handle: str
     seller_display_name: str
     image_url: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 __all__ = ["PublicListingResponse"]

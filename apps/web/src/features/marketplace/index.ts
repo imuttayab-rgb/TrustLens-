@@ -9,4 +9,5 @@ export {
   usePublicListings,
   type BrowseListingsParams,
   type PublicListing,
+  type SortOrder,
 } from './hooks/use-public-listings';

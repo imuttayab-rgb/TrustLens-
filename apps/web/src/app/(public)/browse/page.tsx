@@ -6,11 +6,14 @@ import {
   useFavoriteIds,
   usePublicListings,
   useRemoveFavorite,
+  type SortOrder,
 } from '@/features/marketplace';
 import { useSession } from '@/lib/auth/use-session';
 import {
+  areasForCity,
   LISTING_CATEGORIES,
   LISTING_CATEGORY_LABELS,
+  PAKISTAN_CITIES,
   type ListingCategory,
 } from '@trustlens/constants';
 import { Alert, Spinner } from '@trustlens/ui';
@@ -19,6 +22,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const PAGE_SIZE = 24;
+
+const SORT_LABELS: Record<SortOrder, string> = {
+  newest: 'Newest first',
+  price_asc: 'Price: low to high',
+  price_desc: 'Price: high to low',
+};
+
+function selectClass() {
+  return 'h-10 rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+}
 
 export default function BrowsePage() {
   const router = useRouter();
@@ -30,16 +43,38 @@ export default function BrowsePage() {
       ? (categoryParam as ListingCategory)
       : null;
   const qParam = searchParams.get('q') ?? '';
+  const cityParam = searchParams.get('city');
+  const city =
+    cityParam && (PAKISTAN_CITIES as readonly string[]).includes(cityParam) ? cityParam : null;
+  const areaOptions = city ? areasForCity(city) : [];
+  const areaParam = searchParams.get('area');
+  const area = areaParam && areaOptions.includes(areaParam) ? areaParam : null;
+  const minPriceParam = searchParams.get('minPrice');
+  const maxPriceParam = searchParams.get('maxPrice');
+  const minPrice = minPriceParam ? Number(minPriceParam) : null;
+  const maxPrice = maxPriceParam ? Number(maxPriceParam) : null;
+  const sortParam = searchParams.get('sort');
+  const sort: SortOrder =
+    sortParam === 'price_asc' || sortParam === 'price_desc' ? sortParam : 'newest';
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
 
   // Local input state so typing doesn't refetch on every keystroke - only
   // once the seller stops for a moment, or presses Enter.
   const [searchInput, setSearchInput] = useState(qParam);
   useEffect(() => setSearchInput(qParam), [qParam]);
+  const [minPriceInput, setMinPriceInput] = useState(minPriceParam ?? '');
+  const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam ?? '');
+  useEffect(() => setMinPriceInput(minPriceParam ?? ''), [minPriceParam]);
+  useEffect(() => setMaxPriceInput(maxPriceParam ?? ''), [maxPriceParam]);
 
   const { data, isPending, isError } = usePublicListings({
     category,
     q: qParam || null,
+    city,
+    area,
+    minPrice,
+    maxPrice,
+    sort,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
   });
@@ -61,27 +96,39 @@ export default function BrowsePage() {
     }
   }
 
-  function updateParams(next: { category?: string | null; q?: string | null; page?: number }) {
+  function updateParams(next: {
+    category?: string | null;
+    q?: string | null;
+    city?: string | null;
+    area?: string | null;
+    minPrice?: string | null;
+    maxPrice?: string | null;
+    sort?: string | null;
+    page?: number;
+  }) {
     const params = new URLSearchParams(searchParams.toString());
-    if (next.category !== undefined) {
-      if (next.category) params.set('category', next.category);
-      else params.delete('category');
-    }
-    if (next.q !== undefined) {
-      if (next.q) params.set('q', next.q);
-      else params.delete('q');
-    }
-    if (next.page !== undefined) {
-      if (next.page > 1) params.set('page', String(next.page));
-      else params.delete('page');
-    } else {
-      params.delete('page');
-    }
+    const setOrDelete = (key: string, value: string | null | undefined) => {
+      if (value === undefined) return;
+      if (value) params.set(key, value);
+      else params.delete(key);
+    };
+    setOrDelete('category', next.category);
+    setOrDelete('q', next.q);
+    setOrDelete('city', next.city);
+    // Changing the city invalidates whatever area was picked under the old one.
+    if (next.city !== undefined) params.delete('area');
+    setOrDelete('area', next.area);
+    setOrDelete('minPrice', next.minPrice);
+    setOrDelete('maxPrice', next.maxPrice);
+    setOrDelete('sort', next.sort === 'newest' ? null : next.sort);
+    if (next.page !== undefined && next.page > 1) params.set('page', String(next.page));
+    else params.delete('page');
     router.push(`/browse${params.toString() ? `?${params.toString()}` : ''}`);
   }
 
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const hasFilters = Boolean(qParam || category || city || area || minPrice || maxPrice);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -140,6 +187,80 @@ export default function BrowsePage() {
         ))}
       </div>
 
+      <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-border/60 pt-4">
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          City
+          <select
+            value={city ?? ''}
+            onChange={(event) => updateParams({ city: event.target.value || null })}
+            className={selectClass()}
+          >
+            <option value="">All cities</option>
+            {PAKISTAN_CITIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Area
+          <select
+            value={area ?? ''}
+            disabled={!city}
+            onChange={(event) => updateParams({ area: event.target.value || null })}
+            className={`${selectClass()} disabled:opacity-50`}
+          >
+            <option value="">{city ? 'All areas' : 'Choose a city first'}</option>
+            {areaOptions.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Min price
+          <input
+            value={minPriceInput}
+            onChange={(event) => setMinPriceInput(event.target.value)}
+            onBlur={() => updateParams({ minPrice: minPriceInput.trim() || null })}
+            inputMode="numeric"
+            placeholder="0"
+            className={`${selectClass()} w-28`}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Max price
+          <input
+            value={maxPriceInput}
+            onChange={(event) => setMaxPriceInput(event.target.value)}
+            onBlur={() => updateParams({ maxPrice: maxPriceInput.trim() || null })}
+            inputMode="numeric"
+            placeholder="Any"
+            className={`${selectClass()} w-28`}
+          />
+        </label>
+
+        <label className="ml-auto flex flex-col gap-1 text-xs text-muted-foreground">
+          Sort by
+          <select
+            value={sort}
+            onChange={(event) => updateParams({ sort: event.target.value })}
+            className={selectClass()}
+          >
+            {(Object.keys(SORT_LABELS) as SortOrder[]).map((value) => (
+              <option key={value} value={value}>
+                {SORT_LABELS[value]}
+              </option>
+            ))}
+          </select>
+        </label>
+      </div>
+
       <div className="mt-8">
         {isPending ? (
           <div className="flex justify-center py-16">
@@ -151,8 +272,8 @@ export default function BrowsePage() {
           </Alert>
         ) : data.items.length === 0 ? (
           <Alert tone="info" title="No listings found">
-            {qParam || category
-              ? 'Try a different search or category.'
+            {hasFilters
+              ? 'Try a different search, area, or price range.'
               : 'Nobody has listed anything yet.'}
           </Alert>
         ) : (

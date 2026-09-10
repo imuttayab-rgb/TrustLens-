@@ -220,11 +220,25 @@ class ListingRepository(Protocol):
         *,
         category: str | None = None,
         q: str | None = None,
+        city: str | None = None,
+        area: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+        sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
     ) -> list[PublicListingSummary]: ...
 
-    async def count_public(self, *, category: str | None = None, q: str | None = None) -> int: ...
+    async def count_public(
+        self,
+        *,
+        category: str | None = None,
+        q: str | None = None,
+        city: str | None = None,
+        area: str | None = None,
+        min_price: float | None = None,
+        max_price: float | None = None,
+    ) -> int: ...
 
 
 @runtime_checkable

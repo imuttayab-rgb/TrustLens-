@@ -2,12 +2,19 @@
 
 import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LISTING_CATEGORIES, LISTING_CATEGORY_LABELS } from '@trustlens/constants';
+import {
+  areasForCity,
+  LISTING_CATEGORIES,
+  LISTING_CATEGORY_LABELS,
+  PAKISTAN_CITIES,
+} from '@trustlens/constants';
 import { Alert, Button, Field, fieldAria, Input } from '@trustlens/ui';
 import { listingSchema, type ListingInput } from '@trustlens/validation';
 import { useRouter } from 'next/navigation';
+import { useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import type { Listing, ListingPayload } from '../hooks/use-listings';
+import { LocationPicker } from './LocationPicker';
 
 export function ListingForm({
   listing,
@@ -27,6 +34,8 @@ export function ListingForm({
     register,
     handleSubmit,
     setError,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ListingInput>({
     resolver: zodResolver(listingSchema),
@@ -37,10 +46,28 @@ export function ListingForm({
       currency: listing?.currency ?? 'PKR',
       category: listing?.category ?? undefined,
       city: listing?.city ?? '',
+      area: listing?.area ?? '',
+      latitude: listing?.latitude ?? undefined,
+      longitude: listing?.longitude ?? undefined,
     },
   });
 
   const { submit, formError } = useApiForm<ListingInput>(setError);
+
+  // The area list depends on the chosen city - OLX-style cascading picker,
+  // not two independent free-text fields.
+  const selectedCity = watch('city');
+  const areaOptions = areasForCity(selectedCity);
+  const latitude = watch('latitude');
+  const longitude = watch('longitude');
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    setValue('area', '');
+  }, [selectedCity, setValue]);
 
   const handle = handleSubmit(async (values) => {
     let created: Listing | null = null;
@@ -54,6 +81,9 @@ export function ListingForm({
         currency: values.currency || null,
         category: values.category ?? null,
         city: values.city || null,
+        area: values.area || null,
+        latitude: values.latitude ?? null,
+        longitude: values.longitude ?? null,
       });
     });
     if (ok && created) {
@@ -138,14 +168,49 @@ export function ListingForm({
         </select>
       </Field>
 
-      <Field htmlFor="city" label="City" error={errors.city?.message}>
-        <Input
-          {...fieldAria('city', errors.city?.message)}
-          autoComplete="address-level2"
-          placeholder="Lahore"
-          {...register('city')}
-        />
-      </Field>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field htmlFor="city" label="City" error={errors.city?.message}>
+          {/* A fixed list, like category - the same buyer picking a city on
+              Browse must land on the same value a seller picked here. */}
+          <select
+            {...fieldAria('city', errors.city?.message)}
+            className="h-11 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
+            {...register('city')}
+          >
+            <option value="">Choose a city…</option>
+            {PAKISTAN_CITIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+        </Field>
+
+        <Field htmlFor="area" label="Area" error={errors.area?.message}>
+          <select
+            {...fieldAria('area', errors.area?.message)}
+            disabled={!selectedCity}
+            className="h-11 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50 sm:text-sm"
+            {...register('area')}
+          >
+            <option value="">{selectedCity ? 'Choose an area…' : 'Choose a city first'}</option>
+            {areaOptions.map((a) => (
+              <option key={a} value={a}>
+                {a}
+              </option>
+            ))}
+          </select>
+        </Field>
+      </div>
+
+      <LocationPicker
+        latitude={latitude ?? null}
+        longitude={longitude ?? null}
+        onChange={(lat, lng) => {
+          setValue('latitude', lat);
+          setValue('longitude', lng);
+        }}
+      />
 
       {formError && (
         <Alert tone="error" requestId={formError.requestId}>

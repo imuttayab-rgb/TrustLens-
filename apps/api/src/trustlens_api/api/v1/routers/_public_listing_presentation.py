@@ -36,10 +36,13 @@ async def to_public_listing_response(
         currency=item.currency,
         category=item.category,
         city=item.city,
+        area=item.area,
         created_at=item.created_at,
         seller_handle=item.seller_handle,
         seller_display_name=item.seller_display_name,
         image_url=await image_url(container, uow, item.primary_image_file_id),
+        latitude=item.latitude,
+        longitude=item.longitude,
     )
 
 

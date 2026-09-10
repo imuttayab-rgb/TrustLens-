@@ -42,6 +42,9 @@ class ListingInput:
     category: str | None = None
     condition: str | None = None
     city: str | None = None
+    area: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     country_code: str | None = None
 
     def money(self) -> Money | None:
@@ -109,6 +112,9 @@ class CreateListing:
                     category=validate_category(cmd.data.category),
                     condition=cmd.data.condition,
                     city=cmd.data.city,
+                    area=cmd.data.area,
+                    latitude=cmd.data.latitude,
+                    longitude=cmd.data.longitude,
                     country_code=cmd.data.country_code,
                 )
             )
@@ -167,6 +173,9 @@ class UpdateListing:
                     category=validate_category(cmd.data.category),
                     condition=cmd.data.condition,
                     city=cmd.data.city,
+                    area=cmd.data.area,
+                    latitude=cmd.data.latitude,
+                    longitude=cmd.data.longitude,
                     country_code=cmd.data.country_code,
                     status=ListingStatus.ANALYSING if text_changed else listing.status,
                     updated_at=now,

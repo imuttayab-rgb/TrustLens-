@@ -1363,6 +1363,8 @@ export interface components {
      *     analyser's verdict can only move one bounded signal (ADR-0002).
      */
     ListingWriteRequest: {
+      /** Area */
+      area?: string | null;
       /** Category */
       category?: string | null;
       /** City */
@@ -1375,6 +1377,10 @@ export interface components {
       currency?: string | null;
       /** Description */
       description: string;
+      /** Latitude */
+      latitude?: number | null;
+      /** Longitude */
+      longitude?: number | null;
       /** Price */
       price?: number | null;
       /** Title */
@@ -3649,6 +3655,11 @@ export interface operations {
       query?: {
         category?: string | null;
         q?: string | null;
+        city?: string | null;
+        area?: string | null;
+        min_price?: number | null;
+        max_price?: number | null;
+        sort?: string;
         limit?: number;
         offset?: number;
       };

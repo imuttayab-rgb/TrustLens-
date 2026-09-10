@@ -680,6 +680,12 @@ class ListingModel(Base, TimestampMixin, SoftDeleteMixin):
     category: Mapped[str | None] = mapped_column(String(80))
     condition: Mapped[str | None] = mapped_column(String(40))
     city: Mapped[str | None] = mapped_column(String(80))
+    #: The OLX-style picker's second step - see PAKISTAN_LOCATIONS in
+    #: packages/constants. Independent of city so a listing can carry one
+    #: without the other on rows written before this column existed.
+    area: Mapped[str | None] = mapped_column(String(120))
+    latitude: Mapped[float | None] = mapped_column(Numeric(9, 6))
+    longitude: Mapped[float | None] = mapped_column(Numeric(9, 6))
     country_code: Mapped[str | None] = mapped_column(String(2))
     external_url: Mapped[str | None] = mapped_column(Text)
     posted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -692,6 +698,7 @@ class ListingModel(Base, TimestampMixin, SoftDeleteMixin):
     __table_args__ = (
         Index("ix_listings_seller_created", "seller_id", "created_at"),
         Index("ix_listings_status", "status"),
+        Index("ix_listings_city_area", "city", "area"),
         Index(
             "uq_listings_external_ref",
             "marketplace_id",

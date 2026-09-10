@@ -42,13 +42,28 @@ async def browse_public_listings(
     meta: MetaDep,
     category: str | None = Query(default=None, max_length=80),
     q: str | None = Query(default=None, max_length=200, alias="q"),
+    city: str | None = Query(default=None, max_length=80),
+    area: str | None = Query(default=None, max_length=120),
+    min_price: float | None = Query(default=None, ge=0),
+    max_price: float | None = Query(default=None, ge=0),
+    sort: str = Query(default="newest"),
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
 ) -> dict[str, Any]:
     await _throttle(container, meta)
 
     page = await BrowsePublicListings(uow=uow).execute(
-        BrowsePublicListingsQuery(category=category, q=q, limit=limit, offset=offset)
+        BrowsePublicListingsQuery(
+            category=category,
+            q=q,
+            city=city,
+            area=area,
+            min_price=min_price,
+            max_price=max_price,
+            sort=sort,
+            limit=limit,
+            offset=offset,
+        )
     )
     items = [await to_public_listing_response(item, container, uow) for item in page.items]
 

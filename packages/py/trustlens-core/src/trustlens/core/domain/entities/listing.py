@@ -87,6 +87,9 @@ class Listing:
     category: str | None = None
     condition: str | None = None
     city: str | None = None
+    area: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     country_code: str | None = None
     external_url: str | None = None
     posted_at: datetime | None = None
@@ -116,11 +119,14 @@ class PublicListingSummary:
     currency: str | None
     category: str | None
     city: str | None
+    area: str | None
     created_at: datetime
     seller_id: UUID
     seller_handle: str
     seller_display_name: str
     primary_image_file_id: UUID | None = None
+    latitude: float | None = None
+    longitude: float | None = None
 
 
 @dataclass(frozen=True, slots=True)

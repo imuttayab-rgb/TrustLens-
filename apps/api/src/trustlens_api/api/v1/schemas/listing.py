@@ -31,6 +31,9 @@ class ListingWriteRequest(Schema):
     category: str | None = Field(default=None, max_length=80)
     condition: str | None = Field(default=None, max_length=50)
     city: str | None = Field(default=None, max_length=80)
+    area: str | None = Field(default=None, max_length=120)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
     country_code: str | None = Field(default=None, min_length=2, max_length=2)
 
 
@@ -61,6 +64,9 @@ class ListingResponse(Schema):
     category: str | None = None
     condition: str | None = None
     city: str | None = None
+    area: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
     country_code: str | None = None
     updated_at: datetime | None = None
     analysis: ListingAnalysisResponse | None = None

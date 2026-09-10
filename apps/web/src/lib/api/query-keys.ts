@@ -19,8 +19,7 @@ export const qk = {
     all: ['listings'] as const,
     list: (limit: number, offset: number) => ['listings', 'list', limit, offset] as const,
     byId: (id: string) => ['listings', id] as const,
-    public: (category: string | null, q: string | null, limit: number, offset: number) =>
-      ['listings', 'public', category, q, limit, offset] as const,
+    public: (filters: Record<string, unknown>) => ['listings', 'public', filters] as const,
   },
   verification: { status: ['verification', 'status'] as const },
   job: { status: (jobId: string) => ['job', jobId] as const },
