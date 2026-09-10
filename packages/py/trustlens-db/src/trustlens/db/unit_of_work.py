@@ -82,6 +82,7 @@ class SqlAlchemyUnitOfWork:
         self.devices = repo.SqlDeviceRepository(s)
         self.listings = repo.SqlListingRepository(s)
         self.favorites = repo.SqlFavoriteRepository(s)
+        self.messaging = repo.SqlMessagingRepository(s)
         self.trust_scores = repo.SqlTrustScoreRepository(s)
         self.scoring_models = repo.SqlScoringModelRepository(s)
         self.appeals = repo.SqlAppealRepository(s)
@@ -138,6 +139,7 @@ class SqlAlchemyUnitOfWork:
     devices: Any
     listings: Any
     favorites: Any
+    messaging: Any
     trust_scores: Any
     scoring_models: Any
     appeals: Any

@@ -27,6 +27,8 @@ if TYPE_CHECKING:
         AppealMessage,
         AuditLogEntry,
         Consent,
+        Conversation,
+        ConversationSummary,
         Device,
         DeviceLink,
         EmailAddress,
@@ -37,6 +39,7 @@ if TYPE_CHECKING:
         JobRun,
         Listing,
         ListingAnalysis,
+        Message,
         Notification,
         OtpCode,
         PhoneNumber,
@@ -266,6 +269,50 @@ class FavoriteRepository(Protocol):
 
 
 @runtime_checkable
+class MessagingRepository(Protocol):
+    async def get_conversation(self, conversation_id: UUID) -> Conversation | None: ...
+
+    async def find_conversation(
+        self, *, buyer_id: UUID, seller_id: UUID, listing_id: UUID | None
+    ) -> Conversation | None:
+        """Find-or-create's read half - the same buyer messaging the same
+        seller about the same listing lands in one thread, not a new one
+        each time."""
+        ...
+
+    async def create_conversation(self, conversation: Conversation) -> Conversation: ...
+
+    async def touch_conversation(self, conversation_id: UUID, *, at: datetime) -> None: ...
+
+    async def list_conversations_for_user(
+        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[ConversationSummary]:
+        """Every conversation where this user is a participant - as buyer,
+        or as the seller (resolved through their seller profile) - ordered
+        by most recently active, with unread count and a preview so the
+        inbox renders in one round trip."""
+        ...
+
+    async def count_conversations_for_user(self, user_id: UUID) -> int: ...
+
+    async def get_participants(self, conversation_id: UUID) -> tuple[UUID, UUID] | None:
+        """(buyer_user_id, seller_user_id) for authorization checks - a
+        message sender or thread reader must be one of these two."""
+        ...
+
+    async def add_message(self, message: Message) -> Message: ...
+
+    async def list_messages(
+        self, conversation_id: UUID, *, limit: int = 50, offset: int = 0
+    ) -> list[Message]: ...
+
+    async def mark_read(self, conversation_id: UUID, *, reader_id: UUID, at: datetime) -> None:
+        """Marks every message in the conversation NOT sent by `reader_id`
+        as read - a reader can never mark their own message read."""
+        ...
+
+
+@runtime_checkable
 class TrustScoreRepository(Protocol):
     async def get(self, score_id: UUID) -> TrustScore | None: ...
 
@@ -489,6 +536,7 @@ __all__ = [
     "IdentityRepository",
     "JobRunRepository",
     "ListingRepository",
+    "MessagingRepository",
     "NotificationRepository",
     "OtpRepository",
     "PhoneNumberRepository",

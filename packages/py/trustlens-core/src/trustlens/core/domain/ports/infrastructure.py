@@ -23,6 +23,7 @@ if TYPE_CHECKING:
         IdentityRepository,
         JobRunRepository,
         ListingRepository,
+        MessagingRepository,
         NotificationRepository,
         OtpRepository,
         PhoneNumberRepository,
@@ -77,6 +78,7 @@ class UnitOfWork(Protocol):
     devices: DeviceRepository
     listings: ListingRepository
     favorites: FavoriteRepository
+    messaging: MessagingRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository

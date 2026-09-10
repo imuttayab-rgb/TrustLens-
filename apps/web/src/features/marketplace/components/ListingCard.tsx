@@ -2,9 +2,10 @@
 
 import { LISTING_CATEGORY_LABELS } from '@trustlens/constants';
 import { cn } from '@trustlens/utils';
-import { Heart, ImageOff } from 'lucide-react';
+import { Heart, ImageOff, MessageCircle } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import type { PublicListing } from '../hooks/use-public-listings';
 
 export function ListingCard({
@@ -19,6 +20,8 @@ export function ListingCard({
   onToggleFavorite?: () => void;
   togglingFavorite?: boolean;
 }) {
+  const router = useRouter();
+
   return (
     <Link
       href={`/seller/${encodeURIComponent(listing.sellerHandle)}`}
@@ -60,6 +63,22 @@ export function ListingCard({
             />
           </button>
         )}
+
+        <button
+          type="button"
+          aria-label="Message the seller"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            router.push(`/dashboard/messages/new?listingId=${listing.id}`);
+          }}
+          className={cn(
+            'absolute right-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110',
+            onToggleFavorite ? 'top-12' : 'top-2',
+          )}
+        >
+          <MessageCircle className="h-4 w-4" aria-hidden="true" />
+        </button>
       </div>
       <div className="space-y-1 p-3">
         <p className="truncate text-sm font-medium">{listing.title}</p>

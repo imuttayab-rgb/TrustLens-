@@ -798,6 +798,54 @@ class FavoriteModel(Base):
     )
 
 
+class ConversationModel(Base):
+    """A buyer<->seller thread, optionally anchored to the listing that
+    started it. `last_message_at` is denormalised for one-query inbox
+    sorting - the alternative is a correlated subquery per row."""
+
+    __tablename__ = "conversations"
+
+    id: Mapped[UUID] = uuid_pk()
+    listing_id: Mapped[UUID | None] = uuid_fk("listings.id", ondelete="SET NULL", nullable=True)
+    seller_id: Mapped[UUID] = uuid_fk("seller_profiles.id")
+    buyer_id: Mapped[UUID] = uuid_fk("users.id")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    last_message_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        Index("ix_conversations_buyer", "buyer_id", "last_message_at"),
+        Index("ix_conversations_seller", "seller_id", "last_message_at"),
+        Index(
+            "uq_conversations_buyer_seller_listing",
+            "buyer_id",
+            "seller_id",
+            "listing_id",
+            unique=True,
+        ),
+    )
+
+
+class MessageModel(Base):
+    __tablename__ = "messages"
+
+    id: Mapped[UUID] = uuid_pk()
+    conversation_id: Mapped[UUID] = uuid_fk("conversations.id")
+    sender_id: Mapped[UUID] = uuid_fk("users.id")
+    body: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    #: Set when the OTHER participant views the thread - never by the sender
+    #: reading their own message.
+    read_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    __table_args__ = (Index("ix_messages_conversation_created", "conversation_id", "created_at"),)
+
+
 # ═══════════════════════════════════════════════════════════════════
 #  Scoring
 # ═══════════════════════════════════════════════════════════════════
@@ -1326,6 +1374,7 @@ __all__ = [
     "AuditLogModel",
     "Base",
     "ConsentModel",
+    "ConversationModel",
     "DeviceModel",
     "EmailAddressModel",
     "FavoriteModel",
@@ -1337,6 +1386,7 @@ __all__ = [
     "ListingImageModel",
     "ListingModel",
     "Marketplace",
+    "MessageModel",
     "NotificationModel",
     "OtpCodeModel",
     "OutboxEvent",

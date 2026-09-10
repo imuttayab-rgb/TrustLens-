@@ -8,6 +8,7 @@ const NAV = [
   { href: '/dashboard', label: 'Overview' },
   { href: '/dashboard/listings', label: 'Selling' },
   { href: '/dashboard/favorites', label: 'Favorites' },
+  { href: '/dashboard/messages', label: 'Messages' },
   { href: '/dashboard/trust-score', label: 'Score' },
   { href: '/dashboard/settings', label: 'Settings' },
 ] as const;
