@@ -10,9 +10,21 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
       <footer className="border-t border-border/70">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:px-8">
           <p>© {new Date().getFullYear()} TrustLens</p>
-          <nav className="flex gap-5 sm:ml-auto">
+          <nav className="flex flex-wrap gap-5 sm:ml-auto">
+            <Link href="/browse" className="transition-colors hover:text-foreground">
+              Browse
+            </Link>
             <Link href="/check" className="transition-colors hover:text-foreground">
               Check a seller
+            </Link>
+            <Link href="/help" className="transition-colors hover:text-foreground">
+              Help
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-foreground">
+              Terms
+            </Link>
+            <Link href="/privacy" className="transition-colors hover:text-foreground">
+              Privacy
             </Link>
             <Link href="/docs/api" className="transition-colors hover:text-foreground">
               API docs
