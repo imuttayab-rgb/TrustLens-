@@ -6,11 +6,15 @@ response body - an XSS payload must not be able to read it (ADR-0006).
 
 from __future__ import annotations
 
+import secrets
 from typing import Annotated, Any
 
 from fastapi import APIRouter, Cookie, Request, Response, status
+from fastapi.responses import RedirectResponse
 
 from trustlens.core.application.use_cases.auth import (
+    AuthenticateWithGoogle,
+    GoogleAuthCommand,
     IssuedSession,
     LoginCommand,
     LoginUser,
@@ -45,10 +49,17 @@ from trustlens_api.api.v1.schemas.auth import (
 from trustlens_api.api.v1.schemas.common import MessageResponse, envelope
 from trustlens_api.container import Container
 from trustlens_api.core.cookies import clear_refresh_cookie, set_refresh_cookie
+from trustlens_api.google_oauth import GoogleOAuthError, build_authorize_url, exchange_code
 
 log = get_logger(__name__)
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
+
+#: Short-lived, single-purpose - only proves the callback belongs to the
+#: browser that started this specific login attempt (CSRF), never read
+#: anywhere else.
+_OAUTH_STATE_COOKIE = "tl_oauth_state"
+_OAUTH_STATE_PATH = "/api/v1/auth/google"
 
 
 @router.post(
@@ -171,6 +182,110 @@ async def login(
         )
     )
     return await _issue_session_response(session, response, container, uow, meta)
+
+
+@router.get(
+    "/google/login",
+    summary="Start Google sign-in",
+    description=(
+        "Redirects to Google's consent screen. Not JSON: the browser must "
+        "navigate here directly (a link or `window.location`), not fetch it."
+    ),
+)
+async def google_login(container: ContainerDep) -> RedirectResponse:
+    if not container.settings.google_auth.is_configured:
+        raise TokenInvalid("Google sign-in is not configured on this deployment.")
+
+    state = secrets.token_urlsafe(24)
+    redirect = RedirectResponse(
+        build_authorize_url(container.settings.google_auth, state=state),
+        status_code=status.HTTP_302_FOUND,
+    )
+    redirect.set_cookie(
+        key=_OAUTH_STATE_COOKIE,
+        value=state,
+        max_age=600,
+        httponly=True,
+        secure=container.settings.env.is_deployed,
+        samesite="lax",
+        path=_OAUTH_STATE_PATH,
+    )
+    return redirect
+
+
+@router.get(
+    "/google/callback",
+    summary="Google redirects back here after consent",
+    description=(
+        "Exchanges the authorization code, signs the user in (or registers "
+        "them on first contact), sets the refresh cookie exactly like "
+        "/login does, and redirects into the app. The frontend never talks "
+        "to this endpoint directly - it only ever receives a browser "
+        "redirect starting at /google/login."
+    ),
+)
+async def google_callback(
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+    code: str | None = None,
+    state: str | None = None,
+    error: str | None = None,
+    tl_oauth_state: Annotated[str | None, Cookie()] = None,
+) -> RedirectResponse:
+    failure = RedirectResponse(
+        f"{container.settings.web_base_url}/login?error=google",
+        status_code=status.HTTP_302_FOUND,
+    )
+    failure.delete_cookie(key=_OAUTH_STATE_COOKIE, path=_OAUTH_STATE_PATH)
+
+    # Constant-shape check on purpose: a missing cookie (state expired or
+    # cookies blocked), a missing code (user denied consent), and a state
+    # mismatch (CSRF) all fail the same way rather than leaking which one.
+    if (
+        error
+        or not code
+        or not state
+        or not tl_oauth_state
+        or not secrets.compare_digest(state, tl_oauth_state)
+    ):
+        return failure
+
+    try:
+        google_user = await exchange_code(container.settings.google_auth, code=code)
+    except GoogleOAuthError:
+        log.warning("google_oauth_exchange_failed")
+        return failure
+
+    session = await AuthenticateWithGoogle(
+        uow=uow,
+        tokens=container.token_hasher,
+        clock=container.clock,
+        ids=container.ids,
+        refresh_ttl_days=container.settings.security.refresh_token_ttl_days,
+    ).execute(
+        GoogleAuthCommand(
+            email=google_user.email,
+            full_name=google_user.name,
+            ip=meta.ip,
+            user_agent=meta.user_agent,
+        )
+    )
+
+    # No JSON response to hand back an access token to - this is a full
+    # page navigation, not a fetch. The refresh cookie is the handoff:
+    # landing on /dashboard, the frontend's existing session bootstrap
+    # (useSession -> refreshSession) finds no in-memory access token, sees
+    # this cookie, and exchanges it exactly like it would after any other
+    # hard reload. No new frontend session-handling code needed.
+    redirect = RedirectResponse(
+        f"{container.settings.web_base_url}/dashboard", status_code=status.HTTP_302_FOUND
+    )
+    set_refresh_cookie(
+        redirect, container.settings, token=session.refresh_token_raw, expires_at=session.expires_at
+    )
+    redirect.delete_cookie(key=_OAUTH_STATE_COOKIE, path=_OAUTH_STATE_PATH)
+    return redirect
 
 
 @router.post(
@@ -433,13 +548,15 @@ async def revoke_session(
     container: ContainerDep,
 ) -> dict[str, Any]:
     from uuid import UUID
+
     assert actor.user_id is not None
-    
+
     try:
         family_uuid = UUID(session_id)
     except ValueError:
         from trustlens.core.domain.errors import ValidationError
-        raise ValidationError("Invalid session ID", field="sessionId")
+
+        raise ValidationError("Invalid session ID", field="sessionId") from None
 
     # In trustlens-db, we don't have a direct method to get a session by family_id to check owner
     # But revoke_all_for_user allows revoking all except one.
@@ -449,6 +566,7 @@ async def revoke_session(
     tokens = await uow.refresh_tokens.list_active_for_user(actor.user_id)
     if not any(t.family_id == family_uuid for t in tokens):
         from trustlens.core.domain.errors import EntityNotFound
+
         raise EntityNotFound("session", family_uuid)
 
     await uow.refresh_tokens.revoke_family(
@@ -460,6 +578,7 @@ async def revoke_session(
         MessageResponse(message="Session revoked.").model_dump(by_alias=True),
         request_id=meta.request_id,
     )
+
 
 @router.get("/me/export", summary="Export your data")
 async def export_data(
@@ -493,27 +612,30 @@ async def delete_account(
 
     assert actor.user_id is not None
     current_hash = await uow.users.get_password_hash(actor.user_id)
-    if current_hash is None or not container.password_hasher.verify(
-        body.password, current_hash
-    ):
+    if current_hash is None or not container.password_hasher.verify(body.password, current_hash):
         raise InvalidCredentials
 
     user = await uow.users.get(actor.user_id)
     assert user is not None
-    
+
     # Soft delete the user
     # Or queue an account deletion task
     await container.queue.enqueue("accounts.purge", user_id=str(actor.user_id))
-    
+
     # Revoke all sessions and clear cookie
-    await uow.refresh_tokens.revoke_all_for_user(actor.user_id, at=container.clock.now(), reason="ACCOUNT_DELETED")
+    await uow.refresh_tokens.revoke_all_for_user(
+        actor.user_id, at=container.clock.now(), reason="ACCOUNT_DELETED"
+    )
     await uow.commit()
     clear_refresh_cookie(response, container.settings)
 
     return envelope(
-        MessageResponse(message="Account deletion initiated. Your data will be purged.").model_dump(by_alias=True),
+        MessageResponse(message="Account deletion initiated. Your data will be purged.").model_dump(
+            by_alias=True
+        ),
         request_id=meta.request_id,
     )
+
 
 # ── helpers ──────────────────────────────────────────────────────────
 

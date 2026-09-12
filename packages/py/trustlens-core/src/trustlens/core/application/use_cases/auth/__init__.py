@@ -1,4 +1,6 @@
 from trustlens.core.application.use_cases.auth.authenticate import (
+    AuthenticateWithGoogle,
+    GoogleAuthCommand,
     IssuedSession,
     LoginCommand,
     LoginUser,
@@ -16,6 +18,8 @@ from trustlens.core.application.use_cases.auth.authenticate import (
 )
 
 __all__ = [
+    "AuthenticateWithGoogle",
+    "GoogleAuthCommand",
     "IssuedSession",
     "LoginCommand",
     "LoginUser",

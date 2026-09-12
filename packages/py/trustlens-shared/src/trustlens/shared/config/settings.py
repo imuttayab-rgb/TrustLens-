@@ -315,6 +315,26 @@ class StorageSettings(_Base):
     media_retention_days_identity: int = 90
 
 
+class GoogleAuthSettings(_Base):
+    """Google Sign-In (OAuth 2.0 authorization-code flow).
+
+    Both fields default to None rather than raising at boot: not every
+    deployment - or every developer's machine - has a Google Cloud project
+    set up, and "sign in with Google" degrading to "not offered" is a far
+    better failure than the whole API refusing to start over it.
+    """
+
+    model_config = SettingsConfigDict(env_prefix="google_", extra="ignore")
+
+    client_id: str | None = None
+    client_secret: SecretStr | None = None
+    redirect_uri: str = "http://localhost:8000/api/v1/auth/google/callback"
+
+    @property
+    def is_configured(self) -> bool:
+        return bool(self.client_id and self.client_secret)
+
+
 class NotificationSettings(_Base):
     email_provider: Literal["smtp", "resend", "console"] = "console"
     email_from: str = "no-reply@trustlens.dev"
@@ -412,6 +432,7 @@ class Settings(_Base):
     database: DatabaseSettings = Field(default_factory=DatabaseSettings)
     redis: RedisSettings = Field(default_factory=RedisSettings)
     security: SecuritySettings = Field(default_factory=SecuritySettings)
+    google_auth: GoogleAuthSettings = Field(default_factory=GoogleAuthSettings)
     ai: AiSettings = Field(default_factory=AiSettings)
     storage: StorageSettings = Field(default_factory=StorageSettings)
     notifications: NotificationSettings = Field(default_factory=NotificationSettings)
@@ -483,6 +504,7 @@ __all__ = [
     "AiSettings",
     "DatabaseSettings",
     "Environment",
+    "GoogleAuthSettings",
     "IpIntelSettings",
     "NotificationSettings",
     "ObservabilitySettings",

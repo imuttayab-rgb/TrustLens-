@@ -142,6 +142,12 @@ _PUBLIC_ROUTES = {
     "/api/v1/auth/verify-email",
     "/api/v1/auth/forgot-password",
     "/api/v1/auth/reset-password",
+    # Google sign-in. Both legs are unauthenticated by construction: /login
+    # is where a signed-out browser starts, and /callback is Google
+    # redirecting back to that same signed-out browser with a one-time code
+    # - there is no session to require yet.
+    "/api/v1/auth/google/login",
+    "/api/v1/auth/google/callback",
     "/public/v1/status",
     "/health/worker",
     # The buyer-facing score read (P0-12). Anonymous by design - it is a page

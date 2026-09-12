@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import { GoogleAuthButton } from './GoogleAuthButton';
 
 export function RegisterForm({ className }: { className?: string }) {
   const router = useRouter();
@@ -188,6 +189,25 @@ export function RegisterForm({ className }: { className?: string }) {
       <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? 'Creating your account…' : 'Create account'}
       </Button>
+
+      <div className="relative py-1 text-center text-xs text-muted-foreground">
+        <span className="relative z-10 bg-background px-2">or</span>
+        <div className="absolute inset-x-0 top-1/2 border-t border-border" />
+      </div>
+
+      <GoogleAuthButton label="Continue with Google" />
+      <p className="text-center text-xs text-muted-foreground">
+        Creates an account instantly, verified - no confirmation email needed. By continuing you
+        agree to the{' '}
+        <Link href="/terms" className="underline-offset-4 hover:underline">
+          terms
+        </Link>{' '}
+        and{' '}
+        <Link href="/privacy" className="underline-offset-4 hover:underline">
+          privacy policy
+        </Link>
+        .
+      </p>
     </form>
   );
 }

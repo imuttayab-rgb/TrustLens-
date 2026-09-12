@@ -177,7 +177,7 @@ class RegisterUser:
                 )
 
             if cmd.as_seller:
-                await self._create_seller_profile(user, now)
+                await _create_seller_profile(self._uow, self._ids, user, now)
 
             raw_token = self._tokens.new_token()
             await self._uow.verification_tokens.add(
@@ -209,29 +209,35 @@ class RegisterUser:
         )
         return RegisterUserResult(user_id=user_id, status=AccountStatus.PENDING.value)
 
-    async def _create_seller_profile(self, user: User, now: datetime) -> SellerProfile:
-        handle = await self._unique_handle(user.full_name)
-        return await self._uow.sellers.create(
-            SellerProfile(
-                id=self._ids.new(),
-                user_id=user.id,
-                handle=handle,
-                display_name=user.full_name,
-                account_opened_at=now,
-                created_at=now,
-                email_status=VerificationStatus.PENDING,
-            )
-        )
 
-    async def _unique_handle(self, full_name: str) -> str:
-        base = "".join(c if c.isalnum() else "-" for c in full_name.lower()).strip("-")[:40]
-        base = base or "seller"
-        candidate = base
-        for suffix in range(0, 100):
-            candidate = base if suffix == 0 else f"{base}-{suffix}"
-            if not await self._uow.sellers.handle_exists(candidate):
-                return candidate
-        return f"{base}-{self._ids.new().hex[:8]}"
+async def _create_seller_profile(
+    uow: UnitOfWork, ids: IdGenerator, user: User, now: datetime
+) -> SellerProfile:
+    """Shared by password registration and Google sign-in - both create the
+    same shape of seller profile for a brand-new account."""
+    handle = await _unique_handle(uow, ids, user.full_name)
+    return await uow.sellers.create(
+        SellerProfile(
+            id=ids.new(),
+            user_id=user.id,
+            handle=handle,
+            display_name=user.full_name,
+            account_opened_at=now,
+            created_at=now,
+            email_status=VerificationStatus.PENDING,
+        )
+    )
+
+
+async def _unique_handle(uow: UnitOfWork, ids: IdGenerator, full_name: str) -> str:
+    base = "".join(c if c.isalnum() else "-" for c in full_name.lower()).strip("-")[:40]
+    base = base or "seller"
+    candidate = base
+    for suffix in range(0, 100):
+        candidate = base if suffix == 0 else f"{base}-{suffix}"
+        if not await uow.sellers.handle_exists(candidate):
+            return candidate
+    return f"{base}-{ids.new().hex[:8]}"
 
 
 def _verification_token(
@@ -279,6 +285,53 @@ class IssuedSession:
     family_id: UUID
     expires_at: datetime
     mfa_required: bool = False
+
+
+async def _new_session(
+    uow: UnitOfWork,
+    tokens: TokenHasher,
+    ids: IdGenerator,
+    user: User,
+    *,
+    refresh_ttl: timedelta,
+    ip: str | None,
+    user_agent: str | None,
+    now: datetime,
+) -> IssuedSession:
+    """Issue a brand new refresh-token family for a user who just
+    authenticated - shared by password login and Google sign-in, so
+    token-issuance has exactly one implementation to get right."""
+    raw = tokens.new_token()
+    token_id, family_id = ids.new(), ids.new()
+    expires_at = now + refresh_ttl
+
+    await uow.refresh_tokens.add(
+        RefreshToken(
+            id=token_id,
+            user_id=user.id,
+            token_hash=tokens.hash_token(raw),
+            family_id=family_id,
+            expires_at=expires_at,
+            created_at=now,
+            ip_address=ip,
+            user_agent=user_agent,
+        )
+    )
+
+    permissions = await uow.users.list_permissions(user.id)
+    return IssuedSession(
+        user=user,
+        actor=AuthenticatedActor(
+            user_id=user.id,
+            roles=user.roles,
+            permissions=permissions,
+            session_id=family_id,
+        ),
+        refresh_token_raw=raw,
+        refresh_token_id=token_id,
+        family_id=family_id,
+        expires_at=expires_at,
+    )
 
 
 class LoginUser:
@@ -346,44 +399,162 @@ class LoginUser:
                 await self._uow.commit()
                 raise MfaRequired
 
-            session = await self._issue_session(user, cmd, now)
+            session = await _new_session(
+                self._uow,
+                self._tokens,
+                self._ids,
+                user,
+                refresh_ttl=self._refresh_ttl,
+                ip=cmd.ip,
+                user_agent=cmd.user_agent,
+                now=now,
+            )
             await self._uow.users.record_successful_login(user.id, at=now)
             await self._uow.commit()
 
         return session
 
-    async def _issue_session(self, user: User, cmd: LoginCommand, now: datetime) -> IssuedSession:
-        raw = self._tokens.new_token()
-        token_id, family_id = self._ids.new(), self._ids.new()
-        expires_at = now + self._refresh_ttl
 
-        await self._uow.refresh_tokens.add(
-            RefreshToken(
-                id=token_id,
-                user_id=user.id,
-                token_hash=self._tokens.hash_token(raw),
-                family_id=family_id,
-                expires_at=expires_at,
-                created_at=now,
-                ip_address=cmd.ip,
+# ── Google sign-in ───────────────────────────────────────────────────
+
+
+@dataclass(frozen=True, slots=True)
+class GoogleAuthCommand:
+    #: Google has already verified this address - that is the entire point
+    #: of the flow, so nothing here re-checks it.
+    email: str
+    full_name: str
+    ip: str | None = None
+    user_agent: str | None = None
+    #: Only consulted the first time this email is seen. An existing account
+    #: signing in via Google keeps whatever role it already has.
+    as_seller: bool = True
+    accepted_terms_version: str = "1.0"
+
+
+class AuthenticateWithGoogle:
+    """Sign in, or register on first contact, via Google.
+
+    Google has already proven the account owns this email address - the
+    same fact our own email-verification link exists to establish - so this
+    skips password verification and the verify-email step entirely rather
+    than layering a second, weaker proof on top of a stronger one. A
+    returning user is matched by email only: there is no separate
+    provider-linkage column, because "this person proved they own
+    this address" is the one thing that matters here, regardless of which
+    door they used to prove it.
+    """
+
+    def __init__(
+        self,
+        *,
+        uow: UnitOfWork,
+        tokens: TokenHasher,
+        clock: Clock,
+        ids: IdGenerator,
+        refresh_ttl_days: int = 30,
+    ) -> None:
+        self._uow = uow
+        self._tokens = tokens
+        self._clock = clock
+        self._ids = ids
+        self._refresh_ttl = timedelta(days=refresh_ttl_days)
+
+    async def execute(self, cmd: GoogleAuthCommand) -> IssuedSession:
+        now = self._clock.now()
+        email = Email(cmd.email)
+        full_name = cmd.full_name.strip() or email.value
+
+        async with self._uow:
+            user = await self._uow.users.get_by_email(email)
+
+            if user is None:
+                user = await self._register(email, full_name, cmd, now)
+            else:
+                if user.status != AccountStatus.ACTIVE:
+                    raise AccountNotActive(f"This account is {user.status.value.lower()}.")
+                if not user.is_email_verified:
+                    # Google is re-confirming the same address our own
+                    # verify-email link would have - honour that instead of
+                    # leaving the account stuck PENDING forever because the
+                    # original email never arrived.
+                    await self._uow.users.mark_email_verified(user.id, at=now)
+                    import dataclasses
+
+                    user = dataclasses.replace(
+                        user, email_verified_at=now, status=AccountStatus.ACTIVE
+                    )
+
+            session = await _new_session(
+                self._uow,
+                self._tokens,
+                self._ids,
+                user,
+                refresh_ttl=self._refresh_ttl,
+                ip=cmd.ip,
                 user_agent=cmd.user_agent,
+                now=now,
+            )
+            await self._uow.users.record_successful_login(user.id, at=now)
+            await self._uow.commit()
+
+        return session
+
+    async def _register(
+        self, email: Email, full_name: str, cmd: GoogleAuthCommand, now: datetime
+    ) -> User:
+        user_id = self._ids.new()
+        user = User(
+            id=user_id,
+            email=email,
+            full_name=full_name,
+            status=AccountStatus.ACTIVE,
+            primary_role=UserRole.SELLER if cmd.as_seller else UserRole.BUYER,
+            roles=frozenset({UserRole.SELLER if cmd.as_seller else UserRole.BUYER}),
+            created_at=now,
+            email_verified_at=now,
+        )
+        # No password: this account can only sign in via Google until the
+        # seller sets one from account settings (not yet built - tracked
+        # separately, same as every other password-reset-adjacent gap).
+        await self._uow.users.create(user=user, password_hash=None)
+
+        await self._uow.email_addresses.add(
+            EmailAddress(
+                id=self._ids.new(),
+                user_id=user_id,
+                email=email,
+                created_at=now,
+                is_primary=True,
+                verified_at=now,
             )
         )
 
-        permissions = await self._uow.users.list_permissions(user.id)
-        return IssuedSession(
-            user=user,
-            actor=AuthenticatedActor(
-                user_id=user.id,
-                roles=user.roles,
-                permissions=permissions,
-                session_id=family_id,
-            ),
-            refresh_token_raw=raw,
-            refresh_token_id=token_id,
-            family_id=family_id,
-            expires_at=expires_at,
+        for consent_type in (ConsentType.TERMS, ConsentType.PRIVACY):
+            await self._uow.consents.record(
+                Consent(
+                    id=self._ids.new(),
+                    user_id=user_id,
+                    consent_type=consent_type,
+                    version=cmd.accepted_terms_version,
+                    granted=True,
+                    granted_at=now,
+                    ip=cmd.ip,
+                    user_agent=cmd.user_agent,
+                )
+            )
+
+        if cmd.as_seller:
+            await _create_seller_profile(self._uow, self._ids, user, now)
+
+        await self._uow.publish(
+            UserRegistered(
+                aggregate_id=user_id,
+                occurred_at=now,
+                payload={"as_seller": cmd.as_seller, "via": "google"},
+            )
         )
+        return user
 
 
 # ── Refresh with rotation and reuse detection ────────────────────────
@@ -622,6 +793,8 @@ class DuplicateEmail(ConflictError):
 
 
 __all__ = [
+    "AuthenticateWithGoogle",
+    "GoogleAuthCommand",
     "IssuedSession",
     "LoginCommand",
     "LoginUser",

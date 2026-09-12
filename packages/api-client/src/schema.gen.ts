@@ -488,6 +488,46 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/auth/google/callback': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Google redirects back here after consent
+     * @description Exchanges the authorization code, signs the user in (or registers them on first contact), sets the refresh cookie exactly like /login does, and redirects into the app. The frontend never talks to this endpoint directly - it only ever receives a browser redirect starting at /google/login.
+     */
+    get: operations['google_callback_api_v1_auth_google_callback_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/google/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Start Google sign-in
+     * @description Redirects to Google's consent screen. Not JSON: the browser must navigate here directly (a link or `window.location`), not fetch it.
+     */
+    get: operations['google_login_api_v1_auth_google_login_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/login': {
     parameters: {
       query?: never;
@@ -2765,6 +2805,63 @@ export interface operations {
         };
         content: {
           'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  google_callback_api_v1_auth_google_callback_get: {
+    parameters: {
+      query?: {
+        code?: string | null;
+        state?: string | null;
+        error?: string | null;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: {
+        tl_oauth_state?: string | null;
+      };
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  google_login_api_v1_auth_google_login_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
     };
