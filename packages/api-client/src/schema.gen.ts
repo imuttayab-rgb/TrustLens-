@@ -298,7 +298,11 @@ export interface paths {
     /** List scoring model versions */
     get: operations['list_scoring_models_api_v1_admin_scoring_models_get'];
     put?: never;
-    post?: never;
+    /**
+     * Author a new scoring model version
+     * @description Creates a new version as a draft (never active - activation is a separate, audited action via POST .../activate). Every submitted signal_code must match a known, active SignalDefinition: silently dropping an unrecognised code here, the way scoring itself does for safety, would let a model pass the sum-to-100 check while actually scoring against fewer than 100 points of real signals.
+     */
+    post: operations['create_scoring_model_api_v1_admin_scoring_models_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1406,6 +1410,25 @@ export interface components {
       /** Newpassword */
       newPassword: string;
     };
+    /** CreateScoringModelRequest */
+    CreateScoringModelRequest: {
+      /**
+       * Algorithm
+       * @default WEIGHTED_SUM
+       */
+      algorithm: string;
+      /**
+       * Description
+       * @default
+       */
+      description: string;
+      /** Name */
+      name: string;
+      /** Version */
+      version: string;
+      /** Weights */
+      weights: components['schemas']['ScoringWeightInput'][];
+    };
     /** DecideReviewRequest */
     DecideReviewRequest: {
       /** Approve */
@@ -1667,6 +1690,24 @@ export interface components {
      * @enum {string}
      */
     RiskLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'UNKNOWN';
+    /** ScoringWeightInput */
+    ScoringWeightInput: {
+      /** Hard Cap On Fail */
+      hard_cap_on_fail?: number | null;
+      /**
+       * Is Enabled
+       * @default true
+       */
+      is_enabled: boolean;
+      /** Signal Code */
+      signal_code: string;
+      /** Threshold Config */
+      threshold_config?: {
+        [key: string]: unknown;
+      };
+      /** Weight */
+      weight: number;
+    };
     /** SendMessageRequest */
     SendMessageRequest: {
       /** Body */
@@ -2408,6 +2449,43 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_scoring_model_api_v1_admin_scoring_models_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateScoringModelRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };

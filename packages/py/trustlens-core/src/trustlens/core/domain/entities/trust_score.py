@@ -101,9 +101,12 @@ class ScoringModel:
     def validate(self) -> None:
         """Enabled weights must sum to 100.
 
-        Enforced here *and* by a database check constraint. Weights are runtime
-        data (ADR-0007), so an invalid configuration is possible and must be
-        rejected before it can produce a meaningless score.
+        Weights are runtime data (ADR-0007), so an invalid configuration is
+        possible and must be rejected before it can produce a meaningless
+        score. This is the **sole** gatekeeper for that rule - there is no
+        database check constraint enforcing it, only `weight >= 0` and the
+        hard-cap range - so every write path (authoring a new version,
+        activating one) must call this before persisting or activating.
         """
         if not self.enabled_weights:
             raise InvalidScoringModel("scoring model has no enabled weights")

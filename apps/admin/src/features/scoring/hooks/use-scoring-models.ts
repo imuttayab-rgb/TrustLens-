@@ -49,3 +49,43 @@ export function useActivateScoringModel() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: MODELS_KEY }),
   });
 }
+
+export interface CreateScoringWeightInput {
+  signalCode: string;
+  weight: number;
+  hardCapOnFail: number | null;
+  isEnabled: boolean;
+}
+
+export interface CreateScoringModelInput {
+  version: string;
+  name: string;
+  description: string;
+  algorithm: string;
+  weights: CreateScoringWeightInput[];
+}
+
+export function useCreateScoringModel() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: CreateScoringModelInput) => {
+      const result = await api.POST('/api/v1/admin/scoring-models', {
+        body: {
+          version: input.version,
+          name: input.name,
+          description: input.description,
+          algorithm: input.algorithm,
+          weights: input.weights.map((w) => ({
+            signal_code: w.signalCode,
+            weight: w.weight,
+            hard_cap_on_fail: w.hardCapOnFail,
+            is_enabled: w.isEnabled,
+          })),
+        },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: ScoringModel }).data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: MODELS_KEY }),
+  });
+}

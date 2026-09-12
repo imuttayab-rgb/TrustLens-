@@ -12,7 +12,7 @@ import dataclasses
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, status
 from pydantic import BaseModel, Field
 
 from trustlens.core.application.use_cases.admin import (
@@ -24,9 +24,20 @@ from trustlens.core.application.use_cases.admin import (
     ListReviewQueue,
 )
 from trustlens.core.application.use_cases.scoring import GetTrustScore, GetTrustScoreCommand
-from trustlens.core.domain.entities import AuditLogEntry, AuthenticatedActor, ReviewCase
+from trustlens.core.domain.entities import (
+    AuditLogEntry,
+    AuthenticatedActor,
+    ReviewCase,
+    ScoringModel,
+    ScoringWeight,
+)
 from trustlens.core.domain.enums import DocumentType, RiskLevel
-from trustlens.core.domain.errors import EntityNotFound, PermissionDenied
+from trustlens.core.domain.errors import (
+    ConflictError,
+    EntityNotFound,
+    PermissionDenied,
+    ValidationError,
+)
 from trustlens.db.queries import SellerAdminQueries
 from trustlens_api.api.deps import (
     ActorDep,
@@ -87,6 +98,22 @@ class ScoringModelResponse(Schema):
     total_weight: float
     weights: list[ScoringWeightModel]
     activated_at: Any
+
+
+class ScoringWeightInput(BaseModel):
+    signal_code: str
+    weight: float = Field(ge=0)
+    hard_cap_on_fail: int | None = Field(default=None, ge=0, le=100)
+    is_enabled: bool = True
+    threshold_config: dict[str, Any] = Field(default_factory=dict)
+
+
+class CreateScoringModelRequest(BaseModel):
+    version: str = Field(min_length=1, max_length=20)
+    name: str = Field(min_length=1, max_length=200)
+    description: str = Field(default="", max_length=2_000)
+    algorithm: str = Field(default="WEIGHTED_SUM", max_length=30)
+    weights: list[ScoringWeightInput] = Field(min_length=1)
 
 
 class IdentityReviewDocumentModel(Schema):
@@ -203,6 +230,96 @@ async def list_scoring_models(uow: UowDep, meta: MetaDep) -> dict[str, Any]:
     return envelope(
         [_to_scoring_model(model).model_dump(by_alias=True) for model in models],
         request_id=meta.request_id,
+    )
+
+
+@router.post(
+    "/scoring-models",
+    summary="Author a new scoring model version",
+    description=(
+        "Creates a new version as a draft (never active - activation is a "
+        "separate, audited action via POST .../activate). Every submitted "
+        "signal_code must match a known, active SignalDefinition: silently "
+        "dropping an unrecognised code here, the way scoring itself does for "
+        "safety, would let a model pass the sum-to-100 check while actually "
+        "scoring against fewer than 100 points of real signals."
+    ),
+    dependencies=[Depends(require_permissions("scoring_model:write"))],
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_scoring_model(
+    body: CreateScoringModelRequest,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    if actor.user_id is None:
+        raise PermissionDenied("scoring_model:write")
+    if await uow.scoring_models.get_by_version(body.version) is not None:
+        raise ConflictError(f"a scoring model version {body.version!r} already exists")
+
+    definitions = {d.code.value: d for d in await uow.scoring_models.list_signal_definitions()}
+
+    seen_codes: set[str] = set()
+    resolved: list[tuple[ScoringWeightInput, Any]] = []
+    for weight_input in body.weights:
+        if weight_input.signal_code in seen_codes:
+            raise ValidationError(
+                f"duplicate signal_code {weight_input.signal_code!r} in weights",
+                field="weights",
+            )
+        seen_codes.add(weight_input.signal_code)
+        definition = definitions.get(weight_input.signal_code)
+        if definition is None or not definition.is_active:
+            raise ValidationError(
+                f"{weight_input.signal_code!r} is not a known, active signal",
+                field="weights",
+            )
+        resolved.append((weight_input, definition))
+
+    model_id = container.ids.new()
+    model = ScoringModel(
+        id=model_id,
+        version=body.version,
+        name=body.name,
+        description=body.description,
+        is_active=False,
+        algorithm=body.algorithm,
+        weights=tuple(
+            ScoringWeight(
+                id=container.ids.new(),
+                scoring_model_id=model_id,
+                signal_definition_id=definition.id,
+                signal_code=definition.code,
+                weight=weight_input.weight,
+                threshold_config=weight_input.threshold_config,
+                hard_cap_on_fail=weight_input.hard_cap_on_fail,
+                is_enabled=weight_input.is_enabled,
+            )
+            for weight_input, definition in resolved
+        ),
+    )
+    # Same rule ComputeTrustScore relies on (enabled weights sum to 100) -
+    # checked before this draft ever reaches the database.
+    model.validate()
+
+    created = await uow.scoring_models.create(model)
+    await uow.audit_logs.record(
+        AuditLogEntry(
+            id=container.ids.new(),
+            action="scoring_model.created",
+            entity_type="scoring_models",
+            entity_id=model_id,
+            actor_id=actor.user_id,
+            occurred_at=container.clock.now(),
+            before={},
+            after={"version": created.version, "weight_count": len(created.weights)},
+        )
+    )
+    await uow.commit()
+    return envelope(
+        _to_scoring_model(created).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 

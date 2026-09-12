@@ -144,6 +144,45 @@
         "title": "ChangePasswordRequest",
         "type": "object"
       },
+      "CreateScoringModelRequest": {
+        "properties": {
+          "algorithm": {
+            "default": "WEIGHTED_SUM",
+            "maxLength": 30,
+            "title": "Algorithm",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 2000,
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "version": {
+            "maxLength": 20,
+            "minLength": 1,
+            "title": "Version",
+            "type": "string"
+          },
+          "weights": {
+            "items": {
+              "$ref": "#/components/schemas/ScoringWeightInput"
+            },
+            "minItems": 1,
+            "title": "Weights",
+            "type": "array"
+          }
+        },
+        "required": ["version", "name", "weights"],
+        "title": "CreateScoringModelRequest",
+        "type": "object"
+      },
       "DecideReviewRequest": {
         "properties": {
           "approve": {
@@ -774,6 +813,45 @@
         "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"],
         "title": "RiskLevel",
         "type": "string"
+      },
+      "ScoringWeightInput": {
+        "properties": {
+          "hard_cap_on_fail": {
+            "anyOf": [
+              {
+                "maximum": 100.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hard Cap On Fail"
+          },
+          "is_enabled": {
+            "default": true,
+            "title": "Is Enabled",
+            "type": "boolean"
+          },
+          "signal_code": {
+            "title": "Signal Code",
+            "type": "string"
+          },
+          "threshold_config": {
+            "additionalProperties": true,
+            "title": "Threshold Config",
+            "type": "object"
+          },
+          "weight": {
+            "minimum": 0.0,
+            "title": "Weight",
+            "type": "number"
+          }
+        },
+        "required": ["signal_code", "weight"],
+        "title": "ScoringWeightInput",
+        "type": "object"
       },
       "SendMessageRequest": {
         "additionalProperties": false,
@@ -2235,6 +2313,64 @@
           }
         },
         "summary": "List scoring model versions",
+        "tags": ["admin"]
+      },
+      "post": {
+        "description": "Creates a new version as a draft (never active - activation is a separate, audited action via POST .../activate). Every submitted signal_code must match a known, active SignalDefinition: silently dropping an unrecognised code here, the way scoring itself does for safety, would let a model pass the sum-to-100 check while actually scoring against fewer than 100 points of real signals.",
+        "operationId": "create_scoring_model_api_v1_admin_scoring_models_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateScoringModelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Scoring Model Api V1 Admin Scoring Models Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Author a new scoring model version",
         "tags": ["admin"]
       }
     },

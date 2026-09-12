@@ -4,11 +4,13 @@ import { useActivateScoringModel, useScoringModels } from '@/features/scoring';
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Spinner } from '@trustlens/ui';
 import { toApiError } from '@trustlens/api-client';
 import { useState } from 'react';
+import { NewScoringModelForm } from './NewScoringModelForm';
 
 export function ScoringModelsClient() {
   const { data: models, isPending, error } = useScoringModels();
   const activate = useActivateScoringModel();
   const [failure, setFailure] = useState<string | null>(null);
+  const [creating, setCreating] = useState(false);
 
   if (isPending)
     return (
@@ -23,14 +25,28 @@ export function ScoringModelsClient() {
       </main>
     );
 
+  const activeModel = (models ?? []).find((m) => m.isActive);
+
   return (
     <main className="mx-auto max-w-5xl space-y-6 p-6 sm:p-8">
-      <h1 className="text-2xl font-bold">Scoring models</h1>
-      <p className="mt-1 text-muted-foreground">
-        Versioned weights determine the score. Activating a model preserves historical scores and
-        queues a recomputation.
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold">Scoring models</h1>
+          <p className="mt-1 text-muted-foreground">
+            Versioned weights determine the score. Activating a model preserves historical scores
+            and queues a recomputation.
+          </p>
+        </div>
+        {!creating && (
+          <Button variant="outline" onClick={() => setCreating(true)}>
+            New version
+          </Button>
+        )}
+      </div>
       {failure && <Alert tone="error">{failure}</Alert>}
+
+      {creating && <NewScoringModelForm active={activeModel} onDone={() => setCreating(false)} />}
+
       <div className="space-y-4">
         {(models ?? []).map((model) => (
           <Card key={model.id}>
