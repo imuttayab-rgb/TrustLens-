@@ -40,22 +40,22 @@ Three consequences, and they save real time:
 
 ### Software track
 
-| Phase | Title                                                         | Days   | Status                                                                                                                                    | Owner  |
-| ----- | ------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| 0     | Make it run                                                   | 1      | `[x]` **complete** — P0-09 and P0-11 both closed                                                                                          | Zohaib |
-| 1     | Prove the risky parts                                         | 2      | `[~]` code done; **blocked on real CNIC/face images**                                                                                     | Zohaib |
-| 2     | Seller verification UI (mobile-first)                         | 8      | `[~]` onboarding, four flows, score UI, settings done; **account deletion is a stub**                                                     | Zohaib |
-| 3     | Listings module                                               | 4      | `[x]` **complete** — lifecycle, API, price signal, UI, image upload + duplicate detection all done                                        | Zohaib |
-| 4     | Admin panel                                                   | 5      | `[~]` seller search/list, identity review, dashboard, audit trail done; **evidence viewer + scoring-model authoring left**                | Zohaib |
-| 5     | Appeals                                                       | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green                                                                                  | Zohaib |
-| 6     | Public marketplace API                                        | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs                                                                               | Zohaib |
-| 7     | ML scam classifier                                            | 4      | `[~]` pipeline + baseline shipped; **blocked on local ads**                                                                               | Zohaib |
-| 8     | Real integrations                                             | 4      | `[ ]`                                                                                                                                     |        |
-| 9     | Production ready (local)                                      | 3      | `[~]` stack, monitoring, backups done; Resend/Twilio now have real accounts wired, both still need a verified domain / a purchased number | Zohaib |
-| 10    | QA & demo readiness                                           | 4      | `[ ]` Test Cases doc honestly logs 26/51 executed; **new marketplace features (12b, below) have zero test coverage**                      | Zohaib |
-| 11    | Handover & training                                           | 3      | `[~]` `RUNBOOK.md` done; the rest not started                                                                                             | Zohaib |
-| 12b   | **Marketplace expansion (extra scope, not in original plan)** | —      | `[x]` **complete** — OAuth, catalog/search/categories, favorites, area+maps, chat, listing detail page; see `REMAINING.md` Stage 4b       | Zohaib |
-|       | **Software total**                                            | **44** |                                                                                                                                           |        |
+| Phase | Title                                                         | Days   | Status                                                                                                                                                     | Owner  |
+| ----- | ------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0     | Make it run                                                   | 1      | `[x]` **complete** — P0-09 and P0-11 both closed                                                                                                           | Zohaib |
+| 1     | Prove the risky parts                                         | 2      | `[~]` code done; **blocked on real CNIC/face images**                                                                                                      | Zohaib |
+| 2     | Seller verification UI (mobile-first)                         | 8      | `[~]` onboarding, four flows, score UI, settings done; **account deletion is a stub**                                                                      | Zohaib |
+| 3     | Listings module                                               | 4      | `[x]` **complete** — lifecycle, API, price signal, UI, image upload + duplicate detection all done                                                         | Zohaib |
+| 4     | Admin panel                                                   | 5      | `[x]` **complete 12 Sep** — seller search/list, identity review, dashboard, audit trail, evidence viewer, scoring-model authoring, MFA lockout risk closed | Zohaib |
+| 5     | Appeals                                                       | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green                                                                                                   | Zohaib |
+| 6     | Public marketplace API                                        | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs                                                                                                | Zohaib |
+| 7     | ML scam classifier                                            | 4      | `[~]` pipeline + baseline shipped; **blocked on local ads**                                                                                                | Zohaib |
+| 8     | Real integrations                                             | 4      | `[ ]`                                                                                                                                                      |        |
+| 9     | Production ready (local)                                      | 3      | `[~]` stack, monitoring, backups done; Resend/Twilio now have real accounts wired, both still need a verified domain / a purchased number                  | Zohaib |
+| 10    | QA & demo readiness                                           | 4      | `[ ]` Test Cases doc honestly logs 26/51 executed; **new marketplace features (12b, below) have zero test coverage**                                       | Zohaib |
+| 11    | Handover & training                                           | 3      | `[~]` `RUNBOOK.md` done; the rest not started                                                                                                              | Zohaib |
+| 12b   | **Marketplace expansion (extra scope, not in original plan)** | —      | `[x]` **complete** — OAuth, catalog/search/categories, favorites, area+maps, chat, listing detail page; see `REMAINING.md` Stage 4b                        | Zohaib |
+|       | **Software total**                                            | **44** |                                                                                                                                                            |        |
 
 ### Documentation track (runs in parallel — see Track D)
 
@@ -470,26 +470,49 @@ software track can substitute for them, and they gate the accuracy numbers the r
       _Verified 12 Sep:_ done.
 - [x] **P4-04** Seller list: search, filter by risk band and flag status, pagination.
       _Verified 12 Sep:_ done.
-- [~] **P4-05** Seller detail: full signal breakdown, verification history, score history, evidence viewer.
-  _Verified 12 Sep:_ has verification history and score history. **Missing:** a per-signal
-  score breakdown, and an evidence viewer reachable outside the review-queue context — CNIC/
-  selfie can currently only be viewed while a review is in-flight, not from this page.
+- [x] **P4-05** Seller detail: full signal breakdown, verification history, score history, evidence viewer.
+      _Verified 12 Sep:_ had verification history and score history, but was missing a per-signal
+      breakdown and an evidence viewer reachable outside the review-queue context.
+      **Closed 12 Sep:** new admin-namespaced `GET /admin/sellers/{id}/trust-score` (gated on the
+      previously-unused `trust_score:read:full` permission) feeds the same `SignalBreakdown`
+      component sellers see on their own dashboard; `IdentityEvidence` was extracted out of the
+      review-queue-only flow into a shared component and now renders on this page too, via the
+      existing signed-URL identity-review endpoint, with no need to claim a review case first.
 - [x] **P4-06** Manual identity review screen — CNIC and selfie via **short-lived signed URLs only**, approve/reject with reason.
       _Verified 12 Sep:_ done.
-- [~] **P4-07** Scoring-model admin: view weights, adjust, publish a new version. _(Weights are versioned in the DB — old scores must keep referencing the version that produced them.)_
-  _Verified 12 Sep:_ can view pre-seeded model versions and activate one (version-pinning
-  on historical scores correctly preserved). **Missing:** any way to author/edit weights and
-  publish a new version — the `scoring_model:write`/`scoring_model:simulate` permissions
-  and the repository's `create`/`update` methods exist but are dead code, never called.
+- [x] **P4-07** Scoring-model admin: view weights, adjust, publish a new version. _(Weights are versioned in the DB — old scores must keep referencing the version that produced them.)_
+      _Verified 12 Sep:_ could view pre-seeded model versions and activate one (version-pinning
+      on historical scores correctly preserved), but the `scoring_model:write`/`scoring_model:simulate`
+      permissions and the repository's `create`/`update` methods were dead code, never called.
+      **Closed 12 Sep:** new `POST /admin/scoring-models` (gated on `scoring_model:write`) lets an
+      admin author a new draft version. Rejects a duplicate version string, a duplicate
+      `signal_code` in one submission, or any `signal_code` that isn't a known, active
+      `SignalDefinition` — closing a real risk the research pass found: the scoring engine itself
+      _silently drops_ an unrecognised weight at score time rather than rejecting it, so without
+      this check a model could pass the sum-to-100 rule on paper while actually scoring against
+      fewer than 100 points of real signals. Then runs the existing `ScoringModel.validate()`
+      before the draft is ever written. Publishing stays the separate, audited activate step it
+      already was. Admin UI clones the active model's weights into an editable form with a live
+      running total, since typing 14 weights from a blank form is how the sum drifts from 100 by
+      accident. **Known scope limit:** the repository's `update()` can only tweak existing weight
+      rows by id, not add/remove signal membership, so "adjust and republish" always goes through
+      `create()` (a fresh version) rather than an in-place edit — fine for now, noted for whoever
+      picks this up next. Also fixed a stale docstring on `ScoringModel.validate()` that claimed a
+      database check constraint backs the sum-to-100 rule; it doesn't, application code is the
+      sole gatekeeper, which is exactly why this endpoint has to enforce it itself.
 - [x] **P4-08** Audit trail: every admin action recorded with actor, timestamp, before/after.
       _Verified 12 Sep:_ done, with real call sites across the codebase.
-      _Stage done when:_ the P4-05 evidence-viewer gap and the P4-07 authoring gap are closed.
+      _Stage done 12 Sep._
 
-🚨 **Found while re-verifying P4-00's MFA note on 12 Sep:** `SECURITY_MFA_REQUIRED_ROLES`
-still defaults to `ADMIN,REVIEWER` and **no MFA enrollment endpoint exists anywhere in the
-codebase** — the same class of bug P4-00 fixed for local dev, but for production. A deploy
-that doesn't explicitly empty this setting would lock every admin/reviewer out of login,
-demanding a second factor nobody can ever enroll in. Fix before go-live.
+🚨 **Found while re-verifying P4-00's MFA note on 12 Sep, closed the same day:**
+`SECURITY_MFA_REQUIRED_ROLES` defaulted to `ADMIN,REVIEWER` with **no MFA enrollment endpoint
+anywhere in the codebase** — the same class of bug P4-00 fixed for local dev, but for
+production. A deploy that didn't explicitly empty this setting would have locked every
+admin/reviewer out of login, demanding a second factor nobody could ever enroll in.
+**Fixed:** the setting now defaults empty, and a new `_assert_mfa_roles_are_enrollable` check
+in `main.py` refuses to boot at all if it's ever set non-empty — turning a silent post-deploy
+lockout into an immediate, loud, pre-traffic error. Building real MFA enrollment is still
+optional future work; this closes the lockout risk, not the feature gap.
 
 ---
 

@@ -14,19 +14,20 @@ Task IDs are the same in both files. Tick a box here, tick it in `TASKS.md` too.
 
 |                         |                                                     |
 | ----------------------- | --------------------------------------------------- |
-| Software track          | ~37 of 44 days done — **about 84%**                 |
+| Software track          | ~39 of 44 days done — **about 89%**                 |
 | Documentation track (D) | 8 of 9 days done — **about 89%** (deck/video open)  |
-| **Whole FYP**           | **about 85%**                                       |
-| Phases finished         | 0, 3, 5, 6, most of 2, 4, 7, D                      |
+| **Whole FYP**           | **about 89%**                                       |
+| Phases finished         | 0, 3, 4, 5, 6, most of 2, 7, D                      |
 | Phases untouched        | Stage 1 (blocked on students), D-09 (deck/video)    |
 | Extra scope, done       | A full client-driven marketplace expansion — see    |
 |                         | **Stage 4b** below — none of it was in the original |
 |                         | 72-task plan                                        |
 
-The hard part is behind us, and since 22 Aug the admin panel, the seller-side leftovers, and
-the entire report documentation package have all landed too. Two real gaps remain in the admin
-panel (below), one stub in account deletion, and Stage 1's accuracy numbers are still waiting
-on the students to supply test images. Everything else left is calendar, not risk.
+The hard part is behind us. Stage 4 (admin panel) closed for good on 12 Sep — the
+seller-detail evidence gap, the scoring-model authoring gap, and the MFA lockout risk are
+all fixed. One stub remains in account deletion (Stage 5), and Stage 1's accuracy numbers
+are still waiting on the students to supply test images. Everything else left is calendar
+and test coverage, not unbuilt features.
 
 ---
 
@@ -105,38 +106,47 @@ No change since 22 Aug. Still open, and all of it needs accounts rather than cod
 
 ---
 
-## Stage 4 — Admin panel (Phase 4 remainder) — mostly done, 2 real gaps open
+## Stage 4 — Admin panel (Phase 4 remainder) ✅ done 12 Sep
 
-**Re-verified against actual code, not commit messages, on 12 Sep.** Five of eight items are
-genuinely done with real DB-backed logic. Two are partially done. One (MFA) is decided but
-has a latent production-config risk worth fixing before handover.
+**Re-verified against actual code on 12 Sep, then both remaining gaps closed the same day.**
 
 - [x] **P4-01b** Seller-search use case + endpoint — done.
 - [x] **P4-04** Seller list: search, filter by risk band and flag status, pagination — done.
-- [~] **P4-05** Seller detail — **partial.** Has verification history and score history.
-  **Missing:** a per-signal score breakdown, and an evidence viewer reachable outside the
-  review-queue context (CNIC/selfie can currently only be viewed while a review is
-  in-flight, not from the seller-detail page itself).
+- [x] **P4-05** Seller detail — **closed 12 Sep.** New admin-namespaced
+      `GET /admin/sellers/{id}/trust-score` (gated on the previously-unused
+      `trust_score:read:full` permission) feeds the same `SignalBreakdown` component sellers
+      see on their own dashboard; the identity evidence viewer (CNIC/selfie via signed URLs)
+      was extracted out of the review-queue-only flow into a shared component and is now on
+      this page too, reachable without claiming a review case first.
 - [x] **P4-06** Manual identity review — CNIC and selfie via short-lived signed URLs,
       approve/reject with reason — done.
 - [x] **P4-03b** Dashboard counts by risk band, pending reviews, recent flags — done.
-- [~] **P4-07** Scoring-model admin — **partial.** Can view pre-seeded model versions and
-  activate one (correctly preserving version-pinning on historical scores). **Missing:**
-  any way to actually author or edit weights and publish a new version — the
-  `scoring_model:write` / `scoring_model:simulate` permissions and the repository's
-  `create`/`update` methods exist but are dead code, never called by any endpoint.
+- [x] **P4-07** Scoring-model admin — **closed 12 Sep.** New `POST /admin/scoring-models`
+      (gated on the previously-unused `scoring_model:write` permission) lets an admin author
+      a new draft version — rejecting an unknown/inactive `signal_code`, a duplicate one in
+      the same submission, or a duplicate version string, then running the existing
+      sum-to-100 validation before the draft is ever written. Publishing stays a separate,
+      audited step via the existing activate endpoint. The admin UI clones the active
+      model's weights into an editable form with a live running total, since typing 14
+      weights from scratch is how the sum drifts from 100 by accident.
+      ⚠️ **Known scope limit, noted rather than silently left:** the repository's `update()`
+      can only tweak existing weight rows by id, not add/remove a model's signal membership
+      — so "adjust and republish" always goes through `create()` (a fresh version) rather
+      than an in-place edit. Fine for now; worth revisiting if in-place editing turns out to
+      matter for the demo.
 - [x] **P4-08** Audit trail — every admin action recorded with actor, timestamp, before/after,
       with real call sites across the codebase — done.
-- [x] **P4-09** MFA decision — documented (staff MFA is not implemented; setting exists,
-      feature does not). **🚨 Found while re-verifying:** `SECURITY_MFA_REQUIRED_ROLES`
-      defaults to `ADMIN,REVIEWER` with zero MFA enrollment endpoint anywhere in the codebase.
-      A production deploy that doesn't explicitly empty this setting would **lock every
-      admin/reviewer out of login**, since the system would demand a second factor nobody can
-      ever enroll in. Fix before go-live: either implement enrollment, or default the setting
-      empty and document why.
+- [x] **P4-09** MFA — **closed 12 Sep.** Found while re-verifying: `SECURITY_MFA_REQUIRED_ROLES`
+      defaulted to `ADMIN,REVIEWER` with zero MFA enrollment endpoint anywhere in the
+      codebase — a production deploy that didn't explicitly empty it would have locked every
+      admin/reviewer out of login. Fixed: the setting now defaults empty, and the API
+      **refuses to boot** if it's ever set non-empty (`_assert_mfa_roles_are_enrollable` in
+      `main.py`), turning a silent post-deploy lockout into an immediate, loud,
+      pre-traffic error. Building real MFA enrollment is still future work if ever needed —
+      this closes the lockout risk, not the feature gap.
 
-_Stage done when:_ the seller-detail evidence gap and the scoring-model authoring gap are
-closed, and the MFA setting's default is corrected.
+⚠️ **New gap, not yet tested:** none of this stage's three 12 Sep changes have dedicated
+tests — folded into Stage 6's test-coverage backlog alongside Stage 4b.
 
 ---
 
@@ -280,13 +290,15 @@ submitting — the rest of the package is otherwise submission-ready today.
 ## Decisions still open
 
 1. **Final submission date.** Without it, the remaining software days map to no calendar.
-2. **MFA** — implement enrollment, or default `SECURITY_MFA_REQUIRED_ROLES` empty. This is
-   no longer just a documentation decision (P4-09) — leaving it as-is is a real lockout risk.
-3. **Data-retention approach for account deletion** — hard delete vs. anonymize. Needed to
+2. **Data-retention approach for account deletion** — hard delete vs. anonymize. Needed to
    actually implement `purge_account()` (Stage 5), and worth a line in the report regardless.
-4. **The $3–4/month for the worker instance, plus now a Twilio number purchase** — who pays.
-5. **Scoring-model authoring (P4-07)** — worth building before handover, or documented as a
-   known gap the students accept for viva.
+3. **The $3–4/month for the worker instance, plus now a Twilio number purchase** — who pays.
+4. **Real MFA enrollment** — still not built (P4-09 only closed the lockout _risk_, defaulting
+   the setting empty and refusing to boot if it's misconfigured). Building the actual feature
+   is optional future work, not a blocker, unless a client requirement changes that.
+
+_Resolved 12 Sep: MFA lockout risk (was #2) and scoring-model authoring (was #5) — both built,
+see Stage 4._
 
 ---
 
@@ -300,14 +312,17 @@ Update this as boxes get ticked. It is the one line to show the students each we
 | 1     | Accuracy numbers                   |      7 | 0      | Students → Zohaib         |
 | 2     | Scam classifier                    |      9 | **7**  | Zohaib 🔴 data            |
 | 3     | Production local                   |     14 | **10** | Zohaib (2 need accounts)  |
-| 4     | Admin panel                        |      8 | **6**  | Zohaib (2 gaps + 1 risk)  |
+| 4     | Admin panel                        |      8 | **8**  | Zohaib ✅ (untested)      |
 | 4b    | Marketplace expansion (extra)      |     12 | **12** | Zohaib ✅ (untested)      |
 | 5     | Seller leftovers                   |      4 | **2**  | Zohaib (1 stub: deletion) |
 | 6     | QA and demo                        |      8 | **1**  | Zohaib                    |
 | 7     | Handover                           |      6 | **1**  | Both                      |
 | D     | Report                             |      9 | **8**  | Zohaib draft → Students   |
-|       | **Total (original 72 + 12 extra)** | **84** | **54** |                           |
+|       | **Total (original 72 + 12 extra)** | **84** | **56** |                           |
 
-_Refreshed 12 September 2026 — re-verified against actual current code (not commit messages
-or the stale 22 Aug snapshot) via two independent code-reading passes over Stage 4 and Stage 5. Sequenced by dependency, not by date. Scope: academic FYP + client-driven marketplace
-expansion._
+_Refreshed 12 September 2026, updated same day after closing Stage 4's remaining gaps —
+re-verified against actual current code (not commit messages or the stale 22 Aug snapshot)
+via two independent code-reading passes over Stage 4 and Stage 5, then the seller-detail
+evidence viewer, scoring-model authoring, and the MFA boot-time guard were all built and
+shipped the same day. Sequenced by dependency, not by date. Scope: academic FYP +
+client-driven marketplace expansion._
