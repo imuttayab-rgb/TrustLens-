@@ -40,27 +40,28 @@ Three consequences, and they save real time:
 
 ### Software track
 
-| Phase | Title                                 | Days   | Status                                                       | Owner  |
-| ----- | ------------------------------------- | ------ | ------------------------------------------------------------ | ------ |
-| 0     | Make it run                           | 1      | `[x]` **complete** — P0-09 and P0-11 both closed             | Zohaib |
-| 1     | Prove the risky parts                 | 2      | `[~]` code done; **blocked on real CNIC/face images**        | Zohaib |
-| 2     | Seller verification UI (mobile-first) | 8      | `[~]` onboarding, four flows and score UI done; account left | Zohaib |
-| 3     | Listings module                       | 4      | `[~]` lifecycle, API, price signal + UI done; images left    | Zohaib |
-| 4     | Admin panel                           | 5      | `[~]` reviewer workflow works end to end; seller admin left  | Zohaib |
-| 5     | Appeals                               | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green     | Zohaib |
-| 6     | Public marketplace API                | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs  | Zohaib |
-| 7     | ML scam classifier                    | 4      | `[~]` pipeline + baseline shipped; **blocked on local ads**  | Zohaib |
-| 8     | Real integrations                     | 4      | `[ ]`                                                        |        |
-| 9     | Production ready (local)              | 3      | `[~]` stack, monitoring, backups done; hosting is optional   | Zohaib |
-| 10    | QA & demo readiness                   | 4      | `[ ]`                                                        |        |
-| 11    | Handover & training                   | 3      | `[ ]`                                                        |        |
-|       | **Software total**                    | **44** |                                                              |        |
+| Phase | Title                                                         | Days   | Status                                                                                                                                    | Owner  |
+| ----- | ------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0     | Make it run                                                   | 1      | `[x]` **complete** — P0-09 and P0-11 both closed                                                                                          | Zohaib |
+| 1     | Prove the risky parts                                         | 2      | `[~]` code done; **blocked on real CNIC/face images**                                                                                     | Zohaib |
+| 2     | Seller verification UI (mobile-first)                         | 8      | `[~]` onboarding, four flows, score UI, settings done; **account deletion is a stub**                                                     | Zohaib |
+| 3     | Listings module                                               | 4      | `[x]` **complete** — lifecycle, API, price signal, UI, image upload + duplicate detection all done                                        | Zohaib |
+| 4     | Admin panel                                                   | 5      | `[~]` seller search/list, identity review, dashboard, audit trail done; **evidence viewer + scoring-model authoring left**                | Zohaib |
+| 5     | Appeals                                                       | 3      | `[x]` **complete** — full lifecycle, both UIs, e2e green                                                                                  | Zohaib |
+| 6     | Public marketplace API                                        | 3      | `[x]` **complete** — keys, signing, webhooks, screens, docs                                                                               | Zohaib |
+| 7     | ML scam classifier                                            | 4      | `[~]` pipeline + baseline shipped; **blocked on local ads**                                                                               | Zohaib |
+| 8     | Real integrations                                             | 4      | `[ ]`                                                                                                                                     |        |
+| 9     | Production ready (local)                                      | 3      | `[~]` stack, monitoring, backups done; Resend/Twilio now have real accounts wired, both still need a verified domain / a purchased number | Zohaib |
+| 10    | QA & demo readiness                                           | 4      | `[ ]` Test Cases doc honestly logs 26/51 executed; **new marketplace features (12b, below) have zero test coverage**                      | Zohaib |
+| 11    | Handover & training                                           | 3      | `[~]` `RUNBOOK.md` done; the rest not started                                                                                             | Zohaib |
+| 12b   | **Marketplace expansion (extra scope, not in original plan)** | —      | `[x]` **complete** — OAuth, catalog/search/categories, favorites, area+maps, chat, listing detail page; see `REMAINING.md` Stage 4b       | Zohaib |
+|       | **Software total**                                            | **44** |                                                                                                                                           |        |
 
 ### Documentation track (runs in parallel — see Track D)
 
-| Track | Title                     | Days | Status | Owner                                    |
-| ----- | ------------------------- | ---- | ------ | ---------------------------------------- |
-| D     | FYP academic deliverables | 9    | `[ ]`  | **Haseeb + Muttayab** (confirmed 12 Aug) |
+| Track | Title                     | Days | Status                            | Owner                                    |
+| ----- | ------------------------- | ---- | --------------------------------- | ---------------------------------------- |
+| D     | FYP academic deliverables | 9    | `[~]` **8 of 9 done — see below** | **Haseeb + Muttayab** (confirmed 12 Aug) |
 
 **Decisions, 12 August 2026**
 
@@ -71,6 +72,15 @@ Three consequences, and they save real time:
 - **No submission date set.** Sequencing is therefore by dependency, not by
   calendar. If a date lands later, the schedule can be cut from the back
   (Phases 10-11 compress; Phase 9 cannot).
+
+**Update, 10 September 2026** — Zohaib generated a full first-pass documentation package
+under `fyp-submission/docs/`: SRS (IEEE 830), SDD (IEEE 1016), Test Cases (IEEE 829), User
+Manual, and an 8-chapter Thesis with front matter, references and 4 appendices, plus
+Mermaid diagrams (render-tested, exported to PNG for Word), real screenshots from the
+running app, and a generated `Project_Thesis.docx`. This is a draft to review and defend,
+not a substitute for the students owning and presenting it — see `fyp-submission/docs/02-Index.md`
+for the reading order and `REMAINING.md`'s Track D section for the item-by-item status.
+Only **D-09 (final presentation deck and demo video)** is not started.
 
 **Grand total: 53 working days** ≈ 13 weeks at 4 days/week, or 10.5 weeks at 5 days/week.
 Map to real dates once the submission date is confirmed.
@@ -368,18 +378,26 @@ software track can substitute for them, and they gate the accuracy numbers the r
       _Done 11 Aug, box corrected 22 Aug (P0-15)._ Reads
       `GET /api/v1/sellers/{id}/trust-score/improvements`; the endpoint, the `rank_improvements`
       policy and its tests all predate this correction.
-- [ ] **P2-22** Polish the public buyer page `(public)/seller/[handle]` — **this is the screen in the final demo**, so it must look finished on both phone and laptop.
+- [x] **P2-22** Polish the public buyer page `(public)/seller/[handle]` — **this is the screen in the final demo**, so it must look finished on both phone and laptop.
       _Unblocked 22 Aug by P0-12; the page now renders instead of 404ing._ One defect already
       fixed on the way (**P0-17**): every reason row was labelled "Identity", so a confirmed
-      email address was presented to buyers as an identity check. What remains here is
-      responsive polish at 360 px and 1440 px, not correctness.
-      _Done when:_ the buyer page clearly shows score, band, reasons, and verified badges at 360 px and 1440 px.
+      email address was presented to buyers as an identity check.
+      _Verified 12 Sep:_ genuine responsive Tailwind breakpoints at both 360 px and 1440 px.
 
 ### Day 11 — Account & data rights
 
-- [ ] **P2-23** Account settings: change password, active sessions, delete account.
-- [ ] **P2-24** **Data export and deletion request** flow. _Pakistan's regime gives data subjects access and deletion rights — and it is a strong report section given you hold CNIC and biometric data._
-      _Done when:_ a seller can download their data and request deletion.
+- [~] **P2-23** Account settings: change password, active sessions, delete account.
+  _Verified 12 Sep:_ change-password and active-sessions management are real and
+  functional. **Delete-account is not** — it shares the stub described in P2-24 below.
+- [~] **P2-24** **Data export and deletion request** flow. _Pakistan's regime gives data subjects access and deletion rights — and it is a strong report section given you hold CNIC and biometric data._
+  _Verified 12 Sep:_ data export genuinely works but is minimal — only `user` and
+  `seller_profile` rows, missing listings/verification/sessions.
+  🚨 **Deletion is a fake stub**: `apps/worker/.../jobs/maintenance.py`'s `purge_account()`
+  only logs `"account_purged"` and returns `{"purged": True}` — it deletes nothing, unlike
+  the fully-implemented neighbouring `publish_outbox` job in the same file. A user who
+  requests deletion today is told it happened and nothing happens.
+  _Done when:_ `purge_account()` actually deletes/anonymizes real rows, and export covers
+  listings and verification records too.
 
 **Exit criteria:** a seller can go from registration to a published Trust Score entirely through the UI, on a phone.
 
@@ -405,10 +423,12 @@ software track can substitute for them, and they gate the accuracy numbers the r
       _Done 3 Aug._ The plumbing existed, but live data showed it was silently broken:
       **1. No minimum sample size.** With one listing in a category the median _is_ that listing, so its deviation is 0% and the signal reported "prices are in line with similar items" — a PASS the seller never earned. `category_median_price` now returns None below `MIN_COMPARABLE_LISTINGS` (5), so the signal is UNAVAILABLE and excluded from the denominator. **Verified:** the signal moved from `PASS 5.0/5.0` to `UNAVAILABLE 0.0/0.0`.
       **2. Free-text categories fragmented the corpus.** The dev database held `Mobile Phones`, `mobile-phones` and `mobiles` as three buckets for one category, so a phone was never compared against other phones. Categories are now a controlled vocabulary shared by the constants package, the zod schema, the domain and the form dropdown, with normalisation for case and separator variants. 23 tests.
-- [ ] **P3-05** `imagehash` duplicate-photo detection. _(`ListingImage.perceptual_hash` column already exists.)_
+- [x] **P3-05** `imagehash` duplicate-photo detection. _(`ListingImage.perceptual_hash` column already existed.)_
+      _Done, verified 12 Sep:_ listing image upload shipped alongside it — real SHA-256 +
+      perceptual (dhash) hashing with genuine Hamming-distance duplicate detection, not a stub.
 - [x] **P3-06** Seller listings UI — list, create, edit, remove, per-listing risk panel.
       _Done 3 Aug._ The risk panel translates analyser codes into plain English ("Pressures the buyer to decide immediately"), and reports only _underpricing_ — an overpriced listing is a bad deal, not a scam, and flagging it would train sellers to ignore the panel. Removal is soft and says why: the evidence behind an already-published score has to survive so it can still be appealed.
-      _Not done:_ listing **image upload** — deferred with P3-05, since both need the same image pipeline.
+      _Image upload:_ done alongside P3-05 (see above), same pipeline as planned.
 
 **Exit criteria:** a seller posts a listing, AI analyses it, and both listing signals move the Trust Score.
 
@@ -429,7 +449,9 @@ software track can substitute for them, and they gate the accuracy numbers the r
       Fixed by making the policy take the required roles (defaulting to the hardcoded pair, so production is unchanged) and having the login route pass the configured value. Development clears it; `.env.example` keeps the strict default with a warning.
       ⚠️ **Still open:** MFA is unimplemented. Either build it or document the omission before production — do not simply ship the setting empty.
 
-- [ ] **P4-01b** Remaining admin use cases: seller search
+- [x] **P4-01b** Remaining admin use cases: seller search.
+      _Verified 12 Sep:_ done — real seller-search use case + endpoint, everything below
+      (P4-04, dashboard counts) is built on it.
 
 - [x] ~~**P4-01** Implement `use_cases/admin/`~~ — superseded by the **P4-01** entry above, done 4 Aug.
       Seller search is the one part not covered, and it is tracked separately as **P4-01b**.
@@ -444,13 +466,30 @@ software track can substitute for them, and they gate the accuracy numbers the r
 
 - [x] **P4-06c** 🚨 **Session-cache bug, in _both_ apps.** The guard asks "who is this?" before redirecting to login and caches the answer: nobody. Signing in put a token in memory but left that cached `null` in place, so the guard read it and bounced straight back — with a `200 OK` login sitting in the network tab. Both logins now drop the cached session before redirecting.
 
-- [ ] **P4-03b** Counts by risk band, pending reviews, recent flags _(needs P4-01b)_.
-- [ ] **P4-04** Seller list: search, filter by risk band and flag status, pagination.
-- [ ] **P4-05** Seller detail: full signal breakdown, verification history, score history, evidence viewer.
-- [ ] **P4-06** Manual identity review screen — CNIC and selfie via **short-lived signed URLs only**, approve/reject with reason.
-- [ ] **P4-07** Scoring-model admin: view weights, adjust, publish a new version. _(Weights are versioned in the DB — old scores must keep referencing the version that produced them.)_
-- [ ] **P4-08** Audit trail: every admin action recorded with actor, timestamp, before/after.
-      _Done when:_ an admin can find a seller, review their CNIC, override a decision, and the action is logged.
+- [x] **P4-03b** Counts by risk band, pending reviews, recent flags _(needs P4-01b)_.
+      _Verified 12 Sep:_ done.
+- [x] **P4-04** Seller list: search, filter by risk band and flag status, pagination.
+      _Verified 12 Sep:_ done.
+- [~] **P4-05** Seller detail: full signal breakdown, verification history, score history, evidence viewer.
+  _Verified 12 Sep:_ has verification history and score history. **Missing:** a per-signal
+  score breakdown, and an evidence viewer reachable outside the review-queue context — CNIC/
+  selfie can currently only be viewed while a review is in-flight, not from this page.
+- [x] **P4-06** Manual identity review screen — CNIC and selfie via **short-lived signed URLs only**, approve/reject with reason.
+      _Verified 12 Sep:_ done.
+- [~] **P4-07** Scoring-model admin: view weights, adjust, publish a new version. _(Weights are versioned in the DB — old scores must keep referencing the version that produced them.)_
+  _Verified 12 Sep:_ can view pre-seeded model versions and activate one (version-pinning
+  on historical scores correctly preserved). **Missing:** any way to author/edit weights and
+  publish a new version — the `scoring_model:write`/`scoring_model:simulate` permissions
+  and the repository's `create`/`update` methods exist but are dead code, never called.
+- [x] **P4-08** Audit trail: every admin action recorded with actor, timestamp, before/after.
+      _Verified 12 Sep:_ done, with real call sites across the codebase.
+      _Stage done when:_ the P4-05 evidence-viewer gap and the P4-07 authoring gap are closed.
+
+🚨 **Found while re-verifying P4-00's MFA note on 12 Sep:** `SECURITY_MFA_REQUIRED_ROLES`
+still defaults to `ADMIN,REVIEWER` and **no MFA enrollment endpoint exists anywhere in the
+codebase** — the same class of bug P4-00 fixed for local dev, but for production. A deploy
+that doesn't explicitly empty this setting would lock every admin/reviewer out of login,
+demanding a second factor nobody can ever enroll in. Fix before go-live.
 
 ---
 
@@ -808,9 +847,19 @@ software track can substitute for them, and they gate the accuracy numbers the r
 # Phase 10 — QA & demo readiness (4 days)
 
 - [ ] **P10-01** Raise domain test coverage; add integration tests for each use case.
+      _Updated 12 Sep:_ this now also covers **Phase 12b below — none of the new
+      marketplace features (OAuth, catalog/search, favorites, chat, maps, listing detail
+      page) have any test coverage yet.**
 - [ ] **P10-02** Playwright E2E: full seller journey, buyer lookup, admin review, appeal.
-- [ ] **P10-03** Security pass — OWASP basics, auth rate limiting/brute-force protection, RBAC checks, PII leak scan on API responses.
+      _Updated 12 Sep:_ add specs for catalog/search, favorites, chat, and OAuth login too.
+- [~] **P10-03** Security pass — OWASP basics, auth rate limiting/brute-force protection, RBAC checks, PII leak scan on API responses.
+  _Updated 22 Aug:_ automated checks done (`make prod-security`, 16/16 pass; see
+  P10-03b below). **Left:** manual RBAC review, a dependency-vulnerability scan, and
+  (added 12 Sep) a look at the MFA-lockout risk found while re-verifying P4-09.
 - [ ] **P10-04** Load-test the public score endpoint; confirm the "score within seconds" claim with real p95 numbers.
+      _Updated 12 Sep:_ the corrected claim (sub-second read vs. 30–60s enrollment) is now
+      written into the thesis (`fyp-submission/docs/07-Thesis.md` §7.2) — this task is about
+      confirming those numbers hold under actual load, not just isolated measurement.
 - [ ] **P10-05** Cross-browser and cross-device check: Chrome, Safari on iPhone, Chrome on Android.
 - [x] **P10-06** **Fix the stale docs.**
       _Done 22 Aug._ `README.md` said _"Design phase … implementation has not started"_ and
@@ -846,21 +895,90 @@ software track can substitute for them, and they gate the accuracy numbers the r
 
 ---
 
+# Phase 12b — Marketplace expansion (extra scope, client-driven, not in the original plan)
+
+**None of this was in the original 72-task FYP plan.** The client (relayed through Haseeb
+and Muttayab) sent two rounds of feedback in September, after the trust-verification core
+was already working, asking for consumer-marketplace features on top of it. All delivered,
+verified with the full check suite (mypy/ruff/pytest — 348 tests passing — plus
+tsc/eslint/prettier across all 7 frontend workspace packages), committed and pushed.
+**Zero dedicated test coverage** — folded into P10-01/P10-02 above.
+
+**Round 1 — bug fixes** (translated client reports, each confirmed against the code before
+being touched, not just taken at face value):
+
+- [x] Google OAuth sign-in. Full authorization-code flow (`apps/api/.../google_oauth.py`):
+      login redirect, CSRF state cookie, token exchange + userinfo fetch — not raw JWT
+      decoding. Finds-or-creates the user by email; Google-created accounts are
+      auto-verified/activated, with no separate provider-linkage column needed.
+- [x] Selfie capture now uses the live camera (`getUserMedia`), not a gallery file picker —
+      closes a real trust gap, since a gallery picker let a seller upload someone else's photo.
+- [x] Swagger/OpenAPI docs closed outside dev — `expose_docs` was checking a literal
+      `"is_production"` string instead of `env.is_deployed`, so staging/prod both leaked it.
+- [x] Email verification re-enabled — had been silently disabled by an earlier commit
+      (3f9bbb1) and never turned back on.
+- [x] Header navigation straightened; listing form wording and image-order corrected to
+      match what the client actually asked for.
+- [x] Public listing catalog with categories and search (`(public)/browse`).
+- [x] Favorites/wishlist — `SqlFavoriteRepository`, migration `202609100930_add_favorites.py`.
+
+**Round 2 — feature requests** ("Do work on this" — all five delivered):
+
+- [x] OLX-style area/city selection on listings, plus `latitude`/`longitude`/`area` columns
+      (migration `202609101100_add_listing_location.py`) — fixed a real pre-existing bug on
+      the way: `SqlListingRepository.update()` silently dropped `city`/`condition`/
+      `country_code` on every edit (the column existed and `add()` wrote it, `update()` never did).
+- [x] Map integration — **not** Google Maps. The client explicitly rejected the Maps
+      JavaScript API ("free tier becomes active once u prepay $30, and i dont want that") —
+      built on **Leaflet + OpenStreetMap** instead: no API key, no billing tier, ever.
+      `LocationPicker.tsx` dynamically imports Leaflet inside `useEffect` (never at module
+      scope — it touches `window` at import time and crashes Next.js SSR otherwise).
+- [x] Search, filters (price, location, category) and sorting on the public catalog.
+- [x] Terms, privacy and help pages — closes the "Legal/help completion" ask.
+- [x] Buyer↔seller chat — simple threaded messaging (`SqlMessagingRepository`, migration
+      `202609101400_add_messaging.py`), scope confirmed with the client as "simple
+      buyer→seller message thread" rather than a full realtime system.
+
+**Follow-on, added while finishing the above:**
+
+- [x] Public listing detail page (`(public)/listing/[id]`), server-rendered via the same
+      `serverFetch` SEO pattern as `/seller/[handle]` — catalog cards now open a real
+      listing page instead of jumping straight to the seller's trust-score page.
+
+---
+
 # Track D — FYP academic deliverables (9 days, parallel)
 
 **This is what they are graded on.** The software is the evidence; these documents are the submission.
 
-> ⚠️ **Ownership is undecided.** Agree now whether you write these or the students do. If it lands on you unplanned, it is roughly two weeks of unbilled work.
+> **Resolved, 10 September 2026:** ownership stayed with Haseeb and Muttayab as decided
+> 12 Aug, but Zohaib generated a full first-pass documentation package
+> (`fyp-submission/docs/`) so the students have a working draft to review, correct and
+> defend rather than a blank page. See `fyp-submission/docs/02-Index.md` for the map,
+> reading order, and what to actually submit (`Project_Thesis.docx`).
 
-- [ ] **D-01** Update the **SRS** to match what was actually built — especially the scope correction: TrustLens scores **enrolled** sellers, and returns "no record" for everyone else.
-- [ ] **D-02** Correct the "within seconds" claim: score _reads_ are sub-second; _enrollment verification_ takes 30–60 seconds. State both.
-- [ ] **D-03** Design documents: use-case diagrams, DFDs (levels 0–2), sequence diagrams for the verification and scoring flows.
-- [ ] **D-04** **ER diagram** for all 40 tables (`make erd` once P0-09 fixes it).
-- [ ] **D-05** Test documentation: test cases, results, coverage summary, the Phase 1 accuracy numbers, and the Phase 7 model metrics.
-- [ ] **D-06** Final report chapters: introduction, literature review, methodology, implementation, results, conclusion.
-- [ ] **D-07** **Limitations chapter** — no NADRA verification, device fingerprinting is 60–80% accurate, VPN ≠ fraud, non-commercial model licences, SMS constrained by PTA registration. _Stating limits honestly reads as maturity, not weakness._
-- [ ] **D-08** **Future Scope chapter** — reverse-image stolen-photo detection, chat scam detection, buyer scam-report feedback loop, marketplace integrations, reputation history, mobile app.
-- [ ] **D-09** Final presentation deck and demo video.
+- [x] **D-01** Update the **SRS** to match what was actually built — especially the scope correction: TrustLens scores **enrolled** sellers, and returns "no record" for everyone else.
+      _Done 10 Sep — `03-SRS.md`, IEEE 830 format._
+- [x] **D-02** Correct the "within seconds" claim: score _reads_ are sub-second; _enrollment verification_ takes 30–60 seconds. State both.
+      _Done 10 Sep — Thesis §7.2 and SRS §6.1 both state the corrected figures, not the
+      original single claim._
+- [x] **D-03** Design documents: use-case diagrams, DFDs (levels 0–2), sequence diagrams for the verification and scoring flows.
+      _Done 10 Sep — `04-SDD.md`, IEEE 1016 format, Mermaid diagrams render-tested against
+      `mermaid.js` before shipping and exported to print-quality PNG for the Word thesis._
+- [x] **D-04** **ER diagram** for all tables (`make erd` once P0-09 fixes it).
+      _Done 10 Sep — `04-SDD.md` and Thesis Appendix B (full database schema summary)._
+- [x] **D-05** Test documentation: test cases, results, coverage summary, the Phase 1 accuracy numbers, and the Phase 7 model metrics.
+      _Done 10 Sep — `05-Test-Cases.md`, IEEE 829 format, **honestly marked**: 26 of 51
+      specified test cases executed (~51%), the rest marked specified-but-not-run rather than
+      faked. The Phase 1 accuracy-number rows specifically still wait on Stage 1 in `REMAINING.md`._
+- [x] **D-06** Final report chapters: introduction, literature review, methodology, implementation, results, conclusion.
+      _Done 10 Sep — `07-Thesis.md`, all 8 chapters plus front matter, references, 4 appendices._
+- [x] **D-07** **Limitations chapter** — no NADRA verification, device fingerprinting is 60–80% accurate, VPN ≠ fraud, non-commercial model licences, SMS constrained by PTA registration. _Stating limits honestly reads as maturity, not weakness._
+      _Done 10 Sep — Thesis §1.6 (stated up front) and §8.3 (restated and expanded)._
+- [x] **D-08** **Future Scope chapter** — reverse-image stolen-photo detection, chat scam detection, buyer scam-report feedback loop, marketplace integrations, reputation history, mobile app.
+      _Done 10 Sep — Thesis §8.4._
+- [ ] **D-09** Final presentation deck and demo video. **Not started** — nothing in the
+      documentation package addresses this; still the students' to build for the viva.
 
 ---
 

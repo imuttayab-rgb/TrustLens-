@@ -12,67 +12,44 @@ Task IDs are the same in both files. Tick a box here, tick it in `TASKS.md` too.
 
 ## Where we are
 
-|                         |                                     |
-| ----------------------- | ----------------------------------- |
-| Software track          | ~27 of 44 days done — **about 61%** |
-| Documentation track (D) | 0 of 9 days done — **0%**           |
-| **Whole FYP**           | **about 51%**                       |
-| Phases finished         | 0, 5, 6 — most of 2, 3 and 7        |
-| Phases untouched        | 10, 11, and Track D                 |
+|                         |                                                     |
+| ----------------------- | --------------------------------------------------- |
+| Software track          | ~37 of 44 days done — **about 84%**                 |
+| Documentation track (D) | 8 of 9 days done — **about 89%** (deck/video open)  |
+| **Whole FYP**           | **about 85%**                                       |
+| Phases finished         | 0, 3, 5, 6, most of 2, 4, 7, D                      |
+| Phases untouched        | Stage 1 (blocked on students), D-09 (deck/video)    |
+| Extra scope, done       | A full client-driven marketplace expansion — see    |
+|                         | **Stage 4b** below — none of it was in the original |
+|                         | 72-task plan                                        |
 
-The hard part is behind us. Architecture, auth, verification, scoring, appeals and the
-partner API are built and working. What remains is more items but less risk.
+The hard part is behind us, and since 22 Aug the admin panel, the seller-side leftovers, and
+the entire report documentation package have all landed too. Two real gaps remain in the admin
+panel (below), one stub in account deletion, and Stage 1's accuracy numbers are still waiting
+on the students to supply test images. Everything else left is calendar, not risk.
 
 ---
 
 ## Stage 0 — Corrections first ✅ done 22 Aug
 
 - [x] **P0-12** Fix the public buyer page 404.
-      **Decided: a first-party route, not a partner key.** New
-      `GET /api/v1/public/sellers/{seller_ref}/trust-score` — anonymous, IP rate limited, and
-      reusing the _same_ use case and response model as the partner API, so the PII-free
-      guarantee is inherited rather than re-implemented. Giving `apps/web` a partner key was
-      rejected: a revoked key or an exhausted quota would then take the demo's opening screen
-      down with it. Verified live: the page returns **200** with a real score where it
-      returned 404, and an unknown handle still 404s.
+- [x] **P0-16** 🚨 Startup route guard was checking almost nothing — fixed.
+- [x] **P0-17** 🚨 Every reason on the buyer page was labelled "Identity" — fixed.
+- [x] **P0-18** Three e2e tests could never have passed — fixed, suite 7/7 green.
+- [x] **P10-06** Fixed the stale documentation.
+- [x] **P0-19** 🚨 CI's Prettier gate had never passed — fixed.
+- [x] **P0-15** Corrected the stale boxes in `TASKS.md`.
 
-- [x] **P0-16** 🚨 **The startup route guard had been checking almost nothing.** Found while
-      relying on it for P0-12. FastAPI 0.141 defers `include_router`, so the guard walked 8
-      placeholders and saw **1 route out of 59** — and only warned where its docstring
-      promised a failed boot. Now walks the real tree and raises. The codebase was clean
-      (0 unguarded); the check was blind.
-
-- [x] **P0-17** 🚨 **Every reason on the buyer page was labelled "Identity."** The page
-      hardcoded the category, so "The email address was confirmed" was shown to buyers as an
-      identity check. Invisible until P0-12, because the page never rendered a reason. The
-      public payload now carries the signal category.
-
-- [x] **P0-18** **Three e2e tests could never have passed.** `public-score.spec.ts` asserted
-      the page shows a score — against a page that always 404'd — and two more had drifted
-      into Playwright strict-mode violations. All fixed; the suite is **7/7 green**.
-
-- [x] **P10-06** Fix the stale documentation. `README.md` ("Design phase … implementation has
-      not started") and `ARCHITECTURE.md` ("No implementation code has been written yet") now
-      carry measured status. Table count 30 → 40. The fictional `infrastructure/` path was
-      also in **runnable commands** in `docs/11` and `docs/16`, which would have failed for
-      anyone who copied them.
-
-- [x] **P0-19** 🚨 **CI's Prettier gate had never passed.** 50-odd committed Markdown files
-      were never formatted (the pre-commit hook only reaches _staged_ files), and
-      `.import_linter_cache/` was missing from the root `.gitignore` while its three sibling
-      caches were listed — so the gate also failed on any machine that had run
-      `make check-arch`. Both fixed; `pnpm format:check` is clean.
-
-- [x] **P0-15** Correct the stale boxes in `TASKS.md` — **P2-20**/**P2-21** were done on
-      11 Aug and never ticked; the duplicate **P4-01**/**P4-02** entries were superseded.
+_(Full detail on each item is unchanged from the 22 Aug version — see `TASKS.md` for the
+complete writeup of Stage 0.)_
 
 ---
 
-## Stage 1 — Unblock the accuracy numbers (students, starts today)
+## Stage 1 — Unblock the accuracy numbers (students, still not started)
 
-**This has been stuck since week 1 and it is the only thing Zohaib cannot do alone.**
-Without it there are no accuracy figures, and without those there is no results chapter.
-Start it now and let it run in the background of everything else.
+**Still stuck. This is the only thing left that Zohaib cannot do alone**, and it has been
+stuck since week 1. Without it there are no accuracy figures for the results chapter — the
+Test Cases document already flags this honestly rather than papering over it.
 
 - [!] **P1-01** Collect **10–15 real CNIC images** — good light, poor light, angled, blurry,
   glare, screenshot-of-a-screenshot. Own and volunteers', with permission. Stored
@@ -90,240 +67,226 @@ Start it now and let it run in the background of everything else.
 - [ ] **P1-03** Tune `preprocessing.py` (deskew, denoise, contrast, crop) and re-measure.
       _Done when:_ CNIC-number accuracy ≥ 90% on the good-light subset. **Write the number down.**
 - [ ] **P1-11** Benchmark **both** engine pairs — easyocr/DeepFace vs RapidOCR/InsightFace —
-      on the same images, and choose on measured accuracy. Both are already in the tree
-      behind `OCR_ENGINE` / `FACE_ENGINE`.
-      _Done when:_ a comparison table exists. "We compared two approaches and chose on
-      measured accuracy" is a far better methodology chapter than "we picked one".
+      on the same images, and choose on measured accuracy.
 - [ ] **P1-08** Enable anti-spoofing; test against a printed photo and a phone-screen photo.
-      _Done when:_ both spoofs are rejected, or the limitation is documented honestly.
 - [ ] **P1-09** Record which pretrained weights are downloaded and their licences → feeds P7-08.
-- [ ] **P1-10** Confirm model download size and cold-start time. _(Largely answered by the
-      Step 4 measurements in `docs/20-go-live-plan.md` — write the conclusion down.)_
+- [ ] **P1-10** Confirm model download size and cold-start time.
 
 ---
 
-## Stage 2 — The scam classifier ✅ built 22 Aug · 🔴 blocked on data
+## Stage 2 — The scam classifier ✅ built 22 Aug · 🔴 still blocked on data
 
-> **The model works and it does not work, and both matter.**
->
-> | Measured on                                | Precision | Recall                  | F1        |
-> | ------------------------------------------ | --------- | ----------------------- | --------- |
-> | Held-out split of its own training corpora | 0.918     | 0.894                   | **0.906** |
-> | A fraud corpus it never trained on         | 0.698     | 0.665                   | **0.681** |
-> | A different one, same test                 | 0.320     | 0.714                   | **0.442** |
-> | Pakistani marketplace ads                  | —         | **1 of 7 scams caught** | —         |
->
-> Shown _"Send advance payment via easypaisa. WhatsApp me, no calls. Today only,
-> hurry!"_ it says **genuine, p = 0.13**. The 30-line keyword placeholder catches
-> 4 of those 7. The training data is English **job adverts**; the product scores
-> Pakistani **marketplace ads**. The fix is data, not a bigger model.
+Nothing changed here since 22 Aug — still gated on 300–500 hand-labelled Pakistani ads
+(**P7-02**), which is a human-labelling task, not a code task. See `TASKS.md` for the full
+metrics table and writeup. **Still do not enable this as a live scoring input** — the false
+positive rate on real Pakistani marketplace ads (1 of 7 scams caught) would flow straight
+into sellers' trust scores.
 
-- [x] **P7-01** `apps/ml` training package — CLI, Makefile, workspace member, and an
-      import-linter contract (6 now) so training code can never reach production.
-- [~] **P7-02** Datasets. **Proxies done** — EMSCAD (CC0) and DIFrauD (MIT), 36,695 rows.
-  🔴 **300–500 hand-labelled Pakistani ads still needed.** Template and labelling
-  instructions in `apps/ml/README.md`. Human task; gates the phase.
-- [x] **P7-03** TF-IDF + Logistic Regression baseline — trained, exported, reproducible.
-- [~] **P7-04** DistilBERT — script written and split-matched, **not run** (needs a Colab
-  GPU). Its header says capacity is not the bottleneck; P7-02 buys more.
-- [x] **P7-05** Evaluation — P/R/F1/ROC-AUC/PR-AUC, plots, accuracy always shown against
-      the majority-class baseline, plus a **cross-corpus test** the plan did not ask for.
-      That test is what turned a 0.906 success story into the table above.
-- [x] **P7-06** Wired behind the existing port; `USE_FAKE_AI=false` loads the artifact.
-- [x] **P7-07** `apps/ml/README.md`.
-- [x] **P7-08** Licence note — the classifier is unencumbered (CC0/MIT/BSD/Apache); the
-      **face** weights are the non-commercial ones, which academic FYP use permits.
-- [x] **P7-09** 🚨 Figures and tables were drawn from different rows (the CLI re-split
-      after training had deduplicated). Fixed; the evaluated split now travels with the
-      result.
-
-**⚠️ Do not enable this as a live scoring input yet.** `jobs/listings.py` combines it as
-`max(llm_risk, classifier × 100)`, so a false positive _becomes_ the listing's risk and
-flows into a seller's trust score. Turning it on is gated on P7-02.
-
-**What is left in this stage:** collect the local ads (P7-02), re-run
-`make -C apps/ml train`, and — if a GPU is free — run the DistilBERT script (P7-04).
+- [x] P7-01, P7-03, P7-05, P7-06, P7-07, P7-08, P7-09 — done.
+- [~] **P7-02** 🔴 Datasets — proxies done, local ads still needed. **Gates the phase.**
+- [~] **P7-04** DistilBERT — script ready, not run (needs a Colab GPU).
 
 ---
 
 ## Stage 3 — Production ready, locally ✅ 22 Aug
 
-**Scope changed 22 Aug, on the client's call.** The target is no longer "deployed
-to Fly.io" but "runs in production mode on any machine, so the students can host
-it wherever they like later". That is a better handover: a compose file does not
-expire the way a free tier does.
+No change since 22 Aug. Still open, and all of it needs accounts rather than code:
 
-- [x] **P9-11** `docker-compose.prod.yml` — the whole product in production mode:
-      built Next.js servers, uvicorn with workers, migrations as a release step,
-      health checks, restart policies, a memory limit sized from the measured
-      323 MB peak.
-- [x] **P9-12** `.env.production.example` — every setting, with copy-paste blocks for
-      Neon, Upstash, Cloudflare R2 and Resend. Every backing service is reached only
-      by a URL, so moving one to a managed provider is an edit, not a code change.
-- [x] **P9-13** `make prod-init / prod-up / prod-down / prod-logs / prod-check` and
-      `prod-start.bat` / `prod-stop.bat` for Windows.
-- [x] **P9-07** **Monitoring.** `shared/telemetry/` was a 0-byte file. Now: error
-      reporting that works with nothing configured (structured JSON logs) and adds
-      Sentry when a DSN is set, with PII scrubbed before anything leaves the machine.
-      Plus `GET /health/worker` — the check that catches a worker which is alive,
-      connected and consuming nothing, which no process-level probe can see.
-- [x] **P9-08** **Backups with a tested restore.** `db-backup.sh` verifies the dump is
-      readable and prunes old ones; `db-restore.sh --verify` restores into a scratch
-      database, counts what came back, and drops it.
-      **Verified 22 Aug: 41 tables and 9 user rows recovered.**
-- [x] **P11-02** `RUNBOOK.md` — start, stop, logs, health, common faults, backups,
-      rollback, database access, moving to a hosted service.
-- [x] **P9-14** 🚨 **The api, web and admin images could not build.** Three separate
-      causes: every workspace member's manifest has to be present for `uv` to resolve
-      (the same defect that had kept the worker image from ever building);
-      `output: 'standalone'` was missing from both Next configs, which the web
-      Dockerfile depends on; and the Dockerfile hardcoded `apps/web/server.js`, so the
-      admin image would have started the seller app.
-- [x] **P9-15** 🚨 **No `.dockerignore` existed.** The build context was **236 MB and
-      climbing** — `node_modules`, the virtualenv, `.next`, the 50 MB training corpus.
-      Worse, `.env.production` was inside it, so a `COPY . .` would have baked the
-      database password and JWT signing key into an image layer, where they survive
-      even if a later layer deletes the file. Context is now **3 MB**.
-- [x] **P8-05** Disposable-email detection — the local list went from 10 domains to
-      **149**. Local rather than an API on purpose: this feeds a scored signal, and a
-      third-party outage must not cost a seller points they cannot appeal.
-- [x] **P10-06b** `DEPLOYMENT.md` reframed — self-hosting first, the free-tier platform
-      walkthrough kept as one worked example rather than the plan.
-
-**Still open in this stage, and all of it needs accounts rather than code:**
-
-- [ ] **P8-01 / P8-02** Resend account + SPF, DKIM and DMARC on a real domain. The
-      adapter is written; without the DNS records mail is accepted and silently filed
-      as spam, so signup breaks with no error anywhere.
-- [ ] **P8-03** Twilio trial for SMS OTP. Console driver is the default and works.
+- [ ] **P8-01 / P8-02** Resend account + SPF/DKIM/DMARC on a real domain. **Partially
+      unblocked**: Resend is wired up and sending from the sandbox address
+      (`onboarding@resend.dev`), but that sandbox only delivers to the Resend account owner's
+      own email — a verified domain is still needed before real users receive mail.
+- [ ] **P8-03** Twilio trial for SMS OTP. **Partially unblocked**: a real Twilio account is
+      now configured (SID/token/from-number wired into `.env`), but the from-number is still
+      a personal number, not a Twilio-purchased one — OTP SMS will not actually send until a
+      real Twilio number is bought.
 - [ ] **P8-04** IP/VPN detection API key. Offline heuristics are the default.
-- [ ] **P9-01 → P9-06** A public host, if and when the students want one. The stack is
-      ready; `DEPLOYMENT.md` Option B walks through one free-tier route.
+- [ ] **P9-01 → P9-06** A public host, if and when the students want one.
 
 ---
 
-## Stage 4 — Finish the admin panel (Phase 4 remainder, 3 days, Zohaib)
+## Stage 4 — Admin panel (Phase 4 remainder) — mostly done, 2 real gaps open
 
-The reviewer queue works end to end. Everything else in the admin app is a placeholder —
-`sellers/page.tsx` is 12 lines of heading, `scoring/page.tsx` is read-only, and
-`routers/admin.py` exposes only three endpoints (queue, claim, decide).
+**Re-verified against actual code, not commit messages, on 12 Sep.** Five of eight items are
+genuinely done with real DB-backed logic. Two are partially done. One (MFA) is decided but
+has a latent production-config risk worth fixing before handover.
 
-_This stage can run in parallel with Stage 3 if someone else is handling deployment._
+- [x] **P4-01b** Seller-search use case + endpoint — done.
+- [x] **P4-04** Seller list: search, filter by risk band and flag status, pagination — done.
+- [~] **P4-05** Seller detail — **partial.** Has verification history and score history.
+  **Missing:** a per-signal score breakdown, and an evidence viewer reachable outside the
+  review-queue context (CNIC/selfie can currently only be viewed while a review is
+  in-flight, not from the seller-detail page itself).
+- [x] **P4-06** Manual identity review — CNIC and selfie via short-lived signed URLs,
+      approve/reject with reason — done.
+- [x] **P4-03b** Dashboard counts by risk band, pending reviews, recent flags — done.
+- [~] **P4-07** Scoring-model admin — **partial.** Can view pre-seeded model versions and
+  activate one (correctly preserving version-pinning on historical scores). **Missing:**
+  any way to actually author or edit weights and publish a new version — the
+  `scoring_model:write` / `scoring_model:simulate` permissions and the repository's
+  `create`/`update` methods exist but are dead code, never called by any endpoint.
+- [x] **P4-08** Audit trail — every admin action recorded with actor, timestamp, before/after,
+      with real call sites across the codebase — done.
+- [x] **P4-09** MFA decision — documented (staff MFA is not implemented; setting exists,
+      feature does not). **🚨 Found while re-verifying:** `SECURITY_MFA_REQUIRED_ROLES`
+      defaults to `ADMIN,REVIEWER` with zero MFA enrollment endpoint anywhere in the codebase.
+      A production deploy that doesn't explicitly empty this setting would **lock every
+      admin/reviewer out of login**, since the system would demand a second factor nobody can
+      ever enroll in. Fix before go-live: either implement enrollment, or default the setting
+      empty and document why.
 
-- [ ] **P4-01b** Seller-search use case + endpoint. Everything below depends on it.
-- [ ] **P4-04** Seller list: search, filter by risk band and flag status, pagination.
-- [ ] **P4-05** Seller detail: full signal breakdown, verification history, score history,
-      evidence viewer.
-- [ ] **P4-06** Manual identity review screen — CNIC and selfie via **short-lived signed URLs
-      only**, approve/reject with a reason.
-- [ ] **P4-03b** Dashboard counts by risk band, pending reviews, recent flags.
-- [ ] **P4-07** Scoring-model admin: view weights, adjust, publish a new version. Weights are
-      versioned in the DB — **old scores must keep referencing the version that produced them.**
-- [ ] **P4-08** Audit trail: every admin action recorded with actor, timestamp, before/after.
-- [ ] **P4-09** **MFA decision.** The staff-login MFA setting exists but MFA is unimplemented.
-      Either build it or document the omission — do not ship the setting empty.
-
-_Stage done when:_ an admin can find a seller, review their CNIC, override a decision, and
-the action is logged.
-
----
-
-## Stage 5 — Seller-side leftovers (2.5 days, Zohaib)
-
-- [ ] **P2-22** Polish the public buyer page. _(Needs P0-12 first.)_
-      _Done when:_ it clearly shows score, band, reasons and verified badges at **360 px and
-      1440 px**. This is the screen in the final demo — it must look finished on a phone.
-- [ ] **P3-05** Listing **image upload**, plus `imagehash` duplicate-photo detection. The
-      `ListingImage.perceptual_hash` column and index already exist but nothing writes them,
-      and `ListingForm` has no image field at all. Both need the same pipeline.
-- [ ] **P2-23** Account settings: change password, active sessions, delete account.
-- [ ] **P2-24** **Data export and deletion request** flow. Pakistan's regime gives data
-      subjects access and deletion rights — and it is a strong report section given the
-      system holds CNIC and biometric data.
-      _Done when:_ a seller can download their data and request deletion.
+_Stage done when:_ the seller-detail evidence gap and the scoring-model authoring gap are
+closed, and the MFA setting's default is corrected.
 
 ---
 
-## Stage 6 — QA and demo readiness (Phase 10, 4 days, Zohaib)
+## Stage 4b — Client-driven marketplace expansion (extra scope, done this session) ✅
 
-Currently three Playwright specs, 169 lines total — auth, appeals, public score only.
+**None of this was in the original 72-task FYP plan.** The client (acting through the
+students) sent two rounds of feedback after the product was already functional, asking for
+consumer-marketplace features on top of the trust-verification core. All of it is built,
+tested (mypy/ruff/pytest/tsc/eslint all green, 348 backend tests passing), committed and
+pushed. It has **no dedicated test coverage yet** — see Stage 6.
 
-- [ ] **P10-01** Raise domain test coverage; integration tests for each use case.
-- [ ] **P10-02** Playwright E2E: full seller journey, buyer lookup, admin review, appeal.
-- [~] **P10-03** Security pass. **Automated checks done 22 Aug** — `make prod-security`
-  runs 16 of them against the live stack and all pass. It found one real gap, now
-  fixed: lockout was per-ACCOUNT, so one IP could spray one password across a
-  thousand addresses without moving any counter. **Left:** a manual RBAC review and
-  a dependency-vulnerability scan.
-  _Original wording:_ OWASP basics, auth rate limiting and brute-force protection,
-  RBAC checks, PII leak scan on API responses.
-- [ ] **P10-04** Load-test the public score endpoint. **Confirm the "score within seconds"
-      claim with real p95 numbers** — or correct the claim (see D-02).
+**Round 1 — bug fixes (translated client reports, all confirmed and fixed):**
+
+- [x] Google OAuth sign-in — full authorization-code flow, auto-verified accounts.
+- [x] Selfie capture now uses the live camera, not a gallery file picker.
+- [x] Swagger/OpenAPI docs closed in non-dev environments.
+- [x] Email verification re-enabled (had been silently disabled).
+- [x] Header navigation straightened; sell-flow wording and image-order fixed.
+- [x] Public listing catalog with categories and search.
+- [x] Favorites/wishlist.
+
+**Round 2 — feature requests ("Do work on this" — all five delivered):**
+
+- [x] OLX-style area/city selection on listings.
+- [x] Map integration — **not** Google Maps (client rejected the $0-then-$30-prepay billing
+      model); built on **Leaflet + OpenStreetMap** instead, which needs no API key and has no
+      billing tier at all.
+- [x] Search, filters (price, location, category) and sorting on the public catalog.
+- [x] Terms, privacy and help pages (closing the "Legal/help completion" ask).
+- [x] Buyer↔seller chat — simple threaded messaging, per the scope the client confirmed.
+
+**Follow-on, added while finishing the above:**
+
+- [x] Public listing detail page (`/listing/[id]`), server-rendered, mirroring the existing
+      seller-page SEO pattern — buyer catalog cards now open a real listing page instead of
+      jumping straight to the seller's trust-score page.
+
+---
+
+## Stage 5 — Seller-side leftovers — mostly done, 1 real gap open
+
+**Re-verified against actual code on 12 Sep.**
+
+- [x] **P2-22** Public buyer page polish — done, genuine responsive Tailwind breakpoints
+      verified at 360px and 1440px.
+- [x] **P3-05** Listing image upload + `imagehash` duplicate detection — done, real
+      SHA-256 + perceptual (dhash) hashing with actual Hamming-distance duplicate checks.
+- [~] **P2-23** Account settings — **partial.** Change-password and active-sessions
+  management are fully real and functional. Delete-account shares the same stub as
+  P2-24 below.
+- [~] **P2-24** Data export and deletion — **partial.**
+  - Data export genuinely returns real data, but it's minimal: only `user` and
+    `seller_profile` rows. Listings, verification records and sessions are not included.
+  - 🚨 **Account deletion is a fake stub.** `apps/worker/src/trustlens_worker/jobs/maintenance.py`'s
+    `purge_account()` job only logs `"account_purged"` and returns `{"purged": True}` — it
+    does not delete a single database row. Contrast with the neighbouring `publish_outbox`
+    job in the same file, which is fully implemented. A user who requests deletion today gets
+    told it happened and nothing happens.
+
+_Stage done when:_ `purge_account()` actually deletes (or anonymizes, per the data-retention
+decision the report should state) the user's rows, and data export covers listings and
+verification records too.
+
+---
+
+## Stage 6 — QA and demo readiness (Phase 10) — still the main risk area
+
+Test Cases doc (`fyp-submission/docs/05-Test-Cases.md`) now honestly states **26 of 51
+specified test cases executed (~51%)** — a real, documented number, not a guess. Automated
+coverage is still thin, and **none of Stage 4b's new marketplace features have any test
+coverage** (no unit, integration, or e2e tests for OAuth, catalog/search, favorites, chat,
+maps, or the listing detail page).
+
+- [ ] **P10-01** Raise domain test coverage; integration tests for each use case — **now
+      includes the untested Stage 4b features above.**
+- [ ] **P10-02** Playwright E2E: full seller journey, buyer lookup, admin review, appeal —
+      **plus new specs for catalog/search, favorites, chat, and OAuth login.**
+- [~] **P10-03** Security pass. Automated checks done 22 Aug (`make prod-security`, 16/16
+  pass). **Left:** manual RBAC review, dependency-vulnerability scan, and a look at the
+  MFA-lockout risk found in Stage 4 (P4-09).
+- [ ] **P10-04** Load-test the public score endpoint; confirm the p95 numbers already
+      written into the thesis (§Ch.7) hold up under load, not just in isolation.
 - [ ] **P10-05** Cross-browser and cross-device: Chrome, Safari on iPhone, Chrome on Android.
-- [ ] **P10-07** Seed a convincing demo dataset — sellers across all three risk bands,
-      including one clear scammer and one clear genuine profile.
+- [ ] **P10-07** Seed a convincing demo dataset — sellers across all three risk bands.
 - [ ] **P10-08** Write and **time** the demo script. Rehearse it end to end.
-- [ ] **P10-09** **Demo fallback plan** — recorded video and screenshots, for when the venue's
-      internet fails on the day. ⚠️ Neon sleeps after 5 minutes idle; ping it before the demo
-      so the examiner's first click is not the wake-up call.
+- [ ] **P10-09** Demo fallback plan — recorded video and screenshots. ⚠️ Neon sleeps after
+      5 minutes idle; ping it before the demo.
 
 ---
 
-## Stage 7 — Handover and training (Phase 11, 3 days, Zohaib + students)
+## Stage 7 — Handover and training (Phase 11)
 
 - [ ] **P11-01** Transfer credentials and ownership — GitHub, Vercel, Fly, Neon, Upstash, R2,
-      Twilio, Resend — documented in one place. _(`CREDENTIALS.dev.md` is a start.)_
-- [x] **P11-02** `RUNBOOK.md` — **done 22 Aug**, ahead of schedule. Start, stop, health,
-      logs, the faults that actually happen, backups, rollback, database access, and moving
-      a piece to a hosted service.
-- [ ] **P11-03** **Architecture walkthrough** with Haseeb and Muttayab: why ports and adapters,
-      why deterministic scoring, why the worker is separate, how the score is computed.
-      **They present this, not Zohaib.**
+      Twilio, Resend, and now also the Google Cloud OAuth client.
+- [x] **P11-02** `RUNBOOK.md` — done 22 Aug.
+- [ ] **P11-03** **Architecture walkthrough** with Haseeb and Muttayab. **They present this.**
 - [ ] **P11-04** Admin panel training: review an identity, resolve an appeal, publish a
-      scoring-model version.
-- [ ] **P11-05** **Viva preparation** — rehearse the hard questions until the answers are fluent.
-- [ ] **P11-06** Agree the **support window in writing** — what gets fixed, for how long, and
-      what counts as new work.
+      scoring-model version — **note this last part isn't possible yet, see P4-07.**
+- [ ] **P11-05** **Viva preparation.** `fyp-submission/docs/01-Simple-Guide.md` already exists
+      as a first pass at anticipated viva questions — rehearse from it.
+- [ ] **P11-06** Agree the support window in writing.
 
 ---
 
-## Track D — The report (9 days, Haseeb + Muttayab, runs throughout)
+## Track D — The report — substantially done ✅ (package generated 10 Sep)
 
-**Owned by the students since 12 August.** Zohaib supplies technical content, diagrams and
-measured numbers; they write and present it, because they defend it at viva.
+**Major update since 22 Aug.** A full documentation package now exists under
+`fyp-submission/docs/`: SRS (IEEE 830), SDD (IEEE 1016), Test Cases (IEEE 829), User Manual,
+and an 8-chapter Thesis with front matter, references and 4 appendices — 3,400+ lines across
+8 documents, plus real screenshots from the running app, Mermaid diagrams render-tested and
+exported to print-quality PNG, and a generated `Project_Thesis.docx` (the actual submission
+copy). See `fyp-submission/docs/02-Index.md` for the full map and reading order.
 
-Do not leave this to the end. D-01, D-03 and D-04 can start **now** — they describe what is
-already built.
-
-- [ ] **D-01** Update the **SRS** to match what was actually built — especially the scope
-      correction: TrustLens scores **enrolled** sellers and returns "no record" for everyone else.
-- [ ] **D-02** Correct the "within seconds" claim: score _reads_ are sub-second; _enrollment
-      verification_ takes 30–60 seconds. State both.
-- [ ] **D-03** Design documents: use-case diagrams, DFDs (levels 0–2), sequence diagrams for
-      the verification and scoring flows.
-- [ ] **D-04** **ER diagram** for all 40 tables — run `make erd`.
-- [ ] **D-05** Test documentation: test cases, results, coverage summary, the Phase 1 accuracy
-      numbers, the Phase 7 model metrics. _(Waits on Stage 1 and Stage 2.)_
-- [ ] **D-06** Final report chapters: introduction, literature review, methodology,
-      implementation, results, conclusion.
-- [ ] **D-07** **Limitations chapter** — no NADRA verification, device fingerprinting is
-      60–80% accurate, VPN ≠ fraud, non-commercial model licences, SMS constrained by PTA
-      registration. Stating limits honestly reads as maturity, not weakness.
-- [ ] **D-08** **Future Scope chapter** — reverse-image stolen-photo detection, chat scam
-      detection, buyer scam-report feedback loop, marketplace integrations, reputation
+- [x] **D-01** SRS updated to match what was built, scope correction included — done
+      (`03-SRS.md`).
+- [x] **D-02** "Within seconds" claim corrected: score reads are sub-second, full enrollment
+      verification is 30–60s — both figures stated, not conflated (Thesis §7.2, SRS §6.1).
+- [x] **D-03** Design documents — use-case diagrams, DFDs, sequence diagrams — done (`04-SDD.md`).
+- [x] **D-04** ER diagram and full database schema summary — done (`04-SDD.md`,
+      Thesis Appendix B).
+- [x] **D-05** Test documentation — done, and **honestly incomplete on purpose**: 26/51 test
+      cases marked executed, the rest marked specified-but-not-run rather than faked
+      (`05-Test-Cases.md`). Waits on Stage 1 for the accuracy-number rows specifically.
+- [x] **D-06** Final report chapters — all 8 written (Intro, Lit Review, Requirements,
+      Design, Implementation, Testing, Results, Conclusion) — `07-Thesis.md`.
+- [x] **D-07** Limitations chapter — done, stated up front (§1.6) and expanded at the end
+      (§8.3): no NADRA verification, device fingerprinting 60–80% accurate, VPN ≠ fraud,
+      non-commercial model licences, PTA-constrained SMS.
+- [x] **D-08** Future Scope chapter — done (§8.4): reverse-image stolen-photo detection,
+      chat scam detection, buyer scam-report loop, marketplace integrations, reputation
       history, mobile app.
-- [ ] **D-09** Final presentation deck and demo video.
+- [ ] **D-09** Final presentation deck and demo video — **not started.** Nothing in the
+      documentation package addresses this; still the students' to build for the viva.
+
+**Still to do before submission, per the package's own honest checklist** (`02-Index.md` §7):
+open the `.docx` in Word and refresh its Table of Contents field (press F9) before printing/
+submitting — the rest of the package is otherwise submission-ready today.
 
 ---
 
 ## Decisions still open
 
-1. **Final submission date.** Without it, the remaining ~24 software days map to no calendar.
-   Sequencing above is by dependency, so it survives any date — but Stages 6 and 7 compress
-   under pressure and **Stage 3 cannot**.
-2. **P0-12 approach** — internal route (recommended) or first-party key for `apps/web`.
-3. **MFA** — build it or document the omission (P4-09).
-4. **The $3–4/month for the worker instance** — who pays, and on whose card.
+1. **Final submission date.** Without it, the remaining software days map to no calendar.
+2. **MFA** — implement enrollment, or default `SECURITY_MFA_REQUIRED_ROLES` empty. This is
+   no longer just a documentation decision (P4-09) — leaving it as-is is a real lockout risk.
+3. **Data-retention approach for account deletion** — hard delete vs. anonymize. Needed to
+   actually implement `purge_account()` (Stage 5), and worth a line in the report regardless.
+4. **The $3–4/month for the worker instance, plus now a Twilio number purchase** — who pays.
+5. **Scoring-model authoring (P4-07)** — worth building before handover, or documented as a
+   known gap the students accept for viva.
 
 ---
 
@@ -331,17 +294,20 @@ already built.
 
 Update this as boxes get ticked. It is the one line to show the students each week.
 
-| Stage | Title            |  Tasks | Done   | Owner                    |
-| ----- | ---------------- | -----: | ------ | ------------------------ |
-| 0     | Corrections      |      7 | **7**  | Zohaib ✅                |
-| 1     | Accuracy numbers |      7 | 0      | Students → Zohaib        |
-| 2     | Scam classifier  |      9 | **7**  | Zohaib 🔴 data           |
-| 3     | Production local |     14 | **10** | Zohaib (4 need accounts) |
-| 4     | Admin panel      |      8 | 0      | Zohaib                   |
-| 5     | Seller leftovers |      4 | 0      | Zohaib                   |
-| 6     | QA and demo      |      8 | **1**  | Zohaib                   |
-| 7     | Handover         |      6 | **1**  | Both                     |
-| D     | Report           |      9 | 0      | Students                 |
-|       | **Total**        | **72** | **26** |                          |
+| Stage | Title                              |  Tasks | Done   | Owner                     |
+| ----- | ---------------------------------- | -----: | ------ | ------------------------- |
+| 0     | Corrections                        |      7 | **7**  | Zohaib ✅                 |
+| 1     | Accuracy numbers                   |      7 | 0      | Students → Zohaib         |
+| 2     | Scam classifier                    |      9 | **7**  | Zohaib 🔴 data            |
+| 3     | Production local                   |     14 | **10** | Zohaib (2 need accounts)  |
+| 4     | Admin panel                        |      8 | **6**  | Zohaib (2 gaps + 1 risk)  |
+| 4b    | Marketplace expansion (extra)      |     12 | **12** | Zohaib ✅ (untested)      |
+| 5     | Seller leftovers                   |      4 | **2**  | Zohaib (1 stub: deletion) |
+| 6     | QA and demo                        |      8 | **1**  | Zohaib                    |
+| 7     | Handover                           |      6 | **1**  | Both                      |
+| D     | Report                             |      9 | **8**  | Zohaib draft → Students   |
+|       | **Total (original 72 + 12 extra)** | **84** | **54** |                           |
 
-_Created 22 August 2026 · Sequenced by dependency, not by date · Scope: academic FYP_
+_Refreshed 12 September 2026 — re-verified against actual current code (not commit messages
+or the stale 22 Aug snapshot) via two independent code-reading passes over Stage 4 and Stage 5. Sequenced by dependency, not by date. Scope: academic FYP + client-driven marketplace
+expansion._
