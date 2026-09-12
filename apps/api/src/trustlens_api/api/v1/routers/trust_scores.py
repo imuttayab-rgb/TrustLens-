@@ -66,7 +66,7 @@ async def get_trust_score(
         GetTrustScoreCommand(seller_id=seller_id, include_improvements=False)
     )
     return envelope(
-        _to_response(detail.score).model_dump(by_alias=True), request_id=meta.request_id
+        trust_score_to_response(detail.score).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 
@@ -245,10 +245,12 @@ async def override_score(
     await uow.commit()
     await container.cache.delete_pattern(f"score:{seller_id}:*")
 
-    return envelope(_to_response(saved).model_dump(by_alias=True), request_id=meta.request_id)
+    return envelope(
+        trust_score_to_response(saved).model_dump(by_alias=True), request_id=meta.request_id
+    )
 
 
-def _to_response(score: TrustScore) -> TrustScoreResponse:
+def trust_score_to_response(score: TrustScore) -> TrustScoreResponse:
     rollup = score.category_breakdown
     return TrustScoreResponse(
         id=score.id,
@@ -290,4 +292,4 @@ def _to_response(score: TrustScore) -> TrustScoreResponse:
     )
 
 
-__all__ = ["router"]
+__all__ = ["router", "trust_score_to_response"]

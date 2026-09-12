@@ -8,6 +8,7 @@ import {
   useReviewQueue,
   type ReviewCase,
 } from '../hooks/use-review-queue';
+import { IdentityEvidence } from './IdentityEvidence';
 import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Card, CardContent, Spinner, cn } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
@@ -123,7 +124,10 @@ function CaseRow({
 }) {
   const claim = useClaimCase();
   const decide = useDecideCase();
-  const identity = useIdentityReview(item.seller_id, expanded && item.case_type === 'IDENTITY_REVIEW');
+  const identity = useIdentityReview(
+    item.seller_id,
+    expanded && item.case_type === 'IDENTITY_REVIEW',
+  );
   const [note, setNote] = useState('');
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -185,9 +189,7 @@ function CaseRow({
               </>
             ) : (
               <>
-                {item.case_type === 'IDENTITY_REVIEW' && (
-                  <IdentityEvidence identity={identity} />
-                )}
+                {item.case_type === 'IDENTITY_REVIEW' && <IdentityEvidence identity={identity} />}
 
                 <div>
                   <label htmlFor={`note-${item.id}`} className="block text-sm font-medium">
@@ -228,38 +230,5 @@ function CaseRow({
         )}
       </CardContent>
     </Card>
-  );
-}
-
-function IdentityEvidence({ identity }: { identity: ReturnType<typeof useIdentityReview> }) {
-  if (identity.isPending) return <Spinner label="Loading identity evidence" />;
-  if (identity.error) {
-    return <Alert tone="error">Identity evidence could not be loaded.</Alert>;
-  }
-  if (!identity.data) return <Alert tone="warning">No identity evidence is attached to this case.</Alert>;
-
-  const review = identity.data;
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-3">
-        {review.documents.map((document) => (
-          <figure key={document.documentType} className="overflow-hidden rounded-md border border-border/70">
-            <img src={document.previewUrl} alt={document.documentType.replace('_', ' ').toLowerCase()} className="aspect-video w-full object-cover" />
-            <figcaption className="space-y-1 p-3 text-xs">
-              <p className="font-medium">{document.documentType.replace('_', ' ')}</p>
-              <p className="text-muted-foreground">Status: {document.status}</p>
-              {document.extractedName && <p className="text-muted-foreground">Name: {document.extractedName}</p>}
-              {document.ocrConfidence != null && <p className="text-muted-foreground">OCR confidence: {(document.ocrConfidence * 100).toFixed(0)}%</p>}
-            </figcaption>
-          </figure>
-        ))}
-      </div>
-      <div className="grid gap-3 rounded-md border border-border/70 p-3 text-sm sm:grid-cols-3">
-        <p>Decision: <strong>{review.decision}</strong></p>
-        <p>Face similarity: <strong>{review.faceSimilarity?.toFixed(3) ?? '—'}</strong></p>
-        <p>Threshold: <strong>{review.thresholdUsed?.toFixed(3) ?? '—'}</strong></p>
-      </div>
-      <p className="text-xs text-muted-foreground">Images use short-lived private URLs and are not stored in the browser cache by TrustLens.</p>
-    </div>
   );
 }

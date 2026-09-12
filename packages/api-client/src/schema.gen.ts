@@ -373,6 +373,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/sellers/{seller_id}/trust-score': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a seller's full trust-score breakdown
+     * @description The same per-signal breakdown a seller sees on their own dashboard, reachable from the seller-detail page without opening a review case. Gated on trust_score:read:full rather than reusing the seller-facing route directly, so this admin-side read stays a routed, auditable grant instead of an implicit side effect of seller:read:any.
+     */
+    get: operations['get_seller_trust_score_api_v1_admin_sellers__seller_id__trust_score_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/sellers/{seller_id}/trust-score/override': {
     parameters: {
       query?: never;
@@ -2518,6 +2538,41 @@ export interface operations {
     };
   };
   get_identity_review_api_v1_admin_sellers__seller_id__identity_review_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        seller_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_seller_trust_score_api_v1_admin_sellers__seller_id__trust_score_get: {
     parameters: {
       query?: never;
       header?: {

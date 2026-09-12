@@ -2537,6 +2537,66 @@
         "tags": ["admin"]
       }
     },
+    "/api/v1/admin/sellers/{seller_id}/trust-score": {
+      "get": {
+        "description": "The same per-signal breakdown a seller sees on their own dashboard, reachable from the seller-detail page without opening a review case. Gated on trust_score:read:full rather than reusing the seller-facing route directly, so this admin-side read stays a routed, auditable grant instead of an implicit side effect of seller:read:any.",
+        "operationId": "get_seller_trust_score_api_v1_admin_sellers__seller_id__trust_score_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Seller Trust Score Api V1 Admin Sellers  Seller Id  Trust Score Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get a seller's full trust-score breakdown",
+        "tags": ["admin"]
+      }
+    },
     "/api/v1/admin/sellers/{seller_id}/trust-score/override": {
       "post": {
         "description": "Writes a NEW score row marked as a manual override. The computed score it replaces stays in history, a written reason is mandatory (enforced by a database CHECK), and the action is audit-logged.",

@@ -1,7 +1,16 @@
 'use client';
 
-import { useSellerDetail } from '@/features/sellers';
-import { Alert, Card, CardContent, CardHeader, CardTitle, Spinner } from '@trustlens/ui';
+import { useSellerDetail, useSellerTrustScore } from '@/features/sellers';
+import { IdentityEvidence, useIdentityReview } from '@/features/review';
+import {
+  Alert,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  SignalBreakdown,
+  Spinner,
+} from '@trustlens/ui';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -10,6 +19,8 @@ const statusLabel = (value: string) => value.replaceAll('_', ' ');
 export default function SellerDetailPage() {
   const params = useParams<{ sellerId: string }>();
   const { data: seller, error, isPending } = useSellerDetail(params.sellerId);
+  const trustScore = useSellerTrustScore(params.sellerId);
+  const identity = useIdentityReview(params.sellerId);
 
   if (isPending) {
     return (
@@ -89,6 +100,46 @@ export default function SellerDetailPage() {
 
       <Card>
         <CardHeader>
+          <CardTitle>Signal breakdown</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {trustScore.isPending ? (
+            <Spinner label="Loading the signal breakdown" />
+          ) : trustScore.error ? (
+            <Alert tone="error">The signal breakdown could not be loaded.</Alert>
+          ) : !trustScore.data ? (
+            <Alert tone="info">
+              This seller has not been scored yet — no verification checks have completed.
+            </Alert>
+          ) : (
+            <>
+              {trustScore.data.capApplied != null && (
+                <div className="mb-4 rounded-lg bg-risk-high-bg p-4 text-sm text-risk-high">
+                  <p className="font-semibold">
+                    This score is capped at {trustScore.data.capApplied}.
+                  </p>
+                  <p className="mt-1">
+                    A critical check failed, capping the score regardless of the rest.
+                  </p>
+                </div>
+              )}
+              <SignalBreakdown signals={trustScore.data.signals} />
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Identity evidence</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <IdentityEvidence identity={identity} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
           <CardTitle>Score history</CardTitle>
         </CardHeader>
         <CardContent className="overflow-x-auto p-0">
@@ -119,11 +170,6 @@ export default function SellerDetailPage() {
           </table>
         </CardContent>
       </Card>
-
-      <Alert tone="info">
-        Identity images and raw biometric evidence are intentionally unavailable in this summary.
-        They must be exposed only through a dedicated, short-lived signed URL review flow.
-      </Alert>
     </main>
   );
 }

@@ -23,6 +23,7 @@ from trustlens.core.application.use_cases.admin import (
     DecideReviewCaseCommand,
     ListReviewQueue,
 )
+from trustlens.core.application.use_cases.scoring import GetTrustScore, GetTrustScoreCommand
 from trustlens.core.domain.entities import AuditLogEntry, AuthenticatedActor, ReviewCase
 from trustlens.core.domain.enums import DocumentType, RiskLevel
 from trustlens.core.domain.errors import EntityNotFound, PermissionDenied
@@ -35,6 +36,7 @@ from trustlens_api.api.deps import (
     UowDep,
     require_permissions,
 )
+from trustlens_api.api.v1.routers.trust_scores import trust_score_to_response
 from trustlens_api.api.v1.schemas.common import PageMeta, Schema, envelope
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -328,6 +330,36 @@ async def get_seller_detail(
 
 
 @router.get(
+    "/sellers/{seller_id}/trust-score",
+    summary="Get a seller's full trust-score breakdown",
+    description=(
+        "The same per-signal breakdown a seller sees on their own dashboard, "
+        "reachable from the seller-detail page without opening a review case. "
+        "Gated on trust_score:read:full rather than reusing the seller-facing "
+        "route directly, so this admin-side read stays a routed, auditable "
+        "grant instead of an implicit side effect of seller:read:any."
+    ),
+    dependencies=[Depends(require_permissions("trust_score:read:full"))],
+)
+async def get_seller_trust_score(
+    seller_id: UUID,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    seller = await uow.sellers.get(seller_id)
+    if seller is None:
+        raise EntityNotFound("seller", seller_id)
+
+    detail = await GetTrustScore(uow=uow).execute(
+        GetTrustScoreCommand(seller_id=seller_id, include_improvements=False)
+    )
+    return envelope(
+        trust_score_to_response(detail.score).model_dump(by_alias=True),
+        request_id=meta.request_id,
+    )
+
+
+@router.get(
     "/sellers/{seller_id}/identity-review",
     summary="Review identity evidence",
     dependencies=[Depends(require_permissions("identity:read:any"))],
@@ -554,4 +586,3 @@ async def list_audit_logs(
 
 
 __all__ = ["router"]
-

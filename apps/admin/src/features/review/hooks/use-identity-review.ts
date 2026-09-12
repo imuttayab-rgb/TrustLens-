@@ -31,14 +31,21 @@ export interface IdentityReview {
 }
 
 export function useIdentityReview(sellerId: string | null, enabled = true) {
-  return useQuery<IdentityReview>({
+  return useQuery<IdentityReview | null>({
     queryKey: ['admin', 'identity-review', sellerId ?? 'none'],
     enabled: Boolean(sellerId) && enabled,
     queryFn: async () => {
       const result = await api.GET('/api/v1/admin/sellers/{seller_id}/identity-review', {
         params: { path: { seller_id: sellerId as string } },
       });
-      if (result.error) throw toApiError(result.error);
+      if (result.error) {
+        const apiError = toApiError(result.error);
+        // No identity verification has been submitted at all is a normal
+        // state (buyer accounts, sellers who haven't started identity
+        // checks yet) - not an error to alarm a reviewer with.
+        if (apiError.status === 404) return null;
+        throw apiError;
+      }
       return (result.data as unknown as { data: IdentityReview }).data;
     },
   });
