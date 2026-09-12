@@ -4875,6 +4875,66 @@
         "tags": ["Public Page"]
       }
     },
+    "/api/v1/public/listings/{listing_id}": {
+      "get": {
+        "description": "The full listing page a catalog card opens into. Anonymous, rate limited per IP. Returns 404 for anything not ACTIVE - a listing still being analysed, flagged, or removed is treated as not found, the same as one that never existed.",
+        "operationId": "get_public_listing_api_v1_public_listings__listing_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Public Listing Api V1 Public Listings  Listing Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "View a listing (no auth)",
+        "tags": ["Public Page"]
+      }
+    },
     "/api/v1/public/sellers/{seller_ref}/trust-score": {
       "get": {
         "description": "Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.\n\nMarketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.",

@@ -43,6 +43,7 @@ if TYPE_CHECKING:
         Notification,
         OtpCode,
         PhoneNumber,
+        PublicListingDetail,
         PublicListingSummary,
         RefreshToken,
         ReviewCase,
@@ -217,6 +218,12 @@ class ListingRepository(Protocol):
     ) -> list[ListingAnalysis]: ...
 
     async def category_median_price(self, category: str, *, currency: str) -> float | None: ...
+
+    async def get_public_detail(self, listing_id: UUID) -> PublicListingDetail | None:
+        """The full "view this listing" page - every image, the
+        description, still no seller contact details. Only ever returns an
+        ACTIVE listing; anything else is treated as not found."""
+        ...
 
     async def search_public(
         self,

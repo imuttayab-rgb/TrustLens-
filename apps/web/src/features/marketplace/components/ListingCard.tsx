@@ -24,7 +24,7 @@ export function ListingCard({
 
   return (
     <Link
-      href={`/seller/${encodeURIComponent(listing.sellerHandle)}`}
+      href={`/listing/${listing.id}`}
       className="group block overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="relative aspect-square w-full bg-muted/50">
@@ -49,8 +49,8 @@ export function ListingCard({
             aria-pressed={favorited}
             disabled={togglingFavorite}
             onClick={(event) => {
-              // The card itself is a Link to the seller page - the heart must
-              // not also trigger that navigation.
+              // The card itself is a Link to the listing page - the heart
+              // must not also trigger that navigation.
               event.preventDefault();
               event.stopPropagation();
               onToggleFavorite();
@@ -97,15 +97,25 @@ export function ListingCard({
         </p>
         <p className="truncate text-xs text-muted-foreground">by {listing.sellerDisplayName}</p>
         {listing.latitude !== null && listing.longitude !== null && (
-          <a
-            href={`https://www.google.com/maps?q=${listing.latitude},${listing.longitude}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(event) => event.stopPropagation()}
+          <button
+            type="button"
+            onClick={(event) => {
+              // The card itself is an <a> (Link to the listing page) -
+              // nesting a second <a> here is invalid HTML and the browser
+              // would silently close the outer one, so this opens the map
+              // the same way a link would without actually being one.
+              event.preventDefault();
+              event.stopPropagation();
+              window.open(
+                `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}`,
+                '_blank',
+                'noopener,noreferrer',
+              );
+            }}
             className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
           >
             View on map
-          </a>
+          </button>
         )}
       </div>
     </Link>

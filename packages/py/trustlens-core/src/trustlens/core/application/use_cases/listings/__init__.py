@@ -3,6 +3,7 @@
 from trustlens.core.application.use_cases.listings.browse_public import (
     BrowsePublicListings,
     BrowsePublicListingsQuery,
+    GetPublicListing,
     PublicListingPage,
 )
 from trustlens.core.application.use_cases.listings.manage import (
@@ -33,6 +34,7 @@ __all__ = [
     "DeleteListing",
     "DeleteListingCommand",
     "GetListing",
+    "GetPublicListing",
     "ListSellerListings",
     "ListSellerListingsQuery",
     "ListingInput",

@@ -1,4 +1,5 @@
 export { ListingCard } from './components/ListingCard';
+export { ListingDetailActions } from './components/ListingDetailActions';
 export {
   useAddFavorite,
   useFavoriteIds,

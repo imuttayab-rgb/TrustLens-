@@ -841,6 +841,50 @@ class SqlListingRepository:
         )
         return int((await self._s.execute(stmt)).scalar_one())
 
+    async def get_public_detail(self, listing_id: UUID) -> ent.PublicListingDetail | None:
+        stmt = (
+            select(m.ListingModel, m.SellerProfile)
+            .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
+            .where(
+                m.ListingModel.id == listing_id,
+                m.ListingModel.status == e.ListingStatus.ACTIVE,
+                m.ListingModel.deleted_at.is_(None),
+                m.SellerProfile.deleted_at.is_(None),
+            )
+        )
+        row = (await self._s.execute(stmt)).first()
+        if row is None:
+            return None
+        listing, seller = row
+
+        image_rows = await self._s.execute(
+            select(m.ListingImageModel.file_id, m.ListingImageModel.is_primary)
+            .where(m.ListingImageModel.listing_id == listing_id)
+            .order_by(m.ListingImageModel.position)
+        )
+        images = tuple(
+            ent.PublicListingImage(file_id=file_id, is_primary=is_primary)
+            for file_id, is_primary in image_rows
+        )
+
+        return ent.PublicListingDetail(
+            id=listing.id,
+            title=listing.title,
+            description=listing.description,
+            price=float(listing.price) if listing.price is not None else None,
+            currency=listing.currency,
+            category=listing.category,
+            city=listing.city,
+            area=listing.area,
+            created_at=listing.created_at,
+            seller_id=seller.id,
+            seller_handle=seller.handle,
+            seller_display_name=seller.display_name,
+            images=images,
+            latitude=float(listing.latitude) if listing.latitude is not None else None,
+            longitude=float(listing.longitude) if listing.longitude is not None else None,
+        )
+
     async def add(self, listing: ent.Listing) -> ent.Listing:
         self._s.add(
             m.ListingModel(

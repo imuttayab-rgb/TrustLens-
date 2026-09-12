@@ -149,10 +149,11 @@ _PUBLIC_ROUTES = {
     # construction (it returns the partner API's projection) and IP rate
     # limited in the handler.
     "/api/v1/public/sellers/{seller_ref}/trust-score",
-    # The public listing catalog (browse/search). Same anonymous-by-design
-    # reasoning: a buyer opens this directly, and it is IP rate limited in
-    # the handler.
+    # The public listing catalog (browse/search) and the "view this listing"
+    # page it opens into. Same anonymous-by-design reasoning: a buyer opens
+    # these directly, and both are IP rate limited in the handler.
     "/api/v1/public/listings",
+    "/api/v1/public/listings/{listing_id}",
 }
 
 

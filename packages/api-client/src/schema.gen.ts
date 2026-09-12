@@ -937,6 +937,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/public/listings/{listing_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * View a listing (no auth)
+     * @description The full listing page a catalog card opens into. Anonymous, rate limited per IP. Returns 404 for anything not ACTIVE - a listing still being analysed, flagged, or removed is treated as not found, the same as one that never existed.
+     */
+    get: operations['get_public_listing_api_v1_public_listings__listing_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/public/sellers/{seller_ref}/trust-score': {
     parameters: {
       query?: never;
@@ -3822,6 +3842,41 @@ export interface operations {
         'x-device-fingerprint'?: string | null;
       };
       path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_public_listing_api_v1_public_listings__listing_id__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
       cookie?: never;
     };
     requestBody?: never;

@@ -12,9 +12,10 @@ buyer would contradict the product's whole premise.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from uuid import UUID
 
-from trustlens.core.domain.entities import PublicListingSummary
-from trustlens.core.domain.errors import ValidationError
+from trustlens.core.domain.entities import PublicListingDetail, PublicListingSummary
+from trustlens.core.domain.errors import EntityNotFound, ValidationError
 from trustlens.core.domain.ports import UnitOfWork
 from trustlens.core.domain.value_objects import validate_category
 
@@ -101,10 +102,25 @@ class BrowsePublicListings:
         return PublicListingPage(items=tuple(items), total=total, limit=limit, offset=offset)
 
 
+class GetPublicListing:
+    """The "view this listing" page a catalog card opens into."""
+
+    def __init__(self, *, uow: UnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, listing_id: UUID) -> PublicListingDetail:
+        async with self._uow:
+            detail = await self._uow.listings.get_public_detail(listing_id)
+        if detail is None:
+            raise EntityNotFound("listing", listing_id)
+        return detail
+
+
 __all__ = [
     "MAX_QUERY_CHARS",
     "SORT_ORDERS",
     "BrowsePublicListings",
     "BrowsePublicListingsQuery",
+    "GetPublicListing",
     "PublicListingPage",
 ]

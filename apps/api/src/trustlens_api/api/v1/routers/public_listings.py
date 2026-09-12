@@ -9,18 +9,27 @@ seller-scoped `GET /listings`.
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, Query
 
 from trustlens.core.application.use_cases.listings import (
     BrowsePublicListings,
     BrowsePublicListingsQuery,
+    GetPublicListing,
 )
 from trustlens.core.domain.errors import RateLimitExceeded
 from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ContainerDep, MetaDep, UowDep
-from trustlens_api.api.v1.routers._public_listing_presentation import to_public_listing_response
+from trustlens_api.api.v1.routers._public_listing_presentation import (
+    image_url,
+    to_public_listing_response,
+)
 from trustlens_api.api.v1.schemas.common import PageMeta, envelope
+from trustlens_api.api.v1.schemas.public_listing import (
+    PublicListingDetailResponse,
+    PublicListingImageResponse,
+)
 
 log = get_logger(__name__)
 
@@ -76,6 +85,49 @@ async def browse_public_listings(
             total=page.total,
         ),
     )
+
+
+@router.get(
+    "/public/listings/{listing_id}",
+    summary="View a listing (no auth)",
+    description=(
+        "The full listing page a catalog card opens into. Anonymous, rate "
+        "limited per IP. Returns 404 for anything not ACTIVE - a listing "
+        "still being analysed, flagged, or removed is treated as not found, "
+        "the same as one that never existed."
+    ),
+)
+async def get_public_listing(
+    listing_id: UUID,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    await _throttle(container, meta)
+
+    detail = await GetPublicListing(uow=uow).execute(listing_id)
+    images = [
+        PublicListingImageResponse(image_url=url, is_primary=image.is_primary)
+        for image in detail.images
+        if (url := await image_url(container, uow, image.file_id)) is not None
+    ]
+    response = PublicListingDetailResponse(
+        id=detail.id,
+        title=detail.title,
+        description=detail.description,
+        price=detail.price,
+        currency=detail.currency,
+        category=detail.category,
+        city=detail.city,
+        area=detail.area,
+        created_at=detail.created_at,
+        seller_handle=detail.seller_handle,
+        seller_display_name=detail.seller_display_name,
+        images=images,
+        latitude=detail.latitude,
+        longitude=detail.longitude,
+    )
+    return envelope(response.model_dump(by_alias=True), request_id=meta.request_id)
 
 
 async def _throttle(container: ContainerDep, meta: MetaDep) -> None:

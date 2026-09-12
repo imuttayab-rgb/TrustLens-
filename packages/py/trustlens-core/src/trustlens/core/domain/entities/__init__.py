@@ -14,6 +14,8 @@ from trustlens.core.domain.entities.listing import (
     Listing,
     ListingAnalysis,
     ListingImage,
+    PublicListingDetail,
+    PublicListingImage,
     PublicListingSummary,
     ScamLabel,
 )
@@ -82,6 +84,8 @@ __all__ = [
     "OtpCode",
     "Permission",
     "PhoneNumber",
+    "PublicListingDetail",
+    "PublicListingImage",
     "PublicListingSummary",
     "RefreshToken",
     "ReviewCase",

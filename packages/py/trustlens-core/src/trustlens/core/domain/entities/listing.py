@@ -130,6 +130,40 @@ class PublicListingSummary:
 
 
 @dataclass(frozen=True, slots=True)
+class PublicListingImage:
+    file_id: UUID
+    is_primary: bool
+
+
+@dataclass(frozen=True, slots=True)
+class PublicListingDetail:
+    """The full "view this listing" page a buyer opens from the catalog.
+
+    Unlike PublicListingSummary this does carry the description and every
+    image, not just the primary one - a buyer deciding whether to message a
+    seller needs the whole listing, not a card's worth. Still no seller
+    contact details: that boundary doesn't move just because the page got
+    bigger. Only ever built from an ACTIVE listing.
+    """
+
+    id: UUID
+    title: str
+    description: str
+    price: float | None
+    currency: str | None
+    category: str | None
+    city: str | None
+    area: str | None
+    created_at: datetime
+    seller_id: UUID
+    seller_handle: str
+    seller_display_name: str
+    images: tuple[PublicListingImage, ...] = ()
+    latitude: float | None = None
+    longitude: float | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Favorite:
     """A buyer's saved listing - a bookmark, not scored evidence.
 
@@ -149,6 +183,8 @@ __all__ = [
     "Listing",
     "ListingAnalysis",
     "ListingImage",
+    "PublicListingDetail",
+    "PublicListingImage",
     "PublicListingSummary",
     "ScamLabel",
 ]
