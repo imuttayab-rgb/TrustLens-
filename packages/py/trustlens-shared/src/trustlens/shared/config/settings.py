@@ -190,7 +190,12 @@ class SecuritySettings(_Base):
     #: How many X-Forwarded-For hops to trust. Too high and any client can
     #: spoof its IP, defeating both rate limiting and the NETWORK signal.
     trusted_proxy_count: int = 0
-    mfa_required_roles: CsvList = Field(default_factory=lambda: ["ADMIN", "REVIEWER"])
+    #: Defaults empty. No MFA enrolment or verification endpoint exists yet,
+    #: so any role listed here cannot sign in at all - login would return
+    #: MFA_REQUIRED with no way to satisfy it, locking those accounts out.
+    #: Set this only once enrolment is built; the API refuses to boot
+    #: otherwise (see `_assert_mfa_roles_are_enrollable` in `main.py`).
+    mfa_required_roles: CsvList = Field(default_factory=list)
 
     @field_validator("jwt_private_key", "jwt_public_key")
     @classmethod

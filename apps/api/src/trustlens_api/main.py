@@ -82,6 +82,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
     app.state.container = await build_container(settings)
     _assert_routes_are_guarded(app)
+    _assert_mfa_roles_are_enrollable(settings)
 
     log.info("started", routes=len(app.routes))
     try:
@@ -219,6 +220,29 @@ def _assert_routes_are_guarded(app: FastAPI) -> None:
             + ", ".join(sorted(unguarded))
             + ". Add an auth dependency, or add the path to _PUBLIC_ROUTES if it is "
             "deliberately anonymous."
+        )
+
+
+def _assert_mfa_roles_are_enrollable(settings: Settings) -> None:
+    """Refuse to boot rather than silently lock staff out at login.
+
+    `SECURITY_MFA_REQUIRED_ROLES` makes `LoginUser` reject a matching role
+    with `MFA_REQUIRED` - correctly, since that is the enforcement point. But
+    no MFA enrolment or verification endpoint exists anywhere in this
+    codebase yet, so a role listed here has no way to ever satisfy that
+    requirement. Discovering that after a production deploy means every
+    admin and reviewer account is locked out with no recovery but a database
+    edit. Failing the boot instead turns a silent lockout into an immediate,
+    loud, pre-traffic error - see `REMAINING.md` Stage 4 (P4-09) for the two
+    ways to close this for good: build enrolment, or keep this setting empty.
+    """
+    if settings.security.mfa_required_roles:
+        raise RuntimeError(
+            "SECURITY_MFA_REQUIRED_ROLES is set to "
+            + ", ".join(settings.security.mfa_required_roles)
+            + " but no MFA enrolment or verification endpoint exists yet. Those "
+            "accounts would be permanently unable to sign in. Leave this setting "
+            "empty until MFA enrolment is implemented."
         )
 
 
