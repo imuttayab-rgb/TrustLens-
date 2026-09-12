@@ -1,71 +1,24 @@
 'use client';
 
-import { useEffect, useId, useRef, useState } from 'react';
-
-interface LatLng {
-  lat: number;
-  lng: number;
-}
-
-interface GoogleMapsMarker {
-  setPosition(position: LatLng): void;
-  addListener(event: string, handler: () => void): void;
-  getPosition(): { lat(): number; lng(): number } | null;
-}
-
-interface GoogleMapsMap {
-  addListener(
-    event: string,
-    handler: (e: { latLng: { lat(): number; lng(): number } | null }) => void,
-  ): void;
-  setCenter(position: LatLng): void;
-}
-
-interface GoogleMapsNamespace {
-  Map: new (el: HTMLElement, options: Record<string, unknown>) => GoogleMapsMap;
-  Marker: new (options: Record<string, unknown>) => GoogleMapsMarker;
-}
-
-declare global {
-  interface Window {
-    google?: { maps: GoogleMapsNamespace };
-  }
-}
-
-//: Shared across every instance of this component on the page, so opening
-//: two listing forms does not inject the script twice or race two callbacks.
-let mapsLoader: Promise<GoogleMapsNamespace> | null = null;
-
-function loadGoogleMaps(apiKey: string): Promise<GoogleMapsNamespace> {
-  if (window.google?.maps) return Promise.resolve(window.google.maps);
-  if (mapsLoader) return mapsLoader;
-
-  mapsLoader = new Promise((resolve, reject) => {
-    const callbackName = `__trustlensMapsReady_${Math.random().toString(36).slice(2)}`;
-    (window as unknown as Record<string, () => void>)[callbackName] = () => {
-      if (window.google?.maps) resolve(window.google.maps);
-      else reject(new Error('Google Maps failed to initialise.'));
-    };
-    const script = document.createElement('script');
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&callback=${callbackName}`;
-    script.async = true;
-    script.onerror = () => reject(new Error('Could not load Google Maps.'));
-    document.head.appendChild(script);
-  });
-  return mapsLoader;
-}
+import 'leaflet/dist/leaflet.css';
+import type { Map as LeafletMap, Marker as LeafletMarker } from 'leaflet';
+import { useEffect, useId, useRef } from 'react';
 
 //: Lahore. A neutral default centre for a Pakistani marketplace when no
 //: coordinate has been picked yet.
-const DEFAULT_CENTER: LatLng = { lat: 31.5204, lng: 74.3587 };
+const DEFAULT_CENTER: [number, number] = [31.5204, 74.3587];
 
 /**
  * Drop-a-pin location picker for the listing form.
  *
- * Renders nothing at all when NEXT_PUBLIC_GOOGLE_MAPS_API_KEY is unset,
- * rather than an "unavailable" message - the city/area picker already
- * captures a usable location, so the map is a refinement, not something
- * whose absence needs explaining to a seller mid-form.
+ * Leaflet + OpenStreetMap tiles, not Google Maps: no API key, no billing
+ * account, no signup - OSM's tile server is free for this traffic volume
+ * and the alternative (a Google Maps key) requires linking a card even for
+ * the free tier, which is a real barrier for an FYP with no budget.
+ *
+ * `leaflet` is imported dynamically inside the effect rather than at module
+ * scope - its core touches `window` at import time, which breaks under
+ * Next's server-side render of this file even with 'use client'.
  */
 export function LocationPicker({
   latitude,
@@ -76,82 +29,78 @@ export function LocationPicker({
   longitude: number | null;
   onChange: (lat: number, lng: number) => void;
 }) {
-  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const containerId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<GoogleMapsMap | null>(null);
-  const markerRef = useRef<GoogleMapsMarker | null>(null);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const markerRef = useRef<LeafletMarker | null>(null);
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
 
   useEffect(() => {
-    if (!apiKey || !containerRef.current) return;
+    if (!containerRef.current || mapRef.current) return;
     let cancelled = false;
 
-    loadGoogleMaps(apiKey)
-      .then((maps) => {
-        if (cancelled || !containerRef.current) return;
-        const center =
-          latitude !== null && longitude !== null
-            ? { lat: latitude, lng: longitude }
-            : DEFAULT_CENTER;
-        const map = new maps.Map(containerRef.current, {
-          center,
-          zoom: latitude !== null ? 14 : 11,
-          streetViewControl: false,
-          mapTypeControl: false,
-        });
-        const marker = new maps.Marker({
-          position: center,
-          map,
-          draggable: true,
-        });
-        marker.addListener('dragend', () => {
-          const pos = marker.getPosition();
-          if (pos) onChangeRef.current(pos.lat(), pos.lng());
-        });
-        map.addListener('click', (e) => {
-          if (!e.latLng) return;
-          const lat = e.latLng.lat();
-          const lng = e.latLng.lng();
-          marker.setPosition({ lat, lng });
-          onChangeRef.current(lat, lng);
-        });
-        mapRef.current = map;
-        markerRef.current = marker;
-        setStatus('ready');
-      })
-      .catch(() => {
-        if (!cancelled) setStatus('error');
+    void import('leaflet').then((leafletModule) => {
+      if (cancelled || !containerRef.current || mapRef.current) return;
+      const L = leafletModule.default;
+
+      // Leaflet's default marker icon points at relative image paths that
+      // Next's bundler cannot resolve - point them at the CDN instead.
+      delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
       });
+
+      const center: [number, number] =
+        latitude !== null && longitude !== null ? [latitude, longitude] : DEFAULT_CENTER;
+
+      const map = L.map(containerRef.current).setView(center, latitude !== null ? 14 : 11);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      const marker = L.marker(center, { draggable: true }).addTo(map);
+      marker.on('dragend', () => {
+        const pos = marker.getLatLng();
+        onChangeRef.current(pos.lat, pos.lng);
+      });
+      map.on('click', (e) => {
+        marker.setLatLng(e.latlng);
+        onChangeRef.current(e.latlng.lat, e.latlng.lng);
+      });
+
+      mapRef.current = map;
+      markerRef.current = marker;
+    });
 
     return () => {
       cancelled = true;
+      mapRef.current?.remove();
+      mapRef.current = null;
+      markerRef.current = null;
     };
-    // Intentionally only re-run when the key changes - the map is
-    // initialised once, then updated imperatively via marker.setPosition.
+    // Initialised once on mount - a later lat/lng prop change (e.g. the
+    // form resetting) is not fed back in, since the only source of truth
+    // for the pin's position while this component is mounted is the map
+    // itself.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [apiKey]);
-
-  if (!apiKey) return null;
+  }, []);
 
   return (
     <div className="space-y-2">
       <span className="text-sm font-medium">Pin the exact location (optional)</span>
-      {status === 'error' ? (
-        <p className="text-sm text-muted-foreground">Map could not be loaded.</p>
-      ) : (
-        <div
-          id={containerId}
-          ref={containerRef}
-          className="h-56 w-full overflow-hidden rounded-lg border border-border bg-muted"
-        />
-      )}
+      <div
+        id={containerId}
+        ref={containerRef}
+        className="h-56 w-full overflow-hidden rounded-lg border border-border bg-muted"
+      />
       <p className="text-xs text-muted-foreground">
-        Click or drag the pin. This is separate from the city/area above and is only shown to buyers
-        as a &ldquo;view on map&rdquo; link, never your exact address unless you place the pin there
-        yourself.
+        Click or drag the pin. Map data from OpenStreetMap. This is separate from the city/area
+        above and is only shown to buyers as a &ldquo;view on map&rdquo; link, never your exact
+        address unless you place the pin there yourself.
       </p>
     </div>
   );

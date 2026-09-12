@@ -107,7 +107,7 @@ export function ListingCard({
               event.preventDefault();
               event.stopPropagation();
               window.open(
-                `https://www.google.com/maps?q=${listing.latitude},${listing.longitude}`,
+                `https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=16/${listing.latitude}/${listing.longitude}`,
                 '_blank',
                 'noopener,noreferrer',
               );

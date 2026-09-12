@@ -130,7 +130,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
           {listing.latitude !== null && listing.longitude !== null && (
             <a
-              href={`https://www.google.com/maps?q=${listing.latitude},${listing.longitude}`}
+              href={`https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=16/${listing.latitude}/${listing.longitude}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 inline-block text-sm text-primary underline-offset-4 hover:underline"
