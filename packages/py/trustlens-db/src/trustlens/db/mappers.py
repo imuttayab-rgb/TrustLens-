@@ -524,6 +524,28 @@ def to_meetup(row: m.MeetupModel) -> ent.Meetup:
     )
 
 
+def to_follow(row: m.FollowModel) -> ent.Follow:
+    return ent.Follow(
+        id=row.id,
+        follower_id=row.follower_id,
+        seller_id=row.seller_id,
+        created_at=row.created_at,
+    )
+
+
+def to_review(row: m.ReviewModel) -> ent.Review:
+    return ent.Review(
+        id=row.id,
+        transaction_id=row.transaction_id,
+        listing_id=row.listing_id,
+        reviewer_id=row.reviewer_id,
+        reviewee_id=row.reviewee_id,
+        rating=row.rating,
+        comment=row.comment,
+        created_at=row.created_at,
+    )
+
+
 def to_api_client(row: m.ApiClientModel) -> ent.ApiClient:
     return ent.ApiClient(
         id=row.id,

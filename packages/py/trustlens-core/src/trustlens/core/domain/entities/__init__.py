@@ -22,6 +22,7 @@ from trustlens.core.domain.entities.listing import (
 )
 from trustlens.core.domain.entities.messaging import Conversation, ConversationSummary, Message
 from trustlens.core.domain.entities.moderation import Block, Report
+from trustlens.core.domain.entities.reputation import Follow, Review, SellerRatingSummary
 from trustlens.core.domain.entities.safemeet import MeetingVenue, Meetup
 from trustlens.core.domain.entities.seller import Marketplace, SellerProfile
 from trustlens.core.domain.entities.trust_score import (
@@ -73,6 +74,7 @@ __all__ = [
     "DeviceLink",
     "EmailAddress",
     "Favorite",
+    "Follow",
     "IdentityDocument",
     "IdentityVerification",
     "IpReputation",
@@ -96,12 +98,14 @@ __all__ = [
     "PublicListingSummary",
     "RefreshToken",
     "Report",
+    "Review",
     "ReviewCase",
     "Role",
     "ScamLabel",
     "ScoringModel",
     "ScoringWeight",
     "SellerProfile",
+    "SellerRatingSummary",
     "SignalDefinition",
     "SignalEvaluation",
     "StoredFile",

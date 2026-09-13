@@ -17,10 +17,12 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from trustlens.core.domain.events import DomainEvent
 from trustlens.core.domain.ports import (
     BlockRepository,
+    FollowRepository,
     MeetingVenueRepository,
     MeetupRepository,
     OfferRepository,
     ReportRepository,
+    ReviewRepository,
     TransactionRepository,
 )
 from trustlens.db import models as m
@@ -102,6 +104,8 @@ class SqlAlchemyUnitOfWork:
         self.transactions: TransactionRepository = repo.SqlTransactionRepository(s)
         self.meeting_venues: MeetingVenueRepository = repo.SqlMeetingVenueRepository(s)
         self.meetups: MeetupRepository = repo.SqlMeetupRepository(s)
+        self.follows: FollowRepository = repo.SqlFollowRepository(s)
+        self.reviews: ReviewRepository = repo.SqlReviewRepository(s)
         self.trust_scores = repo.SqlTrustScoreRepository(s)
         self.scoring_models = repo.SqlScoringModelRepository(s)
         self.appeals = repo.SqlAppealRepository(s)

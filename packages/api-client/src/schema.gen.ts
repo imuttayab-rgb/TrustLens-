@@ -1141,6 +1141,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/follows': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Sellers I follow */
+    get: operations['list_my_follows_api_v1_me_follows_get'];
+    put?: never;
+    /** Follow a seller by handle */
+    post: operations['follow_seller_api_v1_me_follows_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/follows/{handle}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Unfollow a seller */
+    delete: operations['unfollow_seller_api_v1_me_follows__handle__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me/reports': {
     parameters: {
       query?: never;
@@ -1259,6 +1294,26 @@ export interface paths {
      * @description The full listing page a catalog card opens into. Anonymous, rate limited per IP. Returns 404 for anything not ACTIVE - a listing still being analysed, flagged, or removed is treated as not found, the same as one that never existed.
      */
     get: operations['get_public_listing_api_v1_public_listings__listing_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/sellers/{handle}/reviews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * A seller's public reviews and rating (no auth)
+     * @description Only reviews where both sides of the transaction have left one are shown - the blind-reveal rule. No reviewer/reviewee identity is included, matching the public trust-score payload's PII boundary.
+     */
+    get: operations['list_seller_reviews_api_v1_public_sellers__handle__reviews_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1415,6 +1470,40 @@ export interface paths {
     put?: never;
     /** Mark a handover as done */
     post: operations['complete_transaction_api_v1_transactions__transaction_id__complete_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/transactions/{transaction_id}/reviews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Review the other party in a completed transaction */
+    post: operations['create_review_api_v1_transactions__transaction_id__reviews_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/transactions/{transaction_id}/reviews/mine': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** My own review of this transaction, if I've left one */
+    get: operations['get_my_review_api_v1_transactions__transaction_id__reviews_mine_get'];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1751,6 +1840,13 @@ export interface components {
       /** Targettype */
       targetType: string;
     };
+    /** CreateReviewRequest */
+    CreateReviewRequest: {
+      /** Comment */
+      comment?: string | null;
+      /** Rating */
+      rating: number;
+    };
     /** CreateScoringModelRequest */
     CreateScoringModelRequest: {
       /**
@@ -1797,6 +1893,11 @@ export interface components {
       timezone?: string | null;
       /** Useragent */
       userAgent?: string | null;
+    };
+    /** FollowSellerRequest */
+    FollowSellerRequest: {
+      /** Handle */
+      handle: string;
     };
     /** ForgotPasswordRequest */
     ForgotPasswordRequest: {
@@ -4888,6 +4989,99 @@ export interface operations {
       };
     };
   };
+  list_my_follows_api_v1_me_follows_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  follow_seller_api_v1_me_follows_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FollowSellerRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  unfollow_seller_api_v1_me_follows__handle__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        handle: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   list_my_reports_api_v1_me_reports_get: {
     parameters: {
       query?: never;
@@ -5158,6 +5352,44 @@ export interface operations {
       };
       path: {
         listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_seller_reviews_api_v1_public_sellers__handle__reviews_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        handle: string;
       };
       cookie?: never;
     };
@@ -5471,6 +5703,80 @@ export interface operations {
     };
   };
   complete_transaction_api_v1_transactions__transaction_id__complete_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_review_api_v1_transactions__transaction_id__reviews_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateReviewRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_my_review_api_v1_transactions__transaction_id__reviews_mine_get: {
     parameters: {
       query?: never;
       header?: {

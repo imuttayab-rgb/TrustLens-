@@ -298,6 +298,32 @@
         "title": "CreateReportRequest",
         "type": "object"
       },
+      "CreateReviewRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "comment": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Comment"
+          },
+          "rating": {
+            "maximum": 5.0,
+            "minimum": 1.0,
+            "title": "Rating",
+            "type": "integer"
+          }
+        },
+        "required": ["rating"],
+        "title": "CreateReviewRequest",
+        "type": "object"
+      },
       "CreateScoringModelRequest": {
         "properties": {
           "algorithm": {
@@ -428,6 +454,20 @@
         },
         "required": ["fingerprint"],
         "title": "DeviceFingerprintRequest",
+        "type": "object"
+      },
+      "FollowSellerRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "handle": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Handle",
+            "type": "string"
+          }
+        },
+        "required": ["handle"],
+        "title": "FollowSellerRequest",
         "type": "object"
       },
       "ForgotPasswordRequest": {
@@ -6015,6 +6055,118 @@
         "tags": ["Me"]
       }
     },
+    "/api/v1/me/follows": {
+      "get": {
+        "operationId": "list_my_follows_api_v1_me_follows_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List My Follows Api V1 Me Follows Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sellers I follow",
+        "tags": ["Reputation"]
+      },
+      "post": {
+        "operationId": "follow_seller_api_v1_me_follows_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FollowSellerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Follow a seller by handle",
+        "tags": ["Reputation"]
+      }
+    },
+    "/api/v1/me/follows/{handle}": {
+      "delete": {
+        "operationId": "unfollow_seller_api_v1_me_follows__handle__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "handle",
+            "required": true,
+            "schema": {
+              "title": "Handle",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unfollow a seller",
+        "tags": ["Reputation"]
+      }
+    },
     "/api/v1/me/reports": {
       "get": {
         "operationId": "list_my_reports_api_v1_me_reports_get",
@@ -6644,6 +6796,88 @@
         "tags": ["Public Page"]
       }
     },
+    "/api/v1/public/sellers/{handle}/reviews": {
+      "get": {
+        "description": "Only reviews where both sides of the transaction have left one are shown - the blind-reveal rule. No reviewer/reviewee identity is included, matching the public trust-score payload's PII boundary.",
+        "operationId": "list_seller_reviews_api_v1_public_sellers__handle__reviews_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "handle",
+            "required": true,
+            "schema": {
+              "title": "Handle",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Seller Reviews Api V1 Public Sellers  Handle  Reviews Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "A seller's public reviews and rating (no auth)",
+        "tags": ["Reputation"]
+      }
+    },
     "/api/v1/public/sellers/{seller_ref}/trust-score": {
       "get": {
         "description": "Powers `/seller/{handle}` on the web app. Anonymous, PII-free, and rate limited per IP.\n\nMarketplaces integrating TrustLens should use `/public/v1` instead - it is versioned independently, signed, and comes with a quota.",
@@ -7201,6 +7435,134 @@
         },
         "summary": "Mark a handover as done",
         "tags": ["Commerce"]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/reviews": {
+      "post": {
+        "operationId": "create_review_api_v1_transactions__transaction_id__reviews_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Review Api V1 Transactions  Transaction Id  Reviews Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review the other party in a completed transaction",
+        "tags": ["Reputation"]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/reviews/mine": {
+      "get": {
+        "operationId": "get_my_review_api_v1_transactions__transaction_id__reviews_mine_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get My Review Api V1 Transactions  Transaction Id  Reviews Mine Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "My own review of this transaction, if I've left one",
+        "tags": ["Reputation"]
       }
     },
     "/api/v1/verification/device": {

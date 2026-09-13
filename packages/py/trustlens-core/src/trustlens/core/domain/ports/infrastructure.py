@@ -21,6 +21,7 @@ if TYPE_CHECKING:
         EmailAddressRepository,
         FavoriteRepository,
         FileRepository,
+        FollowRepository,
         IdentityRepository,
         JobRunRepository,
         ListingRepository,
@@ -34,6 +35,7 @@ if TYPE_CHECKING:
         RefreshTokenRepository,
         ReportRepository,
         ReviewCaseRepository,
+        ReviewRepository,
         ScoringModelRepository,
         SellerRepository,
         TransactionRepository,
@@ -91,6 +93,8 @@ class UnitOfWork(Protocol):
     transactions: TransactionRepository
     meeting_venues: MeetingVenueRepository
     meetups: MeetupRepository
+    follows: FollowRepository
+    reviews: ReviewRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository

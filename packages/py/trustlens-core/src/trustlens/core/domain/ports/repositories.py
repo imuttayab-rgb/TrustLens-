@@ -34,6 +34,7 @@ if TYPE_CHECKING:
         DeviceLink,
         EmailAddress,
         Favorite,
+        Follow,
         IdentityDocument,
         IdentityVerification,
         IpReputation,
@@ -51,9 +52,11 @@ if TYPE_CHECKING:
         PublicListingSummary,
         RefreshToken,
         Report,
+        Review,
         ReviewCase,
         ScoringModel,
         SellerProfile,
+        SellerRatingSummary,
         SignalDefinition,
         StoredFile,
         Transaction,
@@ -463,6 +466,44 @@ class MeetupRepository(Protocol):
     async def close(
         self, meetup_id: UUID, *, status: MeetupStatus, responded_at: datetime
     ) -> Meetup: ...
+
+
+@runtime_checkable
+class FollowRepository(Protocol):
+    async def add(self, follow: Follow) -> Follow: ...
+
+    async def remove(self, *, follower_id: UUID, seller_id: UUID) -> None: ...
+
+    async def exists(self, *, follower_id: UUID, seller_id: UUID) -> bool: ...
+
+    async def list_followed_seller_ids(self, follower_id: UUID) -> frozenset[UUID]: ...
+
+    async def count_followers(self, seller_id: UUID) -> int: ...
+
+
+@runtime_checkable
+class ReviewRepository(Protocol):
+    async def add(self, review: Review) -> Review: ...
+
+    async def get_by_transaction_and_reviewer(
+        self, transaction_id: UUID, reviewer_id: UUID
+    ) -> Review | None:
+        """One review per person per transaction - used both to block a
+        duplicate submission and to check whether the counterpart's review
+        already exists (the other direction of the same lookup)."""
+        ...
+
+    async def list_for_transaction(self, transaction_id: UUID) -> list[Review]: ...
+
+    async def list_visible_for_seller(
+        self, seller_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[Review]:
+        """Only reviews where the counterpart's review for the same
+        transaction also exists - the blind-reveal rule, enforced here
+        rather than with a stored flag so there is nothing to keep in sync."""
+        ...
+
+    async def get_rating_summary(self, seller_id: UUID) -> SellerRatingSummary: ...
 
 
 @runtime_checkable

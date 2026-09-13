@@ -161,6 +161,9 @@ _PUBLIC_ROUTES = {
     # these directly, and both are IP rate limited in the handler.
     "/api/v1/public/listings",
     "/api/v1/public/listings/{listing_id}",
+    # A seller's public reviews (REP-01) - anonymous, PII-free, same
+    # reasoning as the trust-score read above.
+    "/api/v1/public/sellers/{handle}/reviews",
 }
 
 

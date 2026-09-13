@@ -1038,6 +1038,51 @@ class MeetupModel(Base):
     )
 
 
+class FollowModel(Base):
+    """A buyer bookmarking a seller (REP-01) - distinct from `FavoriteModel`,
+    which bookmarks a listing. A plain delete on unfollow, same as favorites."""
+
+    __tablename__ = "follows"
+
+    id: Mapped[UUID] = uuid_pk()
+    follower_id: Mapped[UUID] = uuid_fk("users.id")
+    seller_id: Mapped[UUID] = uuid_fk("users.id")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        Index("uq_follows_follower_seller", "follower_id", "seller_id", unique=True),
+        Index("ix_follows_seller", "seller_id"),
+    )
+
+
+class ReviewModel(Base):
+    """One side of a blind, transaction-scoped review (REP-01). Visibility
+    is not a column here - `list_visible_for_seller` only returns a row once
+    the counterpart's review for the same transaction also exists, so there
+    is nothing to keep in sync when the second side is submitted."""
+
+    __tablename__ = "reviews"
+
+    id: Mapped[UUID] = uuid_pk()
+    transaction_id: Mapped[UUID] = uuid_fk("transactions.id")
+    listing_id: Mapped[UUID] = uuid_fk("listings.id")
+    reviewer_id: Mapped[UUID] = uuid_fk("users.id")
+    reviewee_id: Mapped[UUID] = uuid_fk("users.id")
+    rating: Mapped[int] = mapped_column(Integer, nullable=False)
+    comment: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        CheckConstraint("rating BETWEEN 1 AND 5", name="review_rating_in_range"),
+        Index("uq_reviews_transaction_reviewer", "transaction_id", "reviewer_id", unique=True),
+        Index("ix_reviews_reviewee", "reviewee_id", "created_at"),
+    )
+
+
 # ═══════════════════════════════════════════════════════════════════
 #  Scoring
 # ═══════════════════════════════════════════════════════════════════
@@ -1571,6 +1616,7 @@ __all__ = [
     "DeviceModel",
     "EmailAddressModel",
     "FavoriteModel",
+    "FollowModel",
     "IdentityDocumentModel",
     "IdentityVerificationModel",
     "IpAddressModel",
@@ -1590,6 +1636,7 @@ __all__ = [
     "RefreshToken",
     "ReportModel",
     "ReviewCaseModel",
+    "ReviewModel",
     "Role",
     "RolePermission",
     "ScoringModelRow",

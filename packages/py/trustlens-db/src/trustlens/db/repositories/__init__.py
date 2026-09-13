@@ -18,7 +18,7 @@ from uuid import UUID
 from sqlalchemy import Select, and_, delete, func, or_, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import aliased, selectinload
 
 from trustlens.core.domain import entities as ent
 from trustlens.core.domain import enums as e
@@ -1812,6 +1812,138 @@ class SqlMeetupRepository:
         row = await self._s.get(m.MeetupModel, meetup_id)
         assert row is not None
         return map_.to_meetup(row)
+
+
+class SqlFollowRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, follow: ent.Follow) -> ent.Follow:
+        self._s.add(
+            m.FollowModel(
+                id=follow.id,
+                follower_id=follow.follower_id,
+                seller_id=follow.seller_id,
+                created_at=follow.created_at,
+            )
+        )
+        await self._s.flush()
+        return follow
+
+    async def remove(self, *, follower_id: UUID, seller_id: UUID) -> None:
+        await self._s.execute(
+            delete(m.FollowModel).where(
+                m.FollowModel.follower_id == follower_id, m.FollowModel.seller_id == seller_id
+            )
+        )
+
+    async def exists(self, *, follower_id: UUID, seller_id: UUID) -> bool:
+        row = (
+            await self._s.execute(
+                select(m.FollowModel.id).where(
+                    m.FollowModel.follower_id == follower_id,
+                    m.FollowModel.seller_id == seller_id,
+                )
+            )
+        ).first()
+        return row is not None
+
+    async def list_followed_seller_ids(self, follower_id: UUID) -> frozenset[UUID]:
+        rows = await self._s.execute(
+            select(m.FollowModel.seller_id).where(m.FollowModel.follower_id == follower_id)
+        )
+        return frozenset(rows.scalars().all())
+
+    async def count_followers(self, seller_id: UUID) -> int:
+        result = await self._s.execute(
+            select(func.count(m.FollowModel.id)).where(m.FollowModel.seller_id == seller_id)
+        )
+        return int(result.scalar_one())
+
+
+class SqlReviewRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    @staticmethod
+    def _counterpart_exists() -> Any:
+        """The blind-reveal rule as a correlated subquery: a review is
+        visible once a row exists for the same transaction with reviewer
+        and reviewee swapped."""
+        counterpart = aliased(m.ReviewModel)
+        return (
+            select(counterpart.id)
+            .where(
+                counterpart.transaction_id == m.ReviewModel.transaction_id,
+                counterpart.reviewer_id == m.ReviewModel.reviewee_id,
+                counterpart.reviewee_id == m.ReviewModel.reviewer_id,
+            )
+            .correlate(m.ReviewModel)
+            .exists()
+        )
+
+    async def add(self, review: ent.Review) -> ent.Review:
+        self._s.add(
+            m.ReviewModel(
+                id=review.id,
+                transaction_id=review.transaction_id,
+                listing_id=review.listing_id,
+                reviewer_id=review.reviewer_id,
+                reviewee_id=review.reviewee_id,
+                rating=review.rating,
+                comment=review.comment,
+                created_at=review.created_at,
+            )
+        )
+        await self._s.flush()
+        return review
+
+    async def get_by_transaction_and_reviewer(
+        self, transaction_id: UUID, reviewer_id: UUID
+    ) -> ent.Review | None:
+        stmt = select(m.ReviewModel).where(
+            m.ReviewModel.transaction_id == transaction_id,
+            m.ReviewModel.reviewer_id == reviewer_id,
+        )
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return map_.to_review(row) if row else None
+
+    async def list_for_transaction(self, transaction_id: UUID) -> list[ent.Review]:
+        stmt = (
+            select(m.ReviewModel)
+            .where(m.ReviewModel.transaction_id == transaction_id)
+            .order_by(m.ReviewModel.created_at.asc())
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_review(r) for r in rows]
+
+    async def list_visible_for_seller(
+        self, seller_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[ent.Review]:
+        stmt = (
+            select(m.ReviewModel)
+            .where(
+                m.ReviewModel.reviewee_id == seller_id,
+                self._counterpart_exists(),
+            )
+            .order_by(m.ReviewModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_review(r) for r in rows]
+
+    async def get_rating_summary(self, seller_id: UUID) -> ent.SellerRatingSummary:
+        stmt = select(func.avg(m.ReviewModel.rating), func.count(m.ReviewModel.id)).where(
+            m.ReviewModel.reviewee_id == seller_id,
+            self._counterpart_exists(),
+        )
+        average, count = (await self._s.execute(stmt)).one()
+        return ent.SellerRatingSummary(
+            seller_id=seller_id,
+            average_rating=float(average) if average is not None else None,
+            review_count=int(count),
+        )
 
 
 class SqlTrustScoreRepository:
