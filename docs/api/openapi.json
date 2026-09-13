@@ -5122,6 +5122,25 @@
             }
           },
           {
+            "description": "Filter to one seller's active listings, by handle - the public storefront.",
+            "in": "query",
+            "name": "seller",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 64,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter to one seller's active listings, by handle - the public storefront.",
+              "title": "Seller"
+            }
+          },
+          {
             "in": "query",
             "name": "sort",
             "required": false,

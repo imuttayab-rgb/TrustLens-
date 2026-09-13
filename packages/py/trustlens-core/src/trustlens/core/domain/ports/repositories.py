@@ -234,6 +234,7 @@ class ListingRepository(Protocol):
         area: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
+        seller_handle: str | None = None,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -248,6 +249,7 @@ class ListingRepository(Protocol):
         area: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
+        seller_handle: str | None = None,
     ) -> int: ...
 
 

@@ -39,6 +39,10 @@ class BrowsePublicListingsQuery:
     area: str | None = None
     min_price: float | None = None
     max_price: float | None = None
+    #: Powers the public seller storefront (MKT-04) - one seller's own
+    #: active listings, reusing the same catalog search rather than a
+    #: separate read path.
+    seller_handle: str | None = None
     sort: str = "newest"
     limit: int = 20
     offset: int = 0
@@ -64,6 +68,7 @@ class BrowsePublicListings:
         q = q[:MAX_QUERY_CHARS] if q else None
         city = query.city.strip() if query.city else None
         area = query.area.strip() if query.area else None
+        seller_handle = query.seller_handle.strip() if query.seller_handle else None
 
         if query.sort not in SORT_ORDERS:
             raise ValidationError("Choose a valid sort order.", field="sort")
@@ -86,6 +91,7 @@ class BrowsePublicListings:
                 area=area,
                 min_price=query.min_price,
                 max_price=query.max_price,
+                seller_handle=seller_handle,
                 sort=query.sort,
                 limit=limit,
                 offset=offset,
@@ -97,6 +103,7 @@ class BrowsePublicListings:
                 area=area,
                 min_price=query.min_price,
                 max_price=query.max_price,
+                seller_handle=seller_handle,
             )
 
         return PublicListingPage(items=tuple(items), total=total, limit=limit, offset=offset)

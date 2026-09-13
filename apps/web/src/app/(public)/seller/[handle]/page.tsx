@@ -9,6 +9,7 @@
  * The revalidate window mirrors the API's own score cache, so the two layers
  * cannot disagree by more than one window.
  */
+import { ListingCard, type PublicListing } from '@/features/marketplace';
 import { serverFetch } from '@/lib/api/server';
 import { type RiskLevel, SIGNAL_CATEGORIES, type SignalCategory } from '@trustlens/constants';
 import {
@@ -56,6 +57,20 @@ async function getScore(handle: string): Promise<PublicScore | null> {
   );
 }
 
+/**
+ * The storefront's listings grid (MKT-04). Reuses the same public catalog
+ * search the browse page uses, filtered to this seller's handle - same
+ * PII-free projection, no separate read path. Only ever ACTIVE listings;
+ * there is no "sold" state on a listing yet, so a sold history isn't shown.
+ */
+async function getSellerListings(handle: string): Promise<PublicListing[]> {
+  return (
+    (await serverFetch<PublicListing[]>(
+      `/api/v1/public/listings?seller=${encodeURIComponent(handle)}&limit=12`,
+    )) ?? []
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -78,7 +93,7 @@ export async function generateMetadata({
 
 export default async function SellerPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-  const score = await getScore(handle);
+  const [score, listings] = await Promise.all([getScore(handle), getSellerListings(handle)]);
   if (!score) notFound();
 
   // The public payload carries reasons, not raw signal rows - it is
@@ -146,6 +161,21 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
           </dl>
         </CardContent>
       </Card>
+
+      {listings.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Active listings ({listings.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {listings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <section className="mt-8 rounded-lg border border-border/60 bg-muted/30 p-4 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">About Trust Scores</p>

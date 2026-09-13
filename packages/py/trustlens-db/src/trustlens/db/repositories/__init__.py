@@ -762,6 +762,7 @@ class SqlListingRepository:
         area: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
+        seller_handle: str | None = None,
     ) -> Select[Any]:
         stmt = (
             select(m.ListingModel, m.SellerProfile).join(
@@ -786,6 +787,10 @@ class SqlListingRepository:
             stmt = stmt.where(m.ListingModel.price >= min_price)
         if max_price is not None:
             stmt = stmt.where(m.ListingModel.price <= max_price)
+        if seller_handle:
+            # Powers the public seller storefront (MKT-04) - a seller's own
+            # active listings, same PII-free projection as the catalog.
+            stmt = stmt.where(m.SellerProfile.handle == seller_handle)
         return stmt
 
     def _order_by(self, stmt: Select[Any], sort: str) -> Select[Any]:
@@ -805,12 +810,19 @@ class SqlListingRepository:
         area: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
+        seller_handle: str | None = None,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
     ) -> list[ent.PublicListingSummary]:
         stmt = self._public_query_base(
-            category=category, q=q, city=city, area=area, min_price=min_price, max_price=max_price
+            category=category,
+            q=q,
+            city=city,
+            area=area,
+            min_price=min_price,
+            max_price=max_price,
+            seller_handle=seller_handle,
         )
         stmt = self._order_by(stmt, sort).limit(limit).offset(offset)
         rows = (await self._s.execute(stmt)).all()
@@ -828,6 +840,7 @@ class SqlListingRepository:
         area: str | None = None,
         min_price: float | None = None,
         max_price: float | None = None,
+        seller_handle: str | None = None,
     ) -> int:
         stmt = select(func.count()).select_from(
             self._public_query_base(
@@ -837,6 +850,7 @@ class SqlListingRepository:
                 area=area,
                 min_price=min_price,
                 max_price=max_price,
+                seller_handle=seller_handle,
             ).subquery()
         )
         return int((await self._s.execute(stmt)).scalar_one())
@@ -881,8 +895,12 @@ class SqlListingRepository:
             seller_handle=seller.handle,
             seller_display_name=seller.display_name,
             images=images,
-            latitude=float(listing.latitude) if listing.latitude is not None else None,
-            longitude=float(listing.longitude) if listing.longitude is not None else None,
+            latitude=_approximate_coordinate(
+                float(listing.latitude) if listing.latitude is not None else None
+            ),
+            longitude=_approximate_coordinate(
+                float(listing.longitude) if listing.longitude is not None else None
+            ),
         )
 
     async def add(self, listing: ent.Listing) -> ent.Listing:
@@ -1099,6 +1117,20 @@ class SqlListingRepository:
         return None
 
 
+def _approximate_coordinate(value: float | None) -> float | None:
+    """Round a public-facing coordinate to ~1.1km precision (LOC-01).
+
+    `PublicListingSummary`/`PublicListingDetail` are the buyer-facing
+    projections - unlike the seller's own `Listing` entity, which keeps full
+    precision for editing, these must never carry an exact, dox-able
+    coordinate. Two decimal places is the "approximate area" the product
+    promises rather than a street address, without needing the full
+    province/city/area/radius/centroid model (LOC-01's larger redesign) to
+    be built first.
+    """
+    return round(value, 2) if value is not None else None
+
+
 async def _primary_image_ids(session: AsyncSession, listing_ids: list[UUID]) -> dict[UUID, UUID]:
     """Shared by the public catalog and favorites reads - both project a
     listing down to its primary image in one batched query rather than one
@@ -1130,8 +1162,12 @@ def _to_public_summary(
         seller_handle=seller.handle,
         seller_display_name=seller.display_name,
         primary_image_file_id=primary_images.get(listing.id),
-        latitude=float(listing.latitude) if listing.latitude is not None else None,
-        longitude=float(listing.longitude) if listing.longitude is not None else None,
+        latitude=_approximate_coordinate(
+            float(listing.latitude) if listing.latitude is not None else None
+        ),
+        longitude=_approximate_coordinate(
+            float(listing.longitude) if listing.longitude is not None else None
+        ),
     )
 
 

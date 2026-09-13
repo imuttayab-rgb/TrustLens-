@@ -4064,6 +4064,8 @@ export interface operations {
         area?: string | null;
         min_price?: number | null;
         max_price?: number | null;
+        /** @description Filter to one seller's active listings, by handle - the public storefront. */
+        seller?: string | null;
         sort?: string;
         limit?: number;
         offset?: number;

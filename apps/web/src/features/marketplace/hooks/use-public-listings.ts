@@ -31,6 +31,8 @@ export interface BrowseListingsParams {
   area?: string | null;
   minPrice?: number | null;
   maxPrice?: number | null;
+  /** One seller's own active listings, by handle - the public storefront. */
+  sellerHandle?: string | null;
   sort?: SortOrder;
   limit?: number;
   offset?: number;
@@ -48,6 +50,7 @@ export function usePublicListings({
   area = null,
   minPrice = null,
   maxPrice = null,
+  sellerHandle = null,
   sort = 'newest',
   limit = 20,
   offset = 0,
@@ -60,6 +63,7 @@ export function usePublicListings({
       area,
       minPrice,
       maxPrice,
+      sellerHandle,
       sort,
       limit,
       offset,
@@ -74,6 +78,7 @@ export function usePublicListings({
             area,
             min_price: minPrice,
             max_price: maxPrice,
+            seller: sellerHandle,
             sort,
             limit,
             offset,

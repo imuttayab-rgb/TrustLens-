@@ -129,8 +129,11 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           </p>
 
           {listing.latitude !== null && listing.longitude !== null && (
+            // Zoom 14, not a street-level 16+: the API already rounds this
+            // coordinate to ~1.1km (LOC-01), and a wide "this neighborhood"
+            // view keeps the framing honest about what the pin represents.
             <a
-              href={`https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=16/${listing.latitude}/${listing.longitude}`}
+              href={`https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=14/${listing.latitude}/${listing.longitude}`}
               target="_blank"
               rel="noopener noreferrer"
               className="mt-1 inline-block text-sm text-primary underline-offset-4 hover:underline"

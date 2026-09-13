@@ -106,8 +106,12 @@ export function ListingCard({
               // the same way a link would without actually being one.
               event.preventDefault();
               event.stopPropagation();
+              // Zoom 14, not a street-level 16+: coordinates returned by the
+              // API are already rounded to ~1.1km (LOC-01), and opening on a
+              // wide, "this neighborhood" view keeps the framing honest about
+              // what the pin actually represents.
               window.open(
-                `https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=16/${listing.latitude}/${listing.longitude}`,
+                `https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=14/${listing.latitude}/${listing.longitude}`,
                 '_blank',
                 'noopener,noreferrer',
               );
