@@ -12,6 +12,8 @@ const STATUS_TONE: Record<string, string> = {
   DRAFT: 'text-risk-unknown bg-risk-unknown-bg',
   REMOVED: 'text-risk-unknown bg-risk-unknown-bg',
   EXPIRED: 'text-risk-unknown bg-risk-unknown-bg',
+  RESERVED: 'text-risk-medium bg-risk-medium-bg',
+  SOLD: 'text-risk-unknown bg-risk-unknown-bg',
 };
 
 export default function ListingsPage() {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession } from '@/lib/auth/use-session';
+import { OfferPanel } from '@/features/commerce';
 import { BlockButton } from '@/features/moderation';
 import { Alert, Button, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
@@ -38,6 +39,13 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
             userName={conversation.counterpartName}
           />
         </div>
+      )}
+      {conversation?.listingId && session?.id && (
+        <OfferPanel
+          conversationId={conversationId}
+          listingId={conversation.listingId}
+          currentUserId={session.id}
+        />
       )}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {isPending ? (

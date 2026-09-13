@@ -23,7 +23,8 @@ export interface Listing {
   sellerId: string;
   title: string;
   description: string;
-  status: 'DRAFT' | 'ACTIVE' | 'ANALYSING' | 'FLAGGED' | 'REMOVED' | 'EXPIRED';
+  status:
+    'DRAFT' | 'ACTIVE' | 'ANALYSING' | 'FLAGGED' | 'REMOVED' | 'EXPIRED' | 'RESERVED' | 'SOLD';
   source: string;
   createdAt: string;
   price: number | null;
