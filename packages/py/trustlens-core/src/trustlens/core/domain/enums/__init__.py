@@ -276,6 +276,17 @@ class TransactionStatus(StrEnum):
         }
 
 
+class MeetupStatus(StrEnum):
+    PROPOSED = "PROPOSED"
+    ACCEPTED = "ACCEPTED"
+    DECLINED = "DECLINED"
+    CANCELLED = "CANCELLED"
+
+    @property
+    def is_open(self) -> bool:
+        return self == MeetupStatus.PROPOSED
+
+
 class ApiKeyStatus(StrEnum):
     ACTIVE = "ACTIVE"
     REVOKED = "REVOKED"
@@ -381,6 +392,7 @@ __all__ = [
     "LineType",
     "ListingSource",
     "ListingStatus",
+    "MeetupStatus",
     "OfferStatus",
     "OtpPurpose",
     "ReasonCode",

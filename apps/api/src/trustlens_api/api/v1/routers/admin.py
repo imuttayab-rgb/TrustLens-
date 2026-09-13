@@ -28,6 +28,12 @@ from trustlens.core.application.use_cases.moderation import (
     ResolveReport,
     ResolveReportCommand,
 )
+from trustlens.core.application.use_cases.safemeet import (
+    CreateMeetingVenue,
+    CreateMeetingVenueCommand,
+    ListMeetingVenuesAdmin,
+    SetVenueActive,
+)
 from trustlens.core.application.use_cases.scoring import GetTrustScore, GetTrustScoreCommand
 from trustlens.core.domain.entities import (
     AuditLogEntry,
@@ -801,6 +807,105 @@ async def resolve_report(
     return envelope(
         _to_admin_report(resolved).model_dump(by_alias=True), request_id=meta.request_id
     )
+
+
+class AdminMeetingVenueModel(Schema):
+    id: UUID
+    name: str
+    address: str
+    city: str
+    area: str | None
+    latitude: float
+    longitude: float
+    is_active: bool
+    notes: str | None
+    created_at: Any
+
+
+class CreateMeetingVenueRequest(BaseModel):
+    name: str = Field(min_length=1, max_length=200)
+    address: str = Field(min_length=1, max_length=500)
+    city: str = Field(min_length=1, max_length=100)
+    area: str | None = Field(default=None, max_length=100)
+    latitude: float = Field(ge=-90, le=90)
+    longitude: float = Field(ge=-180, le=180)
+    notes: str | None = Field(default=None, max_length=1_000)
+
+
+def _to_admin_venue(venue: Any) -> AdminMeetingVenueModel:
+    return AdminMeetingVenueModel(
+        id=venue.id,
+        name=venue.name,
+        address=venue.address,
+        city=venue.city,
+        area=venue.area,
+        latitude=venue.latitude,
+        longitude=venue.longitude,
+        is_active=venue.is_active,
+        notes=venue.notes,
+        created_at=venue.created_at,
+    )
+
+
+@router.get(
+    "/meeting-venues",
+    summary="The curated SafeMeet venue catalogue (SAFE-01)",
+    dependencies=[Depends(require_permissions("safemeet:manage"))],
+)
+async def list_meeting_venues(
+    uow: UowDep,
+    meta: MetaDep,
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    venues = await ListMeetingVenuesAdmin(uow=uow).execute(limit=limit, offset=offset)
+    return envelope(
+        [_to_admin_venue(v).model_dump(by_alias=True) for v in venues],
+        request_id=meta.request_id,
+    )
+
+
+@router.post(
+    "/meeting-venues",
+    status_code=status.HTTP_201_CREATED,
+    summary="Add a public meetup spot to the catalogue",
+    dependencies=[Depends(require_permissions("safemeet:manage"))],
+)
+async def create_meeting_venue(
+    body: CreateMeetingVenueRequest, container: ContainerDep, uow: UowDep, meta: MetaDep
+) -> dict[str, Any]:
+    venue = await CreateMeetingVenue(uow=uow, clock=container.clock, ids=container.ids).execute(
+        CreateMeetingVenueCommand(
+            name=body.name,
+            address=body.address,
+            city=body.city,
+            area=body.area,
+            latitude=body.latitude,
+            longitude=body.longitude,
+            notes=body.notes,
+        )
+    )
+    return envelope(_to_admin_venue(venue).model_dump(by_alias=True), request_id=meta.request_id)
+
+
+@router.post(
+    "/meeting-venues/{venue_id}/activate",
+    summary="Reactivate a meeting venue",
+    dependencies=[Depends(require_permissions("safemeet:manage"))],
+)
+async def activate_meeting_venue(venue_id: UUID, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
+    venue = await SetVenueActive(uow=uow).execute(venue_id, is_active=True)
+    return envelope(_to_admin_venue(venue).model_dump(by_alias=True), request_id=meta.request_id)
+
+
+@router.post(
+    "/meeting-venues/{venue_id}/deactivate",
+    summary="Deactivate a meeting venue - it stops being suggested, past meetups are unaffected",
+    dependencies=[Depends(require_permissions("safemeet:manage"))],
+)
+async def deactivate_meeting_venue(venue_id: UUID, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
+    venue = await SetVenueActive(uow=uow).execute(venue_id, is_active=False)
+    return envelope(_to_admin_venue(venue).model_dump(by_alias=True), request_id=meta.request_id)
 
 
 __all__ = ["router"]

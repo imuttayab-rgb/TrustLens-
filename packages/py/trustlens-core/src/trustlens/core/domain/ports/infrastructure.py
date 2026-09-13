@@ -24,6 +24,8 @@ if TYPE_CHECKING:
         IdentityRepository,
         JobRunRepository,
         ListingRepository,
+        MeetingVenueRepository,
+        MeetupRepository,
         MessagingRepository,
         NotificationRepository,
         OfferRepository,
@@ -87,6 +89,8 @@ class UnitOfWork(Protocol):
     blocks: BlockRepository
     offers: OfferRepository
     transactions: TransactionRepository
+    meeting_venues: MeetingVenueRepository
+    meetups: MeetupRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository

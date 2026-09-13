@@ -40,6 +40,8 @@ if TYPE_CHECKING:
         JobRun,
         Listing,
         ListingAnalysis,
+        MeetingVenue,
+        Meetup,
         Message,
         Notification,
         Offer,
@@ -61,6 +63,7 @@ if TYPE_CHECKING:
     )
     from trustlens.core.domain.enums import (
         AppealStatus,
+        MeetupStatus,
         OfferStatus,
         OtpPurpose,
         ReportStatus,
@@ -422,6 +425,44 @@ class TransactionRepository(Protocol):
         at: datetime,
         cancel_reason: str | None = None,
     ) -> Transaction: ...
+
+
+@runtime_checkable
+class MeetingVenueRepository(Protocol):
+    async def add(self, venue: MeetingVenue) -> MeetingVenue: ...
+
+    async def get(self, venue_id: UUID) -> MeetingVenue | None: ...
+
+    async def list_near(self, *, city: str, limit: int = 5) -> list[MeetingVenue]:
+        """Active venues in a city, nearest-first once we have real
+        coordinates to sort by - for now, newest-curated first."""
+        ...
+
+    async def list_all(self, *, limit: int = 50, offset: int = 0) -> list[MeetingVenue]:
+        """The admin management list - active and inactive both."""
+        ...
+
+    async def set_active(self, venue_id: UUID, *, is_active: bool) -> MeetingVenue: ...
+
+
+@runtime_checkable
+class MeetupRepository(Protocol):
+    async def add(self, meetup: Meetup) -> Meetup: ...
+
+    async def get(self, meetup_id: UUID) -> Meetup | None: ...
+
+    async def list_for_conversation(self, conversation_id: UUID) -> list[Meetup]:
+        """Oldest first - every proposal made for this conversation, however
+        it was resolved."""
+        ...
+
+    async def get_open_for_conversation(self, conversation_id: UUID) -> Meetup | None:
+        """At most one open (PROPOSED) meetup per conversation at a time."""
+        ...
+
+    async def close(
+        self, meetup_id: UUID, *, status: MeetupStatus, responded_at: datetime
+    ) -> Meetup: ...
 
 
 @runtime_checkable

@@ -492,6 +492,38 @@ def to_transaction(row: m.TransactionModel) -> ent.Transaction:
     )
 
 
+def to_meeting_venue(row: m.MeetingVenueModel) -> ent.MeetingVenue:
+    return ent.MeetingVenue(
+        id=row.id,
+        name=row.name,
+        address=row.address,
+        city=row.city,
+        area=row.area,
+        latitude=float(row.latitude),
+        longitude=float(row.longitude),
+        is_active=row.is_active,
+        notes=row.notes,
+        created_at=row.created_at,
+    )
+
+
+def to_meetup(row: m.MeetupModel) -> ent.Meetup:
+    return ent.Meetup(
+        id=row.id,
+        conversation_id=row.conversation_id,
+        listing_id=row.listing_id,
+        buyer_id=row.buyer_id,
+        seller_id=row.seller_id,
+        proposed_by=row.proposed_by,
+        venue_id=row.venue_id,
+        proposed_time=row.proposed_time,
+        status=row.status,
+        created_at=row.created_at,
+        message=row.message,
+        responded_at=row.responded_at,
+    )
+
+
 def to_api_client(row: m.ApiClientModel) -> ent.ApiClient:
     return ent.ApiClient(
         id=row.id,

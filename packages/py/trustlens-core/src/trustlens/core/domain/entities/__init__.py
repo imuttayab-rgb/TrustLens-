@@ -22,6 +22,7 @@ from trustlens.core.domain.entities.listing import (
 )
 from trustlens.core.domain.entities.messaging import Conversation, ConversationSummary, Message
 from trustlens.core.domain.entities.moderation import Block, Report
+from trustlens.core.domain.entities.safemeet import MeetingVenue, Meetup
 from trustlens.core.domain.entities.seller import Marketplace, SellerProfile
 from trustlens.core.domain.entities.trust_score import (
     ScoringModel,
@@ -80,6 +81,8 @@ __all__ = [
     "ListingAnalysis",
     "ListingImage",
     "Marketplace",
+    "MeetingVenue",
+    "Meetup",
     "Message",
     "NewUserRegistration",
     "Notification",

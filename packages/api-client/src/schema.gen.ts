@@ -112,6 +112,58 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/meeting-venues': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The curated SafeMeet venue catalogue (SAFE-01) */
+    get: operations['list_meeting_venues_api_v1_admin_meeting_venues_get'];
+    put?: never;
+    /** Add a public meetup spot to the catalogue */
+    post: operations['create_meeting_venue_api_v1_admin_meeting_venues_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/meeting-venues/{venue_id}/activate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reactivate a meeting venue */
+    post: operations['activate_meeting_venue_api_v1_admin_meeting_venues__venue_id__activate_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/meeting-venues/{venue_id}/deactivate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Deactivate a meeting venue - it stops being suggested, past meetups are unaffected */
+    post: operations['deactivate_meeting_venue_api_v1_admin_meeting_venues__venue_id__deactivate_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/partners': {
     parameters: {
       query?: never;
@@ -782,6 +834,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/conversations/{conversation_id}/meetups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The SafeMeet proposal history for one conversation */
+    get: operations['list_meetups_api_v1_conversations__conversation_id__meetups_get'];
+    put?: never;
+    /** Propose a SafeMeet */
+    post: operations['propose_meetup_api_v1_conversations__conversation_id__meetups_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/conversations/{conversation_id}/offers': {
     parameters: {
       query?: never;
@@ -1100,6 +1170,40 @@ export interface paths {
     get: operations['list_my_transactions_api_v1_me_transactions_get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/meeting-venues': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Platform-suggested public meetup spots near a city */
+    get: operations['list_nearby_venues_api_v1_meeting_venues_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/meetups/{meetup_id}/respond': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Accept or decline a proposed SafeMeet */
+    post: operations['respond_to_meetup_api_v1_meetups__meetup_id__respond_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1599,6 +1703,23 @@ export interface components {
       /** Newpassword */
       newPassword: string;
     };
+    /** CreateMeetingVenueRequest */
+    CreateMeetingVenueRequest: {
+      /** Address */
+      address: string;
+      /** Area */
+      area?: string | null;
+      /** City */
+      city: string;
+      /** Latitude */
+      latitude: number;
+      /** Longitude */
+      longitude: number;
+      /** Name */
+      name: string;
+      /** Notes */
+      notes?: string | null;
+    };
     /** CreateOfferRequest */
     CreateOfferRequest: {
       /** Amount */
@@ -1763,6 +1884,21 @@ export interface components {
       /** Score */
       score: number;
     };
+    /** ProposeMeetupRequest */
+    ProposeMeetupRequest: {
+      /** Message */
+      message?: string | null;
+      /**
+       * Proposedtime
+       * Format: date-time
+       */
+      proposedTime: string;
+      /**
+       * Venueid
+       * Format: uuid
+       */
+      venueId: string;
+    };
     /** PublicReasonModel */
     PublicReasonModel: {
       /**
@@ -1911,6 +2047,11 @@ export interface components {
       resolution_note?: string | null;
       /** Status */
       status: string;
+    };
+    /** RespondToMeetupRequest */
+    RespondToMeetupRequest: {
+      /** Accept */
+      accept: boolean;
     };
     /** RespondToOfferRequest */
     RespondToOfferRequest: {
@@ -2246,6 +2387,149 @@ export interface operations {
         'x-device-fingerprint'?: string | null;
       };
       path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_meeting_venues_api_v1_admin_meeting_venues_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_meeting_venue_api_v1_admin_meeting_venues_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateMeetingVenueRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  activate_meeting_venue_api_v1_admin_meeting_venues__venue_id__activate_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        venue_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  deactivate_meeting_venue_api_v1_admin_meeting_venues__venue_id__deactivate_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        venue_id: string;
+      };
       cookie?: never;
     };
     requestBody?: never;
@@ -3696,6 +3980,80 @@ export interface operations {
       };
     };
   };
+  list_meetups_api_v1_conversations__conversation_id__meetups_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  propose_meetup_api_v1_conversations__conversation_id__meetups_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProposeMeetupRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   list_offers_api_v1_conversations__conversation_id__offers_get: {
     parameters: {
       query?: never;
@@ -4610,6 +4968,81 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_nearby_venues_api_v1_meeting_venues_get: {
+    parameters: {
+      query: {
+        city: string;
+        limit?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  respond_to_meetup_api_v1_meetups__meetup_id__respond_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        meetup_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RespondToMeetupRequest'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
