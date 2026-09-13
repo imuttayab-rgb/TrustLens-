@@ -1347,6 +1347,7 @@ class SqlMessagingRepository:
                 ent.ConversationSummary(
                     conversation=_to_conversation(conversation),
                     counterpart_name=seller.display_name if not is_seller_side else buyer.full_name,
+                    counterpart_user_id=seller.user_id if not is_seller_side else buyer.id,
                     listing_title=listing.title if listing is not None else None,
                     last_message_preview=previews.get(conversation.id),
                     unread_count=unread.get(conversation.id, 0),

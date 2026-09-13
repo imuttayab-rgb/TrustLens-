@@ -10,6 +10,7 @@
  * cannot disagree by more than one window.
  */
 import { ListingCard, type PublicListing } from '@/features/marketplace';
+import { SellerReportButton } from '@/features/moderation';
 import { serverFetch } from '@/lib/api/server';
 import { type RiskLevel, SIGNAL_CATEGORIES, type SignalCategory } from '@trustlens/constants';
 import {
@@ -135,6 +136,7 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         <p className="text-xs text-muted-foreground sm:text-sm">
           Last checked {formatDateTime(score.computedAt)} · scoring model {score.modelVersion}
         </p>
+        <SellerReportButton handle={handle} />
       </header>
 
       <Card className="mt-8">

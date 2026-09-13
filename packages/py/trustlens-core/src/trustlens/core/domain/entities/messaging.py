@@ -41,6 +41,10 @@ class ConversationSummary:
     #: The other party's display name, from the buyer's or seller's point
     #: of view depending on which one the current user is.
     counterpart_name: str
+    #: The other party's users.id - distinct from Conversation.seller_id,
+    #: which is a seller_profiles.id. Needed to block them: Block rows
+    #: reference users.id on both sides.
+    counterpart_user_id: UUID
     listing_title: str | None
     last_message_preview: str | None
     unread_count: int

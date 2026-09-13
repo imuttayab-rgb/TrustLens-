@@ -9,6 +9,7 @@ export interface ConversationSummary {
   listingId: string | null;
   listingTitle: string | null;
   counterpartName: string;
+  counterpartUserId: string;
   lastMessageAt: string;
   lastMessagePreview: string | null;
   unreadCount: number;

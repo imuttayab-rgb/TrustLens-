@@ -33,6 +33,7 @@ class ConversationResponse(Schema):
     listing_id: UUID | None = None
     listing_title: str | None = None
     counterpart_name: str
+    counterpart_user_id: UUID
     last_message_at: datetime
     last_message_preview: str | None = None
     unread_count: int = 0

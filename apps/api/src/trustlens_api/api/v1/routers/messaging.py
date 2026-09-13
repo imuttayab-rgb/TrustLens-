@@ -50,6 +50,7 @@ def _to_conversation_response(summary: Any) -> ConversationResponse:
         listing_id=c.listing_id,
         listing_title=summary.listing_title,
         counterpart_name=summary.counterpart_name,
+        counterpart_user_id=summary.counterpart_user_id,
         last_message_at=c.last_message_at,
         last_message_preview=summary.last_message_preview,
         unread_count=summary.unread_count,

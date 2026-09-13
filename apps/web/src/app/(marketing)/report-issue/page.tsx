@@ -16,13 +16,18 @@ function ReportCategory({ title, children }: { title: string; children: React.Re
   );
 }
 
-export default function ReportIssuePage() {
+export default async function ReportIssuePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ seller?: string }>;
+}) {
+  const { seller } = await searchParams;
   const subject = encodeURIComponent('TrustLens report');
   const body = encodeURIComponent(
     [
       'What are you reporting? (a listing / a seller / a message / something else)',
       '',
-      'Link or handle of the listing/seller, if you have one:',
+      `Link or handle of the listing/seller, if you have one: ${seller ?? ''}`,
       '',
       'What happened?',
       '',

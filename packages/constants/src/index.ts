@@ -151,6 +151,7 @@ export const ADMIN_ROUTES = {
   reviews: '/reviews',
   sellers: '/sellers',
   appeals: '/appeals',
+  reports: '/reports',
   scoring: '/scoring',
   apiClients: '/api-clients',
   auditLogs: '/audit-logs',

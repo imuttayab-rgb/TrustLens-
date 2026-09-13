@@ -1,18 +1,21 @@
 'use client';
 
 import { useSession } from '@/lib/auth/use-session';
+import { BlockButton } from '@/features/moderation';
 import { Alert, Button, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useMessages, useSendMessage } from '../hooks/use-messaging';
+import { useConversations, useMessages, useSendMessage } from '../hooks/use-messaging';
 
 export function MessageThread({ conversationId }: { conversationId: string }) {
   const { data: session } = useSession();
   const { data: messages, isPending, isError } = useMessages(conversationId);
+  const { data: conversations } = useConversations();
   const sendMessage = useSendMessage();
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
+  const conversation = conversations?.items.find((item) => item.id === conversationId);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' });
@@ -27,6 +30,15 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
 
   return (
     <div className="flex h-[65dvh] flex-col rounded-lg border border-border">
+      {conversation && (
+        <div className="flex items-center justify-between gap-2 border-b border-border p-3">
+          <p className="truncate text-sm font-medium">{conversation.counterpartName}</p>
+          <BlockButton
+            userId={conversation.counterpartUserId}
+            userName={conversation.counterpartName}
+          />
+        </div>
+      )}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {isPending ? (
           <div className="flex h-full items-center justify-center">
