@@ -170,6 +170,11 @@ class ListingStatus(StrEnum):
     FLAGGED = "FLAGGED"
     REMOVED = "REMOVED"
     EXPIRED = "EXPIRED"
+    #: An accepted offer reserves the listing (OFF-01) - it stops appearing
+    #: in search, but stays viewable to whoever is already in the thread.
+    RESERVED = "RESERVED"
+    #: Set once the transaction behind it completes. Terminal, like REMOVED.
+    SOLD = "SOLD"
 
 
 class ListingSource(StrEnum):
@@ -230,6 +235,45 @@ class ReportStatus(StrEnum):
     @property
     def is_open(self) -> bool:
         return self in {ReportStatus.OPEN, ReportStatus.UNDER_REVIEW}
+
+
+class OfferStatus(StrEnum):
+    PENDING = "PENDING"
+    ACCEPTED = "ACCEPTED"
+    REJECTED = "REJECTED"
+    #: A counter isn't a new offer row - it's this one closed out and a new
+    #: row opened replying to it, chained via Offer.parent_offer_id.
+    COUNTERED = "COUNTERED"
+    WITHDRAWN = "WITHDRAWN"
+    EXPIRED = "EXPIRED"
+
+    @property
+    def is_open(self) -> bool:
+        return self == OfferStatus.PENDING
+
+
+class TransactionStatus(StrEnum):
+    """Initiated -> ... -> Completed/Cancelled/Disputed, per the spec's
+    transaction state machine. MEETUP_PLANNED and HANDED_OVER exist here so
+    the schema doesn't need another migration once SafeMeet (SAFE-01) lands
+    to drive them - only INITIATED, COMPLETED and CANCELLED are reachable
+    today; nothing produces the others yet.
+    """
+
+    INITIATED = "INITIATED"
+    AGREED = "AGREED"
+    MEETUP_PLANNED = "MEETUP_PLANNED"
+    HANDED_OVER = "HANDED_OVER"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+    DISPUTED = "DISPUTED"
+
+    @property
+    def is_open(self) -> bool:
+        return self not in {
+            TransactionStatus.COMPLETED,
+            TransactionStatus.CANCELLED,
+        }
 
 
 class ApiKeyStatus(StrEnum):
@@ -337,6 +381,7 @@ __all__ = [
     "LineType",
     "ListingSource",
     "ListingStatus",
+    "OfferStatus",
     "OtpPurpose",
     "ReasonCode",
     "ReportCategory",
@@ -351,6 +396,7 @@ __all__ = [
     "SignalCode",
     "SignalStatus",
     "TokenPurpose",
+    "TransactionStatus",
     "UserRole",
     "VerificationStatus",
     "WebhookEvent",

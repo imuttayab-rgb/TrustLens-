@@ -42,6 +42,7 @@ if TYPE_CHECKING:
         ListingAnalysis,
         Message,
         Notification,
+        Offer,
         OtpCode,
         PhoneNumber,
         PublicListingDetail,
@@ -53,15 +54,18 @@ if TYPE_CHECKING:
         SellerProfile,
         SignalDefinition,
         StoredFile,
+        Transaction,
         TrustScore,
         User,
         VerificationToken,
     )
     from trustlens.core.domain.enums import (
         AppealStatus,
+        OfferStatus,
         OtpPurpose,
         ReportStatus,
         TokenPurpose,
+        TransactionStatus,
     )
     from trustlens.core.domain.value_objects import Email, PhoneE164
 
@@ -371,6 +375,53 @@ class MessagingRepository(Protocol):
         """Marks every message in the conversation NOT sent by `reader_id`
         as read - a reader can never mark their own message read."""
         ...
+
+
+@runtime_checkable
+class OfferRepository(Protocol):
+    async def add(self, offer: Offer) -> Offer: ...
+
+    async def get(self, offer_id: UUID) -> Offer | None: ...
+
+    async def list_for_conversation(self, conversation_id: UUID) -> list[Offer]:
+        """Oldest first - the full negotiation history, offer then
+        counter-offer then counter-counter-offer, as it actually happened."""
+        ...
+
+    async def get_open_for_listing(self, listing_id: UUID) -> Offer | None:
+        """At most one open (PENDING) offer per listing at a time - a second
+        offer attempt while one is open should counter it, not race it."""
+        ...
+
+    async def close(self, offer_id: UUID, *, status: OfferStatus, responded_at: datetime) -> Offer:
+        """Move a PENDING offer to a terminal or counter state. Never used
+        to reopen one - status only ever moves forward."""
+        ...
+
+
+@runtime_checkable
+class TransactionRepository(Protocol):
+    async def add(self, transaction: Transaction) -> Transaction: ...
+
+    async def get(self, transaction_id: UUID) -> Transaction | None: ...
+
+    async def get_open_for_listing(self, listing_id: UUID) -> Transaction | None: ...
+
+    async def list_for_user(
+        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[Transaction]:
+        """Every transaction where this user is the buyer or the seller,
+        most recent first."""
+        ...
+
+    async def update_status(
+        self,
+        transaction_id: UUID,
+        *,
+        status: TransactionStatus,
+        at: datetime,
+        cancel_reason: str | None = None,
+    ) -> Transaction: ...
 
 
 @runtime_checkable

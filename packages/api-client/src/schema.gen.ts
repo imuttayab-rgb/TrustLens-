@@ -782,6 +782,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/conversations/{conversation_id}/offers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The offer/counter-offer history for one conversation */
+    get: operations['list_offers_api_v1_conversations__conversation_id__offers_get'];
+    put?: never;
+    /** Make an offer or counter-offer */
+    post: operations['create_offer_api_v1_conversations__conversation_id__offers_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/files/upload-intent': {
     parameters: {
       query?: never;
@@ -1071,6 +1089,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** My transactions, buying or selling */
+    get: operations['list_my_transactions_api_v1_me_transactions_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/offers/{offer_id}/respond': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Accept or reject an open offer */
+    post: operations['respond_to_offer_api_v1_offers__offer_id__respond_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/public/listings': {
     parameters: {
       query?: never;
@@ -1225,6 +1277,40 @@ export interface paths {
      * @description Enqueues a scoring job. Rate-limited and debounced: a burst of requests collapses into a single computation.
      */
     post: operations['recompute_api_v1_sellers__seller_id__trust_score_recompute_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/transactions/{transaction_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancel a transaction */
+    post: operations['cancel_transaction_api_v1_transactions__transaction_id__cancel_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/transactions/{transaction_id}/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark a handover as done */
+    post: operations['complete_transaction_api_v1_transactions__transaction_id__complete_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1501,12 +1587,34 @@ export interface components {
        */
       blockedUserId: string;
     };
+    /** CancelTransactionRequest */
+    CancelTransactionRequest: {
+      /** Reason */
+      reason: string;
+    };
     /** ChangePasswordRequest */
     ChangePasswordRequest: {
       /** Currentpassword */
       currentPassword: string;
       /** Newpassword */
       newPassword: string;
+    };
+    /** CreateOfferRequest */
+    CreateOfferRequest: {
+      /** Amount */
+      amount: number;
+      /**
+       * Currency
+       * @default PKR
+       */
+      currency: string;
+      /** Message */
+      message?: string | null;
+      /**
+       * Ttlhours
+       * @default 48
+       */
+      ttlHours: number;
     };
     /** CreateReportRequest */
     CreateReportRequest: {
@@ -1803,6 +1911,11 @@ export interface components {
       resolution_note?: string | null;
       /** Status */
       status: string;
+    };
+    /** RespondToOfferRequest */
+    RespondToOfferRequest: {
+      /** Accept */
+      accept: boolean;
     };
     /**
      * RiskLevel
@@ -3583,6 +3696,80 @@ export interface operations {
       };
     };
   };
+  list_offers_api_v1_conversations__conversation_id__offers_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_offer_api_v1_conversations__conversation_id__offers_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateOfferRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   upload_intent_api_v1_files_upload_intent_post: {
     parameters: {
       query?: never;
@@ -4413,6 +4600,78 @@ export interface operations {
       };
     };
   };
+  list_my_transactions_api_v1_me_transactions_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  respond_to_offer_api_v1_offers__offer_id__respond_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        offer_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RespondToOfferRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   browse_public_listings_api_v1_public_listings_get: {
     parameters: {
       query?: {
@@ -4719,6 +4978,80 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  cancel_transaction_api_v1_transactions__transaction_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CancelTransactionRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  complete_transaction_api_v1_transactions__transaction_id__complete_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };

@@ -15,7 +15,12 @@ import uuid_utils
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from trustlens.core.domain.events import DomainEvent
-from trustlens.core.domain.ports import BlockRepository, ReportRepository
+from trustlens.core.domain.ports import (
+    BlockRepository,
+    OfferRepository,
+    ReportRepository,
+    TransactionRepository,
+)
 from trustlens.db import models as m
 from trustlens.db import repositories as repo
 
@@ -91,6 +96,8 @@ class SqlAlchemyUnitOfWork:
         # `UnitOfWork.reports`/`.blocks` interface type, not a subtype of it.
         self.reports: ReportRepository = repo.SqlReportRepository(s)
         self.blocks: BlockRepository = repo.SqlBlockRepository(s)
+        self.offers: OfferRepository = repo.SqlOfferRepository(s)
+        self.transactions: TransactionRepository = repo.SqlTransactionRepository(s)
         self.trust_scores = repo.SqlTrustScoreRepository(s)
         self.scoring_models = repo.SqlScoringModelRepository(s)
         self.appeals = repo.SqlAppealRepository(s)

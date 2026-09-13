@@ -1562,6 +1562,141 @@ class SqlBlockRepository:
         return frozenset(rows.scalars().all())
 
 
+class SqlOfferRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, offer: ent.Offer) -> ent.Offer:
+        self._s.add(
+            m.OfferModel(
+                id=offer.id,
+                conversation_id=offer.conversation_id,
+                listing_id=offer.listing_id,
+                buyer_id=offer.buyer_id,
+                seller_id=offer.seller_id,
+                offered_by=offer.offered_by,
+                amount=offer.amount,
+                currency=offer.currency,
+                status=offer.status,
+                created_at=offer.created_at,
+                expires_at=offer.expires_at,
+                message=offer.message,
+                parent_offer_id=offer.parent_offer_id,
+            )
+        )
+        await self._s.flush()
+        return offer
+
+    async def get(self, offer_id: UUID) -> ent.Offer | None:
+        row = await self._s.get(m.OfferModel, offer_id)
+        return map_.to_offer(row) if row else None
+
+    async def list_for_conversation(self, conversation_id: UUID) -> list[ent.Offer]:
+        stmt = (
+            select(m.OfferModel)
+            .where(m.OfferModel.conversation_id == conversation_id)
+            .order_by(m.OfferModel.created_at.asc())
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_offer(r) for r in rows]
+
+    async def get_open_for_listing(self, listing_id: UUID) -> ent.Offer | None:
+        stmt = select(m.OfferModel).where(
+            m.OfferModel.listing_id == listing_id, m.OfferModel.status == e.OfferStatus.PENDING
+        )
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return map_.to_offer(row) if row else None
+
+    async def close(
+        self, offer_id: UUID, *, status: e.OfferStatus, responded_at: datetime
+    ) -> ent.Offer:
+        await self._s.execute(
+            update(m.OfferModel)
+            .where(m.OfferModel.id == offer_id)
+            .values(status=status, responded_at=responded_at)
+        )
+        row = await self._s.get(m.OfferModel, offer_id)
+        assert row is not None
+        return map_.to_offer(row)
+
+
+class SqlTransactionRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, transaction: ent.Transaction) -> ent.Transaction:
+        self._s.add(
+            m.TransactionModel(
+                id=transaction.id,
+                listing_id=transaction.listing_id,
+                buyer_id=transaction.buyer_id,
+                seller_id=transaction.seller_id,
+                offer_id=transaction.offer_id,
+                amount=transaction.amount,
+                currency=transaction.currency,
+                status=transaction.status,
+                created_at=transaction.created_at,
+            )
+        )
+        await self._s.flush()
+        return transaction
+
+    async def get(self, transaction_id: UUID) -> ent.Transaction | None:
+        row = await self._s.get(m.TransactionModel, transaction_id)
+        return map_.to_transaction(row) if row else None
+
+    async def get_open_for_listing(self, listing_id: UUID) -> ent.Transaction | None:
+        stmt = select(m.TransactionModel).where(
+            m.TransactionModel.listing_id == listing_id,
+            m.TransactionModel.status.notin_(
+                [e.TransactionStatus.COMPLETED, e.TransactionStatus.CANCELLED]
+            ),
+        )
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return map_.to_transaction(row) if row else None
+
+    async def list_for_user(
+        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[ent.Transaction]:
+        stmt = (
+            select(m.TransactionModel)
+            .where(
+                or_(
+                    m.TransactionModel.buyer_id == user_id,
+                    m.TransactionModel.seller_id == user_id,
+                )
+            )
+            .order_by(m.TransactionModel.created_at.desc())
+            .limit(limit)
+            .offset(offset)
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_transaction(r) for r in rows]
+
+    async def update_status(
+        self,
+        transaction_id: UUID,
+        *,
+        status: e.TransactionStatus,
+        at: datetime,
+        cancel_reason: str | None = None,
+    ) -> ent.Transaction:
+        values: dict[str, Any] = {"status": status, "updated_at": at}
+        if status == e.TransactionStatus.COMPLETED:
+            values["completed_at"] = at
+        if status == e.TransactionStatus.CANCELLED:
+            values["cancelled_at"] = at
+            values["cancel_reason"] = cancel_reason
+        await self._s.execute(
+            update(m.TransactionModel)
+            .where(m.TransactionModel.id == transaction_id)
+            .values(**values)
+        )
+        row = await self._s.get(m.TransactionModel, transaction_id)
+        assert row is not None
+        return map_.to_transaction(row)
+
+
 class SqlTrustScoreRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session

@@ -8,6 +8,7 @@ from trustlens_api.api.v1.routers import (
     admin,
     appeals,
     auth,
+    commerce,
     health,
     jobs,
     listings,
@@ -34,6 +35,7 @@ api_v1.include_router(public_scores.router)
 api_v1.include_router(public_listings.router)
 api_v1.include_router(messaging.router)
 api_v1.include_router(moderation.router)
+api_v1.include_router(commerce.router)
 api_v1.include_router(jobs.router)
 
 __all__ = ["api_v1", "health"]

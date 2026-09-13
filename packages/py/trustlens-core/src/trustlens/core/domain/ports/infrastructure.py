@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         ListingRepository,
         MessagingRepository,
         NotificationRepository,
+        OfferRepository,
         OtpRepository,
         PhoneNumberRepository,
         RefreshTokenRepository,
@@ -33,6 +34,7 @@ if TYPE_CHECKING:
         ReviewCaseRepository,
         ScoringModelRepository,
         SellerRepository,
+        TransactionRepository,
         TrustScoreRepository,
         UserRepository,
         VerificationTokenRepository,
@@ -83,6 +85,8 @@ class UnitOfWork(Protocol):
     messaging: MessagingRepository
     reports: ReportRepository
     blocks: BlockRepository
+    offers: OfferRepository
+    transactions: TransactionRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository

@@ -9,6 +9,7 @@ from trustlens.core.domain.entities.appeal import (
     JobRun,
     ReviewCase,
 )
+from trustlens.core.domain.entities.commerce import Offer, Transaction
 from trustlens.core.domain.entities.listing import (
     Favorite,
     Listing,
@@ -83,6 +84,7 @@ __all__ = [
     "NewUserRegistration",
     "Notification",
     "OcrFields",
+    "Offer",
     "OtpCode",
     "Permission",
     "PhoneNumber",
@@ -100,6 +102,7 @@ __all__ = [
     "SignalDefinition",
     "SignalEvaluation",
     "StoredFile",
+    "Transaction",
     "TrustScore",
     "TrustScoreSignal",
     "User",

@@ -455,6 +455,43 @@ def to_block(row: m.BlockModel) -> ent.Block:
     )
 
 
+def to_offer(row: m.OfferModel) -> ent.Offer:
+    return ent.Offer(
+        id=row.id,
+        conversation_id=row.conversation_id,
+        listing_id=row.listing_id,
+        buyer_id=row.buyer_id,
+        seller_id=row.seller_id,
+        offered_by=row.offered_by,
+        amount=float(row.amount),
+        currency=row.currency,
+        status=row.status,
+        created_at=row.created_at,
+        expires_at=row.expires_at,
+        message=row.message,
+        parent_offer_id=row.parent_offer_id,
+        responded_at=row.responded_at,
+    )
+
+
+def to_transaction(row: m.TransactionModel) -> ent.Transaction:
+    return ent.Transaction(
+        id=row.id,
+        listing_id=row.listing_id,
+        buyer_id=row.buyer_id,
+        seller_id=row.seller_id,
+        offer_id=row.offer_id,
+        amount=float(row.amount),
+        currency=row.currency,
+        status=row.status,
+        created_at=row.created_at,
+        updated_at=row.updated_at,
+        completed_at=row.completed_at,
+        cancelled_at=row.cancelled_at,
+        cancel_reason=row.cancel_reason,
+    )
+
+
 def to_api_client(row: m.ApiClientModel) -> ent.ApiClient:
     return ent.ApiClient(
         id=row.id,
