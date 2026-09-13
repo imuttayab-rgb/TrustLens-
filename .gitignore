@@ -163,3 +163,9 @@ apps/ml/models/*.joblib
 apps/ml/reports/
 
 .claude
+
+# ── Client-supplied reference material (personal working copy, not repo content) ──
+# UI mockups, requirements docs and backlog exports dropped in for reading, not
+# meant to live in git history. Re-derive/re-request from the client if needed.
+# Note: gitignore patterns don't support shell-style quoting - the space is literal.
+docs/client docs/
