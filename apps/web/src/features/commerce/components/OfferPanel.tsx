@@ -1,5 +1,6 @@
 'use client';
 
+import { ReviewPrompt } from '@/features/reputation';
 import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Field, fieldAria, Input, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
@@ -60,6 +61,9 @@ export function OfferPanel({
   const openTransaction = transactions?.find(
     (txn) => txn.listingId === listingId && txn.status === 'INITIATED',
   );
+  const completedTransaction = transactions?.find(
+    (txn) => txn.listingId === listingId && txn.status === 'COMPLETED',
+  );
 
   async function handleSubmit() {
     const parsed = Number(amount);
@@ -86,6 +90,7 @@ export function OfferPanel({
       {openTransaction && (
         <TransactionCard transaction={openTransaction} currentUserId={currentUserId} />
       )}
+      {completedTransaction && <ReviewPrompt transactionId={completedTransaction.id} />}
 
       {isPending ? (
         <Spinner label="Loading offers" />

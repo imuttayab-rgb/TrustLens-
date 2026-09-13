@@ -11,6 +11,7 @@
  */
 import { ListingCard, type PublicListing } from '@/features/marketplace';
 import { SellerReportButton } from '@/features/moderation';
+import { FollowButton } from '@/features/reputation';
 import { serverFetch } from '@/lib/api/server';
 import { type RiskLevel, SIGNAL_CATEGORIES, type SignalCategory } from '@trustlens/constants';
 import {
@@ -43,6 +44,18 @@ interface PublicScore {
   unavailableSignals: string[];
 }
 
+interface PublicReview {
+  id: string;
+  rating: number;
+  comment: string | null;
+  createdAt: string;
+}
+
+interface SellerReviews {
+  items: PublicReview[];
+  summary: { averageRating: number | null; reviewCount: number };
+}
+
 /**
  * Reads the first-party buyer route, not the partner API at `/public/v1`.
  *
@@ -72,6 +85,14 @@ async function getSellerListings(handle: string): Promise<PublicListing[]> {
   );
 }
 
+async function getSellerReviews(handle: string): Promise<SellerReviews> {
+  return (
+    (await serverFetch<SellerReviews>(
+      `/api/v1/public/sellers/${encodeURIComponent(handle)}/reviews`,
+    )) ?? { items: [], summary: { averageRating: null, reviewCount: 0 } }
+  );
+}
+
 export async function generateMetadata({
   params,
 }: {
@@ -94,7 +115,11 @@ export async function generateMetadata({
 
 export default async function SellerPage({ params }: { params: Promise<{ handle: string }> }) {
   const { handle } = await params;
-  const [score, listings] = await Promise.all([getScore(handle), getSellerListings(handle)]);
+  const [score, listings, reviews] = await Promise.all([
+    getScore(handle),
+    getSellerListings(handle),
+    getSellerReviews(handle),
+  ]);
   if (!score) notFound();
 
   // The public payload carries reasons, not raw signal rows - it is
@@ -136,7 +161,10 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         <p className="text-xs text-muted-foreground sm:text-sm">
           Last checked {formatDateTime(score.computedAt)} · scoring model {score.modelVersion}
         </p>
-        <SellerReportButton handle={handle} />
+        <div className="flex items-center gap-2">
+          <FollowButton handle={handle} />
+          <SellerReportButton handle={handle} />
+        </div>
       </header>
 
       <Card className="mt-8">
@@ -175,6 +203,39 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {reviews.summary.reviewCount > 0 && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>
+              Reviews ({reviews.summary.reviewCount})
+              {reviews.summary.averageRating !== null &&
+                ` · ${reviews.summary.averageRating.toFixed(1)} avg`}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {reviews.items.map((review) => (
+              <div key={review.id} className="rounded-lg border border-border p-3 text-sm">
+                <div className="flex" aria-label={`${review.rating} out of 5 stars`}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <span
+                      key={i}
+                      className={i < review.rating ? 'text-amber-500' : 'text-muted-foreground/40'}
+                      aria-hidden="true"
+                    >
+                      ★
+                    </span>
+                  ))}
+                </div>
+                {review.comment && <p className="mt-1 text-muted-foreground">{review.comment}</p>}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatDateTime(review.createdAt)}
+                </p>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
