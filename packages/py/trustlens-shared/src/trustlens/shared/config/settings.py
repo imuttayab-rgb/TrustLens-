@@ -476,6 +476,13 @@ class Settings(_Base):
             problems.append("SECURITY_API_KEY_PREFIX must be 'tl_live' in production")
         if self.log_format != "json":
             problems.append("LOG_FORMAT must be 'json' in production")
+        if self.storage.storage_endpoint_url and "minio:" in self.storage.storage_endpoint_url:
+            problems.append(
+                "STORAGE_ENDPOINT_URL still points at the internal 'minio:9000' compose "
+                "hostname - presigned upload/download URLs built from it are unreachable "
+                "from a browser. Point it at a publicly-reachable address (the published "
+                "MinIO port, or a managed S3-compatible provider like Cloudflare R2)."
+            )
 
         if problems:
             raise ValueError("Production configuration is unsafe:\n  - " + "\n  - ".join(problems))
