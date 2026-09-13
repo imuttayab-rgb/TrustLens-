@@ -429,6 +429,32 @@ def to_review_case(row: m.ReviewCaseModel) -> ent.ReviewCase:
     )
 
 
+def to_report(row: m.ReportModel) -> ent.Report:
+    return ent.Report(
+        id=row.id,
+        reporter_id=row.reporter_id,
+        target_type=row.target_type,
+        target_id=row.target_id,
+        category=row.category,
+        description=row.description,
+        status=row.status,
+        created_at=row.created_at,
+        resolved_at=row.resolved_at,
+        resolved_by=row.resolved_by,
+        resolution_note=row.resolution_note,
+        updated_at=row.updated_at,
+    )
+
+
+def to_block(row: m.BlockModel) -> ent.Block:
+    return ent.Block(
+        id=row.id,
+        blocker_id=row.blocker_id,
+        blocked_id=row.blocked_id,
+        created_at=row.created_at,
+    )
+
+
 def to_api_client(row: m.ApiClientModel) -> ent.ApiClient:
     return ent.ApiClient(
         id=row.id,

@@ -15,7 +15,7 @@ from datetime import datetime
 from typing import Any, cast
 from uuid import UUID
 
-from sqlalchemy import Select, delete, func, select, update
+from sqlalchemy import Select, and_, delete, func, or_, select, update
 from sqlalchemy.engine import CursorResult
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -1432,6 +1432,133 @@ class SqlMessagingRepository:
             )
             .values(read_at=at)
         )
+
+
+class SqlReportRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, report: ent.Report) -> ent.Report:
+        self._s.add(
+            m.ReportModel(
+                id=report.id,
+                reporter_id=report.reporter_id,
+                target_type=report.target_type,
+                target_id=report.target_id,
+                category=report.category,
+                description=report.description,
+                status=report.status,
+                created_at=report.created_at,
+            )
+        )
+        await self._s.flush()
+        return report
+
+    async def get(self, report_id: UUID) -> ent.Report | None:
+        row = await self._s.get(m.ReportModel, report_id)
+        return map_.to_report(row) if row else None
+
+    async def list_for_reporter(self, reporter_id: UUID, *, limit: int = 50) -> list[ent.Report]:
+        stmt = (
+            select(m.ReportModel)
+            .where(m.ReportModel.reporter_id == reporter_id)
+            .order_by(m.ReportModel.created_at.desc())
+            .limit(limit)
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_report(r) for r in rows]
+
+    async def list_queue(
+        self, *, status: e.ReportStatus | None = None, limit: int = 50, offset: int = 0
+    ) -> list[ent.Report]:
+        stmt = select(m.ReportModel).order_by(m.ReportModel.created_at.desc())
+        if status is not None:
+            stmt = stmt.where(m.ReportModel.status == status)
+        stmt = stmt.limit(limit).offset(offset)
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_report(r) for r in rows]
+
+    async def count_queue(self, *, status: e.ReportStatus | None = None) -> int:
+        stmt = select(func.count()).select_from(m.ReportModel)
+        if status is not None:
+            stmt = stmt.where(m.ReportModel.status == status)
+        return int((await self._s.execute(stmt)).scalar_one())
+
+    async def resolve(
+        self,
+        report_id: UUID,
+        *,
+        status: e.ReportStatus,
+        resolution_note: str | None,
+        resolved_by: UUID,
+        resolved_at: datetime,
+    ) -> ent.Report:
+        await self._s.execute(
+            update(m.ReportModel)
+            .where(m.ReportModel.id == report_id)
+            .values(
+                status=status,
+                resolution_note=resolution_note,
+                resolved_by=resolved_by,
+                resolved_at=resolved_at,
+            )
+        )
+        row = await self._s.get(m.ReportModel, report_id)
+        assert row is not None
+        return map_.to_report(row)
+
+
+class SqlBlockRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, block: ent.Block) -> ent.Block:
+        self._s.add(
+            m.BlockModel(
+                id=block.id,
+                blocker_id=block.blocker_id,
+                blocked_id=block.blocked_id,
+                created_at=block.created_at,
+            )
+        )
+        await self._s.flush()
+        return block
+
+    async def remove(self, *, blocker_id: UUID, blocked_id: UUID) -> None:
+        await self._s.execute(
+            delete(m.BlockModel).where(
+                m.BlockModel.blocker_id == blocker_id, m.BlockModel.blocked_id == blocked_id
+            )
+        )
+
+    async def exists(self, *, blocker_id: UUID, blocked_id: UUID) -> bool:
+        row = (
+            await self._s.execute(
+                select(m.BlockModel.id).where(
+                    m.BlockModel.blocker_id == blocker_id, m.BlockModel.blocked_id == blocked_id
+                )
+            )
+        ).first()
+        return row is not None
+
+    async def is_blocked_either_way(self, user_a: UUID, user_b: UUID) -> bool:
+        row = (
+            await self._s.execute(
+                select(m.BlockModel.id).where(
+                    or_(
+                        and_(m.BlockModel.blocker_id == user_a, m.BlockModel.blocked_id == user_b),
+                        and_(m.BlockModel.blocker_id == user_b, m.BlockModel.blocked_id == user_a),
+                    )
+                )
+            )
+        ).first()
+        return row is not None
+
+    async def list_blocked_ids(self, blocker_id: UUID) -> frozenset[UUID]:
+        rows = await self._s.execute(
+            select(m.BlockModel.blocked_id).where(m.BlockModel.blocker_id == blocker_id)
+        )
+        return frozenset(rows.scalars().all())
 
 
 class SqlTrustScoreRepository:

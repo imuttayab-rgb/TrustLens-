@@ -23,6 +23,11 @@ from trustlens.core.application.use_cases.admin import (
     DecideReviewCaseCommand,
     ListReviewQueue,
 )
+from trustlens.core.application.use_cases.moderation import (
+    ListReportQueue,
+    ResolveReport,
+    ResolveReportCommand,
+)
 from trustlens.core.application.use_cases.scoring import GetTrustScore, GetTrustScoreCommand
 from trustlens.core.domain.entities import (
     AuditLogEntry,
@@ -31,7 +36,7 @@ from trustlens.core.domain.entities import (
     ScoringModel,
     ScoringWeight,
 )
-from trustlens.core.domain.enums import DocumentType, RiskLevel
+from trustlens.core.domain.enums import DocumentType, ReportStatus, RiskLevel
 from trustlens.core.domain.errors import (
     ConflictError,
     EntityNotFound,
@@ -654,6 +659,41 @@ class AuditLogEntryModel(Schema):
     occurred_at: Any
 
 
+class AdminReportModel(Schema):
+    id: UUID
+    reporter_id: UUID
+    target_type: str
+    target_id: UUID
+    category: str
+    description: str
+    status: str
+    created_at: Any
+    resolved_at: Any
+    resolved_by: UUID | None
+    resolution_note: str | None
+
+
+class ResolveReportRequest(BaseModel):
+    status: str
+    resolution_note: str | None = Field(default=None, max_length=2_000)
+
+
+def _to_admin_report(report: Any) -> AdminReportModel:
+    return AdminReportModel(
+        id=report.id,
+        reporter_id=report.reporter_id,
+        target_type=report.target_type.value,
+        target_id=report.target_id,
+        category=report.category.value,
+        description=report.description,
+        status=report.status.value,
+        created_at=report.created_at,
+        resolved_at=report.resolved_at,
+        resolved_by=report.resolved_by,
+        resolution_note=report.resolution_note,
+    )
+
+
 @router.get(
     "/audit-logs",
     summary="List admin audit log entries",
@@ -699,6 +739,67 @@ async def list_audit_logs(
             for e in entries
         ],
         request_id=meta.request_id,
+    )
+
+
+@router.get(
+    "/reports",
+    summary="The reports queue (MOD-01)",
+    description=(
+        "Every user-filed report against a listing, seller, or message. "
+        "Separate from the identity-review/appeal queues above - those are "
+        "about a score decision, this is content/conduct moderation."
+    ),
+    dependencies=[Depends(require_permissions("moderation:read"))],
+)
+async def list_report_queue(
+    uow: UowDep,
+    meta: MetaDep,
+    status_filter: str | None = Query(default=None, alias="status"),
+    limit: int = Query(default=50, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+) -> dict[str, Any]:
+    status_value = ReportStatus(status_filter) if status_filter else None
+    page = await ListReportQueue(uow=uow).execute(status=status_value, limit=limit, offset=offset)
+    return envelope(
+        [_to_admin_report(item).model_dump(by_alias=True) for item in page.items],
+        request_id=meta.request_id,
+        pagination=PageMeta.build(
+            page=(page.offset // page.limit) + 1, per_page=page.limit, total=page.total
+        ),
+    )
+
+
+@router.post(
+    "/reports/{report_id}/resolve",
+    summary="Resolve a report",
+    dependencies=[Depends(require_permissions("moderation:resolve"))],
+)
+async def resolve_report(
+    report_id: UUID,
+    body: ResolveReportRequest,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    if actor.user_id is None:
+        raise PermissionDenied("moderation:resolve")
+    try:
+        status_value = ReportStatus(body.status)
+    except ValueError as exc:
+        raise ValidationError(f"Invalid status: {body.status}") from exc
+
+    resolved = await ResolveReport(uow=uow, clock=container.clock, ids=container.ids).execute(
+        ResolveReportCommand(
+            report_id=report_id,
+            resolver_id=actor.user_id,
+            status=status_value,
+            resolution_note=body.resolution_note,
+        )
+    )
+    return envelope(
+        _to_admin_report(resolved).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 

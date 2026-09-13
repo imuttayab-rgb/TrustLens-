@@ -124,6 +124,19 @@
         "title": "BecomeSellerRequest",
         "type": "object"
       },
+      "BlockUserRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "blockedUserId": {
+            "format": "uuid",
+            "title": "Blockeduserid",
+            "type": "string"
+          }
+        },
+        "required": ["blockedUserId"],
+        "title": "BlockUserRequest",
+        "type": "object"
+      },
       "ChangePasswordRequest": {
         "additionalProperties": false,
         "properties": {
@@ -142,6 +155,33 @@
         },
         "required": ["currentPassword", "newPassword"],
         "title": "ChangePasswordRequest",
+        "type": "object"
+      },
+      "CreateReportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Description",
+            "type": "string"
+          },
+          "targetId": {
+            "format": "uuid",
+            "title": "Targetid",
+            "type": "string"
+          },
+          "targetType": {
+            "title": "Targettype",
+            "type": "string"
+          }
+        },
+        "required": ["targetType", "targetId", "category", "description"],
+        "title": "CreateReportRequest",
         "type": "object"
       },
       "CreateScoringModelRequest": {
@@ -807,6 +847,29 @@
         },
         "required": ["decision", "note"],
         "title": "ResolveAppealRequest",
+        "type": "object"
+      },
+      "ResolveReportRequest": {
+        "properties": {
+          "resolution_note": {
+            "anyOf": [
+              {
+                "maxLength": 2000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolution Note"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": ["status"],
+        "title": "ResolveReportRequest",
         "type": "object"
       },
       "RiskLevel": {
@@ -2062,6 +2125,164 @@
         },
         "summary": "Approve, suspend or reinstate a partner",
         "tags": ["partners"]
+      }
+    },
+    "/api/v1/admin/reports": {
+      "get": {
+        "description": "Every user-filed report against a listing, seller, or message. Separate from the identity-review/appeal queues above - those are about a score decision, this is content/conduct moderation.",
+        "operationId": "list_report_queue_api_v1_admin_reports_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Report Queue Api V1 Admin Reports Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The reports queue (MOD-01)",
+        "tags": ["admin"]
+      }
+    },
+    "/api/v1/admin/reports/{report_id}/resolve": {
+      "post": {
+        "operationId": "resolve_report_api_v1_admin_reports__report_id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resolve Report Api V1 Admin Reports  Report Id  Resolve Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve a report",
+        "tags": ["admin"]
       }
     },
     "/api/v1/admin/review-cases": {
@@ -4617,6 +4838,119 @@
         "tags": ["Me"]
       }
     },
+    "/api/v1/me/blocks": {
+      "get": {
+        "operationId": "list_my_blocks_api_v1_me_blocks_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List My Blocks Api V1 Me Blocks Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Users I've blocked",
+        "tags": ["Moderation"]
+      },
+      "post": {
+        "operationId": "block_user_api_v1_me_blocks_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BlockUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Block a user - idempotent, safe to call repeatedly",
+        "tags": ["Moderation"]
+      }
+    },
+    "/api/v1/me/blocks/{blocked_user_id}": {
+      "delete": {
+        "operationId": "unblock_user_api_v1_me_blocks__blocked_user_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "blocked_user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Blocked User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unblock a user",
+        "tags": ["Moderation"]
+      }
+    },
     "/api/v1/me/conversations": {
       "get": {
         "operationId": "list_conversations_api_v1_me_conversations_get",
@@ -5012,6 +5346,112 @@
         },
         "summary": "Unsave a listing",
         "tags": ["Me"]
+      }
+    },
+    "/api/v1/me/reports": {
+      "get": {
+        "operationId": "list_my_reports_api_v1_me_reports_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List My Reports Api V1 Me Reports Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "My own report submissions",
+        "tags": ["Moderation"]
+      },
+      "post": {
+        "operationId": "create_report_api_v1_me_reports_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Report Api V1 Me Reports Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Report a listing, seller, message, or something else",
+        "tags": ["Moderation"]
       }
     },
     "/api/v1/public/listings": {

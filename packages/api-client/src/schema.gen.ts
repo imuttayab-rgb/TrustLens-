@@ -231,6 +231,43 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * The reports queue (MOD-01)
+     * @description Every user-filed report against a listing, seller, or message. Separate from the identity-review/appeal queues above - those are about a score decision, this is content/conduct moderation.
+     */
+    get: operations['list_report_queue_api_v1_admin_reports_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/reports/{report_id}/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Resolve a report */
+    post: operations['resolve_report_api_v1_admin_reports__report_id__resolve_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/review-cases': {
     parameters: {
       query?: never;
@@ -891,6 +928,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/blocks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Users I've blocked */
+    get: operations['list_my_blocks_api_v1_me_blocks_get'];
+    put?: never;
+    /** Block a user - idempotent, safe to call repeatedly */
+    post: operations['block_user_api_v1_me_blocks_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/blocks/{blocked_user_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Unblock a user */
+    delete: operations['unblock_user_api_v1_me_blocks__blocked_user_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me/conversations': {
     parameters: {
       query?: never;
@@ -976,6 +1048,24 @@ export interface paths {
     post?: never;
     /** Unsave a listing */
     delete: operations['remove_favorite_api_v1_me_favorites__listing_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/reports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** My own report submissions */
+    get: operations['list_my_reports_api_v1_me_reports_get'];
+    put?: never;
+    /** Report a listing, seller, message, or something else */
+    post: operations['create_report_api_v1_me_reports_post'];
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1403,12 +1493,34 @@ export interface components {
       /** Displayname */
       displayName: string;
     };
+    /** BlockUserRequest */
+    BlockUserRequest: {
+      /**
+       * Blockeduserid
+       * Format: uuid
+       */
+      blockedUserId: string;
+    };
     /** ChangePasswordRequest */
     ChangePasswordRequest: {
       /** Currentpassword */
       currentPassword: string;
       /** Newpassword */
       newPassword: string;
+    };
+    /** CreateReportRequest */
+    CreateReportRequest: {
+      /** Category */
+      category: string;
+      /** Description */
+      description: string;
+      /**
+       * Targetid
+       * Format: uuid
+       */
+      targetId: string;
+      /** Targettype */
+      targetType: string;
     };
     /** CreateScoringModelRequest */
     CreateScoringModelRequest: {
@@ -1684,6 +1796,13 @@ export interface components {
       note: string;
       /** Overridescore */
       overrideScore?: number | null;
+    };
+    /** ResolveReportRequest */
+    ResolveReportRequest: {
+      /** Resolution Note */
+      resolution_note?: string | null;
+      /** Status */
+      status: string;
     };
     /**
      * RiskLevel
@@ -2301,6 +2420,82 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['SetStatusRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_report_queue_api_v1_admin_reports_get: {
+    parameters: {
+      query?: {
+        status?: string | null;
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  resolve_report_api_v1_admin_reports__report_id__resolve_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        report_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResolveReportRequest'];
       };
     };
     responses: {
@@ -3815,6 +4010,99 @@ export interface operations {
       };
     };
   };
+  list_my_blocks_api_v1_me_blocks_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  block_user_api_v1_me_blocks_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BlockUserRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  unblock_user_api_v1_me_blocks__blocked_user_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        blocked_user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   list_conversations_api_v1_me_conversations_get: {
     parameters: {
       query?: {
@@ -4043,6 +4331,76 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_my_reports_api_v1_me_reports_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_report_api_v1_me_reports_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateReportRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
       };
       /** @description Validation Error */
       422: {

@@ -15,6 +15,7 @@ if TYPE_CHECKING:
         ApiClientRepository,
         AppealRepository,
         AuditLogRepository,
+        BlockRepository,
         ConsentRepository,
         DeviceRepository,
         EmailAddressRepository,
@@ -28,6 +29,7 @@ if TYPE_CHECKING:
         OtpRepository,
         PhoneNumberRepository,
         RefreshTokenRepository,
+        ReportRepository,
         ReviewCaseRepository,
         ScoringModelRepository,
         SellerRepository,
@@ -79,6 +81,8 @@ class UnitOfWork(Protocol):
     listings: ListingRepository
     favorites: FavoriteRepository
     messaging: MessagingRepository
+    reports: ReportRepository
+    blocks: BlockRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository

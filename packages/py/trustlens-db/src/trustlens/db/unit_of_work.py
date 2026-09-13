@@ -15,6 +15,7 @@ import uuid_utils
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from trustlens.core.domain.events import DomainEvent
+from trustlens.core.domain.ports import BlockRepository, ReportRepository
 from trustlens.db import models as m
 from trustlens.db import repositories as repo
 
@@ -83,6 +84,13 @@ class SqlAlchemyUnitOfWork:
         self.listings = repo.SqlListingRepository(s)
         self.favorites = repo.SqlFavoriteRepository(s)
         self.messaging = repo.SqlMessagingRepository(s)
+        # Typed to the port, not the concrete class: unlike every other
+        # repository attribute here (which mypy happens to infer as `Any`,
+        # masking a real Protocol-attribute-invariance mismatch), these two
+        # infer a real, specific type - which then correctly needs the exact
+        # `UnitOfWork.reports`/`.blocks` interface type, not a subtype of it.
+        self.reports: ReportRepository = repo.SqlReportRepository(s)
+        self.blocks: BlockRepository = repo.SqlBlockRepository(s)
         self.trust_scores = repo.SqlTrustScoreRepository(s)
         self.scoring_models = repo.SqlScoringModelRepository(s)
         self.appeals = repo.SqlAppealRepository(s)

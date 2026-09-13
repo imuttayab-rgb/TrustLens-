@@ -846,6 +846,63 @@ class MessageModel(Base):
     __table_args__ = (Index("ix_messages_conversation_created", "conversation_id", "created_at"),)
 
 
+class ReportModel(Base):
+    """A report against a listing, seller, message, or something else
+    (MOD-01). `target_id` is untyped beyond a UUID - `target_type` names
+    what it points to, the same pattern `ReviewCaseModel.related_entity_*`
+    already uses."""
+
+    __tablename__ = "reports"
+
+    id: Mapped[UUID] = uuid_pk()
+    reporter_id: Mapped[UUID] = uuid_fk("users.id")
+    target_type: Mapped[e.ReportTargetType] = mapped_column(
+        pg_enum(e.ReportTargetType, "report_target_type"), nullable=False
+    )
+    target_id: Mapped[UUID] = mapped_column(PgUUID(as_uuid=True), nullable=False)
+    category: Mapped[e.ReportCategory] = mapped_column(
+        pg_enum(e.ReportCategory, "report_category"), nullable=False
+    )
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[e.ReportStatus] = mapped_column(
+        pg_enum(e.ReportStatus, "report_status"), nullable=False, default=e.ReportStatus.OPEN
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+    updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), onupdate=func.now()
+    )
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL")
+    )
+    resolution_note: Mapped[str | None] = mapped_column(Text)
+
+    __table_args__ = (
+        Index("ix_reports_queue", "status", "created_at"),
+        Index("ix_reports_reporter", "reporter_id", "created_at"),
+        Index("ix_reports_target", "target_type", "target_id"),
+    )
+
+
+class BlockModel(Base):
+    """One user refusing further contact from another. Directional -
+    `blocker_id` blocked `blocked_id`; messaging enforcement checks both
+    directions rather than relying on symmetry here."""
+
+    __tablename__ = "blocks"
+
+    id: Mapped[UUID] = uuid_pk()
+    blocker_id: Mapped[UUID] = uuid_fk("users.id")
+    blocked_id: Mapped[UUID] = uuid_fk("users.id")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (Index("uq_blocks_blocker_blocked", "blocker_id", "blocked_id", unique=True),)
+
+
 # ═══════════════════════════════════════════════════════════════════
 #  Scoring
 # ═══════════════════════════════════════════════════════════════════
@@ -1373,6 +1430,7 @@ __all__ = [
     "AppealModel",
     "AuditLogModel",
     "Base",
+    "BlockModel",
     "ConsentModel",
     "ConversationModel",
     "DeviceModel",
@@ -1392,6 +1450,7 @@ __all__ = [
     "OutboxEvent",
     "Permission",
     "RefreshToken",
+    "ReportModel",
     "ReviewCaseModel",
     "Role",
     "RolePermission",

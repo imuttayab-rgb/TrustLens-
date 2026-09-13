@@ -206,6 +206,32 @@ class ReviewCaseType(StrEnum):
     DEVICE_CLUSTER = "DEVICE_CLUSTER"
 
 
+class ReportTargetType(StrEnum):
+    LISTING = "LISTING"
+    SELLER = "SELLER"
+    MESSAGE = "MESSAGE"
+    OTHER = "OTHER"
+
+
+class ReportCategory(StrEnum):
+    SCAM_OR_FRAUD = "SCAM_OR_FRAUD"
+    PROHIBITED_ITEM = "PROHIBITED_ITEM"
+    HARASSMENT = "HARASSMENT"
+    MISLEADING_LISTING = "MISLEADING_LISTING"
+    OTHER = "OTHER"
+
+
+class ReportStatus(StrEnum):
+    OPEN = "OPEN"
+    UNDER_REVIEW = "UNDER_REVIEW"
+    RESOLVED = "RESOLVED"
+    DISMISSED = "DISMISSED"
+
+    @property
+    def is_open(self) -> bool:
+        return self in {ReportStatus.OPEN, ReportStatus.UNDER_REVIEW}
+
+
 class ApiKeyStatus(StrEnum):
     ACTIVE = "ACTIVE"
     REVOKED = "REVOKED"
@@ -313,6 +339,9 @@ __all__ = [
     "ListingStatus",
     "OtpPurpose",
     "ReasonCode",
+    "ReportCategory",
+    "ReportStatus",
+    "ReportTargetType",
     "ReviewCaseType",
     "ReviewStatus",
     "RiskLevel",

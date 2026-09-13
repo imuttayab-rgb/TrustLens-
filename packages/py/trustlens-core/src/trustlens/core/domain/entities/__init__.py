@@ -20,6 +20,7 @@ from trustlens.core.domain.entities.listing import (
     ScamLabel,
 )
 from trustlens.core.domain.entities.messaging import Conversation, ConversationSummary, Message
+from trustlens.core.domain.entities.moderation import Block, Report
 from trustlens.core.domain.entities.seller import Marketplace, SellerProfile
 from trustlens.core.domain.entities.trust_score import (
     ScoringModel,
@@ -62,6 +63,7 @@ __all__ = [
     "AppealMessage",
     "AuditLogEntry",
     "AuthenticatedActor",
+    "Block",
     "Consent",
     "Conversation",
     "ConversationSummary",
@@ -88,6 +90,7 @@ __all__ = [
     "PublicListingImage",
     "PublicListingSummary",
     "RefreshToken",
+    "Report",
     "ReviewCase",
     "Role",
     "ScamLabel",

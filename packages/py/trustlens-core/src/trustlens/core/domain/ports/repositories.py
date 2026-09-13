@@ -26,6 +26,7 @@ if TYPE_CHECKING:
         Appeal,
         AppealMessage,
         AuditLogEntry,
+        Block,
         Consent,
         Conversation,
         ConversationSummary,
@@ -46,6 +47,7 @@ if TYPE_CHECKING:
         PublicListingDetail,
         PublicListingSummary,
         RefreshToken,
+        Report,
         ReviewCase,
         ScoringModel,
         SellerProfile,
@@ -55,7 +57,12 @@ if TYPE_CHECKING:
         User,
         VerificationToken,
     )
-    from trustlens.core.domain.enums import AppealStatus, OtpPurpose, TokenPurpose
+    from trustlens.core.domain.enums import (
+        AppealStatus,
+        OtpPurpose,
+        ReportStatus,
+        TokenPurpose,
+    )
     from trustlens.core.domain.value_objects import Email, PhoneE164
 
 
@@ -270,11 +277,50 @@ class FavoriteRepository(Protocol):
         """
         ...
 
-    async def list_favorite_listings(
-        self, user_id: UUID, *, limit: int = 20, offset: int = 0
-    ) -> list[PublicListingSummary]: ...
 
-    async def count_for_user(self, user_id: UUID) -> int: ...
+@runtime_checkable
+class ReportRepository(Protocol):
+    async def add(self, report: Report) -> Report: ...
+
+    async def get(self, report_id: UUID) -> Report | None: ...
+
+    async def list_for_reporter(self, reporter_id: UUID, *, limit: int = 50) -> list[Report]: ...
+
+    async def list_queue(
+        self, *, status: ReportStatus | None = None, limit: int = 50, offset: int = 0
+    ) -> list[Report]:
+        """The admin work queue - every report, optionally filtered to one
+        status, newest first."""
+        ...
+
+    async def count_queue(self, *, status: ReportStatus | None = None) -> int: ...
+
+    async def resolve(
+        self,
+        report_id: UUID,
+        *,
+        status: ReportStatus,
+        resolution_note: str | None,
+        resolved_by: UUID,
+        resolved_at: datetime,
+    ) -> Report: ...
+
+
+@runtime_checkable
+class BlockRepository(Protocol):
+    async def add(self, block: Block) -> Block: ...
+
+    async def remove(self, *, blocker_id: UUID, blocked_id: UUID) -> None: ...
+
+    async def exists(self, *, blocker_id: UUID, blocked_id: UUID) -> bool: ...
+
+    async def is_blocked_either_way(self, user_a: UUID, user_b: UUID) -> bool:
+        """Messaging enforcement checks both directions - a blocked user
+        must not be able to route around a block by starting a fresh
+        conversation from the other side."""
+        ...
+
+    async def list_blocked_ids(self, blocker_id: UUID) -> frozenset[UUID]: ...
 
 
 @runtime_checkable

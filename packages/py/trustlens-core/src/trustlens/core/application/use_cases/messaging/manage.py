@@ -85,6 +85,12 @@ class SendMessage:
             participants = await self._uow.messaging.get_participants(conversation.id)
             if participants is None or cmd.sender_id not in participants:
                 raise PermissionDenied("This conversation belongs to someone else.")
+            other = next(p for p in participants if p != cmd.sender_id)
+            if await self._uow.blocks.is_blocked_either_way(cmd.sender_id, other):
+                # A blocked user must not be able to route around it by
+                # replying into a thread that predates the block - checked
+                # both directions, since either party may have blocked.
+                raise PermissionDenied("You cannot message this user.")
             return conversation
 
         if cmd.listing_id is None:
@@ -100,6 +106,10 @@ class SendMessage:
         seller = await self._uow.sellers.get(listing.seller_id)
         if seller is not None and seller.user_id == cmd.sender_id:
             raise ValidationError("You cannot message yourself about your own listing.")
+        if seller is not None and await self._uow.blocks.is_blocked_either_way(
+            cmd.sender_id, seller.user_id
+        ):
+            raise PermissionDenied("You cannot message this user.")
 
         existing = await self._uow.messaging.find_conversation(
             buyer_id=cmd.sender_id, seller_id=listing.seller_id, listing_id=listing.id
