@@ -7,6 +7,7 @@ export {
   useRemoveFavorite,
 } from './hooks/use-favorites';
 export {
+  useListingCity,
   usePublicListings,
   type BrowseListingsParams,
   type PublicListing,

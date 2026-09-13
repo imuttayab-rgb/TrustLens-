@@ -152,6 +152,7 @@ export const ADMIN_ROUTES = {
   sellers: '/sellers',
   appeals: '/appeals',
   reports: '/reports',
+  safemeet: '/safemeet',
   scoring: '/scoring',
   apiClients: '/api-clients',
   auditLogs: '/audit-logs',

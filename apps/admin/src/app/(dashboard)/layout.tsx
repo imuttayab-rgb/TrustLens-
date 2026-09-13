@@ -10,6 +10,7 @@ const NAV = [
   { href: ADMIN_ROUTES.sellers, label: 'Sellers' },
   { href: ADMIN_ROUTES.appeals, label: 'Appeals' },
   { href: ADMIN_ROUTES.reports, label: 'Reports' },
+  { href: ADMIN_ROUTES.safemeet, label: 'SafeMeet venues' },
   { href: ADMIN_ROUTES.scoring, label: 'Scoring models' },
   { href: ADMIN_ROUTES.apiClients, label: 'API clients' },
   { href: ADMIN_ROUTES.auditLogs, label: 'Audit log' },

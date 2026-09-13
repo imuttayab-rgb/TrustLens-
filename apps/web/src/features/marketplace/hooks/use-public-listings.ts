@@ -94,3 +94,22 @@ export function usePublicListings({
     },
   });
 }
+
+/**
+ * Just enough of the public listing detail to drive SafeMeet's venue
+ * suggestions (which are keyed by city) - not the full page fetch that
+ * `/listing/[id]/page.tsx` does server-side.
+ */
+export function useListingCity(listingId: string | null) {
+  return useQuery<{ city: string | null }>({
+    queryKey: qk.listing.publicById(listingId ?? 'none'),
+    enabled: Boolean(listingId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/public/listings/{listing_id}', {
+        params: { path: { listing_id: listingId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: { city: string | null } }).data;
+    },
+  });
+}

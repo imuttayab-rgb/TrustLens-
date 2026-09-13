@@ -2,7 +2,9 @@
 
 import { useSession } from '@/lib/auth/use-session';
 import { OfferPanel } from '@/features/commerce';
+import { useListingCity } from '@/features/marketplace';
 import { BlockButton } from '@/features/moderation';
+import { MeetupPanel } from '@/features/safemeet';
 import { Alert, Button, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { Send } from 'lucide-react';
@@ -17,6 +19,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const conversation = conversations?.items.find((item) => item.id === conversationId);
+  const { data: listingInfo } = useListingCity(conversation?.listingId ?? null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: 'end' });
@@ -44,6 +47,13 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
         <OfferPanel
           conversationId={conversationId}
           listingId={conversation.listingId}
+          currentUserId={session.id}
+        />
+      )}
+      {conversation?.listingId && session?.id && (
+        <MeetupPanel
+          conversationId={conversationId}
+          listingCity={listingInfo?.city ?? null}
           currentUserId={session.id}
         />
       )}
