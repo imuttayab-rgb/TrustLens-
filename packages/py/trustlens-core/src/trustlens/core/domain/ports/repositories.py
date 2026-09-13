@@ -277,6 +277,12 @@ class FavoriteRepository(Protocol):
         """
         ...
 
+    async def list_favorite_listings(
+        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+    ) -> list[PublicListingSummary]: ...
+
+    async def count_for_user(self, user_id: UUID) -> int: ...
+
 
 @runtime_checkable
 class ReportRepository(Protocol):
