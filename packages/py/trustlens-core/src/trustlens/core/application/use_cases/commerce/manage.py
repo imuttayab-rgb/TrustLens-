@@ -187,6 +187,46 @@ class RespondToOffer:
 
 
 @dataclass(frozen=True, slots=True)
+class ConfirmHandoverCommand:
+    transaction_id: UUID
+    actor_id: UUID
+
+
+class ConfirmHandover:
+    """The QR check-in (QR-01): whoever opens the other party's QR code and
+    confirms it moves the transaction to HANDED_OVER. Deliberately the same
+    mutual-trust bar as `CompleteTransaction` - either party can confirm,
+    there is no cryptographic proof the two phones were ever in the same
+    room, just the existing "you are a party to this deal" auth check. The
+    QR code itself is a plain deep link to this action, not a signed or
+    time-limited token - the transaction's own open/closed state is what
+    bounds how long an old code stays meaningful."""
+
+    def __init__(self, *, uow: UnitOfWork, clock: Clock) -> None:
+        self._uow = uow
+        self._clock = clock
+
+    async def execute(self, cmd: ConfirmHandoverCommand) -> Transaction:
+        now = self._clock.now()
+        async with self._uow:
+            txn = await self._uow.transactions.get(cmd.transaction_id)
+            if txn is None:
+                raise EntityNotFound("transaction", cmd.transaction_id)
+            if cmd.actor_id not in (txn.buyer_id, txn.seller_id):
+                raise PermissionDenied("This transaction belongs to someone else.")
+            if not txn.is_open:
+                raise InvalidStateError("This transaction is already closed.")
+            if txn.status == TransactionStatus.HANDED_OVER:
+                raise InvalidStateError("Handover has already been confirmed.")
+
+            updated = await self._uow.transactions.update_status(
+                txn.id, status=TransactionStatus.HANDED_OVER, at=now
+            )
+            await self._uow.commit()
+        return updated
+
+
+@dataclass(frozen=True, slots=True)
 class CompleteTransactionCommand:
     transaction_id: UUID
     actor_id: UUID
@@ -282,6 +322,8 @@ __all__ = [
     "CancelTransactionCommand",
     "CompleteTransaction",
     "CompleteTransactionCommand",
+    "ConfirmHandover",
+    "ConfirmHandoverCommand",
     "CreateOffer",
     "CreateOfferCommand",
     "ListMyTransactions",

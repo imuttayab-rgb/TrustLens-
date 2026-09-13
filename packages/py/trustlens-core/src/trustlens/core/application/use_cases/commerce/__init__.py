@@ -1,4 +1,4 @@
-"""Offers and transactions use cases (feature OFF-01)."""
+"""Offers and transactions use cases (feature OFF-01, plus QR-01's handover confirmation)."""
 
 from trustlens.core.application.use_cases.commerce.manage import (
     DEFAULT_OFFER_TTL_HOURS,
@@ -6,6 +6,8 @@ from trustlens.core.application.use_cases.commerce.manage import (
     CancelTransactionCommand,
     CompleteTransaction,
     CompleteTransactionCommand,
+    ConfirmHandover,
+    ConfirmHandoverCommand,
     CreateOffer,
     CreateOfferCommand,
     ListMyTransactions,
@@ -21,6 +23,8 @@ __all__ = [
     "CancelTransactionCommand",
     "CompleteTransaction",
     "CompleteTransactionCommand",
+    "ConfirmHandover",
+    "ConfirmHandoverCommand",
     "CreateOffer",
     "CreateOfferCommand",
     "ListMyTransactions",

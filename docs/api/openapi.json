@@ -7437,6 +7437,65 @@
         "tags": ["Commerce"]
       }
     },
+    "/api/v1/transactions/{transaction_id}/handover": {
+      "post": {
+        "operationId": "confirm_handover_api_v1_transactions__transaction_id__handover_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Confirm Handover Api V1 Transactions  Transaction Id  Handover Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm handover via QR check-in (QR-01)",
+        "tags": ["Commerce"]
+      }
+    },
     "/api/v1/transactions/{transaction_id}/reviews": {
       "post": {
         "operationId": "create_review_api_v1_transactions__transaction_id__reviews_post",

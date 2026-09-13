@@ -1,11 +1,13 @@
-"""Offers and transactions endpoints (feature OFF-01).
+"""Offers and transactions endpoints (feature OFF-01, plus QR-01's handover
+confirmation).
 
 Offers live under /conversations/{id}/offers, matching the spec's own
 proposed route shape; everything else (responding, completing, cancelling,
-listing my transactions) lives under /offers and /transactions, and
-/me/transactions - the same "any signed-in user, no role check" convention
-/me/favorites and /me/conversations already use, since either the buyer or
-the seller can be on either side of a response/complete/cancel action.
+confirming a QR handover, listing my transactions) lives under /offers and
+/transactions, and /me/transactions - the same "any signed-in user, no role
+check" convention /me/favorites and /me/conversations already use, since
+either the buyer or the seller can be on either side of a
+response/complete/cancel/handover action.
 """
 
 from __future__ import annotations
@@ -20,6 +22,8 @@ from trustlens.core.application.use_cases.commerce import (
     CancelTransactionCommand,
     CompleteTransaction,
     CompleteTransactionCommand,
+    ConfirmHandover,
+    ConfirmHandoverCommand,
     CreateOffer,
     CreateOfferCommand,
     ListMyTransactions,
@@ -152,6 +156,26 @@ async def list_my_transactions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> d
     return envelope(
         [_to_transaction_response(t).model_dump(by_alias=True) for t in transactions],
         request_id=meta.request_id,
+    )
+
+
+@router.post(
+    "/transactions/{transaction_id}/handover",
+    summary="Confirm handover via QR check-in (QR-01)",
+)
+async def confirm_handover(
+    transaction_id: UUID,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    txn = await ConfirmHandover(uow=uow, clock=container.clock).execute(
+        ConfirmHandoverCommand(transaction_id=transaction_id, actor_id=actor.user_id)
+    )
+    return envelope(
+        _to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 
