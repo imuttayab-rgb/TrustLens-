@@ -5,6 +5,7 @@ import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Field, fieldAria, Input, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { useState } from 'react';
+import { HandoverQrCode } from './HandoverQrCode';
 import {
   useCancelTransaction,
   useCompleteTransaction,
@@ -23,6 +24,13 @@ const STATUS_LABEL: Record<Offer['status'], string> = {
   COUNTERED: 'Countered',
   EXPIRED: 'Expired',
 };
+
+const OPEN_TRANSACTION_STATUSES: readonly Transaction['status'][] = [
+  'INITIATED',
+  'AGREED',
+  'MEETUP_PLANNED',
+  'HANDED_OVER',
+];
 
 function formatMoney(amount: number, currency: string) {
   try {
@@ -59,7 +67,7 @@ export function OfferPanel({
   const openOffer = offers?.find((offer) => offer.status === 'PENDING');
   const history = offers?.filter((offer) => offer.id !== openOffer?.id) ?? [];
   const openTransaction = transactions?.find(
-    (txn) => txn.listingId === listingId && txn.status === 'INITIATED',
+    (txn) => txn.listingId === listingId && OPEN_TRANSACTION_STATUSES.includes(txn.status),
   );
   const completedTransaction = transactions?.find(
     (txn) => txn.listingId === listingId && txn.status === 'COMPLETED',
@@ -217,10 +225,13 @@ function TransactionCard({
         Deal agreed at {formatMoney(transaction.amount, transaction.currency)}
       </p>
       <p className="text-muted-foreground">
-        {isSeller
-          ? 'Mark this done once you hand the item over and get paid.'
-          : 'The seller will mark this done once you complete the handover.'}
+        {transaction.status === 'HANDED_OVER'
+          ? 'Handover confirmed.'
+          : isSeller
+            ? 'Mark this done once you hand the item over and get paid.'
+            : 'The seller will mark this done once you complete the handover.'}
       </p>
+      {transaction.status !== 'HANDED_OVER' && <HandoverQrCode transactionId={transaction.id} />}
       {error && <Alert tone="error">{error}</Alert>}
       {cancelling ? (
         <div className="space-y-2">

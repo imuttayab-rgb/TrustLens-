@@ -2,6 +2,7 @@ export { OfferPanel } from './components/OfferPanel';
 export {
   useCancelTransaction,
   useCompleteTransaction,
+  useConfirmHandover,
   useCreateOffer,
   useMyTransactions,
   useOffers,
