@@ -149,11 +149,11 @@ echo   File storage  http://localhost:9001    (minioadmin / minioadmin)
 echo.
 echo   Demo logins - password is in the second column
 echo   ---------------------------------------------
-echo   admin@trustlens.dev        Admin^^!Passw0rd123
-echo   reviewer@trustlens.dev     Review^^!Passw0rd123
-echo   seller.low@trustlens.dev   Seller^^!Passw0rd123
-echo   seller.mid@trustlens.dev   Seller^^!Passw0rd123
-echo   seller.high@trustlens.dev  Seller^^!Passw0rd123
+echo   admin@trustlens.dev        Admin!Passw0rd123
+echo   reviewer@trustlens.dev     Review!Passw0rd123
+echo   seller.low@trustlens.dev   Seller!Passw0rd123
+echo   seller.mid@trustlens.dev   Seller!Passw0rd123
+echo   seller.high@trustlens.dev  Seller!Passw0rd123
 echo.
 echo   Verification emails land in Mailpit (port 8025), not a real
 echo   inbox. Open it to click the confirmation link.
