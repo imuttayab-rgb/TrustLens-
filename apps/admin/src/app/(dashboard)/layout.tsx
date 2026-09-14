@@ -14,6 +14,7 @@ const NAV = [
   { href: ADMIN_ROUTES.scoring, label: 'Scoring models' },
   { href: ADMIN_ROUTES.apiClients, label: 'API clients' },
   { href: ADMIN_ROUTES.auditLogs, label: 'Audit log' },
+  { href: ADMIN_ROUTES.security, label: 'Security' },
 ];
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {

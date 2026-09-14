@@ -156,6 +156,7 @@ export const ADMIN_ROUTES = {
   scoring: '/scoring',
   apiClients: '/api-clients',
   auditLogs: '/audit-logs',
+  security: '/security',
 } as const;
 
 /** Polling backoff for long jobs: 2s, then 5s, then 10s. */

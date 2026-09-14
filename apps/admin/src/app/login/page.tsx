@@ -9,12 +9,27 @@ import { ShieldCheck } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
 
+interface LoginSuccess {
+  accessToken: string;
+}
+
+interface MfaChallenge {
+  mfaRequired: true;
+  mfaToken: string;
+}
+
+function isMfaChallenge(data: LoginSuccess | MfaChallenge): data is MfaChallenge {
+  return 'mfaRequired' in data && data.mfaRequired;
+}
+
 function LoginForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const params = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [code, setCode] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<{ message: string; requestId: string | undefined } | null>(
     null,
@@ -25,20 +40,29 @@ function LoginForm() {
   const raw = params.get('next');
   const next = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
 
-  async function submit(event: React.FormEvent) {
+  async function finishLogin() {
+    // The guard already asked "who is this?" before the redirect here and
+    // cached the answer: nobody. Without dropping that, it re-reads the
+    // cached null and bounces straight back to this page.
+    await queryClient.invalidateQueries({ queryKey: ['me'] });
+    router.replace(next);
+    router.refresh();
+  }
+
+  async function submitPassword(event: React.FormEvent) {
     event.preventDefault();
     setBusy(true);
     setError(null);
     try {
       const result = await api.POST('/api/v1/auth/login', { body: { email, password } });
       if (result.error) throw toApiError(result.error);
-      setAccessToken((result.data as { data: { accessToken: string } }).data.accessToken);
-      // The guard already asked "who is this?" before the redirect here and
-      // cached the answer: nobody. Without dropping that, it re-reads the
-      // cached null and bounces straight back to this page.
-      await queryClient.invalidateQueries({ queryKey: ['me'] });
-      router.replace(next);
-      router.refresh();
+      const data = (result.data as { data: LoginSuccess | MfaChallenge }).data;
+      if (isMfaChallenge(data)) {
+        setMfaToken(data.mfaToken);
+      } else {
+        setAccessToken(data.accessToken);
+        await finishLogin();
+      }
     } catch (raw_) {
       const apiError = toApiError(raw_);
       setError({ message: apiError.message, requestId: apiError.requestId });
@@ -47,8 +71,69 @@ function LoginForm() {
     }
   }
 
+  async function submitMfaCode(event: React.FormEvent) {
+    event.preventDefault();
+    if (!mfaToken) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const result = await api.POST('/api/v1/auth/mfa/verify', {
+        body: { mfaToken, code },
+      });
+      if (result.error) throw toApiError(result.error);
+      setAccessToken((result.data as { data: LoginSuccess }).data.accessToken);
+      await finishLogin();
+    } catch (raw_) {
+      const apiError = toApiError(raw_);
+      setError({ message: apiError.message, requestId: apiError.requestId });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (mfaToken) {
+    return (
+      <form onSubmit={(e) => void submitMfaCode(e)} className="space-y-4" noValidate>
+        <p className="text-sm text-muted-foreground">
+          Enter the code from your authenticator app, or one of your recovery codes.
+        </p>
+        <Field htmlFor="mfa-code" label="Authentication code">
+          <Input
+            {...fieldAria('mfa-code')}
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+          />
+        </Field>
+
+        {error && (
+          <Alert tone="error" requestId={error.requestId}>
+            {error.message}
+          </Alert>
+        )}
+
+        <Button type="submit" size="lg" className="w-full" disabled={busy || !code}>
+          {busy ? 'Verifying…' : 'Verify'}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => {
+            setMfaToken(null);
+            setCode('');
+            setError(null);
+          }}
+        >
+          Back
+        </Button>
+      </form>
+    );
+  }
+
   return (
-    <form onSubmit={(e) => void submit(e)} className="space-y-4" noValidate>
+    <form onSubmit={(e) => void submitPassword(e)} className="space-y-4" noValidate>
       <Field htmlFor="email" label="Email address">
         <Input
           {...fieldAria('email')}

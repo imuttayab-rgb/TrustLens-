@@ -61,6 +61,9 @@ importers:
       next:
         specifier: ^15.0.3
         version: 15.5.22(@playwright/test@1.62.1)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      qrcode:
+        specifier: ^1.5.4
+        version: 1.5.4
       react:
         specifier: ^19.0.0
         version: 19.2.8
@@ -89,6 +92,9 @@ importers:
       '@types/node':
         specifier: ^22.9.0
         version: 22.20.1
+      '@types/qrcode':
+        specifier: ^1.5.6
+        version: 1.5.6
       '@types/react':
         specifier: ^19.0.0
         version: 19.2.18
@@ -103,7 +109,7 @@ importers:
         version: 17.4.2
       eslint:
         specifier: ^9.14.0
-        version: 9.39.5(jiti@2.6.1)
+        version: 9.39.5(jiti@1.21.7)
       postcss:
         specifier: ^8.4.49
         version: 8.5.25
@@ -206,7 +212,7 @@ importers:
         version: 17.4.2
       eslint:
         specifier: ^9.14.0
-        version: 9.39.5(jiti@1.21.7)
+        version: 9.39.5(jiti@2.6.1)
       postcss:
         specifier: ^8.4.49
         version: 8.5.25
