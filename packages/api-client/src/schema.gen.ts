@@ -726,6 +726,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/auth/mfa/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Complete a login held up by MFA
+     * @description Takes the `mfaToken` from a `mfaRequired` login response plus a live TOTP code or one recovery code, and finishes the login - the same response shape `/login` returns on success.
+     */
+    post: operations['verify_mfa_api_v1_auth_mfa_verify_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/refresh': {
     parameters: {
       query?: never;
@@ -1171,6 +1191,83 @@ export interface paths {
     post?: never;
     /** Unfollow a seller */
     delete: operations['unfollow_seller_api_v1_me_follows__handle__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/mfa/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm MFA enrollment
+     * @description Verifies a code from the authenticator app against the pending secret from /enroll. On success, MFA is enabled and ten recovery codes are returned - shown once, never retrievable again.
+     */
+    post: operations['confirm_enrollment_api_v1_me_mfa_confirm_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/mfa/disable': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Disable MFA
+     * @description Requires the current password - MFA is a security control, not a preference.
+     */
+    post: operations['disable_mfa_api_v1_me_mfa_disable_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/mfa/enroll': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Begin MFA enrollment
+     * @description Generates a new TOTP secret - render the provisioning URI as a QR code for an authenticator app, or show the secret for manual entry. MFA is not enabled yet; call /confirm with a code from the app to finish. Calling this again before confirming replaces the pending secret.
+     */
+    post: operations['begin_enrollment_api_v1_me_mfa_enroll_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/mfa/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Whether MFA is enabled, and whether it's required */
+    get: operations['mfa_status_api_v1_me_mfa_status_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
     options?: never;
     head?: never;
     patch?: never;
@@ -1994,6 +2091,27 @@ export interface components {
       email: string;
       /** Password */
       password: string;
+    };
+    /** MfaConfirmRequest */
+    MfaConfirmRequest: {
+      /** Code */
+      code: string;
+    };
+    /** MfaDisableRequest */
+    MfaDisableRequest: {
+      /** Password */
+      password: string;
+    };
+    /**
+     * MfaVerifyRequest
+     * @description Completes a login stopped by `MfaRequiredResponse` - the token from
+     *     that response, plus a live TOTP code or one recovery code.
+     */
+    MfaVerifyRequest: {
+      /** Code */
+      code: string;
+      /** Mfatoken */
+      mfaToken: string;
     };
     /** OverrideScoreRequest */
     OverrideScoreRequest: {
@@ -3884,6 +4002,43 @@ export interface operations {
       };
     };
   };
+  verify_mfa_api_v1_auth_mfa_verify_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MfaVerifyRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   refresh_api_v1_auth_refresh_post: {
     parameters: {
       query?: never;
@@ -5087,6 +5242,146 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  confirm_enrollment_api_v1_me_mfa_confirm_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MfaConfirmRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  disable_mfa_api_v1_me_mfa_disable_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MfaDisableRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  begin_enrollment_api_v1_me_mfa_enroll_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  mfa_status_api_v1_me_mfa_status_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
       };
       /** @description Validation Error */
       422: {

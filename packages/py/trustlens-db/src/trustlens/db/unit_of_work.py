@@ -20,6 +20,7 @@ from trustlens.core.domain.ports import (
     FollowRepository,
     MeetingVenueRepository,
     MeetupRepository,
+    MfaRecoveryCodeRepository,
     OfferRepository,
     ReportRepository,
     ReviewRepository,
@@ -113,6 +114,7 @@ class SqlAlchemyUnitOfWork:
         self.api_clients = repo.SqlApiClientRepository(s)
         self.refresh_tokens = repo.SqlRefreshTokenRepository(s)
         self.verification_tokens = repo.SqlVerificationTokenRepository(s)
+        self.mfa_recovery_codes: MfaRecoveryCodeRepository = repo.SqlMfaRecoveryCodeRepository(s)
         self.otps = repo.SqlOtpRepository(s)
         self.consents = repo.SqlConsentRepository(s)
         self.files = repo.SqlFileRepository(s)

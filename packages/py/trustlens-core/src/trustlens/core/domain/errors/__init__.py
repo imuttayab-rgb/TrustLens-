@@ -10,6 +10,7 @@ transport-agnostic.
 from __future__ import annotations
 
 from typing import Any
+from uuid import UUID
 
 
 class DomainError(Exception):
@@ -160,6 +161,22 @@ class TokenReuseDetected(AuthenticationError):
 class MfaRequired(AuthenticationError):
     code = "MFA_REQUIRED"
     title = "Multi-factor authentication required"
+
+    def __init__(self, user_id: UUID | None = None) -> None:
+        super().__init__("Multi-factor authentication required")
+        #: The router uses this to mint the short-lived MFA challenge token -
+        #: LoginUser already commits any password-verify state change before
+        #: raising, so the exception only needs to carry an identifier, not a
+        #: whole session.
+        self.user_id = user_id
+
+
+class MfaCodeInvalid(AuthenticationError):
+    code = "MFA_CODE_INVALID"
+    title = "Invalid authentication code"
+
+    def __init__(self) -> None:
+        super().__init__("That code is invalid, expired, or already used.")
 
 
 class PermissionDenied(DomainError):

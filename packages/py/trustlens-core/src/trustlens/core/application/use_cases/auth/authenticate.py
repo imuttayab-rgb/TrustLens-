@@ -12,6 +12,7 @@ properties are load-bearing and must survive refactoring:
 
 from __future__ import annotations
 
+import secrets
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from typing import Protocol
@@ -39,6 +40,7 @@ from trustlens.core.domain.errors import (
     ConflictError,
     EmailNotVerified,
     InvalidCredentials,
+    MfaCodeInvalid,
     MfaRequired,
     TokenInvalid,
     TokenReuseDetected,
@@ -46,7 +48,14 @@ from trustlens.core.domain.errors import (
 )
 from trustlens.core.domain.events import RefreshTokenReuseDetected, UserRegistered
 from trustlens.core.domain.policies import LoginThrottlePolicy, PasswordPolicy, mfa_required_for
-from trustlens.core.domain.ports import Clock, IdGenerator, JobQueue, UnitOfWork
+from trustlens.core.domain.ports import (
+    Clock,
+    IdGenerator,
+    JobQueue,
+    SecretEncryptor,
+    TotpProvider,
+    UnitOfWork,
+)
 from trustlens.core.domain.value_objects import Email
 
 
@@ -397,7 +406,7 @@ class LoginUser:
 
             if user.mfa_enabled or mfa_required_for(user, self._mfa_required_roles):
                 await self._uow.commit()
-                raise MfaRequired
+                raise MfaRequired(user.id)
 
             session = await _new_session(
                 self._uow,
@@ -792,8 +801,230 @@ class DuplicateEmail(ConflictError):
     title = "Email already registered"
 
 
+# ── Multi-factor authentication (BLK-04) ───────────────────────────────
+
+#: Ten backup codes, each usable once - enough that losing a couple to
+#: typos or forgetting which are spent doesn't strand someone before they
+#: can regenerate a fresh set.
+RECOVERY_CODE_COUNT = 10
+
+
+def _generate_recovery_code() -> str:
+    """A short, typeable one-time code - grouped hex, not the 32-byte link
+    tokens `TokenHasher.new_token` mints for things nobody has to read."""
+    raw = secrets.token_hex(8)
+    return f"{raw[:4]}-{raw[4:8]}-{raw[8:12]}-{raw[12:]}"
+
+
+@dataclass(frozen=True, slots=True)
+class BeginMfaEnrollmentResult:
+    secret: str
+    provisioning_uri: str
+
+
+class BeginMfaEnrollment:
+    """Generates a fresh TOTP secret and stores it encrypted, unconfirmed -
+    `mfa_enabled` only flips once `ConfirmMfaEnrollment` verifies a code
+    against it. Calling this again before confirming overwrites the pending
+    secret; nothing is lost, since an unconfirmed secret was never usable."""
+
+    def __init__(
+        self, *, uow: UnitOfWork, encryptor: SecretEncryptor, totp: TotpProvider, issuer: str
+    ) -> None:
+        self._uow = uow
+        self._encryptor = encryptor
+        self._totp = totp
+        self._issuer = issuer
+
+    async def execute(self, user_id: UUID) -> BeginMfaEnrollmentResult:
+        async with self._uow:
+            user = await self._uow.users.get(user_id)
+            assert user is not None  # the caller is always an authenticated actor
+
+            secret = self._totp.generate_secret()
+            encrypted = self._encryptor.encrypt(secret, associated_data=str(user_id).encode())
+            await self._uow.users.set_mfa_secret(user_id, encrypted.encode())
+            await self._uow.commit()
+
+        uri = self._totp.provisioning_uri(
+            secret, account_name=user.email.value, issuer=self._issuer
+        )
+        return BeginMfaEnrollmentResult(secret=secret, provisioning_uri=uri)
+
+
+@dataclass(frozen=True, slots=True)
+class ConfirmMfaEnrollmentResult:
+    recovery_codes: tuple[str, ...]
+
+
+class ConfirmMfaEnrollment:
+    def __init__(
+        self,
+        *,
+        uow: UnitOfWork,
+        clock: Clock,
+        tokens: TokenHasher,
+        encryptor: SecretEncryptor,
+        totp: TotpProvider,
+    ) -> None:
+        self._uow = uow
+        self._clock = clock
+        self._tokens = tokens
+        self._encryptor = encryptor
+        self._totp = totp
+
+    async def execute(self, user_id: UUID, code: str) -> ConfirmMfaEnrollmentResult:
+        import dataclasses
+
+        now = self._clock.now()
+        async with self._uow:
+            secret_encrypted = await self._uow.users.get_mfa_secret(user_id)
+            if secret_encrypted is None:
+                raise MfaCodeInvalid  # nothing pending - enrollment was never begun
+
+            secret = self._encryptor.decrypt(
+                secret_encrypted.decode(), associated_data=str(user_id).encode()
+            )
+            if not self._totp.verify_code(secret, code):
+                raise MfaCodeInvalid
+
+            user = await self._uow.users.get(user_id)
+            assert user is not None
+            await self._uow.users.update(dataclasses.replace(user, mfa_enabled=True))
+
+            raw_codes = [_generate_recovery_code() for _ in range(RECOVERY_CODE_COUNT)]
+            await self._uow.mfa_recovery_codes.replace_all(
+                user_id, [self._tokens.hash_token(c) for c in raw_codes], created_at=now
+            )
+            await self._uow.commit()
+        return ConfirmMfaEnrollmentResult(recovery_codes=tuple(raw_codes))
+
+
+@dataclass(frozen=True, slots=True)
+class DisableMfaCommand:
+    user_id: UUID
+    password: str
+
+
+class DisableMfa:
+    def __init__(self, *, uow: UnitOfWork, hasher: PasswordHasher, clock: Clock) -> None:
+        self._uow = uow
+        self._hasher = hasher
+        self._clock = clock
+
+    async def execute(self, cmd: DisableMfaCommand) -> None:
+        import dataclasses
+
+        async with self._uow:
+            password_hash = await self._uow.users.get_password_hash(cmd.user_id)
+            if password_hash is None or not self._hasher.verify(cmd.password, password_hash):
+                raise InvalidCredentials
+
+            user = await self._uow.users.get(cmd.user_id)
+            assert user is not None
+            await self._uow.users.update(dataclasses.replace(user, mfa_enabled=False))
+            await self._uow.users.set_mfa_secret(cmd.user_id, None)
+            await self._uow.mfa_recovery_codes.replace_all(
+                cmd.user_id, [], created_at=self._clock.now()
+            )
+            await self._uow.commit()
+
+
+@dataclass(frozen=True, slots=True)
+class VerifyMfaLoginCommand:
+    mfa_token: str
+    code: str
+    ip: str | None = None
+    user_agent: str | None = None
+
+
+class VerifyMfaLogin:
+    """Completes a login that stopped at `MfaRequired`. The short-lived
+    challenge token (a `VerificationToken`, purpose MFA_LOGIN) identifies
+    which pending login this code belongs to, since the browser presenting
+    it is not otherwise authenticated yet - the same shape `VerifyEmail`
+    uses for an email-verification link, not a new mechanism.
+
+    Accepts either a live TOTP code or one unused recovery code, trying TOTP
+    first since that is the common case.
+    """
+
+    def __init__(
+        self,
+        *,
+        uow: UnitOfWork,
+        tokens: TokenHasher,
+        clock: Clock,
+        ids: IdGenerator,
+        encryptor: SecretEncryptor,
+        totp: TotpProvider,
+        refresh_ttl_days: int = 30,
+    ) -> None:
+        self._uow = uow
+        self._tokens = tokens
+        self._clock = clock
+        self._ids = ids
+        self._encryptor = encryptor
+        self._totp = totp
+        self._refresh_ttl = timedelta(days=refresh_ttl_days)
+
+    async def execute(self, cmd: VerifyMfaLoginCommand) -> IssuedSession:
+        now = self._clock.now()
+        async with self._uow:
+            challenge = await self._uow.verification_tokens.get_by_hash(
+                self._tokens.hash_token(cmd.mfa_token), purpose=TokenPurpose.MFA_LOGIN
+            )
+            if challenge is None or not challenge.is_usable_at(now):
+                raise MfaCodeInvalid
+
+            user = await self._uow.users.get(challenge.user_id)
+            if user is None:
+                raise MfaCodeInvalid
+
+            verified = False
+            secret_encrypted = await self._uow.users.get_mfa_secret(user.id)
+            if secret_encrypted is not None:
+                secret = self._encryptor.decrypt(
+                    secret_encrypted.decode(), associated_data=str(user.id).encode()
+                )
+                verified = self._totp.verify_code(secret, cmd.code)
+
+            if not verified:
+                recovery_id = await self._uow.mfa_recovery_codes.get_unused_by_hash(
+                    user.id, self._tokens.hash_token(cmd.code)
+                )
+                if recovery_id is not None:
+                    await self._uow.mfa_recovery_codes.consume(recovery_id, at=now)
+                    verified = True
+
+            if not verified:
+                raise MfaCodeInvalid
+
+            await self._uow.verification_tokens.consume(challenge.id, at=now)
+            session = await _new_session(
+                self._uow,
+                self._tokens,
+                self._ids,
+                user,
+                refresh_ttl=self._refresh_ttl,
+                ip=cmd.ip,
+                user_agent=cmd.user_agent,
+                now=now,
+            )
+            await self._uow.users.record_successful_login(user.id, at=now)
+            await self._uow.commit()
+        return session
+
+
 __all__ = [
+    "RECOVERY_CODE_COUNT",
     "AuthenticateWithGoogle",
+    "BeginMfaEnrollment",
+    "BeginMfaEnrollmentResult",
+    "ConfirmMfaEnrollment",
+    "ConfirmMfaEnrollmentResult",
+    "DisableMfa",
+    "DisableMfaCommand",
     "GoogleAuthCommand",
     "IssuedSession",
     "LoginCommand",
@@ -810,4 +1041,6 @@ __all__ = [
     "VerifyEmail",
     "VerifyEmailCommand",
     "VerifyEmailResult",
+    "VerifyMfaLogin",
+    "VerifyMfaLoginCommand",
 ]

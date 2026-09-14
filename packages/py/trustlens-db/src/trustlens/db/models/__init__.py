@@ -249,6 +249,23 @@ class VerificationTokenModel(Base):
     __table_args__ = (Index("ix_verification_tokens_user_purpose", "user_id", "purpose"),)
 
 
+class MfaRecoveryCodeModel(Base):
+    """One-time backup codes for staff MFA (BLK-04). A confirmed enrollment
+    replaces the whole set; each row is used at most once."""
+
+    __tablename__ = "mfa_recovery_codes"
+
+    id: Mapped[UUID] = uuid_pk()
+    user_id: Mapped[UUID] = uuid_fk("users.id")
+    code_hash: Mapped[bytes] = mapped_column(LargeBinary, nullable=False, unique=True)
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (Index("ix_mfa_recovery_codes_user", "user_id"),)
+
+
 class OtpCodeModel(Base):
     """Phone OTP (feature F2).
 
@@ -1628,6 +1645,7 @@ __all__ = [
     "MeetingVenueModel",
     "MeetupModel",
     "MessageModel",
+    "MfaRecoveryCodeModel",
     "NotificationModel",
     "OfferModel",
     "OtpCodeModel",

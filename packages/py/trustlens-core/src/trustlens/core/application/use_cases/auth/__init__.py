@@ -1,5 +1,12 @@
 from trustlens.core.application.use_cases.auth.authenticate import (
+    RECOVERY_CODE_COUNT,
     AuthenticateWithGoogle,
+    BeginMfaEnrollment,
+    BeginMfaEnrollmentResult,
+    ConfirmMfaEnrollment,
+    ConfirmMfaEnrollmentResult,
+    DisableMfa,
+    DisableMfaCommand,
     GoogleAuthCommand,
     IssuedSession,
     LoginCommand,
@@ -15,10 +22,19 @@ from trustlens.core.application.use_cases.auth.authenticate import (
     TokenHasher,
     VerifyEmail,
     VerifyEmailCommand,
+    VerifyMfaLogin,
+    VerifyMfaLoginCommand,
 )
 
 __all__ = [
+    "RECOVERY_CODE_COUNT",
     "AuthenticateWithGoogle",
+    "BeginMfaEnrollment",
+    "BeginMfaEnrollmentResult",
+    "ConfirmMfaEnrollment",
+    "ConfirmMfaEnrollmentResult",
+    "DisableMfa",
+    "DisableMfaCommand",
     "GoogleAuthCommand",
     "IssuedSession",
     "LoginCommand",
@@ -34,4 +50,6 @@ __all__ = [
     "TokenHasher",
     "VerifyEmail",
     "VerifyEmailCommand",
+    "VerifyMfaLogin",
+    "VerifyMfaLoginCommand",
 ]

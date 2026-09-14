@@ -7,7 +7,9 @@ response body - an XSS payload must not be able to read it (ADR-0006).
 from __future__ import annotations
 
 import secrets
+from datetime import timedelta
 from typing import Annotated, Any
+from uuid import UUID
 
 from fastapi import APIRouter, Cookie, Request, Response, status
 from fastapi.responses import RedirectResponse
@@ -26,9 +28,11 @@ from trustlens.core.application.use_cases.auth import (
     RegisterUserCommand,
     VerifyEmail,
     VerifyEmailCommand,
+    VerifyMfaLogin,
+    VerifyMfaLoginCommand,
 )
 from trustlens.core.domain.enums import UserRole
-from trustlens.core.domain.errors import RateLimitExceeded, TokenInvalid
+from trustlens.core.domain.errors import MfaRequired, RateLimitExceeded, TokenInvalid
 from trustlens.core.domain.policies import LoginThrottlePolicy, PasswordPolicy
 from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
 from trustlens.shared.logging import get_logger
@@ -39,6 +43,8 @@ from trustlens_api.api.v1.schemas.auth import (
     ForgotPasswordRequest,
     LoginRequest,
     LoginResponse,
+    MfaRequiredResponse,
+    MfaVerifyRequest,
     RegisterRequest,
     RegisterResponse,
     ResetPasswordRequest,
@@ -172,13 +178,52 @@ async def login(
             UserRole(role) for role in container.settings.security.mfa_required_roles
         ),
     )
+    try:
+        session = await use_case.execute(
+            LoginCommand(
+                email=body.email,
+                password=body.password,
+                ip=meta.ip,
+                user_agent=meta.user_agent,
+                device_fingerprint=body.device_fingerprint or meta.device_fingerprint,
+            )
+        )
+    except MfaRequired as exc:
+        assert exc.user_id is not None
+        return await _issue_mfa_challenge(exc.user_id, container, uow, meta)
+    return await _issue_session_response(session, response, container, uow, meta)
+
+
+@router.post(
+    "/mfa/verify",
+    summary="Complete a login held up by MFA",
+    description=(
+        "Takes the `mfaToken` from a `mfaRequired` login response plus a "
+        "live TOTP code or one recovery code, and finishes the login - the "
+        "same response shape `/login` returns on success."
+    ),
+)
+async def verify_mfa(
+    body: MfaVerifyRequest,
+    response: Response,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    await _throttle_login_by_ip(container, meta)
+
+    use_case = VerifyMfaLogin(
+        uow=uow,
+        tokens=container.token_hasher,
+        clock=container.clock,
+        ids=container.ids,
+        encryptor=container.encryptor,
+        totp=container.totp,
+        refresh_ttl_days=container.settings.security.refresh_token_ttl_days,
+    )
     session = await use_case.execute(
-        LoginCommand(
-            email=body.email,
-            password=body.password,
-            ip=meta.ip,
-            user_agent=meta.user_agent,
-            device_fingerprint=body.device_fingerprint or meta.device_fingerprint,
+        VerifyMfaLoginCommand(
+            mfa_token=body.mfa_token, code=body.code, ip=meta.ip, user_agent=meta.user_agent
         )
     )
     return await _issue_session_response(session, response, container, uow, meta)
@@ -638,6 +683,43 @@ async def delete_account(
 
 
 # ── helpers ──────────────────────────────────────────────────────────
+
+
+async def _issue_mfa_challenge(
+    user_id: UUID,
+    container: Container,
+    uow: SqlAlchemyUnitOfWork,
+    meta: RequestMeta,
+) -> dict[str, Any]:
+    """Mints the short-lived MFA challenge token - the same hashed,
+    single-use `VerificationToken` shape `/forgot-password` uses, not a
+    separate JWT-based mechanism. `LoginUser` has already committed any
+    password-verify state change before raising `MfaRequired`, so this is
+    a fresh write, not a continuation of that transaction."""
+    from trustlens.core.domain.entities import VerificationToken
+    from trustlens.core.domain.enums import TokenPurpose
+
+    now = container.clock.now()
+    raw = container.token_hasher.new_token()
+    await uow.verification_tokens.invalidate_for_user(user_id, purpose=TokenPurpose.MFA_LOGIN)
+    await uow.verification_tokens.add(
+        VerificationToken(
+            id=container.ids.new(),
+            user_id=user_id,
+            purpose=TokenPurpose.MFA_LOGIN,
+            token_hash=container.token_hasher.hash_token(raw),
+            target=str(user_id),
+            # Short-lived: long enough to type in a 6-digit code, not so
+            # long that a captured challenge token stays useful.
+            expires_at=now + timedelta(minutes=10),
+            created_at=now,
+        )
+    )
+    await uow.commit()
+
+    return envelope(
+        MfaRequiredResponse(mfa_token=raw).model_dump(by_alias=True), request_id=meta.request_id
+    )
 
 
 async def _issue_session_response(

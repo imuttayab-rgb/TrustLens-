@@ -14,6 +14,7 @@ from trustlens_api.api.v1.routers import (
     listings,
     me,
     messaging,
+    mfa,
     moderation,
     partners,
     public_listings,
@@ -36,6 +37,7 @@ api_v1.include_router(trust_scores.router)
 api_v1.include_router(public_scores.router)
 api_v1.include_router(public_listings.router)
 api_v1.include_router(messaging.router)
+api_v1.include_router(mfa.router)
 api_v1.include_router(moderation.router)
 api_v1.include_router(commerce.router)
 api_v1.include_router(safemeet.router)

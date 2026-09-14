@@ -28,6 +28,7 @@ if TYPE_CHECKING:
         MeetingVenueRepository,
         MeetupRepository,
         MessagingRepository,
+        MfaRecoveryCodeRepository,
         NotificationRepository,
         OfferRepository,
         OtpRepository,
@@ -95,6 +96,7 @@ class UnitOfWork(Protocol):
     meetups: MeetupRepository
     follows: FollowRepository
     reviews: ReviewRepository
+    mfa_recovery_codes: MfaRecoveryCodeRepository
     trust_scores: TrustScoreRepository
     scoring_models: ScoringModelRepository
     appeals: AppealRepository
@@ -255,6 +257,30 @@ class PhoneLookup(Protocol):
 
 
 @runtime_checkable
+class SecretEncryptor(Protocol):
+    """Reversible encryption for values that must be read back, not just
+    verified - a TOTP secret (BLK-04) unlike a password, has to be decrypted
+    on every login to compute the expected code."""
+
+    def encrypt(self, plaintext: str, *, associated_data: bytes | None = None) -> str: ...
+
+    def decrypt(self, token: str, *, associated_data: bytes | None = None) -> str: ...
+
+
+@runtime_checkable
+class TotpProvider(Protocol):
+    """TOTP (RFC 6238) enrollment and verification for staff MFA (BLK-04)."""
+
+    def generate_secret(self) -> str: ...
+
+    def provisioning_uri(self, secret: str, *, account_name: str, issuer: str) -> str:
+        """An `otpauth://` URI - what the enrollment QR code encodes."""
+        ...
+
+    def verify_code(self, secret: str, code: str) -> bool: ...
+
+
+@runtime_checkable
 class ApiKeyGenerator(Protocol):
     """Mints partner API keys.
 
@@ -306,6 +332,8 @@ __all__ = [
     "PhoneLookup",
     "PresignedUpload",
     "ResponseSigner",
+    "SecretEncryptor",
     "SmsSender",
+    "TotpProvider",
     "UnitOfWork",
 ]

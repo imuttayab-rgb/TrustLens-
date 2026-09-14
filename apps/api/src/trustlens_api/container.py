@@ -34,6 +34,7 @@ from trustlens.shared.crypto import (
     JwtService,
     OtpCodeGenerator,
     PepperedTokenHasher,
+    PyotpTotpProvider,
 )
 from trustlens.shared.ip import build_ip_intelligence
 from trustlens.shared.logging import get_logger
@@ -63,6 +64,7 @@ class Container:
     response_signer: HmacResponseSigner | None
     jwt: JwtService
     encryptor: EnvelopeEncryptor
+    totp: PyotpTotpProvider
     email: EmailSender
     sms: SmsSender
     ip_intel: IpIntelligence
@@ -127,6 +129,7 @@ async def build_container(settings: Settings) -> Container:
         encryptor=EnvelopeEncryptor(
             settings.security.aes_key(), settings.security.encryption_key_id
         ),
+        totp=PyotpTotpProvider(),
         email=build_email_sender(settings.notifications, web_base_url=settings.web_base_url),
         sms=build_sms_sender(settings.notifications),
         ip_intel=build_ip_intelligence(settings.ip_intel),

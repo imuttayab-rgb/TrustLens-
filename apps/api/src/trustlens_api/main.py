@@ -143,6 +143,10 @@ _PUBLIC_ROUTES = {
     "/api/v1/auth/verify-email",
     "/api/v1/auth/forgot-password",
     "/api/v1/auth/reset-password",
+    # Completes a login already past the password check (BLK-04) - the
+    # caller has no session yet, only the short-lived mfa_token from the
+    # login response itself.
+    "/api/v1/auth/mfa/verify",
     # Google sign-in. Both legs are unauthenticated by construction: /login
     # is where a signed-out browser starts, and /callback is Google
     # redirecting back to that same signed-out browser with a one-time code
@@ -227,25 +231,33 @@ def _assert_routes_are_guarded(app: FastAPI) -> None:
 
 
 def _assert_mfa_roles_are_enrollable(settings: Settings) -> None:
-    """Refuse to boot rather than silently lock staff out at login.
+    """Warn, rather than crash, when staff MFA enforcement is turned on.
 
     `SECURITY_MFA_REQUIRED_ROLES` makes `LoginUser` reject a matching role
-    with `MFA_REQUIRED` - correctly, since that is the enforcement point. But
-    no MFA enrolment or verification endpoint exists anywhere in this
-    codebase yet, so a role listed here has no way to ever satisfy that
-    requirement. Discovering that after a production deploy means every
-    admin and reviewer account is locked out with no recovery but a database
-    edit. Failing the boot instead turns a silent lockout into an immediate,
-    loud, pre-traffic error - see `REMAINING.md` Stage 4 (P4-09) for the two
-    ways to close this for good: build enrolment, or keep this setting empty.
+    with `MFA_REQUIRED` (BLK-04) - correctly, since that is the enforcement
+    point, and real enrollment (`/me/mfa/enroll`, `/auth/mfa/verify`) now
+    exists to satisfy it. This used to be a hard boot failure, back when no
+    enrollment endpoint existed at all and turning this setting on would
+    have locked every matching account out with no way back in short of a
+    database edit. That risk is now an operational one, not a code gap: an
+    account whose role requires MFA but who has never enrolled still cannot
+    complete a login (there is no unauthenticated bootstrap path), so the
+    rollout order matters - get every affected staff member enrolled with
+    this setting still empty, *then* turn it on - but that is a deploy
+    runbook step, the same category BLK-01's "point STORAGE_ENDPOINT_URL at
+    a real address" already is, not something this boot check can verify
+    for a given database.
     """
     if settings.security.mfa_required_roles:
-        raise RuntimeError(
-            "SECURITY_MFA_REQUIRED_ROLES is set to "
-            + ", ".join(settings.security.mfa_required_roles)
-            + " but no MFA enrolment or verification endpoint exists yet. Those "
-            "accounts would be permanently unable to sign in. Leave this setting "
-            "empty until MFA enrolment is implemented."
+        log.warning(
+            "mfa_required_roles_enforced",
+            roles=list(settings.security.mfa_required_roles),
+            note=(
+                "Any account with one of these roles that has not completed "
+                "MFA enrollment cannot sign in until it does - there is no "
+                "unauthenticated enrollment path. Confirm everyone affected "
+                "has enrolled before relying on this."
+            ),
         )
 
 

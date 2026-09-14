@@ -350,6 +350,11 @@ class TokenPurpose(StrEnum):
     EMAIL_VERIFICATION = "EMAIL_VERIFICATION"
     PASSWORD_RESET = "PASSWORD_RESET"
     EMAIL_CHANGE = "EMAIL_CHANGE"
+    #: The short-lived challenge issued between "password verified" and
+    #: "MFA code verified" during a staff login (BLK-04) - the same
+    #: hashed/single-use/expiring VerificationToken shape password reset
+    #: already uses, not a separate JWT-based mechanism.
+    MFA_LOGIN = "MFA_LOGIN"
 
 
 class LineType(StrEnum):

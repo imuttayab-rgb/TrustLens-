@@ -17,6 +17,7 @@ from typing import Any
 from uuid import UUID
 
 import jwt
+import pyotp
 from argon2 import PasswordHasher as _Argon2
 from argon2.exceptions import InvalidHashError, VerifyMismatchError
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -326,6 +327,26 @@ class HmacResponseSigner:
         return -self._max_age <= (now - timestamp) <= self._max_age
 
 
+# ── TOTP (staff MFA) ────────────────────────────────────────────────
+
+
+class PyotpTotpProvider:
+    """RFC 6238 TOTP, via `pyotp`. The secret itself is never handled here -
+    callers encrypt/decrypt it separately (`EnvelopeEncryptor`); this class
+    only ever sees a secret already in hand for the duration of one call."""
+
+    def generate_secret(self) -> str:
+        return pyotp.random_base32()
+
+    def provisioning_uri(self, secret: str, *, account_name: str, issuer: str) -> str:
+        return pyotp.TOTP(secret).provisioning_uri(name=account_name, issuer_name=issuer)
+
+    def verify_code(self, secret: str, code: str) -> bool:
+        # valid_window=1 tolerates one 30s step of clock drift either way -
+        # tight enough that a stolen code is still only briefly useful.
+        return pyotp.TOTP(secret).verify(code, valid_window=1)
+
+
 def stable_json(value: Any) -> str:
     """Deterministic JSON for hashing and idempotency fingerprints."""
     return json.dumps(value, sort_keys=True, separators=(",", ":"), default=str)
@@ -343,6 +364,7 @@ __all__ = [
     "JwtService",
     "OtpCodeGenerator",
     "PepperedTokenHasher",
+    "PyotpTotpProvider",
     "fingerprint",
     "sign_webhook_payload",
     "stable_json",

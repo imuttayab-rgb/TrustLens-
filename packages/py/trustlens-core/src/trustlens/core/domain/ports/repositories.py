@@ -90,6 +90,19 @@ class UserRepository(Protocol):
 
     async def set_password_hash(self, user_id: UUID, password_hash: str) -> None: ...
 
+    async def get_mfa_secret(self, user_id: UUID) -> bytes | None:
+        """The encrypted TOTP secret (BLK-04) - kept off the `User` entity
+        entirely, the same reasoning `get_password_hash` already follows for
+        the password hash: a secret that must be decrypted to be used has no
+        business round-tripping through a dataclass that gets logged,
+        serialised, or handed to code that has no reason to see it."""
+        ...
+
+    async def set_mfa_secret(self, user_id: UUID, secret_encrypted: bytes | None) -> None:
+        """`None` clears it - disabling MFA (or a fresh, unconfirmed
+        enrollment overwriting a stale one) with nothing left to decrypt."""
+        ...
+
     async def record_failed_login(
         self, user_id: UUID, *, locked_until: datetime | None
     ) -> None: ...
@@ -641,6 +654,30 @@ class VerificationTokenRepository(Protocol):
     async def consume(self, token_id: UUID, *, at: datetime) -> None: ...
 
     async def invalidate_for_user(self, user_id: UUID, *, purpose: TokenPurpose) -> int: ...
+
+
+@runtime_checkable
+class MfaRecoveryCodeRepository(Protocol):
+    """One-time backup codes for staff MFA (BLK-04) - issued as a set of 10
+    whenever enrollment is confirmed (replacing any previous set), each
+    usable exactly once if a TOTP device is lost. Hashed with the same
+    peppered `TokenHasher` refresh/verification tokens use, not argon2:
+    these are high-entropy random strings, not user-chosen passwords, so a
+    fast deterministic hash (letting lookup-by-hash work at all) loses
+    nothing a slow one would have bought."""
+
+    async def replace_all(
+        self, user_id: UUID, code_hashes: list[bytes], *, created_at: datetime
+    ) -> None: ...
+
+    async def get_unused_by_hash(self, user_id: UUID, code_hash: bytes) -> UUID | None:
+        """The matching row's id, so the caller can `consume` it - or None
+        if no unused code hashes to this value."""
+        ...
+
+    async def consume(self, code_id: UUID, *, at: datetime) -> None: ...
+
+    async def count_unused(self, user_id: UUID) -> int: ...
 
 
 @runtime_checkable

@@ -97,6 +97,16 @@ class SqlUserRepository:
             .values(password_hash=password_hash, password_changed_at=func.now())
         )
 
+    async def get_mfa_secret(self, user_id: UUID) -> bytes | None:
+        return (
+            await self._s.execute(select(m.User.mfa_secret_encrypted).where(m.User.id == user_id))
+        ).scalar_one_or_none()
+
+    async def set_mfa_secret(self, user_id: UUID, secret_encrypted: bytes | None) -> None:
+        await self._s.execute(
+            update(m.User).where(m.User.id == user_id).values(mfa_secret_encrypted=secret_encrypted)
+        )
+
     async def record_failed_login(self, user_id: UUID, *, locked_until: datetime | None) -> None:
         await self._s.execute(
             update(m.User)
@@ -2312,6 +2322,57 @@ class SqlVerificationTokenRepository:
         # A DML statement always yields a CursorResult; only that subclass
         # carries rowcount, and execute() is typed as the general Result.
         return int(cast("CursorResult[Any]", result).rowcount or 0)
+
+
+class SqlMfaRecoveryCodeRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def replace_all(
+        self, user_id: UUID, code_hashes: list[bytes], *, created_at: datetime
+    ) -> None:
+        import uuid_utils
+
+        await self._s.execute(
+            delete(m.MfaRecoveryCodeModel).where(m.MfaRecoveryCodeModel.user_id == user_id)
+        )
+        for code_hash in code_hashes:
+            self._s.add(
+                m.MfaRecoveryCodeModel(
+                    id=UUID(str(uuid_utils.uuid7())),
+                    user_id=user_id,
+                    code_hash=code_hash,
+                    created_at=created_at,
+                )
+            )
+        await self._s.flush()
+
+    async def get_unused_by_hash(self, user_id: UUID, code_hash: bytes) -> UUID | None:
+        return (
+            await self._s.execute(
+                select(m.MfaRecoveryCodeModel.id).where(
+                    m.MfaRecoveryCodeModel.user_id == user_id,
+                    m.MfaRecoveryCodeModel.code_hash == code_hash,
+                    m.MfaRecoveryCodeModel.used_at.is_(None),
+                )
+            )
+        ).scalar_one_or_none()
+
+    async def consume(self, code_id: UUID, *, at: datetime) -> None:
+        await self._s.execute(
+            update(m.MfaRecoveryCodeModel)
+            .where(m.MfaRecoveryCodeModel.id == code_id)
+            .values(used_at=at)
+        )
+
+    async def count_unused(self, user_id: UUID) -> int:
+        result = await self._s.execute(
+            select(func.count(m.MfaRecoveryCodeModel.id)).where(
+                m.MfaRecoveryCodeModel.user_id == user_id,
+                m.MfaRecoveryCodeModel.used_at.is_(None),
+            )
+        )
+        return int(result.scalar_one())
 
 
 class SqlOtpRepository:

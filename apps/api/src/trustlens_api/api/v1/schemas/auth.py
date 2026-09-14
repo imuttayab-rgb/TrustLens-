@@ -97,13 +97,52 @@ class DeleteAccountRequest(Schema):
     password: str = Field(min_length=1, max_length=128)
 
 
+class MfaVerifyRequest(Schema):
+    """Completes a login stopped by `MfaRequiredResponse` - the token from
+    that response, plus a live TOTP code or one recovery code."""
+
+    mfa_token: str = Field(min_length=16, max_length=256)
+    code: str = Field(min_length=1, max_length=40)
+
+
+class MfaStatusResponse(Schema):
+    enabled: bool
+    #: Whether this account's role requires MFA on this deployment - true
+    #: does not imply `enabled`; an unenrolled required account still shows
+    #: `enabled: false` until they complete enrollment.
+    required: bool
+
+
+class MfaEnrollResponse(Schema):
+    secret: str
+    provisioning_uri: str
+
+
+class MfaConfirmRequest(Schema):
+    code: str = Field(min_length=6, max_length=10)
+
+
+class MfaConfirmResponse(Schema):
+    recovery_codes: list[str]
+
+
+class MfaDisableRequest(Schema):
+    password: str = Field(min_length=1, max_length=128)
+
+
 __all__ = [
     "ChangePasswordRequest",
     "DeleteAccountRequest",
     "ForgotPasswordRequest",
     "LoginRequest",
     "LoginResponse",
+    "MfaConfirmRequest",
+    "MfaConfirmResponse",
+    "MfaDisableRequest",
+    "MfaEnrollResponse",
     "MfaRequiredResponse",
+    "MfaStatusResponse",
+    "MfaVerifyRequest",
     "RegisterRequest",
     "RegisterResponse",
     "ResetPasswordRequest",
