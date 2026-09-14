@@ -4,7 +4,8 @@ import { api } from '@/lib/api/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 
-export type ReportTargetType = 'LISTING' | 'SELLER' | 'MESSAGE' | 'OTHER';
+export type ReportTargetType =
+  'LISTING' | 'SELLER' | 'MESSAGE' | 'TRANSACTION' | 'MEETUP' | 'OTHER';
 export type ReportCategory =
   'SCAM_OR_FRAUD' | 'PROHIBITED_ITEM' | 'HARASSMENT' | 'MISLEADING_LISTING' | 'OTHER';
 export type ReportStatus = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED';
@@ -66,5 +67,27 @@ export function useResolveReport() {
       return (result.data as unknown as { data: AdminReport }).data;
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: REPORTS_KEY }),
+  });
+}
+
+/** Resolving a TRANSACTION-targeted report's *report row* (above) documents
+ * the verdict; this is the other half (OPS-01) - it unsticks the disputed
+ * transaction's own state so it isn't frozen forever. */
+export function useResolveDispute() {
+  return useMutation({
+    mutationFn: async ({
+      transactionId,
+      outcome,
+    }: {
+      transactionId: string;
+      outcome: 'COMPLETED' | 'CANCELLED';
+    }) => {
+      const result = await api.POST('/api/v1/admin/transactions/{transaction_id}/resolve-dispute', {
+        params: { path: { transaction_id: transactionId } },
+        body: { outcome },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: unknown }).data;
+    },
   });
 }

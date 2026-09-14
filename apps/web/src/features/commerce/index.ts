@@ -6,6 +6,7 @@ export {
   useCreateOffer,
   useMyTransactions,
   useOffers,
+  useRaiseDispute,
   useRespondToOffer,
   type Offer,
   type OfferStatus,

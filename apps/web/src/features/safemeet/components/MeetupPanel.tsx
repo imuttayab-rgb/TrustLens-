@@ -1,5 +1,6 @@
 'use client';
 
+import { ReportButton } from '@/features/moderation';
 import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Field, fieldAria, Input, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
@@ -237,6 +238,11 @@ function MeetupRow({
         </p>
         {meetup.message && (
           <p className="mt-1 text-muted-foreground">&ldquo;{meetup.message}&rdquo;</p>
+        )}
+        {meetup.status === 'ACCEPTED' && (
+          <div className="mt-2">
+            <ReportButton targetType="MEETUP" targetId={meetup.id} label="Report an issue" />
+          </div>
         )}
       </div>
       {canRespond && (

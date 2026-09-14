@@ -23,6 +23,10 @@ from trustlens.core.application.use_cases.admin import (
     DecideReviewCaseCommand,
     ListReviewQueue,
 )
+from trustlens.core.application.use_cases.commerce import (
+    ResolveDispute,
+    ResolveDisputeCommand,
+)
 from trustlens.core.application.use_cases.moderation import (
     ListReportQueue,
     ResolveReport,
@@ -42,7 +46,7 @@ from trustlens.core.domain.entities import (
     ScoringModel,
     ScoringWeight,
 )
-from trustlens.core.domain.enums import DocumentType, ReportStatus, RiskLevel
+from trustlens.core.domain.enums import DocumentType, ReportStatus, RiskLevel, TransactionStatus
 from trustlens.core.domain.errors import (
     ConflictError,
     EntityNotFound,
@@ -58,7 +62,9 @@ from trustlens_api.api.deps import (
     UowDep,
     require_permissions,
 )
+from trustlens_api.api.v1.routers.commerce import to_transaction_response
 from trustlens_api.api.v1.routers.trust_scores import trust_score_to_response
+from trustlens_api.api.v1.schemas.commerce import ResolveDisputeRequest
 from trustlens_api.api.v1.schemas.common import PageMeta, Schema, envelope
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -806,6 +812,41 @@ async def resolve_report(
     )
     return envelope(
         _to_admin_report(resolved).model_dump(by_alias=True), request_id=meta.request_id
+    )
+
+
+@router.post(
+    "/transactions/{transaction_id}/resolve-dispute",
+    summary="Resolve a disputed transaction",
+    description=(
+        "The other half of resolving a dispute (OPS-01) - resolving the "
+        "report itself (above) documents the verdict, this unsticks the "
+        "transaction's own state so it isn't frozen forever."
+    ),
+    dependencies=[Depends(require_permissions("moderation:resolve"))],
+)
+async def resolve_dispute(
+    transaction_id: UUID,
+    body: ResolveDisputeRequest,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    if actor.user_id is None:
+        raise PermissionDenied("moderation:resolve")
+    try:
+        outcome = TransactionStatus(body.outcome)
+    except ValueError as exc:
+        raise ValidationError(f"Invalid outcome: {body.outcome}") from exc
+
+    resolved = await ResolveDispute(uow=uow, clock=container.clock, ids=container.ids).execute(
+        ResolveDisputeCommand(
+            transaction_id=transaction_id, resolver_id=actor.user_id, outcome=outcome
+        )
+    )
+    return envelope(
+        to_transaction_response(resolved).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 

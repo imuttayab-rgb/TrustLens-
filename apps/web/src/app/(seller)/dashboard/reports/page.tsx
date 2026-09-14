@@ -16,6 +16,8 @@ const TARGET_LABELS: Record<ReportTargetType, string> = {
   LISTING: 'Listing',
   SELLER: 'Seller',
   MESSAGE: 'Message',
+  TRANSACTION: 'Transaction dispute',
+  MEETUP: 'SafeMeet incident',
   OTHER: 'Other',
 };
 

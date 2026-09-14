@@ -28,14 +28,19 @@ from trustlens.core.application.use_cases.commerce import (
     CreateOfferCommand,
     ListMyTransactions,
     ListOffersForConversation,
+    RaiseDispute,
+    RaiseDisputeCommand,
     RespondToOffer,
     RespondToOfferCommand,
 )
+from trustlens.core.domain.enums import ReportCategory
+from trustlens.core.domain.errors import ValidationError
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
 from trustlens_api.api.v1.schemas.commerce import (
     CancelTransactionRequest,
     CreateOfferRequest,
     OfferResponse,
+    RaiseDisputeRequest,
     RespondToOfferRequest,
     TransactionResponse,
 )
@@ -63,7 +68,7 @@ def _to_offer_response(offer: Any) -> OfferResponse:
     )
 
 
-def _to_transaction_response(txn: Any) -> TransactionResponse:
+def to_transaction_response(txn: Any) -> TransactionResponse:
     return TransactionResponse(
         id=txn.id,
         listing_id=txn.listing_id,
@@ -140,7 +145,7 @@ async def respond_to_offer(
         {
             "offer": _to_offer_response(result.offer).model_dump(by_alias=True),
             "transaction": (
-                _to_transaction_response(result.transaction).model_dump(by_alias=True)
+                to_transaction_response(result.transaction).model_dump(by_alias=True)
                 if result.transaction is not None
                 else None
             ),
@@ -154,7 +159,7 @@ async def list_my_transactions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> d
     assert actor.user_id is not None
     transactions = await ListMyTransactions(uow=uow).execute(actor.user_id)
     return envelope(
-        [_to_transaction_response(t).model_dump(by_alias=True) for t in transactions],
+        [to_transaction_response(t).model_dump(by_alias=True) for t in transactions],
         request_id=meta.request_id,
     )
 
@@ -175,7 +180,7 @@ async def confirm_handover(
         ConfirmHandoverCommand(transaction_id=transaction_id, actor_id=actor.user_id)
     )
     return envelope(
-        _to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
+        to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 
@@ -192,7 +197,7 @@ async def complete_transaction(
         CompleteTransactionCommand(transaction_id=transaction_id, actor_id=actor.user_id)
     )
     return envelope(
-        _to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
+        to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 
@@ -212,7 +217,43 @@ async def cancel_transaction(
         )
     )
     return envelope(
-        _to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
+        to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
+    )
+
+
+@router.post(
+    "/transactions/{transaction_id}/dispute",
+    summary="Raise a dispute on a transaction",
+    description=(
+        "Freezes the transaction (neither party can complete or cancel it) "
+        "and opens a report in the staff queue, the same one MOD-01's "
+        "listing/seller/message reports already go through."
+    ),
+)
+async def raise_dispute(
+    transaction_id: UUID,
+    body: RaiseDisputeRequest,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    try:
+        category = ReportCategory(body.category)
+    except ValueError as exc:
+        raise ValidationError(f"Invalid category: {body.category}", field="category") from exc
+
+    txn = await RaiseDispute(uow=uow, clock=container.clock, ids=container.ids).execute(
+        RaiseDisputeCommand(
+            transaction_id=transaction_id,
+            actor_id=actor.user_id,
+            category=category,
+            description=body.description,
+        )
+    )
+    return envelope(
+        to_transaction_response(txn).model_dump(by_alias=True), request_id=meta.request_id
     )
 
 

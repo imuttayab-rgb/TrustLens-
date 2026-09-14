@@ -215,6 +215,12 @@ class ReportTargetType(StrEnum):
     LISTING = "LISTING"
     SELLER = "SELLER"
     MESSAGE = "MESSAGE"
+    #: A transaction dispute (OPS-01) - reuses this generic entity rather
+    #: than a parallel Dispute one, since a dispute is exactly "a report,
+    #: targeting a transaction, that also freezes it" (see `RaiseDispute`).
+    TRANSACTION = "TRANSACTION"
+    #: A SafeMeet incident report (OPS-01) - "this meetup went wrong."
+    MEETUP = "MEETUP"
     OTHER = "OTHER"
 
 

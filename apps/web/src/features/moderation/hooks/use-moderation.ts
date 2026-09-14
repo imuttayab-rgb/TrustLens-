@@ -4,7 +4,8 @@ import { api } from '@/lib/api/client';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 
-export type ReportTargetType = 'LISTING' | 'SELLER' | 'MESSAGE' | 'OTHER';
+export type ReportTargetType =
+  'LISTING' | 'SELLER' | 'MESSAGE' | 'TRANSACTION' | 'MEETUP' | 'OTHER';
 export type ReportCategory =
   'SCAM_OR_FRAUD' | 'PROHIBITED_ITEM' | 'HARASSMENT' | 'MISLEADING_LISTING' | 'OTHER';
 

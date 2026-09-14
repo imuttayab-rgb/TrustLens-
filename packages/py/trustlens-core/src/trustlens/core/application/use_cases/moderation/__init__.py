@@ -15,6 +15,7 @@ from trustlens.core.application.use_cases.moderation.manage import (
     ResolveReportCommand,
     UnblockUser,
     UnblockUserCommand,
+    clean_report_description,
 )
 
 __all__ = [
@@ -32,4 +33,5 @@ __all__ = [
     "ResolveReportCommand",
     "UnblockUser",
     "UnblockUserCommand",
+    "clean_report_description",
 ]

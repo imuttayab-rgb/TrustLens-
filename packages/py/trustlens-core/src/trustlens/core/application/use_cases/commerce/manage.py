@@ -19,8 +19,16 @@ from datetime import timedelta
 from uuid import UUID
 
 from trustlens.core.application.notifications import notify
-from trustlens.core.domain.entities import Offer, Transaction
-from trustlens.core.domain.enums import ListingStatus, OfferStatus, TransactionStatus
+from trustlens.core.application.use_cases.moderation import clean_report_description
+from trustlens.core.domain.entities import Offer, Report, Transaction
+from trustlens.core.domain.enums import (
+    ListingStatus,
+    OfferStatus,
+    ReportCategory,
+    ReportStatus,
+    ReportTargetType,
+    TransactionStatus,
+)
 from trustlens.core.domain.errors import (
     EntityNotFound,
     InvalidStateError,
@@ -249,6 +257,10 @@ class ConfirmHandover:
                 raise PermissionDenied("This transaction belongs to someone else.")
             if not txn.is_open:
                 raise InvalidStateError("This transaction is already closed.")
+            if txn.status == TransactionStatus.DISPUTED:
+                raise InvalidStateError(
+                    "This transaction is under dispute. Wait for staff to resolve it."
+                )
             if txn.status == TransactionStatus.HANDED_OVER:
                 raise InvalidStateError("Handover has already been confirmed.")
 
@@ -277,9 +289,9 @@ class CompleteTransactionCommand:
 
 
 class CompleteTransaction:
-    """Either party can mark a handover done - there is no dispute process
-    yet (DISPUTED exists in the enum but nothing raises it), so this is
-    deliberately mutual-trust rather than requiring both sides to confirm."""
+    """Either party can mark a handover done - deliberately mutual-trust
+    rather than requiring both sides to confirm. `RaiseDispute` (OPS-01) is
+    the escape hatch when the two sides disagree about what happened."""
 
     def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
         self._uow = uow
@@ -296,6 +308,10 @@ class CompleteTransaction:
                 raise PermissionDenied("This transaction belongs to someone else.")
             if not txn.is_open:
                 raise InvalidStateError("This transaction is already closed.")
+            if txn.status == TransactionStatus.DISPUTED:
+                raise InvalidStateError(
+                    "This transaction is under dispute. Wait for staff to resolve it."
+                )
 
             updated = await self._uow.transactions.update_status(
                 txn.id, status=TransactionStatus.COMPLETED, at=now
@@ -346,6 +362,10 @@ class CancelTransaction:
                 raise PermissionDenied("This transaction belongs to someone else.")
             if not txn.is_open:
                 raise InvalidStateError("This transaction is already closed.")
+            if txn.status == TransactionStatus.DISPUTED:
+                raise InvalidStateError(
+                    "This transaction is under dispute. Wait for staff to resolve it."
+                )
 
             updated = await self._uow.transactions.update_status(
                 txn.id, status=TransactionStatus.CANCELLED, at=now, cancel_reason=cmd.reason
@@ -366,6 +386,136 @@ class CancelTransaction:
                 body=cmd.reason or "The other party cancelled this deal.",
                 data={"transactionId": str(txn.id)},
             )
+            await self._uow.commit()
+        return updated
+
+
+@dataclass(frozen=True, slots=True)
+class RaiseDisputeCommand:
+    transaction_id: UUID
+    actor_id: UUID
+    category: ReportCategory
+    description: str
+
+
+class RaiseDispute:
+    """A party contests a transaction (OPS-01). Reuses MOD-01's generic
+    `Report` rather than a parallel Dispute entity - a dispute is exactly
+    "a report, targeting a transaction, that also freezes it" so neither
+    side can unilaterally complete or cancel out from under a disagreement
+    while staff look at it. `ResolveDispute` below is the other half."""
+
+    def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
+        self._uow = uow
+        self._clock = clock
+        self._ids = ids
+
+    async def execute(self, cmd: RaiseDisputeCommand) -> Transaction:
+        description = clean_report_description(cmd.description)
+        now = self._clock.now()
+        async with self._uow:
+            txn = await self._uow.transactions.get(cmd.transaction_id)
+            if txn is None:
+                raise EntityNotFound("transaction", cmd.transaction_id)
+            if cmd.actor_id not in (txn.buyer_id, txn.seller_id):
+                raise PermissionDenied("This transaction belongs to someone else.")
+            if not txn.is_open:
+                raise InvalidStateError("This transaction is already closed.")
+            if txn.status == TransactionStatus.DISPUTED:
+                raise InvalidStateError("This transaction is already under dispute.")
+
+            await self._uow.reports.add(
+                Report(
+                    id=self._ids.new(),
+                    reporter_id=cmd.actor_id,
+                    target_type=ReportTargetType.TRANSACTION,
+                    target_id=txn.id,
+                    category=cmd.category,
+                    description=description,
+                    status=ReportStatus.OPEN,
+                    created_at=now,
+                )
+            )
+            updated = await self._uow.transactions.update_status(
+                txn.id, status=TransactionStatus.DISPUTED, at=now
+            )
+            other = txn.seller_id if cmd.actor_id == txn.buyer_id else txn.buyer_id
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=other,
+                type="TRANSACTION_DISPUTED",
+                title="Deal disputed",
+                body="The other party raised a dispute on this deal. Staff will review it.",
+                data={"transactionId": str(txn.id)},
+            )
+            await self._uow.commit()
+        return updated
+
+
+@dataclass(frozen=True, slots=True)
+class ResolveDisputeCommand:
+    transaction_id: UUID
+    resolver_id: UUID
+    #: The only two outcomes a dispute can land on - same terminal pair
+    #: every other transaction path already uses, so staff aren't inventing
+    #: a third state nothing else in the system understands.
+    outcome: TransactionStatus
+
+
+class ResolveDispute:
+    """Staff-only close-out of a disputed transaction (OPS-01) - the report
+    itself is resolved separately via `ResolveReport` (documenting what was
+    decided and why); this is the other half, unsticking the transaction's
+    own state once a verdict is reached. Without this, `RaiseDispute` would
+    freeze a transaction with no way to ever move it again."""
+
+    def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
+        self._uow = uow
+        self._clock = clock
+        self._ids = ids
+
+    async def execute(self, cmd: ResolveDisputeCommand) -> Transaction:
+        if cmd.outcome not in (TransactionStatus.COMPLETED, TransactionStatus.CANCELLED):
+            raise ValidationError(
+                "A dispute can only resolve to completed or cancelled.", field="outcome"
+            )
+        now = self._clock.now()
+        async with self._uow:
+            txn = await self._uow.transactions.get(cmd.transaction_id)
+            if txn is None:
+                raise EntityNotFound("transaction", cmd.transaction_id)
+            if txn.status != TransactionStatus.DISPUTED:
+                raise InvalidStateError("This transaction isn't under dispute.")
+
+            cancel_reason = (
+                "Resolved by staff" if cmd.outcome == TransactionStatus.CANCELLED else None
+            )
+            updated = await self._uow.transactions.update_status(
+                txn.id, status=cmd.outcome, at=now, cancel_reason=cancel_reason
+            )
+            listing = await self._uow.listings.get(txn.listing_id)
+            if listing is not None:
+                if cmd.outcome == TransactionStatus.COMPLETED:
+                    await self._uow.listings.update(
+                        dataclasses.replace(listing, status=ListingStatus.SOLD, updated_at=now)
+                    )
+                elif listing.status == ListingStatus.RESERVED:
+                    await self._uow.listings.update(
+                        dataclasses.replace(listing, status=ListingStatus.ACTIVE, updated_at=now)
+                    )
+            for user_id in (txn.buyer_id, txn.seller_id):
+                await notify(
+                    self._uow,
+                    self._ids,
+                    self._clock,
+                    user_id=user_id,
+                    type="DISPUTE_RESOLVED",
+                    title="Dispute resolved",
+                    body=f"Staff resolved this dispute: {cmd.outcome.value.title()}.",
+                    data={"transactionId": str(txn.id)},
+                )
             await self._uow.commit()
         return updated
 
@@ -396,6 +546,10 @@ __all__ = [
     "CreateOfferCommand",
     "ListMyTransactions",
     "ListOffersForConversation",
+    "RaiseDispute",
+    "RaiseDisputeCommand",
+    "ResolveDispute",
+    "ResolveDisputeCommand",
     "RespondToOffer",
     "RespondToOfferCommand",
     "RespondToOfferResult",

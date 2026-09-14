@@ -1043,6 +1043,24 @@
         "title": "PublicStatusResponse",
         "type": "object"
       },
+      "RaiseDisputeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "title": "Category",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 10,
+            "title": "Description",
+            "type": "string"
+          }
+        },
+        "required": ["category", "description"],
+        "title": "RaiseDisputeRequest",
+        "type": "object"
+      },
       "RegisterPartnerRequest": {
         "properties": {
           "contactEmail": {
@@ -1187,6 +1205,18 @@
         },
         "required": ["decision", "note"],
         "title": "ResolveAppealRequest",
+        "type": "object"
+      },
+      "ResolveDisputeRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "outcome": {
+            "title": "Outcome",
+            "type": "string"
+          }
+        },
+        "required": ["outcome"],
+        "title": "ResolveDisputeRequest",
         "type": "object"
       },
       "ResolveReportRequest": {
@@ -3645,6 +3675,76 @@
         },
         "summary": "Override a computed score (ADMIN only)",
         "tags": ["Trust Score"]
+      }
+    },
+    "/api/v1/admin/transactions/{transaction_id}/resolve-dispute": {
+      "post": {
+        "description": "The other half of resolving a dispute (OPS-01) - resolving the report itself (above) documents the verdict, this unsticks the transaction's own state so it isn't frozen forever.",
+        "operationId": "resolve_dispute_api_v1_admin_transactions__transaction_id__resolve_dispute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolveDisputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resolve Dispute Api V1 Admin Transactions  Transaction Id  Resolve Dispute Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve a disputed transaction",
+        "tags": ["admin"]
       }
     },
     "/api/v1/appeals": {
@@ -8393,6 +8493,76 @@
           }
         },
         "summary": "Mark a handover as done",
+        "tags": ["Commerce"]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/dispute": {
+      "post": {
+        "description": "Freezes the transaction (neither party can complete or cancel it) and opens a report in the staff queue, the same one MOD-01's listing/seller/message reports already go through.",
+        "operationId": "raise_dispute_api_v1_transactions__transaction_id__dispute_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RaiseDisputeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Raise Dispute Api V1 Transactions  Transaction Id  Dispute Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Raise a dispute on a transaction",
         "tags": ["Commerce"]
       }
     },

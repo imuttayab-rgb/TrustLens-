@@ -159,3 +159,18 @@ export function useCancelTransaction() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.myTransactions }),
   });
 }
+
+export function useRaiseDispute() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { transactionId: string; category: string; description: string }) => {
+      const result = await api.POST('/api/v1/transactions/{transaction_id}/dispute', {
+        params: { path: { transaction_id: input.transactionId } },
+        body: { category: input.category, description: input.description },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Transaction }).data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.myTransactions }),
+  });
+}

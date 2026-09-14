@@ -1,5 +1,6 @@
 export {
   useReportQueue,
+  useResolveDispute,
   useResolveReport,
   type AdminReport,
   type ReportCategory,

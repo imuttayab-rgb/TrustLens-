@@ -26,7 +26,7 @@ MAX_REPORT_DESCRIPTION_CHARS = 2_000
 _RESOLUTION_STATES = frozenset({ReportStatus.RESOLVED, ReportStatus.DISMISSED})
 
 
-def _clean_description(description: str) -> str:
+def clean_report_description(description: str) -> str:
     text = description.strip()
     if len(text) < MIN_REPORT_DESCRIPTION_CHARS:
         raise ValidationError(
@@ -57,7 +57,7 @@ class CreateReport:
         self._ids = ids
 
     async def execute(self, cmd: CreateReportCommand) -> Report:
-        description = _clean_description(cmd.description)
+        description = clean_report_description(cmd.description)
         now = self._clock.now()
 
         async with self._uow:
@@ -254,4 +254,5 @@ __all__ = [
     "ResolveReportCommand",
     "UnblockUser",
     "UnblockUserCommand",
+    "clean_report_description",
 ]

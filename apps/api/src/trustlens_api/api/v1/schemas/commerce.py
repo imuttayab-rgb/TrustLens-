@@ -7,6 +7,10 @@ from uuid import UUID
 
 from pydantic import Field
 
+from trustlens.core.application.use_cases.moderation import (
+    MAX_REPORT_DESCRIPTION_CHARS,
+    MIN_REPORT_DESCRIPTION_CHARS,
+)
 from trustlens_api.api.v1.schemas.common import Schema
 
 
@@ -58,10 +62,24 @@ class CancelTransactionRequest(Schema):
     reason: str = Field(min_length=1, max_length=1_000)
 
 
+class RaiseDisputeRequest(Schema):
+    category: str
+    description: str = Field(
+        min_length=MIN_REPORT_DESCRIPTION_CHARS, max_length=MAX_REPORT_DESCRIPTION_CHARS
+    )
+
+
+class ResolveDisputeRequest(Schema):
+    #: "COMPLETED" or "CANCELLED" - the only two outcomes a dispute resolves to.
+    outcome: str
+
+
 __all__ = [
     "CancelTransactionRequest",
     "CreateOfferRequest",
     "OfferResponse",
+    "RaiseDisputeRequest",
+    "ResolveDisputeRequest",
     "RespondToOfferRequest",
     "TransactionResponse",
 ]

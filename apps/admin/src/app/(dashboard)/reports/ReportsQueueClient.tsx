@@ -6,6 +6,7 @@ import { formatDateTime } from '@trustlens/utils';
 import { useState } from 'react';
 import {
   useReportQueue,
+  useResolveDispute,
   useResolveReport,
   type AdminReport,
   type ReportStatus,
@@ -76,8 +77,10 @@ export function ReportsQueueClient() {
 
 function ReportRow({ report }: { report: AdminReport }) {
   const resolve = useResolveReport();
+  const resolveDispute = useResolveDispute();
   const [note, setNote] = useState('');
   const [failure, setFailure] = useState<string | null>(null);
+  const [disputeOutcome, setDisputeOutcome] = useState<string | null>(null);
   const isOpen = report.status === 'OPEN' || report.status === 'UNDER_REVIEW';
 
   function submit(status: 'RESOLVED' | 'DISMISSED') {
@@ -85,6 +88,17 @@ function ReportRow({ report }: { report: AdminReport }) {
     resolve.mutate(
       { reportId: report.id, status, resolutionNote: note },
       { onError: (e) => setFailure(toApiError(e).message) },
+    );
+  }
+
+  function resolveTransaction(outcome: 'COMPLETED' | 'CANCELLED') {
+    setFailure(null);
+    resolveDispute.mutate(
+      { transactionId: report.targetId, outcome },
+      {
+        onSuccess: () => setDisputeOutcome(outcome),
+        onError: (e) => setFailure(toApiError(e).message),
+      },
     );
   }
 
@@ -145,6 +159,39 @@ function ReportRow({ report }: { report: AdminReport }) {
                 Dismiss
               </Button>
             </div>
+          </div>
+        )}
+
+        {report.targetType === 'TRANSACTION' && (
+          <div className="space-y-2 border-t border-border/70 pt-3">
+            <p className="text-sm font-medium">Disputed transaction</p>
+            <p className="text-xs text-muted-foreground">
+              The report above documents the verdict - these unstick the frozen transaction itself,
+              so it isn&apos;t stuck disputed forever.
+            </p>
+            {disputeOutcome ? (
+              <Alert tone="success" className="text-sm">
+                Transaction resolved as {disputeOutcome.toLowerCase()}.
+              </Alert>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  disabled={resolveDispute.isPending}
+                  onClick={() => resolveTransaction('COMPLETED')}
+                >
+                  Mark deal completed
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={resolveDispute.isPending}
+                  onClick={() => resolveTransaction('CANCELLED')}
+                >
+                  Mark deal cancelled
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

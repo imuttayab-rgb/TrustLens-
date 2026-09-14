@@ -506,6 +506,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/transactions/{transaction_id}/resolve-dispute': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resolve a disputed transaction
+     * @description The other half of resolving a dispute (OPS-01) - resolving the report itself (above) documents the verdict, this unsticks the transaction's own state so it isn't frozen forever.
+     */
+    post: operations['resolve_dispute_api_v1_admin_transactions__transaction_id__resolve_dispute_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/appeals': {
     parameters: {
       query?: never;
@@ -1699,6 +1719,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/transactions/{transaction_id}/dispute': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Raise a dispute on a transaction
+     * @description Freezes the transaction (neither party can complete or cancel it) and opens a report in the staff queue, the same one MOD-01's listing/seller/message reports already go through.
+     */
+    post: operations['raise_dispute_api_v1_transactions__transaction_id__dispute_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/transactions/{transaction_id}/handover': {
     parameters: {
       query?: never;
@@ -2361,6 +2401,13 @@ export interface components {
       /** Status */
       status: string;
     };
+    /** RaiseDisputeRequest */
+    RaiseDisputeRequest: {
+      /** Category */
+      category: string;
+      /** Description */
+      description: string;
+    };
     /** RegisterPartnerRequest */
     RegisterPartnerRequest: {
       /** Contactemail */
@@ -2430,6 +2477,11 @@ export interface components {
       note: string;
       /** Overridescore */
       overrideScore?: number | null;
+    };
+    /** ResolveDisputeRequest */
+    ResolveDisputeRequest: {
+      /** Outcome */
+      outcome: string;
     };
     /** ResolveReportRequest */
     ResolveReportRequest: {
@@ -3686,6 +3738,45 @@ export interface operations {
     requestBody: {
       content: {
         'application/json': components['schemas']['OverrideScoreRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  resolve_dispute_api_v1_admin_transactions__transaction_id__resolve_dispute_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResolveDisputeRequest'];
       };
     };
     responses: {
@@ -6463,6 +6554,45 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  raise_dispute_api_v1_transactions__transaction_id__dispute_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RaiseDisputeRequest'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {
