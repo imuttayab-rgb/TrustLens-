@@ -141,6 +141,7 @@ _PUBLIC_ROUTES = {
     "/api/v1/auth/refresh",
     "/api/v1/auth/logout",
     "/api/v1/auth/verify-email",
+    "/api/v1/auth/resend-verification-email",
     "/api/v1/auth/forgot-password",
     "/api/v1/auth/reset-password",
     # Completes a login already past the password check (BLK-04) - the

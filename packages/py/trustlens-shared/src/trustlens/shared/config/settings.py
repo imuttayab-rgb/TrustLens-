@@ -395,6 +395,10 @@ class RateLimitSettings(_Base):
     #: real conversation (a burst of quick replies), low enough to blunt a
     #: scripted spam/flood attempt.
     message_send_per_minute: int = 20
+    #: BLK-03's guard on the two anonymous endpoints that send a real email
+    #: (resend-verification, forgot-password) - low, since a real person
+    #: retries at most a couple of times an hour, not dozens.
+    email_send_per_hour: int = 5
     public_api_free_per_minute: int = 60
     public_api_partner_per_minute: int = 600
     #: Public API fails CLOSED (protects cost and data); auth fails OPEN

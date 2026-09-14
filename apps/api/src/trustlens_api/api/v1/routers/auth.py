@@ -26,13 +26,21 @@ from trustlens.core.application.use_cases.auth import (
     RefreshSessionCommand,
     RegisterUser,
     RegisterUserCommand,
+    ResendEmailVerification,
+    ResendEmailVerificationCommand,
     VerifyEmail,
     VerifyEmailCommand,
     VerifyMfaLogin,
     VerifyMfaLoginCommand,
 )
 from trustlens.core.domain.enums import UserRole
-from trustlens.core.domain.errors import MfaRequired, RateLimitExceeded, TokenInvalid
+from trustlens.core.domain.errors import (
+    MfaRequired,
+    RateLimitExceeded,
+    TokenExpired,
+    TokenInvalid,
+    TokenUsed,
+)
 from trustlens.core.domain.policies import LoginThrottlePolicy, PasswordPolicy
 from trustlens.db.unit_of_work import SqlAlchemyUnitOfWork
 from trustlens.shared.logging import get_logger
@@ -428,6 +436,61 @@ async def verify_email(
     )
 
 
+async def _throttle_email_send(container: Container, meta: RequestMeta, key: str) -> None:
+    """Per-IP limit shared by resend-verification and forgot-password
+    (BLK-03) - both are anonymous, unauthenticated endpoints that send a
+    real email, so without a limiter either is a free way to spam an inbox
+    or run up an email-provider bill. Fails open, same policy as every
+    other rate limit here: a Redis blip must not block a real user from
+    getting back into their account."""
+    limits = container.settings.rate_limit
+    if not limits.enabled or meta.ip is None:
+        return
+    try:
+        allowed, _remaining, retry_after = await container.rate_limiter.hit(
+            f"{key}:{meta.ip}", limit=limits.email_send_per_hour, window_seconds=3600
+        )
+    except Exception:
+        log.warning("email_send_throttle_unavailable_failing_open", ip=meta.ip, key=key)
+        return
+    if not allowed:
+        raise RateLimitExceeded("Too many requests. Try again later.", retry_after=retry_after)
+
+
+@router.post(
+    "/resend-verification-email",
+    status_code=status.HTTP_202_ACCEPTED,
+    summary="Resend the email confirmation link",
+    description=(
+        "Always returns 202, whether or not the address exists or is "
+        "already verified - revealing that would make this an enumeration "
+        "oracle. A dedicated path, not a repurposed password-reset send: "
+        "completing a password reset never verifies an address, so the old "
+        "workaround left an unverified account stuck even after 'success'."
+    ),
+)
+async def resend_verification_email(
+    body: ForgotPasswordRequest,
+    container: ContainerDep,
+    meta: MetaDep,
+    uow: UowDep,
+) -> dict[str, Any]:
+    await _throttle_email_send(container, meta, "resend-verify:ip")
+    await ResendEmailVerification(
+        uow=uow,
+        tokens=container.token_hasher,
+        queue=container.queue,
+        clock=container.clock,
+        ids=container.ids,
+    ).execute(ResendEmailVerificationCommand(email=body.email))
+    return envelope(
+        MessageResponse(
+            message="If that address needs confirming, a new link is on its way."
+        ).model_dump(by_alias=True),
+        request_id=meta.request_id,
+    )
+
+
 @router.post(
     "/forgot-password",
     status_code=status.HTTP_202_ACCEPTED,
@@ -449,6 +512,7 @@ async def forgot_password(
     from trustlens.core.domain.enums import TokenPurpose
     from trustlens.core.domain.value_objects import Email
 
+    await _throttle_email_send(container, meta, "forgot-password:ip")
     email = Email(body.email)
     user = await uow.users.get_by_email(email)
 
@@ -501,12 +565,16 @@ async def reset_password(
     token = await uow.verification_tokens.get_by_hash(
         container.token_hasher.hash_token(body.token), purpose=TokenPurpose.PASSWORD_RESET
     )
-    if token is None or not token.is_usable_at(now):
-        raise TokenInvalid("This reset link is invalid or has expired.")
+    if token is None:
+        raise TokenInvalid("This reset link is invalid.")
+    if token.consumed_at is not None:
+        raise TokenUsed("This reset link has already been used.")
+    if now >= token.expires_at:
+        raise TokenExpired("This reset link has expired. Request a new one.")
 
     user = await uow.users.get(token.user_id)
     if user is None:
-        raise TokenInvalid("This reset link is invalid or has expired.")
+        raise TokenInvalid("This reset link is invalid.")
 
     policy = PasswordPolicy(container.settings.security.password_min_length)
     if problems := policy.validate(body.password, email=user.email.value):

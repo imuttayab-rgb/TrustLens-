@@ -786,6 +786,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/auth/resend-verification-email': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resend the email confirmation link
+     * @description Always returns 202, whether or not the address exists or is already verified - revealing that would make this an enumeration oracle. A dedicated path, not a repurposed password-reset send: completing a password reset never verifies an address, so the old workaround left an unverified account stuck even after 'success'.
+     */
+    post: operations['resend_verification_email_api_v1_auth_resend_verification_email_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/reset-password': {
     parameters: {
       query?: never;
@@ -4179,6 +4199,43 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  resend_verification_email_api_v1_auth_resend_verification_email_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ForgotPasswordRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
         headers: {
           [name: string]: unknown;
         };

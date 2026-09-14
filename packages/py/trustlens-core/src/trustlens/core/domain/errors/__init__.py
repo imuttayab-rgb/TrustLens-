@@ -142,6 +142,23 @@ class TokenInvalid(AuthenticationError):
     title = "Token is invalid or expired"
 
 
+class TokenExpired(TokenInvalid):
+    """The token was real but its TTL passed - distinct from `TokenUsed` and
+    a not-found/malformed token so the frontend can say "request a new one"
+    instead of a generic "invalid link" (BLK-03)."""
+
+    code = "TOKEN_EXPIRED"
+    title = "This link has expired"
+
+
+class TokenUsed(TokenInvalid):
+    """The token was real and unexpired, but already consumed - most often a
+    user clicking an email link a second time (BLK-03)."""
+
+    code = "TOKEN_USED"
+    title = "This link has already been used"
+
+
 class TokenReuseDetected(AuthenticationError):
     """A rotated refresh token was presented again.
 
@@ -357,8 +374,10 @@ __all__ = [
     "QuotaExceeded",
     "RateLimitExceeded",
     "ScoringError",
+    "TokenExpired",
     "TokenInvalid",
     "TokenReuseDetected",
+    "TokenUsed",
     "UnsupportedFileType",
     "ValidationError",
     "VerificationError",

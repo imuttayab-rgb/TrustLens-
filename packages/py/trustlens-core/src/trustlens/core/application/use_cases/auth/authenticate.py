@@ -42,8 +42,10 @@ from trustlens.core.domain.errors import (
     InvalidCredentials,
     MfaCodeInvalid,
     MfaRequired,
+    TokenExpired,
     TokenInvalid,
     TokenReuseDetected,
+    TokenUsed,
     ValidationError,
 )
 from trustlens.core.domain.events import RefreshTokenReuseDetected, UserRegistered
@@ -757,8 +759,12 @@ class VerifyEmail:
             token = await self._uow.verification_tokens.get_by_hash(
                 self._tokens.hash_token(cmd.raw_token), purpose=TokenPurpose.EMAIL_VERIFICATION
             )
-            if token is None or not token.is_usable_at(now):
-                raise TokenInvalid("This verification link is invalid or has expired.")
+            if token is None:
+                raise TokenInvalid("This verification link is invalid.")
+            if token.consumed_at is not None:
+                raise TokenUsed("This verification link has already been used.")
+            if now >= token.expires_at:
+                raise TokenExpired("This verification link has expired. Request a new one.")
 
             user = await self._uow.users.get(token.user_id)
             if user is None:
@@ -794,6 +800,75 @@ class VerifyEmail:
                 "scoring.recompute_trust_score", seller_id=str(seller.id), trigger="SIGNAL_CHANGE"
             )
         return VerifyEmailResult(user_id=user.id)
+
+
+@dataclass(frozen=True, slots=True)
+class ResendEmailVerificationCommand:
+    email: str
+
+
+class ResendEmailVerification:
+    """A dedicated resend path (BLK-03) - the frontend used to call
+    `/forgot-password` as a workaround, which mints a PASSWORD_RESET token
+    and sends a "reset your password" email to someone who actually just
+    wants their address confirmed. Completing that email never verifies
+    anything, so an unverified account that took that path stayed stuck.
+
+    Enumeration-safe like registration/forgot-password: a non-existent or
+    already-verified address gets the identical no-op response.
+    """
+
+    def __init__(
+        self,
+        *,
+        uow: UnitOfWork,
+        tokens: TokenHasher,
+        queue: JobQueue,
+        clock: Clock,
+        ids: IdGenerator,
+        verification_ttl_hours: int = 24,
+    ) -> None:
+        self._uow = uow
+        self._tokens = tokens
+        self._queue = queue
+        self._clock = clock
+        self._ids = ids
+        self._ttl = timedelta(hours=verification_ttl_hours)
+
+    async def execute(self, cmd: ResendEmailVerificationCommand) -> None:
+        email = Email(cmd.email)
+        now = self._clock.now()
+
+        async with self._uow:
+            user = await self._uow.users.get_by_email(email)
+            if user is None or user.is_email_verified:
+                await self._uow.commit()
+                return
+
+            raw_token = self._tokens.new_token()
+            await self._uow.verification_tokens.invalidate_for_user(
+                user.id, purpose=TokenPurpose.EMAIL_VERIFICATION
+            )
+            await self._uow.verification_tokens.add(
+                _verification_token(
+                    self._ids.new(),
+                    user.id,
+                    TokenPurpose.EMAIL_VERIFICATION,
+                    self._tokens.hash_token(raw_token),
+                    email.value,
+                    now,
+                    self._ttl,
+                )
+            )
+            full_name = user.full_name
+            await self._uow.commit()
+
+        await self._queue.enqueue(
+            "notifications.send_email",
+            to=email.value,
+            template="verify_email",
+            context={"token": raw_token, "full_name": full_name},
+        )
 
 
 class DuplicateEmail(ConflictError):
@@ -1037,6 +1112,8 @@ __all__ = [
     "RegisterUser",
     "RegisterUserCommand",
     "RegisterUserResult",
+    "ResendEmailVerification",
+    "ResendEmailVerificationCommand",
     "TokenHasher",
     "VerifyEmail",
     "VerifyEmailCommand",

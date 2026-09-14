@@ -4597,6 +4597,66 @@
         "tags": ["Authentication"]
       }
     },
+    "/api/v1/auth/resend-verification-email": {
+      "post": {
+        "description": "Always returns 202, whether or not the address exists or is already verified - revealing that would make this an enumeration oracle. A dedicated path, not a repurposed password-reset send: completing a password reset never verifies an address, so the old workaround left an unverified account stuck even after 'success'.",
+        "operationId": "resend_verification_email_api_v1_auth_resend_verification_email_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgotPasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Resend Verification Email Api V1 Auth Resend Verification Email Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resend the email confirmation link",
+        "tags": ["Authentication"]
+      }
+    },
     "/api/v1/auth/reset-password": {
       "post": {
         "operationId": "reset_password_api_v1_auth_reset_password_post",

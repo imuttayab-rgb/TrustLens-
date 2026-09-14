@@ -23,10 +23,9 @@ export function EmailVerification({ email, verified }: { email: string; verified
     setBusy(true);
     setError(null);
     try {
-      // The same endpoint that starts a password reset also re-sends the
-      // confirmation for an unverified address, so there is no separate
-      // resend route to call.
-      const result = await api.POST('/api/v1/auth/forgot-password', { body: { email } });
+      const result = await api.POST('/api/v1/auth/resend-verification-email', {
+        body: { email },
+      });
       if (result.error) throw toApiError(result.error);
       setSent(true);
     } catch (raw) {
