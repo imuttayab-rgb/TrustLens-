@@ -18,6 +18,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from uuid import UUID
 
+from trustlens.core.application.notifications import notify
 from trustlens.core.domain.entities import Offer, Transaction
 from trustlens.core.domain.enums import ListingStatus, OfferStatus, TransactionStatus
 from trustlens.core.domain.errors import (
@@ -98,6 +99,17 @@ class CreateOffer:
                     parent_offer_id=parent_offer_id,
                 )
             )
+            recipient = seller_id if cmd.offered_by == buyer_id else buyer_id
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=recipient,
+                type="OFFER_RECEIVED",
+                title="New offer",
+                body=f"{cmd.amount:,.2f} {cmd.currency}",
+                data={"conversationId": str(conversation.id), "offerId": str(offer.id)},
+            )
             await self._uow.commit()
         return offer
 
@@ -154,6 +166,16 @@ class RespondToOffer:
                 closed = await self._uow.offers.close(
                     offer.id, status=OfferStatus.REJECTED, responded_at=now
                 )
+                await notify(
+                    self._uow,
+                    self._ids,
+                    self._clock,
+                    user_id=offer.offered_by,
+                    type="OFFER_REJECTED",
+                    title="Offer declined",
+                    body=f"Your offer of {offer.amount:,.2f} {offer.currency} was declined.",
+                    data={"conversationId": str(offer.conversation_id), "offerId": str(offer.id)},
+                )
                 await self._uow.commit()
                 return RespondToOfferResult(offer=closed, transaction=None)
 
@@ -182,6 +204,16 @@ class RespondToOffer:
                     created_at=now,
                 )
             )
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=offer.offered_by,
+                type="OFFER_ACCEPTED",
+                title="Offer accepted",
+                body=f"Your offer of {offer.amount:,.2f} {offer.currency} was accepted.",
+                data={"conversationId": str(offer.conversation_id), "offerId": str(offer.id)},
+            )
             await self._uow.commit()
         return RespondToOfferResult(offer=closed, transaction=transaction)
 
@@ -202,9 +234,10 @@ class ConfirmHandover:
     time-limited token - the transaction's own open/closed state is what
     bounds how long an old code stays meaningful."""
 
-    def __init__(self, *, uow: UnitOfWork, clock: Clock) -> None:
+    def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
         self._uow = uow
         self._clock = clock
+        self._ids = ids
 
     async def execute(self, cmd: ConfirmHandoverCommand) -> Transaction:
         now = self._clock.now()
@@ -222,6 +255,17 @@ class ConfirmHandover:
             updated = await self._uow.transactions.update_status(
                 txn.id, status=TransactionStatus.HANDED_OVER, at=now
             )
+            other = txn.seller_id if cmd.actor_id == txn.buyer_id else txn.buyer_id
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=other,
+                type="HANDOVER_CONFIRMED",
+                title="Handover confirmed",
+                body="The other party confirmed the handover via QR check-in.",
+                data={"transactionId": str(txn.id)},
+            )
             await self._uow.commit()
         return updated
 
@@ -237,9 +281,10 @@ class CompleteTransaction:
     yet (DISPUTED exists in the enum but nothing raises it), so this is
     deliberately mutual-trust rather than requiring both sides to confirm."""
 
-    def __init__(self, *, uow: UnitOfWork, clock: Clock) -> None:
+    def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
         self._uow = uow
         self._clock = clock
+        self._ids = ids
 
     async def execute(self, cmd: CompleteTransactionCommand) -> Transaction:
         now = self._clock.now()
@@ -260,6 +305,17 @@ class CompleteTransaction:
                 await self._uow.listings.update(
                     dataclasses.replace(listing, status=ListingStatus.SOLD, updated_at=now)
                 )
+            other = txn.seller_id if cmd.actor_id == txn.buyer_id else txn.buyer_id
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=other,
+                type="TRANSACTION_COMPLETED",
+                title="Deal marked complete",
+                body="The other party marked this deal done. Leave a review when you're ready.",
+                data={"transactionId": str(txn.id)},
+            )
             await self._uow.commit()
         return updated
 
@@ -275,9 +331,10 @@ class CancelTransaction:
     """Cancelling releases the listing back to ACTIVE - a fallen-through
     deal should not leave an item permanently unsellable."""
 
-    def __init__(self, *, uow: UnitOfWork, clock: Clock) -> None:
+    def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
         self._uow = uow
         self._clock = clock
+        self._ids = ids
 
     async def execute(self, cmd: CancelTransactionCommand) -> Transaction:
         now = self._clock.now()
@@ -298,6 +355,17 @@ class CancelTransaction:
                 await self._uow.listings.update(
                     dataclasses.replace(listing, status=ListingStatus.ACTIVE, updated_at=now)
                 )
+            other = txn.seller_id if cmd.actor_id == txn.buyer_id else txn.buyer_id
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=other,
+                type="TRANSACTION_CANCELLED",
+                title="Deal cancelled",
+                body=cmd.reason or "The other party cancelled this deal.",
+                data={"transactionId": str(txn.id)},
+            )
             await self._uow.commit()
         return updated
 

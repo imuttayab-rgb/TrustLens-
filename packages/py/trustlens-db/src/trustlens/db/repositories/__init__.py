@@ -3268,10 +3268,26 @@ class SqlNotificationRepository:
         rows = await self._s.execute(stmt)
         return [map_.to_notification(r) for r in rows.scalars().all()]
 
-    async def mark_read(self, notification_id: UUID, *, at: datetime) -> None:
+    async def count_unread(self, user_id: UUID) -> int:
+        return int(
+            (
+                await self._s.execute(
+                    select(func.count())
+                    .select_from(m.NotificationModel)
+                    .where(
+                        m.NotificationModel.user_id == user_id,
+                        m.NotificationModel.read_at.is_(None),
+                    )
+                )
+            ).scalar_one()
+        )
+
+    async def mark_read(self, notification_id: UUID, *, user_id: UUID, at: datetime) -> None:
         await self._s.execute(
             update(m.NotificationModel)
-            .where(m.NotificationModel.id == notification_id)
+            .where(
+                m.NotificationModel.id == notification_id, m.NotificationModel.user_id == user_id
+            )
             .values(read_at=at)
         )
 

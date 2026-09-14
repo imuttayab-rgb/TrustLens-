@@ -117,8 +117,15 @@ def envelope(
     request_id: str | None = None,
     pagination: PageMeta | None = None,
     cached: bool | None = None,
+    meta_extra: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Build a response body without needing a concrete generic type."""
+    """Build a response body without needing a concrete generic type.
+
+    `meta_extra` is an escape hatch for the rare endpoint-specific meta field
+    that isn't pagination or caching - e.g. a notification list's unread
+    count, which belongs with the response metadata rather than reshaping
+    `data` away from the plain-list convention every other list endpoint uses.
+    """
     from datetime import UTC
 
     meta: dict[str, Any] = {
@@ -129,6 +136,8 @@ def envelope(
         meta["pagination"] = pagination.model_dump(by_alias=True)
     if cached is not None:
         meta["cached"] = cached
+    if meta_extra:
+        meta.update(meta_extra)
     return {"data": data, "meta": meta}
 
 

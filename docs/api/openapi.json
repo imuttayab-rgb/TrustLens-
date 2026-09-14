@@ -6744,6 +6744,160 @@
         "tags": ["MFA"]
       }
     },
+    "/api/v1/me/notifications": {
+      "get": {
+        "operationId": "list_notifications_api_v1_me_notifications_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "unreadOnly",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Unreadonly",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Notifications Api V1 Me Notifications Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List my notifications",
+        "tags": ["Notifications"]
+      }
+    },
+    "/api/v1/me/notifications/read-all": {
+      "put": {
+        "operationId": "mark_all_notifications_read_api_v1_me_notifications_read_all_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Mark All Notifications Read Api V1 Me Notifications Read All Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark every notification read",
+        "tags": ["Notifications"]
+      }
+    },
+    "/api/v1/me/notifications/{notification_id}/read": {
+      "put": {
+        "operationId": "mark_notification_read_api_v1_me_notifications__notification_id__read_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "notification_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Notification Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark one notification read",
+        "tags": ["Notifications"]
+      }
+    },
     "/api/v1/me/reports": {
       "get": {
         "operationId": "list_my_reports_api_v1_me_reports_get",

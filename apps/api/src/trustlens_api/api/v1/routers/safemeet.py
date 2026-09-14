@@ -131,7 +131,7 @@ async def respond_to_meetup(
     meta: MetaDep,
 ) -> dict[str, Any]:
     assert actor.user_id is not None
-    meetup = await RespondToMeetup(uow=uow, clock=container.clock).execute(
+    meetup = await RespondToMeetup(uow=uow, clock=container.clock, ids=container.ids).execute(
         RespondToMeetupCommand(meetup_id=meetup_id, responder_id=actor.user_id, accept=body.accept)
     )
     return envelope(

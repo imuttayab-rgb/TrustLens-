@@ -17,6 +17,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from trustlens.core.application.notifications import notify
 from trustlens.core.domain.entities import Conversation, ConversationSummary, Message
 from trustlens.core.domain.errors import EntityNotFound, PermissionDenied, ValidationError
 from trustlens.core.domain.ports import Clock, IdGenerator, UnitOfWork
@@ -73,9 +74,38 @@ class SendMessage:
                 )
             )
             await self._uow.messaging.touch_conversation(conversation.id, at=now)
+            await self._notify_recipient(conversation, cmd.sender_id, body)
             await self._uow.commit()
 
         return SendMessageResult(conversation_id=conversation.id, message=message)
+
+    async def _notify_recipient(
+        self, conversation: Conversation, sender_id: UUID, body: str
+    ) -> None:
+        participants = await self._uow.messaging.get_participants(conversation.id)
+        if participants is None:
+            return
+        buyer_user_id, seller_user_id = participants
+        recipient_id = seller_user_id if sender_id == buyer_user_id else buyer_user_id
+        # A conversation this side has muted (SOC-01) should not also ping
+        # their notification center - that is the whole point of muting it.
+        muted = (
+            conversation.muted_by_seller
+            if recipient_id == seller_user_id
+            else conversation.muted_by_buyer
+        )
+        if muted:
+            return
+        await notify(
+            self._uow,
+            self._ids,
+            self._clock,
+            user_id=recipient_id,
+            type="MESSAGE_RECEIVED",
+            title="New message",
+            body=body[:140],
+            data={"conversationId": str(conversation.id)},
+        )
 
     async def _resolve_conversation(self, cmd: SendMessageCommand, now: datetime) -> Conversation:
         if cmd.conversation_id is not None:

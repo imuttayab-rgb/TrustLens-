@@ -171,7 +171,7 @@ async def confirm_handover(
     meta: MetaDep,
 ) -> dict[str, Any]:
     assert actor.user_id is not None
-    txn = await ConfirmHandover(uow=uow, clock=container.clock).execute(
+    txn = await ConfirmHandover(uow=uow, clock=container.clock, ids=container.ids).execute(
         ConfirmHandoverCommand(transaction_id=transaction_id, actor_id=actor.user_id)
     )
     return envelope(
@@ -188,7 +188,7 @@ async def complete_transaction(
     meta: MetaDep,
 ) -> dict[str, Any]:
     assert actor.user_id is not None
-    txn = await CompleteTransaction(uow=uow, clock=container.clock).execute(
+    txn = await CompleteTransaction(uow=uow, clock=container.clock, ids=container.ids).execute(
         CompleteTransactionCommand(transaction_id=transaction_id, actor_id=actor.user_id)
     )
     return envelope(
@@ -206,7 +206,7 @@ async def cancel_transaction(
     meta: MetaDep,
 ) -> dict[str, Any]:
     assert actor.user_id is not None
-    txn = await CancelTransaction(uow=uow, clock=container.clock).execute(
+    txn = await CancelTransaction(uow=uow, clock=container.clock, ids=container.ids).execute(
         CancelTransactionCommand(
             transaction_id=transaction_id, actor_id=actor.user_id, reason=body.reason
         )

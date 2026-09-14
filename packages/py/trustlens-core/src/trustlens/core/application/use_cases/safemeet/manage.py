@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from trustlens.core.application.notifications import notify
 from trustlens.core.domain.entities import MeetingVenue, Meetup
 from trustlens.core.domain.enums import MeetupStatus, TransactionStatus
 from trustlens.core.domain.errors import (
@@ -102,6 +103,17 @@ class ProposeMeetup:
                     message=cmd.message,
                 )
             )
+            recipient = seller_id if cmd.proposed_by == buyer_id else buyer_id
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=recipient,
+                type="MEETUP_PROPOSED",
+                title="SafeMeet proposed",
+                body=f"A meetup was proposed at {venue.name}.",
+                data={"conversationId": str(conversation.id), "meetupId": str(meetup.id)},
+            )
             await self._uow.commit()
         return meetup
 
@@ -126,9 +138,10 @@ class RespondToMeetupCommand:
 
 
 class RespondToMeetup:
-    def __init__(self, *, uow: UnitOfWork, clock: Clock) -> None:
+    def __init__(self, *, uow: UnitOfWork, clock: Clock, ids: IdGenerator) -> None:
         self._uow = uow
         self._clock = clock
+        self._ids = ids
 
     async def execute(self, cmd: RespondToMeetupCommand) -> Meetup:
         now = self._clock.now()
@@ -156,6 +169,18 @@ class RespondToMeetup:
                         transaction.id, status=TransactionStatus.MEETUP_PLANNED, at=now
                     )
 
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=meetup.proposed_by,
+                type="MEETUP_ACCEPTED" if cmd.accept else "MEETUP_DECLINED",
+                title="SafeMeet accepted" if cmd.accept else "SafeMeet declined",
+                body="Your meetup proposal was accepted."
+                if cmd.accept
+                else "Your meetup proposal was declined.",
+                data={"conversationId": str(meetup.conversation_id), "meetupId": str(meetup.id)},
+            )
             await self._uow.commit()
         return closed
 

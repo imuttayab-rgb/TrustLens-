@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from uuid import UUID
 
+from trustlens.core.application.notifications import notify
 from trustlens.core.domain.entities import AuditLogEntry, Block, Report
 from trustlens.core.domain.enums import ReportCategory, ReportStatus, ReportTargetType
 from trustlens.core.domain.errors import EntityNotFound, InvalidStateError, ValidationError
@@ -223,6 +224,16 @@ class ResolveReport:
                     before={"status": report.status.value},
                     after={"status": cmd.status.value, "note": cmd.resolution_note},
                 )
+            )
+            await notify(
+                self._uow,
+                self._ids,
+                self._clock,
+                user_id=report.reporter_id,
+                type="REPORT_RESOLVED",
+                title="Your report was reviewed",
+                body=cmd.resolution_note or f"Status: {cmd.status.value.title()}.",
+                data={"reportId": str(report.id)},
             )
             await self._uow.commit()
         return resolved

@@ -1,4 +1,5 @@
 import { RequireSession } from '@/features/auth';
+import { NotificationBell } from '@/features/notifications';
 import { DeviceCheck } from '@/features/verification';
 import { Ambient, ThemeToggle } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
@@ -53,6 +54,7 @@ export default function SellerLayout({ children }: { children: React.ReactNode }
                 {item.label}
               </Link>
             ))}
+            <NotificationBell />
             <ThemeToggle className="ml-1" />
           </nav>
         </div>
