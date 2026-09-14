@@ -74,8 +74,11 @@ async function getScore(handle: string): Promise<PublicScore | null> {
 /**
  * The storefront's listings grid (MKT-04). Reuses the same public catalog
  * search the browse page uses, filtered to this seller's handle - same
- * PII-free projection, no separate read path. Only ever ACTIVE listings;
- * there is no "sold" state on a listing yet, so a sold history isn't shown.
+ * PII-free projection, no separate read path. Unlike the anonymous
+ * catalog, a seller_handle-filtered search also returns their
+ * RESERVED/SOLD listings (a deliberate storefront-only broadening, see
+ * `include_sold` in browse_public.py), so this doubles as the sold
+ * history the spec asks for.
  */
 async function getSellerListings(handle: string): Promise<PublicListing[]> {
   return (
@@ -121,6 +124,9 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
     getSellerReviews(handle),
   ]);
   if (!score) notFound();
+
+  const activeListings = listings.filter((l) => l.status === 'ACTIVE');
+  const pastListings = listings.filter((l) => l.status !== 'ACTIVE');
 
   // The public payload carries reasons, not raw signal rows - it is
   // deliberately PII-free. Map them into the shared breakdown shape.
@@ -192,14 +198,29 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         </CardContent>
       </Card>
 
-      {listings.length > 0 && (
+      {activeListings.length > 0 && (
         <Card className="mt-4">
           <CardHeader>
-            <CardTitle>Active listings ({listings.length})</CardTitle>
+            <CardTitle>Active listings ({activeListings.length})</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-              {listings.map((listing) => (
+              {activeListings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {pastListings.length > 0 && (
+        <Card className="mt-4">
+          <CardHeader>
+            <CardTitle>Past deals ({pastListings.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              {pastListings.map((listing) => (
                 <ListingCard key={listing.id} listing={listing} />
               ))}
             </div>
