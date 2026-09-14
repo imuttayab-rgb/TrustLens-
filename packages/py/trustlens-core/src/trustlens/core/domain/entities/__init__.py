@@ -9,7 +9,14 @@ from trustlens.core.domain.entities.appeal import (
     JobRun,
     ReviewCase,
 )
-from trustlens.core.domain.entities.commerce import Offer, Transaction
+from trustlens.core.domain.entities.commerce import (
+    Auction,
+    Bid,
+    Installment,
+    InstallmentPlan,
+    Offer,
+    Transaction,
+)
 from trustlens.core.domain.entities.listing import (
     Favorite,
     Listing,
@@ -65,8 +72,10 @@ __all__ = [
     "ApiKey",
     "Appeal",
     "AppealMessage",
+    "Auction",
     "AuditLogEntry",
     "AuthenticatedActor",
+    "Bid",
     "Block",
     "Consent",
     "Conversation",
@@ -78,6 +87,8 @@ __all__ = [
     "Follow",
     "IdentityDocument",
     "IdentityVerification",
+    "Installment",
+    "InstallmentPlan",
     "IpReputation",
     "JobRun",
     "Listing",

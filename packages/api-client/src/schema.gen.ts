@@ -601,6 +601,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/auctions/{auction_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** View one auction */
+    get: operations['get_auction_api_v1_auctions__auction_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auctions/{auction_id}/bids': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Bid history for one auction, highest first */
+    get: operations['list_bids_api_v1_auctions__auction_id__bids_get'];
+    put?: never;
+    /** Place a bid */
+    post: operations['place_bid_api_v1_auctions__auction_id__bids_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auth/change-password': {
     parameters: {
       query?: never;
@@ -967,6 +1002,40 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/installment-plans/{plan_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancel an installment plan */
+    post: operations['cancel_installment_plan_api_v1_installment_plans__plan_id__cancel_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/installments/{installment_id}/pay': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark one installment paid */
+    post: operations['pay_installment_api_v1_installments__installment_id__pay_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/jobs/{job_id}': {
     parameters: {
       query?: never;
@@ -1032,6 +1101,23 @@ export interface paths {
     put?: never;
     /** Re-run analysis on a listing */
     post: operations['analyse_listing_api_v1_listings__listing_id__analyse_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/listings/{listing_id}/auction': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** List a listing as an auction instead of a fixed price */
+    post: operations['create_auction_api_v1_listings__listing_id__auction_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1773,6 +1859,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/transactions/{transaction_id}/installment-plan': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** View the installment plan for a transaction, if any */
+    get: operations['get_installment_plan_api_v1_transactions__transaction_id__installment_plan_get'];
+    put?: never;
+    /** Set up a buy-now-pay-later plan for a transaction */
+    post: operations['create_installment_plan_api_v1_transactions__transaction_id__installment_plan_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/transactions/{transaction_id}/reviews': {
     parameters: {
       query?: never;
@@ -2111,6 +2215,27 @@ export interface components {
       /** Newpassword */
       newPassword: string;
     };
+    /** CreateAuctionRequest */
+    CreateAuctionRequest: {
+      /**
+       * Currency
+       * @default PKR
+       */
+      currency: string;
+      /** Durationhours */
+      durationHours: number;
+      /** Reserveprice */
+      reservePrice?: number | null;
+      /** Startingprice */
+      startingPrice: number;
+    };
+    /** CreateInstallmentPlanRequest */
+    CreateInstallmentPlanRequest: {
+      /** Frequencydays */
+      frequencyDays: number;
+      /** Installmentcount */
+      installmentCount: number;
+    };
     /** CreateMeetingVenueRequest */
     CreateMeetingVenueRequest: {
       /** Address */
@@ -2352,6 +2477,11 @@ export interface components {
       reason: string;
       /** Score */
       score: number;
+    };
+    /** PlaceBidRequest */
+    PlaceBidRequest: {
+      /** Amount */
+      amount: number;
     };
     /** ProposeMeetupRequest */
     ProposeMeetupRequest: {
@@ -4034,6 +4164,115 @@ export interface operations {
       };
     };
   };
+  get_auction_api_v1_auctions__auction_id__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        auction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_bids_api_v1_auctions__auction_id__bids_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        auction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  place_bid_api_v1_auctions__auction_id__bids_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        auction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PlaceBidRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   change_password_api_v1_auth_change_password_post: {
     parameters: {
       query?: never;
@@ -4813,6 +5052,76 @@ export interface operations {
       };
     };
   };
+  cancel_installment_plan_api_v1_installment_plans__plan_id__cancel_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        plan_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  pay_installment_api_v1_installments__installment_id__pay_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        installment_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   get_job_api_v1_jobs__job_id__get: {
     parameters: {
       query?: never;
@@ -5039,6 +5348,45 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_auction_api_v1_listings__listing_id__auction_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAuctionRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };
@@ -6719,6 +7067,80 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_installment_plan_api_v1_transactions__transaction_id__installment_plan_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_installment_plan_api_v1_transactions__transaction_id__installment_plan_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        transaction_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateInstallmentPlanRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
         headers: {
           [name: string]: unknown;
         };

@@ -74,10 +74,83 @@ class ResolveDisputeRequest(Schema):
     outcome: str
 
 
+class CreateInstallmentPlanRequest(Schema):
+    installment_count: int = Field(ge=2, le=12)
+    frequency_days: int = Field(ge=7, le=90)
+
+
+class InstallmentResponse(Schema):
+    id: UUID
+    sequence_number: int
+    amount: float
+    due_at: datetime
+    status: str
+    paid_at: datetime | None = None
+    paid_by: UUID | None = None
+
+
+class InstallmentPlanResponse(Schema):
+    id: UUID
+    transaction_id: UUID
+    buyer_id: UUID
+    seller_id: UUID
+    total_amount: float
+    currency: str
+    installment_count: int
+    status: str
+    created_at: datetime
+    cancelled_at: datetime | None = None
+    installments: list[InstallmentResponse] = Field(default_factory=list)
+
+
+class CreateAuctionRequest(Schema):
+    starting_price: float = Field(gt=0)
+    currency: str = Field(default="PKR", min_length=3, max_length=3)
+    duration_hours: int = Field(ge=1, le=24 * 14)
+    reserve_price: float | None = Field(default=None, gt=0)
+
+
+class PlaceBidRequest(Schema):
+    amount: float = Field(gt=0)
+
+
+class AuctionResponse(Schema):
+    id: UUID
+    listing_id: UUID
+    seller_id: UUID
+    starting_price: float
+    currency: str
+    ends_at: datetime
+    status: str
+    created_at: datetime
+    reserve_price: float | None = None
+    winning_bid_id: UUID | None = None
+    ended_at: datetime | None = None
+    #: Convenience for a client that just wants "what do I have to beat" -
+    #: derived from the bid list, not stored.
+    current_price: float | None = None
+    bid_count: int = 0
+
+
+class BidResponse(Schema):
+    id: UUID
+    auction_id: UUID
+    bidder_id: UUID
+    amount: float
+    created_at: datetime
+
+
 __all__ = [
+    "AuctionResponse",
+    "BidResponse",
     "CancelTransactionRequest",
+    "CreateAuctionRequest",
+    "CreateInstallmentPlanRequest",
     "CreateOfferRequest",
+    "InstallmentPlanResponse",
+    "InstallmentResponse",
     "OfferResponse",
+    "PlaceBidRequest",
     "RaiseDisputeRequest",
     "ResolveDisputeRequest",
     "RespondToOfferRequest",

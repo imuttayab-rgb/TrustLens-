@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from trustlens.core.domain.ports.repositories import (
         ApiClientRepository,
         AppealRepository,
+        AuctionRepository,
         AuditLogRepository,
         BlockRepository,
         ConsentRepository,
@@ -23,6 +24,7 @@ if TYPE_CHECKING:
         FileRepository,
         FollowRepository,
         IdentityRepository,
+        InstallmentRepository,
         JobRunRepository,
         ListingRepository,
         MeetingVenueRepository,
@@ -94,6 +96,8 @@ class UnitOfWork(Protocol):
     blocks: BlockRepository
     offers: OfferRepository
     transactions: TransactionRepository
+    installments: InstallmentRepository
+    auctions: AuctionRepository
     meeting_venues: MeetingVenueRepository
     meetups: MeetupRepository
     follows: FollowRepository

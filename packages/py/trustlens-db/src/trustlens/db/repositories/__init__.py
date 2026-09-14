@@ -1930,6 +1930,182 @@ class SqlTransactionRepository:
         return map_.to_transaction(row)
 
 
+class SqlInstallmentRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add_plan(self, plan: ent.InstallmentPlan) -> ent.InstallmentPlan:
+        self._s.add(
+            m.InstallmentPlanModel(
+                id=plan.id,
+                transaction_id=plan.transaction_id,
+                buyer_id=plan.buyer_id,
+                seller_id=plan.seller_id,
+                total_amount=plan.total_amount,
+                currency=plan.currency,
+                installment_count=plan.installment_count,
+                status=plan.status,
+                created_at=plan.created_at,
+            )
+        )
+        await self._s.flush()
+        return plan
+
+    async def get_plan(self, plan_id: UUID) -> ent.InstallmentPlan | None:
+        row = await self._s.get(m.InstallmentPlanModel, plan_id)
+        return map_.to_installment_plan(row) if row else None
+
+    async def get_plan_for_transaction(self, transaction_id: UUID) -> ent.InstallmentPlan | None:
+        stmt = (
+            select(m.InstallmentPlanModel)
+            .where(m.InstallmentPlanModel.transaction_id == transaction_id)
+            .order_by(m.InstallmentPlanModel.created_at.desc())
+            .limit(1)
+        )
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return map_.to_installment_plan(row) if row else None
+
+    async def update_plan(self, plan: ent.InstallmentPlan) -> ent.InstallmentPlan:
+        await self._s.execute(
+            update(m.InstallmentPlanModel)
+            .where(m.InstallmentPlanModel.id == plan.id)
+            .values(status=plan.status, cancelled_at=plan.cancelled_at)
+        )
+        return plan
+
+    async def add_installment(self, installment: ent.Installment) -> ent.Installment:
+        self._s.add(
+            m.InstallmentModel(
+                id=installment.id,
+                plan_id=installment.plan_id,
+                sequence_number=installment.sequence_number,
+                amount=installment.amount,
+                due_at=installment.due_at,
+                status=installment.status,
+                created_at=installment.created_at,
+            )
+        )
+        await self._s.flush()
+        return installment
+
+    async def list_installments(self, plan_id: UUID) -> list[ent.Installment]:
+        stmt = (
+            select(m.InstallmentModel)
+            .where(m.InstallmentModel.plan_id == plan_id)
+            .order_by(m.InstallmentModel.sequence_number.asc())
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_installment(r) for r in rows]
+
+    async def get_installment(self, installment_id: UUID) -> ent.Installment | None:
+        row = await self._s.get(m.InstallmentModel, installment_id)
+        return map_.to_installment(row) if row else None
+
+    async def update_installment(self, installment: ent.Installment) -> ent.Installment:
+        await self._s.execute(
+            update(m.InstallmentModel)
+            .where(m.InstallmentModel.id == installment.id)
+            .values(
+                status=installment.status,
+                paid_at=installment.paid_at,
+                paid_by=installment.paid_by,
+            )
+        )
+        return installment
+
+
+class SqlAuctionRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, auction: ent.Auction) -> ent.Auction:
+        self._s.add(
+            m.AuctionModel(
+                id=auction.id,
+                listing_id=auction.listing_id,
+                seller_id=auction.seller_id,
+                starting_price=auction.starting_price,
+                currency=auction.currency,
+                ends_at=auction.ends_at,
+                status=auction.status,
+                created_at=auction.created_at,
+                reserve_price=auction.reserve_price,
+            )
+        )
+        await self._s.flush()
+        return auction
+
+    async def get(self, auction_id: UUID) -> ent.Auction | None:
+        row = await self._s.get(m.AuctionModel, auction_id)
+        return map_.to_auction(row) if row else None
+
+    async def get_for_listing(self, listing_id: UUID) -> ent.Auction | None:
+        stmt = (
+            select(m.AuctionModel)
+            .where(m.AuctionModel.listing_id == listing_id)
+            .order_by(m.AuctionModel.created_at.desc())
+            .limit(1)
+        )
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return map_.to_auction(row) if row else None
+
+    async def update(self, auction: ent.Auction) -> ent.Auction:
+        await self._s.execute(
+            update(m.AuctionModel)
+            .where(m.AuctionModel.id == auction.id)
+            .values(
+                status=auction.status,
+                winning_bid_id=auction.winning_bid_id,
+                ended_at=auction.ended_at,
+            )
+        )
+        return auction
+
+    async def list_ending_before(self, at: datetime, *, limit: int = 100) -> list[ent.Auction]:
+        stmt = (
+            select(m.AuctionModel)
+            .where(
+                m.AuctionModel.status == e.AuctionStatus.ACTIVE,
+                m.AuctionModel.ends_at <= at,
+            )
+            .limit(limit)
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_auction(r) for r in rows]
+
+    async def add_bid(self, bid: ent.Bid) -> ent.Bid:
+        self._s.add(
+            m.BidModel(
+                id=bid.id,
+                auction_id=bid.auction_id,
+                bidder_id=bid.bidder_id,
+                amount=bid.amount,
+                created_at=bid.created_at,
+            )
+        )
+        await self._s.flush()
+        return bid
+
+    async def list_bids(self, auction_id: UUID) -> list[ent.Bid]:
+        stmt = (
+            select(m.BidModel)
+            .where(m.BidModel.auction_id == auction_id)
+            .order_by(m.BidModel.amount.desc())
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [map_.to_bid(r) for r in rows]
+
+    async def get_highest_bid(self, auction_id: UUID) -> ent.Bid | None:
+        stmt = (
+            select(m.BidModel)
+            .where(m.BidModel.auction_id == auction_id)
+            .order_by(m.BidModel.amount.desc())
+            .limit(1)
+        )
+        row = (await self._s.execute(stmt)).scalar_one_or_none()
+        return map_.to_bid(row) if row else None
+
+
 class SqlMeetingVenueRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._s = session

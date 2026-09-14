@@ -19,7 +19,13 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from trustlens.core.domain.enums import OfferStatus, TransactionStatus
+from trustlens.core.domain.enums import (
+    AuctionStatus,
+    InstallmentPlanStatus,
+    InstallmentStatus,
+    OfferStatus,
+    TransactionStatus,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -73,4 +79,88 @@ class Transaction:
         return self.status.is_open
 
 
-__all__ = ["Offer", "Transaction"]
+@dataclass(frozen=True, slots=True)
+class InstallmentPlan:
+    """Buy-now-pay-later, sandboxed (PAY-01): the platform tracks a payment
+    schedule against an existing Transaction, it does not move money. Each
+    Installment is marked paid the same mutual-trust way `CompleteTransaction`
+    already works - either party can confirm it, there is no card charge or
+    gateway behind it."""
+
+    id: UUID
+    transaction_id: UUID
+    buyer_id: UUID
+    seller_id: UUID
+    total_amount: float
+    currency: str
+    installment_count: int
+    status: InstallmentPlanStatus
+    created_at: datetime
+    cancelled_at: datetime | None = None
+
+    @property
+    def is_open(self) -> bool:
+        return self.status.is_open
+
+
+@dataclass(frozen=True, slots=True)
+class Installment:
+    id: UUID
+    plan_id: UUID
+    #: 1-indexed position in the schedule - installments are paid in order,
+    #: so this is also how "the next payable one" is found.
+    sequence_number: int
+    amount: float
+    due_at: datetime
+    status: InstallmentStatus
+    created_at: datetime
+    paid_at: datetime | None = None
+    #: Whichever party marked it paid - kept for the same reason a
+    #: transaction's completion isn't anonymous: it's a claim one side is
+    #: making, and disputing it later needs to know who made it.
+    paid_by: UUID | None = None
+
+    @property
+    def is_paid(self) -> bool:
+        return self.status == InstallmentStatus.PAID
+
+
+@dataclass(frozen=True, slots=True)
+class Auction:
+    """A listing sold competitively instead of at a fixed price (AUC-01) -
+    a distinct mechanism from OFF-01's offers, not a reuse of them: bidding
+    is public and time-boxed, an offer is one buyer negotiating privately.
+    """
+
+    id: UUID
+    listing_id: UUID
+    seller_id: UUID
+    starting_price: float
+    currency: str
+    ends_at: datetime
+    status: AuctionStatus
+    created_at: datetime
+    #: The lowest amount the seller will actually accept - never shown to
+    #: bidders, the same "declared but private" shape a lot of real auction
+    #: sites use. Bidding can proceed below it; closing without a bid at or
+    #: above it ends the auction with no winner.
+    reserve_price: float | None = None
+    #: Set once the auction ends with at least one qualifying bid.
+    winning_bid_id: UUID | None = None
+    ended_at: datetime | None = None
+
+    @property
+    def is_open(self) -> bool:
+        return self.status.is_open
+
+
+@dataclass(frozen=True, slots=True)
+class Bid:
+    id: UUID
+    auction_id: UUID
+    bidder_id: UUID
+    amount: float
+    created_at: datetime
+
+
+__all__ = ["Auction", "Bid", "Installment", "InstallmentPlan", "Offer", "Transaction"]

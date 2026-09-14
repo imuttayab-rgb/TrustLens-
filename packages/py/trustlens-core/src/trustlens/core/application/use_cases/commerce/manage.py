@@ -81,6 +81,11 @@ class CreateOffer:
                 raise EntityNotFound("listing", conversation.listing_id)
             if listing.status != ListingStatus.ACTIVE:
                 raise InvalidStateError("This listing isn't open for offers right now.")
+            auction = await self._uow.auctions.get_for_listing(listing.id)
+            if auction is not None and auction.is_open:
+                raise InvalidStateError(
+                    "This listing is being sold by auction. Place a bid instead."
+                )
 
             existing_open = await self._uow.offers.get_open_for_listing(listing.id)
             parent_offer_id = None
@@ -311,6 +316,11 @@ class CompleteTransaction:
             if txn.status == TransactionStatus.DISPUTED:
                 raise InvalidStateError(
                     "This transaction is under dispute. Wait for staff to resolve it."
+                )
+            plan = await self._uow.installments.get_plan_for_transaction(txn.id)
+            if plan is not None and plan.is_open:
+                raise InvalidStateError(
+                    "Finish or cancel the installment plan before marking this deal done."
                 )
 
             updated = await self._uow.transactions.update_status(

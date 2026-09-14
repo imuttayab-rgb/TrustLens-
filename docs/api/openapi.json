@@ -183,6 +183,64 @@
         "title": "ChangePasswordRequest",
         "type": "object"
       },
+      "CreateAuctionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "currency": {
+            "default": "PKR",
+            "maxLength": 3,
+            "minLength": 3,
+            "title": "Currency",
+            "type": "string"
+          },
+          "durationHours": {
+            "maximum": 336.0,
+            "minimum": 1.0,
+            "title": "Durationhours",
+            "type": "integer"
+          },
+          "reservePrice": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reserveprice"
+          },
+          "startingPrice": {
+            "exclusiveMinimum": 0.0,
+            "title": "Startingprice",
+            "type": "number"
+          }
+        },
+        "required": ["startingPrice", "durationHours"],
+        "title": "CreateAuctionRequest",
+        "type": "object"
+      },
+      "CreateInstallmentPlanRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "frequencyDays": {
+            "maximum": 90.0,
+            "minimum": 7.0,
+            "title": "Frequencydays",
+            "type": "integer"
+          },
+          "installmentCount": {
+            "maximum": 12.0,
+            "minimum": 2.0,
+            "title": "Installmentcount",
+            "type": "integer"
+          }
+        },
+        "required": ["installmentCount", "frequencyDays"],
+        "title": "CreateInstallmentPlanRequest",
+        "type": "object"
+      },
       "CreateMeetingVenueRequest": {
         "properties": {
           "address": {
@@ -894,6 +952,19 @@
         },
         "required": ["score", "reason"],
         "title": "OverrideScoreRequest",
+        "type": "object"
+      },
+      "PlaceBidRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "amount": {
+            "exclusiveMinimum": 0.0,
+            "title": "Amount",
+            "type": "number"
+          }
+        },
+        "required": ["amount"],
+        "title": "PlaceBidRequest",
         "type": "object"
       },
       "ProposeMeetupRequest": {
@@ -4091,6 +4162,191 @@
         "tags": ["appeals"]
       }
     },
+    "/api/v1/auctions/{auction_id}": {
+      "get": {
+        "operationId": "get_auction_api_v1_auctions__auction_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "auction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Auction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Auction Api V1 Auctions  Auction Id  Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "View one auction",
+        "tags": ["Commerce"]
+      }
+    },
+    "/api/v1/auctions/{auction_id}/bids": {
+      "get": {
+        "operationId": "list_bids_api_v1_auctions__auction_id__bids_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "auction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Auction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response List Bids Api V1 Auctions  Auction Id  Bids Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bid history for one auction, highest first",
+        "tags": ["Commerce"]
+      },
+      "post": {
+        "operationId": "place_bid_api_v1_auctions__auction_id__bids_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "auction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Auction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlaceBidRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Place Bid Api V1 Auctions  Auction Id  Bids Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Place a bid",
+        "tags": ["Commerce"]
+      }
+    },
     "/api/v1/auth/change-password": {
       "post": {
         "operationId": "change_password_api_v1_auth_change_password_post",
@@ -5402,6 +5658,124 @@
         "tags": ["Verification"]
       }
     },
+    "/api/v1/installment-plans/{plan_id}/cancel": {
+      "post": {
+        "operationId": "cancel_installment_plan_api_v1_installment_plans__plan_id__cancel_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "plan_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Plan Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Cancel Installment Plan Api V1 Installment Plans  Plan Id  Cancel Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel an installment plan",
+        "tags": ["Commerce"]
+      }
+    },
+    "/api/v1/installments/{installment_id}/pay": {
+      "post": {
+        "operationId": "pay_installment_api_v1_installments__installment_id__pay_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "installment_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Installment Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Pay Installment Api V1 Installments  Installment Id  Pay Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark one installment paid",
+        "tags": ["Commerce"]
+      }
+    },
     "/api/v1/jobs/{job_id}": {
       "get": {
         "operationId": "get_job_api_v1_jobs__job_id__get",
@@ -5804,6 +6178,75 @@
         },
         "summary": "Re-run analysis on a listing",
         "tags": ["Listings"]
+      }
+    },
+    "/api/v1/listings/{listing_id}/auction": {
+      "post": {
+        "operationId": "create_auction_api_v1_listings__listing_id__auction_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAuctionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Auction Api V1 Listings  Listing Id  Auction Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List a listing as an auction instead of a fixed price",
+        "tags": ["Commerce"]
       }
     },
     "/api/v1/listings/{listing_id}/images": {
@@ -8730,6 +9173,132 @@
           }
         },
         "summary": "Confirm handover via QR check-in (QR-01)",
+        "tags": ["Commerce"]
+      }
+    },
+    "/api/v1/transactions/{transaction_id}/installment-plan": {
+      "get": {
+        "operationId": "get_installment_plan_api_v1_transactions__transaction_id__installment_plan_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Installment Plan Api V1 Transactions  Transaction Id  Installment Plan Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "View the installment plan for a transaction, if any",
+        "tags": ["Commerce"]
+      },
+      "post": {
+        "operationId": "create_installment_plan_api_v1_transactions__transaction_id__installment_plan_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "transaction_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Transaction Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInstallmentPlanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Create Installment Plan Api V1 Transactions  Transaction Id  Installment Plan Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Set up a buy-now-pay-later plan for a transaction",
         "tags": ["Commerce"]
       }
     },

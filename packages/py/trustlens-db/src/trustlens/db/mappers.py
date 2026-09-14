@@ -501,6 +501,61 @@ def to_transaction(row: m.TransactionModel) -> ent.Transaction:
     )
 
 
+def to_installment_plan(row: m.InstallmentPlanModel) -> ent.InstallmentPlan:
+    return ent.InstallmentPlan(
+        id=row.id,
+        transaction_id=row.transaction_id,
+        buyer_id=row.buyer_id,
+        seller_id=row.seller_id,
+        total_amount=float(row.total_amount),
+        currency=row.currency,
+        installment_count=row.installment_count,
+        status=row.status,
+        created_at=row.created_at,
+        cancelled_at=row.cancelled_at,
+    )
+
+
+def to_installment(row: m.InstallmentModel) -> ent.Installment:
+    return ent.Installment(
+        id=row.id,
+        plan_id=row.plan_id,
+        sequence_number=row.sequence_number,
+        amount=float(row.amount),
+        due_at=row.due_at,
+        status=row.status,
+        created_at=row.created_at,
+        paid_at=row.paid_at,
+        paid_by=row.paid_by,
+    )
+
+
+def to_auction(row: m.AuctionModel) -> ent.Auction:
+    return ent.Auction(
+        id=row.id,
+        listing_id=row.listing_id,
+        seller_id=row.seller_id,
+        starting_price=float(row.starting_price),
+        currency=row.currency,
+        ends_at=row.ends_at,
+        status=row.status,
+        created_at=row.created_at,
+        reserve_price=float(row.reserve_price) if row.reserve_price is not None else None,
+        winning_bid_id=row.winning_bid_id,
+        ended_at=row.ended_at,
+    )
+
+
+def to_bid(row: m.BidModel) -> ent.Bid:
+    return ent.Bid(
+        id=row.id,
+        auction_id=row.auction_id,
+        bidder_id=row.bidder_id,
+        amount=float(row.amount),
+        created_at=row.created_at,
+    )
+
+
 def to_meeting_venue(row: m.MeetingVenueModel) -> ent.MeetingVenue:
     return ent.MeetingVenue(
         id=row.id,

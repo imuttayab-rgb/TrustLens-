@@ -44,6 +44,7 @@ from trustlens.shared.queue import ArqJobQueue
 from trustlens.shared.storage import build_storage
 from trustlens.shared.telemetry import Heartbeat, init_error_reporting
 from trustlens_worker.jobs import (
+    commerce,
     identity,
     listings,
     maintenance,
@@ -177,6 +178,9 @@ class WorkerSettings:
         # worker restart. deliver_webhook schedules its own next attempt;
         # this catches the ones that fell on the floor.
         cron(webhooks.retry_pending_webhooks, minute=set(range(0, 60, 5))),
+        # Auctions (AUC-01) don't close themselves - something has to notice
+        # ends_at has passed and settle the winner (or not).
+        cron(commerce.close_ended_auctions, minute=set(range(0, 60, 5))),
     ]
 
     on_startup = startup

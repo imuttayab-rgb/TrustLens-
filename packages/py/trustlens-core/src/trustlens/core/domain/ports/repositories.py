@@ -25,7 +25,9 @@ if TYPE_CHECKING:
         ApiKey,
         Appeal,
         AppealMessage,
+        Auction,
         AuditLogEntry,
+        Bid,
         Block,
         Consent,
         Conversation,
@@ -37,6 +39,8 @@ if TYPE_CHECKING:
         Follow,
         IdentityDocument,
         IdentityVerification,
+        Installment,
+        InstallmentPlan,
         IpReputation,
         JobRun,
         Listing,
@@ -473,6 +477,55 @@ class TransactionRepository(Protocol):
         at: datetime,
         cancel_reason: str | None = None,
     ) -> Transaction: ...
+
+
+@runtime_checkable
+class InstallmentRepository(Protocol):
+    async def add_plan(self, plan: InstallmentPlan) -> InstallmentPlan: ...
+
+    async def get_plan(self, plan_id: UUID) -> InstallmentPlan | None: ...
+
+    async def get_plan_for_transaction(self, transaction_id: UUID) -> InstallmentPlan | None:
+        """At most one plan per transaction - a second attempt while one is
+        active should be refused, not create a competing schedule."""
+        ...
+
+    async def update_plan(self, plan: InstallmentPlan) -> InstallmentPlan: ...
+
+    async def add_installment(self, installment: Installment) -> Installment: ...
+
+    async def list_installments(self, plan_id: UUID) -> list[Installment]:
+        """Sequence order - installments are paid in order, so callers can
+        just take the first non-paid one as "what's due next"."""
+        ...
+
+    async def get_installment(self, installment_id: UUID) -> Installment | None: ...
+
+    async def update_installment(self, installment: Installment) -> Installment: ...
+
+
+@runtime_checkable
+class AuctionRepository(Protocol):
+    async def add(self, auction: Auction) -> Auction: ...
+
+    async def get(self, auction_id: UUID) -> Auction | None: ...
+
+    async def get_for_listing(self, listing_id: UUID) -> Auction | None: ...
+
+    async def update(self, auction: Auction) -> Auction: ...
+
+    async def list_ending_before(self, at: datetime, *, limit: int = 100) -> list[Auction]:
+        """Every still-ACTIVE auction whose `ends_at` has passed - what the
+        close-out sweep works through."""
+        ...
+
+    async def add_bid(self, bid: Bid) -> Bid: ...
+
+    async def list_bids(self, auction_id: UUID) -> list[Bid]:
+        """Highest first - the leaderboard a listing page shows."""
+        ...
+
+    async def get_highest_bid(self, auction_id: UUID) -> Bid | None: ...
 
 
 @runtime_checkable

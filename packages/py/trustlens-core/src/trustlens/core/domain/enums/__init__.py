@@ -194,6 +194,20 @@ class ListingSource(StrEnum):
     API = "API"
 
 
+class AuctionStatus(StrEnum):
+    """A listing's auction, if it has one (AUC-01) - bidding is a distinct
+    mechanism from OFF-01's offers, not a reuse of them: an offer is one
+    buyer negotiating privately, a bid is competitive and time-boxed."""
+
+    ACTIVE = "ACTIVE"
+    ENDED = "ENDED"
+    CANCELLED = "CANCELLED"
+
+    @property
+    def is_open(self) -> bool:
+        return self == AuctionStatus.ACTIVE
+
+
 class AppealStatus(StrEnum):
     OPEN = "OPEN"
     UNDER_REVIEW = "UNDER_REVIEW"
@@ -295,6 +309,26 @@ class TransactionStatus(StrEnum):
             TransactionStatus.COMPLETED,
             TransactionStatus.CANCELLED,
         }
+
+
+class InstallmentPlanStatus(StrEnum):
+    """Buy-now-pay-later sandbox (PAY-01) - "sandbox" because there is no
+    real payment gateway behind it. Money never moves through the platform;
+    an installment is marked paid the same mutual-trust way a handover is
+    confirmed, not by charging a card."""
+
+    ACTIVE = "ACTIVE"
+    COMPLETED = "COMPLETED"
+    CANCELLED = "CANCELLED"
+
+    @property
+    def is_open(self) -> bool:
+        return self == InstallmentPlanStatus.ACTIVE
+
+
+class InstallmentStatus(StrEnum):
+    PENDING = "PENDING"
+    PAID = "PAID"
 
 
 class MeetupStatus(StrEnum):
@@ -419,10 +453,13 @@ __all__ = [
     "ActorType",
     "ApiKeyStatus",
     "AppealStatus",
+    "AuctionStatus",
     "ConsentType",
     "DeliveryStatus",
     "DocumentType",
     "FilePurpose",
+    "InstallmentPlanStatus",
+    "InstallmentStatus",
     "JobStatus",
     "LineType",
     "ListingSource",
