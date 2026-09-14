@@ -776,6 +776,9 @@ class SqlListingRepository:
         attribute_key: str | None = None,
         attribute_value: str | None = None,
         include_sold: bool = False,
+        near_latitude: float | None = None,
+        near_longitude: float | None = None,
+        radius_km: float | None = None,
     ) -> Select[Any]:
         stmt = (
             select(m.ListingModel, m.SellerProfile, m.TrustScoreModel.risk_level)
@@ -820,6 +823,21 @@ class SqlListingRepository:
             # the freeform {key: value} spec bag (LST-01), not a per-category
             # schema, so this matches whatever a seller actually entered.
             stmt = stmt.where(m.ListingModel.attributes.contains({attribute_key: attribute_value}))
+        if near_latitude is not None and near_longitude is not None and radius_km is not None:
+            # "Nearby" (MKT-01) / radius search (LOC-01) - a plain Haversine
+            # expression against the seller's full-precision coordinates
+            # (only the *response* gets rounded, via _approximate_coordinate,
+            # not what search filters against). No PostGIS: at this catalog
+            # size a function-based filter is simpler to reason about than
+            # standing up an extension for one query.
+            distance_km = 6371 * func.acos(
+                func.cos(func.radians(near_latitude))
+                * func.cos(func.radians(m.ListingModel.latitude))
+                * func.cos(func.radians(m.ListingModel.longitude) - func.radians(near_longitude))
+                + func.sin(func.radians(near_latitude))
+                * func.sin(func.radians(m.ListingModel.latitude))
+            )
+            stmt = stmt.where(m.ListingModel.latitude.isnot(None), distance_km <= radius_km)
         return stmt
 
     def _order_by(self, stmt: Select[Any], sort: str) -> Select[Any]:
@@ -843,6 +861,9 @@ class SqlListingRepository:
         attribute_key: str | None = None,
         attribute_value: str | None = None,
         include_sold: bool = False,
+        near_latitude: float | None = None,
+        near_longitude: float | None = None,
+        radius_km: float | None = None,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -858,6 +879,9 @@ class SqlListingRepository:
             attribute_key=attribute_key,
             attribute_value=attribute_value,
             include_sold=include_sold,
+            near_latitude=near_latitude,
+            near_longitude=near_longitude,
+            radius_km=radius_km,
         )
         stmt = self._order_by(stmt, sort).limit(limit).offset(offset)
         rows = (await self._s.execute(stmt)).all()
@@ -882,6 +906,9 @@ class SqlListingRepository:
         attribute_key: str | None = None,
         attribute_value: str | None = None,
         include_sold: bool = False,
+        near_latitude: float | None = None,
+        near_longitude: float | None = None,
+        radius_km: float | None = None,
     ) -> int:
         stmt = select(func.count()).select_from(
             self._public_query_base(
@@ -895,6 +922,9 @@ class SqlListingRepository:
                 attribute_key=attribute_key,
                 attribute_value=attribute_value,
                 include_sold=include_sold,
+                near_latitude=near_latitude,
+                near_longitude=near_longitude,
+                radius_km=radius_km,
             ).subquery()
         )
         return int((await self._s.execute(stmt)).scalar_one())

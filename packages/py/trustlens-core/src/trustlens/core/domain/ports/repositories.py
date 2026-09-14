@@ -269,6 +269,9 @@ class ListingRepository(Protocol):
         attribute_key: str | None = None,
         attribute_value: str | None = None,
         include_sold: bool = False,
+        near_latitude: float | None = None,
+        near_longitude: float | None = None,
+        radius_km: float | None = None,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -287,6 +290,9 @@ class ListingRepository(Protocol):
         attribute_key: str | None = None,
         attribute_value: str | None = None,
         include_sold: bool = False,
+        near_latitude: float | None = None,
+        near_longitude: float | None = None,
+        radius_km: float | None = None,
     ) -> int: ...
 
 

@@ -5635,6 +5635,9 @@ export interface operations {
         seller?: string | null;
         attributeKey?: string | null;
         attributeValue?: string | null;
+        nearLatitude?: number | null;
+        nearLongitude?: number | null;
+        radiusKm?: number | null;
         sort?: string;
         limit?: number;
         offset?: number;

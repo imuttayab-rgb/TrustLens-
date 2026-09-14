@@ -51,6 +51,10 @@ class BrowsePublicListingsQuery:
     #: own past deals, not just what's currently buyable. The anonymous
     #: catalog never sets this.
     include_sold: bool = False
+    #: "Nearby" (MKT-01) / radius search (LOC-01) - all three or none.
+    near_latitude: float | None = None
+    near_longitude: float | None = None
+    radius_km: float | None = None
     sort: str = "newest"
     limit: int = 20
     offset: int = 0
@@ -90,6 +94,10 @@ class BrowsePublicListings:
             and query.min_price > query.max_price
         ):
             raise ValidationError("Minimum price cannot exceed maximum price.", field="minPrice")
+        if query.radius_km is not None and (
+            query.near_latitude is None or query.near_longitude is None
+        ):
+            raise ValidationError("Nearby search needs your location too.", field="nearLatitude")
 
         async with self._uow:
             items = await self._uow.listings.search_public(
@@ -103,6 +111,9 @@ class BrowsePublicListings:
                 attribute_key=query.attribute_key,
                 attribute_value=query.attribute_value,
                 include_sold=query.include_sold,
+                near_latitude=query.near_latitude,
+                near_longitude=query.near_longitude,
+                radius_km=query.radius_km,
                 sort=query.sort,
                 limit=limit,
                 offset=offset,
@@ -118,6 +129,9 @@ class BrowsePublicListings:
                 attribute_key=query.attribute_key,
                 attribute_value=query.attribute_value,
                 include_sold=query.include_sold,
+                near_latitude=query.near_latitude,
+                near_longitude=query.near_longitude,
+                radius_km=query.radius_km,
             )
 
         return PublicListingPage(items=tuple(items), total=total, limit=limit, offset=offset)
