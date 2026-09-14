@@ -6,7 +6,7 @@ export default function MarketingLayout({ children }: { children: React.ReactNod
   return (
     <div data-surface="marketing" className="min-h-dvh bg-background text-foreground">
       <SiteNav />
-      {children}
+      <main id="main-content">{children}</main>
       <footer className="border-t border-border/70">
         <div className="mx-auto flex max-w-6xl flex-col gap-3 px-5 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:px-8">
           <p>© {new Date().getFullYear()} TrustLens</p>

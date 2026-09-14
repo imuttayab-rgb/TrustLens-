@@ -1,7 +1,9 @@
 'use client';
 
+import { LocaleSwitcher } from '@/i18n/LocaleSwitcher';
 import { Button, ThemeToggle, cn } from '@trustlens/ui';
 import { Menu, ShieldCheck, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
@@ -13,14 +15,16 @@ import { useEffect, useState } from 'react';
  * like a dead link; `/#checks` navigates home and then scrolls.
  */
 const LINKS = [
-  { href: '/browse', label: 'Browse' },
-  { href: '/#how-it-works', label: 'How it works' },
-  { href: '/#checks', label: 'What we check' },
-  { href: '/#explainable', label: 'Why explainable' },
-  { href: '/docs/api', label: 'API docs' },
+  { href: '/browse', key: 'browse' },
+  { href: '/#how-it-works', key: 'howItWorks' },
+  { href: '/#checks', key: 'whatWeCheck' },
+  { href: '/#explainable', key: 'whyExplainable' },
+  { href: '/docs/api', key: 'apiDocs' },
 ] as const;
 
 export function SiteNav() {
+  const t = useTranslations('SiteNav');
+  const tc = useTranslations('Common');
   const [lifted, setLifted] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -55,7 +59,7 @@ export function SiteNav() {
           </span>
           <span className="leading-none">
             <span className="block text-sm font-bold tracking-tight">TrustLens</span>
-            <span className="block text-[10px] text-muted-foreground">Trust before you deal.</span>
+            <span className="block text-[10px] text-muted-foreground">{t('tagline')}</span>
           </span>
         </Link>
 
@@ -66,7 +70,7 @@ export function SiteNav() {
               href={link.href}
               className="group relative rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {link.label}
+              {t(link.key)}
               {/* Grows from the centre on hover or keyboard focus. `group-*`
                   rather than a bare `hover:` - the underline must react to the
                   link, not to the one-pixel strip it lives in. */}
@@ -79,20 +83,21 @@ export function SiteNav() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2 md:ml-0">
+          <LocaleSwitcher className="hidden sm:flex" />
           <ThemeToggle />
           <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
-            <Link href="/login">Log in</Link>
+            <Link href="/login">{tc('logIn')}</Link>
           </Button>
           <Button
             asChild
             size="sm"
             className="hidden bg-gradient-to-r from-brand to-brand-2 font-semibold text-[hsl(var(--background))] shadow-[0_6px_24px_-8px_hsl(var(--brand)/0.7)] transition-transform duration-200 hover:scale-[1.03] active:scale-[0.98] sm:inline-flex"
           >
-            <Link href="/register">Get verified</Link>
+            <Link href="/register">{tc('getVerified')}</Link>
           </Button>
           <button
             type="button"
-            aria-label={menuOpen ? 'Close menu' : 'Open menu'}
+            aria-label={menuOpen ? tc('closeMenu') : tc('openMenu')}
             aria-expanded={menuOpen}
             onClick={() => setMenuOpen((v) => !v)}
             className="grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:hidden"
@@ -116,13 +121,16 @@ export function SiteNav() {
                 onClick={() => setMenuOpen(false)}
                 className="rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
-                {link.label}
+                {t(link.key)}
               </a>
             ))}
-            <div className="mt-2 flex items-center gap-2 border-t border-border/60 pt-3">
+            <div className="mt-3 border-t border-border/60 pt-3">
+              <LocaleSwitcher />
+            </div>
+            <div className="mt-2 flex items-center gap-2">
               <Button asChild variant="ghost" size="sm" className="flex-1">
                 <Link href="/login" onClick={() => setMenuOpen(false)}>
-                  Log in
+                  {tc('logIn')}
                 </Link>
               </Button>
               <Button
@@ -131,7 +139,7 @@ export function SiteNav() {
                 className="flex-1 bg-gradient-to-r from-brand to-brand-2 font-semibold text-[hsl(var(--background))]"
               >
                 <Link href="/register" onClick={() => setMenuOpen(false)}>
-                  Get verified
+                  {tc('getVerified')}
                 </Link>
               </Button>
             </div>

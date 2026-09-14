@@ -13,7 +13,9 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
     <div className="relative flex min-h-dvh flex-col overflow-hidden">
       <Ambient />
       <SiteNav />
-      <div className="flex-1">{children}</div>
+      <main id="main-content" className="flex-1">
+        {children}
+      </main>
     </div>
   );
 }

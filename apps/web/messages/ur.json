@@ -1,0 +1,35 @@
+{
+  "Common": {
+    "skipToContent": "مواد پر جائیں",
+    "logIn": "لاگ ان کریں",
+    "getVerified": "تصدیق کروائیں",
+    "save": "محفوظ کریں",
+    "saved": "محفوظ شدہ",
+    "messageSeller": "بیچنے والے کو پیغام بھیجیں",
+    "makeOffer": "پیشکش کریں",
+    "proposeSafeMeet": "SafeMeet تجویز کریں",
+    "cancel": "منسوخ کریں",
+    "submit": "جمع کروائیں",
+    "loading": "لوڈ ہو رہا ہے",
+    "openMenu": "مینو کھولیں",
+    "closeMenu": "مینو بند کریں",
+    "language": "زبان"
+  },
+  "SiteNav": {
+    "browse": "براؤز کریں",
+    "howItWorks": "یہ کیسے کام کرتا ہے",
+    "whatWeCheck": "ہم کیا جانچتے ہیں",
+    "whyExplainable": "قابلِ وضاحت کیوں",
+    "apiDocs": "API دستاویزات",
+    "tagline": "ڈیل کرنے سے پہلے اعتماد۔"
+  },
+  "DashboardNav": {
+    "overview": "جائزہ",
+    "selling": "فروخت",
+    "favorites": "پسندیدہ",
+    "messages": "پیغامات",
+    "score": "اسکور",
+    "myReports": "میری رپورٹس",
+    "settings": "ترتیبات"
+  }
+}

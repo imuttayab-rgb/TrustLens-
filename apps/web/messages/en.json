@@ -1,0 +1,35 @@
+{
+  "Common": {
+    "skipToContent": "Skip to content",
+    "logIn": "Log in",
+    "getVerified": "Get verified",
+    "save": "Save",
+    "saved": "Saved",
+    "messageSeller": "Message seller",
+    "makeOffer": "Make an offer",
+    "proposeSafeMeet": "Propose SafeMeet",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "loading": "Loading",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "language": "Language"
+  },
+  "SiteNav": {
+    "browse": "Browse",
+    "howItWorks": "How it works",
+    "whatWeCheck": "What we check",
+    "whyExplainable": "Why explainable",
+    "apiDocs": "API docs",
+    "tagline": "Trust before you deal."
+  },
+  "DashboardNav": {
+    "overview": "Overview",
+    "selling": "Selling",
+    "favorites": "Favorites",
+    "messages": "Messages",
+    "score": "Score",
+    "myReports": "My reports",
+    "settings": "Settings"
+  }
+}

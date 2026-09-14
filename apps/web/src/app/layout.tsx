@@ -1,8 +1,11 @@
 import '@/styles/globals.css';
 
 import { Providers } from '@/providers';
+import { dirForLocale } from '@/i18n/config';
 import { THEME_COOKIE, resolveTheme } from '@trustlens/ui';
 import type { Metadata } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { cookies } from 'next/headers';
 import { Inter } from 'next/font/google';
 
@@ -24,14 +27,31 @@ export const metadata: Metadata = {
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const locale = await getLocale();
+  const messages = await getMessages();
+  const t = await getTranslations('Common');
+  const dir = dirForLocale(locale as Parameters<typeof dirForLocale>[0]);
+
   return (
     <html
-      lang="en"
+      lang={locale}
+      dir={dir}
       className={`${inter.variable} ${theme === 'dark' ? 'dark' : ''}`}
       suppressHydrationWarning
     >
       <body className="min-h-dvh">
-        <Providers>{children}</Providers>
+        {/* Visually hidden until focused - the first tab stop for a keyboard
+            or screen-reader user, so they don't have to tab through the whole
+            nav on every single page just to reach the content. */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-sm focus:font-medium focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring"
+        >
+          {t('skipToContent')}
+        </a>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
