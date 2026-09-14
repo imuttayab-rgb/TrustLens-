@@ -43,6 +43,10 @@ export interface BrowseListingsParams {
   sellerHandle?: string | null;
   attributeKey?: string | null;
   attributeValue?: string | null;
+  /** "Nearby" (MKT-01) / radius search (LOC-01) - all three or none. */
+  nearLatitude?: number | null;
+  nearLongitude?: number | null;
+  radiusKm?: number | null;
   sort?: SortOrder;
   limit?: number;
   offset?: number;
@@ -63,6 +67,9 @@ export function usePublicListings({
   sellerHandle = null,
   attributeKey = null,
   attributeValue = null,
+  nearLatitude = null,
+  nearLongitude = null,
+  radiusKm = null,
   sort = 'newest',
   limit = 20,
   offset = 0,
@@ -78,6 +85,9 @@ export function usePublicListings({
       sellerHandle,
       attributeKey,
       attributeValue,
+      nearLatitude,
+      nearLongitude,
+      radiusKm,
       sort,
       limit,
       offset,
@@ -95,6 +105,9 @@ export function usePublicListings({
             seller: sellerHandle,
             attributeKey,
             attributeValue,
+            nearLatitude,
+            nearLongitude,
+            radiusKm,
             sort,
             limit,
             offset,

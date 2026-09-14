@@ -2,6 +2,7 @@
 
 import {
   ListingCard,
+  RecentlyViewedStrip,
   useAddFavorite,
   useFavoriteIds,
   usePublicListings,
@@ -17,11 +18,15 @@ import {
   type ListingCategory,
 } from '@trustlens/constants';
 import { Alert, Spinner } from '@trustlens/ui';
-import { Search } from 'lucide-react';
+import { MapPin, Search } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 const PAGE_SIZE = 24;
+
+// Default catchment for "Nearby" - wide enough to be useful in a sprawling
+// city, narrow enough that "near me" still means something.
+const DEFAULT_NEARBY_RADIUS_KM = 15;
 
 const SORT_LABELS: Record<SortOrder, string> = {
   newest: 'Newest first',
@@ -57,6 +62,14 @@ export default function BrowsePage() {
   const sort: SortOrder =
     sortParam === 'price_asc' || sortParam === 'price_desc' ? sortParam : 'newest';
   const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+  const attributeKey = searchParams.get('attr') || null;
+  const attributeValue = searchParams.get('attrValue') || null;
+  const nearLatParam = searchParams.get('lat');
+  const nearLngParam = searchParams.get('lng');
+  const nearLatitude = nearLatParam ? Number(nearLatParam) : null;
+  const nearLongitude = nearLngParam ? Number(nearLngParam) : null;
+  const radiusKm =
+    nearLatitude !== null ? Number(searchParams.get('radius') ?? DEFAULT_NEARBY_RADIUS_KM) : null;
 
   // Local input state so typing doesn't refetch on every keystroke - only
   // once the seller stops for a moment, or presses Enter.
@@ -66,6 +79,12 @@ export default function BrowsePage() {
   const [maxPriceInput, setMaxPriceInput] = useState(maxPriceParam ?? '');
   useEffect(() => setMinPriceInput(minPriceParam ?? ''), [minPriceParam]);
   useEffect(() => setMaxPriceInput(maxPriceParam ?? ''), [maxPriceParam]);
+  const [attrKeyInput, setAttrKeyInput] = useState(attributeKey ?? '');
+  const [attrValueInput, setAttrValueInput] = useState(attributeValue ?? '');
+  useEffect(() => setAttrKeyInput(attributeKey ?? ''), [attributeKey]);
+  useEffect(() => setAttrValueInput(attributeValue ?? ''), [attributeValue]);
+  const [locating, setLocating] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const { data, isPending, isError } = usePublicListings({
     category,
@@ -74,6 +93,11 @@ export default function BrowsePage() {
     area,
     minPrice,
     maxPrice,
+    attributeKey,
+    attributeValue,
+    nearLatitude,
+    nearLongitude,
+    radiusKm,
     sort,
     limit: PAGE_SIZE,
     offset: (page - 1) * PAGE_SIZE,
@@ -103,6 +127,11 @@ export default function BrowsePage() {
     area?: string | null;
     minPrice?: string | null;
     maxPrice?: string | null;
+    attr?: string | null;
+    attrValue?: string | null;
+    lat?: string | null;
+    lng?: string | null;
+    radius?: string | null;
     sort?: string | null;
     page?: number;
   }) {
@@ -120,15 +149,46 @@ export default function BrowsePage() {
     setOrDelete('area', next.area);
     setOrDelete('minPrice', next.minPrice);
     setOrDelete('maxPrice', next.maxPrice);
+    setOrDelete('attr', next.attr);
+    setOrDelete('attrValue', next.attrValue);
+    setOrDelete('lat', next.lat);
+    setOrDelete('lng', next.lng);
+    setOrDelete('radius', next.radius);
     setOrDelete('sort', next.sort === 'newest' ? null : next.sort);
     if (next.page !== undefined && next.page > 1) params.set('page', String(next.page));
     else params.delete('page');
     router.push(`/browse${params.toString() ? `?${params.toString()}` : ''}`);
   }
 
+  function useNearbySearch() {
+    setLocationError(null);
+    if (!navigator.geolocation) {
+      setLocationError('Your browser does not support location search.');
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setLocating(false);
+        updateParams({
+          lat: String(position.coords.latitude),
+          lng: String(position.coords.longitude),
+          radius: String(DEFAULT_NEARBY_RADIUS_KM),
+        });
+      },
+      () => {
+        setLocating(false);
+        setLocationError('Could not get your location - check your browser permissions.');
+      },
+      { timeout: 10_000 },
+    );
+  }
+
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-  const hasFilters = Boolean(qParam || category || city || area || minPrice || maxPrice);
+  const hasFilters = Boolean(
+    qParam || category || city || area || minPrice || maxPrice || attributeKey || nearLatitude,
+  );
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -136,6 +196,8 @@ export default function BrowsePage() {
       <p className="mt-1 text-sm text-muted-foreground">
         Everything shown here has passed TrustLens&apos;s scam-pattern check.
       </p>
+
+      <RecentlyViewedStrip />
 
       <form
         onSubmit={(event) => {
@@ -157,7 +219,28 @@ export default function BrowsePage() {
             className="h-11 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
           />
         </div>
+        {nearLatitude !== null ? (
+          <button
+            type="button"
+            onClick={() => updateParams({ lat: null, lng: null, radius: null })}
+            className="flex h-11 items-center gap-1.5 rounded-md border border-foreground bg-foreground px-3 text-sm text-background"
+          >
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            Nearby ({radiusKm}km)
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={useNearbySearch}
+            disabled={locating}
+            className="flex h-11 items-center gap-1.5 rounded-md border border-input px-3 text-sm hover:border-foreground/50 disabled:opacity-60"
+          >
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            {locating ? 'Locating…' : 'Nearby'}
+          </button>
+        )}
       </form>
+      {locationError && <p className="mt-1 text-xs text-destructive">{locationError}</p>}
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
@@ -244,6 +327,46 @@ export default function BrowsePage() {
             className={`${selectClass()} w-28`}
           />
         </label>
+
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Spec name
+          <input
+            value={attrKeyInput}
+            onChange={(event) => setAttrKeyInput(event.target.value)}
+            onBlur={() => updateParams({ attr: attrKeyInput.trim() || null })}
+            placeholder="e.g. storage"
+            className={`${selectClass()} w-32`}
+          />
+        </label>
+
+        <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+          Spec value
+          <input
+            value={attrValueInput}
+            onChange={(event) => setAttrValueInput(event.target.value)}
+            onBlur={() => updateParams({ attrValue: attrValueInput.trim() || null })}
+            placeholder="e.g. 128GB"
+            disabled={!attrKeyInput.trim()}
+            className={`${selectClass()} w-32 disabled:opacity-50`}
+          />
+        </label>
+
+        {nearLatitude !== null && (
+          <label className="flex flex-col gap-1 text-xs text-muted-foreground">
+            Radius
+            <select
+              value={String(radiusKm)}
+              onChange={(event) => updateParams({ radius: event.target.value })}
+              className={selectClass()}
+            >
+              {[5, 10, 15, 25, 50, 100].map((km) => (
+                <option key={km} value={km}>
+                  {km} km
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="ml-auto flex flex-col gap-1 text-xs text-muted-foreground">
           Sort by

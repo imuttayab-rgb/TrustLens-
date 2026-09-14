@@ -6,7 +6,7 @@
  * should not wait on a client round trip just to read a description.
  * Only the save/message buttons cross into a client component.
  */
-import { ListingDetailActions } from '@/features/marketplace';
+import { ListingDetailActions, RecordRecentlyViewed } from '@/features/marketplace';
 import { serverFetch } from '@/lib/api/server';
 import {
   LISTING_CATEGORY_LABELS,
@@ -87,6 +87,30 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
   return (
     <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+      <RecordRecentlyViewed
+        listing={{
+          id: listing.id,
+          title: listing.title,
+          price: listing.price,
+          currency: listing.currency,
+          category: listing.category,
+          condition: listing.condition,
+          city: listing.city,
+          area: listing.area,
+          createdAt: listing.createdAt,
+          sellerHandle: listing.sellerHandle,
+          sellerDisplayName: listing.sellerDisplayName,
+          status: listing.status,
+          negotiable: listing.negotiable,
+          riskLevel: listing.riskLevel,
+          identityVerified: listing.identityVerified,
+          phoneVerified: listing.phoneVerified,
+          imageUrl: images[0]?.imageUrl ?? null,
+          thumbnailUrl: images[0]?.thumbnailUrl ?? null,
+          latitude: listing.latitude,
+          longitude: listing.longitude,
+        }}
+      />
       <Link href="/browse" className="text-sm text-muted-foreground hover:underline">
         ← Back to Browse
       </Link>
