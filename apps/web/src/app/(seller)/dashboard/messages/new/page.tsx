@@ -10,6 +10,7 @@ export default function NewConversationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const listingId = searchParams.get('listingId');
+  const intent = searchParams.get('intent');
   const sendMessage = useSendMessage();
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +40,8 @@ export default function NewConversationPage() {
         body: trimmed,
         listingId: listingId as string,
       });
-      router.push(`/dashboard/messages/${result.conversationId}`);
+      const suffix = intent ? `?intent=${encodeURIComponent(intent)}` : '';
+      router.push(`/dashboard/messages/${result.conversationId}${suffix}`);
     } catch {
       setError('Could not send that message. Try again.');
     }

@@ -39,16 +39,20 @@ export function MeetupPanel({
   conversationId,
   listingCity,
   currentUserId,
+  autoOpen = false,
 }: {
   conversationId: string;
   listingCity: string | null;
   currentUserId: string;
+  /** Opens the "propose a SafeMeet" form immediately - a buyer arriving
+   * here from the listing page's "Propose a SafeMeet" button. */
+  autoOpen?: boolean;
 }) {
   const { data: meetups, isPending } = useMeetups(conversationId);
   const { data: venues, isPending: venuesPending } = useNearbyVenues(listingCity);
   const proposeMeetup = useProposeMeetup(conversationId);
   const respondToMeetup = useRespondToMeetup(conversationId);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(autoOpen);
   const [venueId, setVenueId] = useState('');
   const [when, setWhen] = useState('');
   const [message, setMessage] = useState('');

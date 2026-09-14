@@ -11,7 +11,16 @@ import { Send } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useConversations, useMessages, useSendMessage } from '../hooks/use-messaging';
 
-export function MessageThread({ conversationId }: { conversationId: string }) {
+export function MessageThread({
+  conversationId,
+  intent,
+}: {
+  conversationId: string;
+  /** Auto-opens the matching panel's form - set when the buyer arrived here
+   * via the listing page's "Make an offer"/"Propose a SafeMeet" buttons,
+   * not by opening an existing conversation from the inbox. */
+  intent?: 'offer' | 'safemeet' | undefined;
+}) {
   const { data: session } = useSession();
   const { data: messages, isPending, isError } = useMessages(conversationId);
   const { data: conversations } = useConversations();
@@ -48,6 +57,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
           conversationId={conversationId}
           listingId={conversation.listingId}
           currentUserId={session.id}
+          autoOpen={intent === 'offer'}
         />
       )}
       {conversation?.listingId && session?.id && (
@@ -55,6 +65,7 @@ export function MessageThread({ conversationId }: { conversationId: string }) {
           conversationId={conversationId}
           listingCity={listingInfo?.city ?? null}
           currentUserId={session.id}
+          autoOpen={intent === 'safemeet'}
         />
       )}
       <div className="flex-1 space-y-3 overflow-y-auto p-4">

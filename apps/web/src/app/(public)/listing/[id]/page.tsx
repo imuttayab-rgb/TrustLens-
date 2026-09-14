@@ -8,14 +8,25 @@
  */
 import { ListingDetailActions } from '@/features/marketplace';
 import { serverFetch } from '@/lib/api/server';
-import { LISTING_CATEGORY_LABELS, type ListingCategory } from '@trustlens/constants';
+import {
+  LISTING_CATEGORY_LABELS,
+  type ListingCategory,
+  type RiskLevel,
+} from '@trustlens/constants';
+import { RiskBadge } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
+import { BadgeCheck, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export const revalidate = 300;
+
+const STATUS_LABEL: Record<string, string> = {
+  RESERVED: 'Reserved - a deal is in progress',
+  SOLD: 'Sold',
+};
 
 interface PublicListingDetail {
   id: string;
@@ -24,12 +35,20 @@ interface PublicListingDetail {
   price: number | null;
   currency: string | null;
   category: ListingCategory | null;
+  condition: string | null;
   city: string | null;
   area: string | null;
   createdAt: string;
   sellerHandle: string;
   sellerDisplayName: string;
-  images: { imageUrl: string; isPrimary: boolean }[];
+  status: string;
+  negotiable: boolean;
+  attributes: Record<string, string>;
+  videoUrl: string | null;
+  riskLevel: RiskLevel | null;
+  identityVerified: boolean;
+  phoneVerified: boolean;
+  images: { imageUrl: string; thumbnailUrl: string | null; isPrimary: boolean }[];
   latitude: number | null;
   longitude: number | null;
 }
@@ -72,6 +91,12 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         ← Back to Browse
       </Link>
 
+      {listing.status !== 'ACTIVE' && (
+        <div className="mt-4 rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-medium">
+          {STATUS_LABEL[listing.status] ?? listing.status}
+        </div>
+      )}
+
       <div className="mt-4 grid gap-8 sm:grid-cols-2">
         <div>
           {images.length > 0 ? (
@@ -94,7 +119,7 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                       className="relative aspect-square overflow-hidden rounded-md border border-border bg-muted"
                     >
                       <Image
-                        src={image.imageUrl}
+                        src={image.thumbnailUrl ?? image.imageUrl}
                         alt={`${listing.title} photo ${i + 2}`}
                         fill
                         className="object-cover"
@@ -103,6 +128,14 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
                     </div>
                   ))}
                 </div>
+              )}
+              {listing.videoUrl && (
+                // eslint-disable-next-line jsx-a11y/media-has-caption -- a seller's own upload, no captions to source
+                <video
+                  src={listing.videoUrl}
+                  controls
+                  className="aspect-video w-full rounded-lg border border-border bg-black"
+                />
               )}
             </div>
           ) : (
@@ -118,15 +151,30 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             {listing.price !== null
               ? `${listing.currency ?? ''} ${listing.price.toLocaleString()}`
               : 'Price on request'}
+            {listing.negotiable && (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">negotiable</span>
+            )}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             {listing.category ? LISTING_CATEGORY_LABELS[listing.category] : 'Uncategorised'}
+            {listing.condition ? ` · ${listing.condition.replace(/_/g, ' ').toLowerCase()}` : ''}
             {listing.area
               ? ` · ${listing.area}, ${listing.city}`
               : listing.city
                 ? ` · ${listing.city}`
                 : ''}
           </p>
+
+          {Object.keys(listing.attributes).length > 0 && (
+            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+              {Object.entries(listing.attributes).map(([key, value]) => (
+                <div key={key} className="contents">
+                  <dt className="text-muted-foreground">{key}</dt>
+                  <dd>{value}</dd>
+                </div>
+              ))}
+            </dl>
+          )}
 
           {listing.latitude !== null && listing.longitude !== null && (
             // Zoom 14, not a street-level 16+: the API already rounds this
@@ -143,13 +191,32 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           )}
 
           <div className="mt-4 rounded-lg border border-border p-4">
-            <p className="text-sm font-medium">{listing.sellerDisplayName}</p>
-            <Link
-              href={`/seller/${encodeURIComponent(listing.sellerHandle)}`}
-              className="text-sm text-primary underline-offset-4 hover:underline"
-            >
-              View seller&apos;s Trust Score
-            </Link>
+            <div className="flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="flex items-center gap-1.5 truncate text-sm font-medium">
+                  <span className="truncate">{listing.sellerDisplayName}</span>
+                  {listing.identityVerified && (
+                    <ShieldCheck
+                      className="h-4 w-4 shrink-0 text-risk-low"
+                      aria-label="Identity verified"
+                    />
+                  )}
+                  {listing.phoneVerified && (
+                    <BadgeCheck
+                      className="h-4 w-4 shrink-0 text-muted-foreground"
+                      aria-label="Phone verified"
+                    />
+                  )}
+                </p>
+                <Link
+                  href={`/seller/${encodeURIComponent(listing.sellerHandle)}`}
+                  className="text-sm text-primary underline-offset-4 hover:underline"
+                >
+                  View seller&apos;s Trust Score
+                </Link>
+              </div>
+              {listing.riskLevel && <RiskBadge riskLevel={listing.riskLevel} />}
+            </div>
           </div>
 
           <div className="mt-4">

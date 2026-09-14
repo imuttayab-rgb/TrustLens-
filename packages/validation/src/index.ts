@@ -208,6 +208,8 @@ export const becomeSellerSchema = z.object({
 });
 export type BecomeSellerInput = z.infer<typeof becomeSellerSchema>;
 
+export const LISTING_CONDITIONS = ['NEW', 'LIKE_NEW', 'USED', 'FOR_PARTS'] as const;
+
 export const listingSchema = z.object({
   title: z.string().trim().min(3, 'Enter a title.').max(250),
   description: z.string().trim().min(10, 'Describe the item in at least 10 characters.').max(8000),
@@ -218,10 +220,13 @@ export const listingSchema = z.object({
   // "Mobile Phones", "mobile-phones" and "mobiles" as three separate buckets -
   // so a phone was never compared against other phones.
   category: z.enum(LISTING_CATEGORIES).optional(),
+  condition: z.enum(LISTING_CONDITIONS).optional(),
   city: z.string().max(80).optional(),
   area: z.string().max(120).optional(),
   latitude: z.coerce.number().min(-90).max(90).optional(),
   longitude: z.coerce.number().min(-180).max(180).optional(),
+  negotiable: z.boolean().optional(),
+  videoFileId: z.string().optional(),
 });
 export type ListingInput = z.infer<typeof listingSchema>;
 

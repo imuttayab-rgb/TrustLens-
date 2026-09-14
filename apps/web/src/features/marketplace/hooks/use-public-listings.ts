@@ -14,12 +14,19 @@ export interface PublicListing {
   price: number | null;
   currency: string | null;
   category: ListingCategory | null;
+  condition: string | null;
   city: string | null;
   area: string | null;
   createdAt: string;
   sellerHandle: string;
   sellerDisplayName: string;
+  status: string;
+  negotiable: boolean;
+  riskLevel: string | null;
+  identityVerified: boolean;
+  phoneVerified: boolean;
   imageUrl: string | null;
+  thumbnailUrl: string | null;
   latitude: number | null;
   longitude: number | null;
 }
@@ -31,8 +38,11 @@ export interface BrowseListingsParams {
   area?: string | null;
   minPrice?: number | null;
   maxPrice?: number | null;
-  /** One seller's own active listings, by handle - the public storefront. */
+  /** One seller's own listings, by handle - the public storefront. Unlike
+   * the anonymous catalog, this also returns their reserved/sold history. */
   sellerHandle?: string | null;
+  attributeKey?: string | null;
+  attributeValue?: string | null;
   sort?: SortOrder;
   limit?: number;
   offset?: number;
@@ -51,6 +61,8 @@ export function usePublicListings({
   minPrice = null,
   maxPrice = null,
   sellerHandle = null,
+  attributeKey = null,
+  attributeValue = null,
   sort = 'newest',
   limit = 20,
   offset = 0,
@@ -64,6 +76,8 @@ export function usePublicListings({
       minPrice,
       maxPrice,
       sellerHandle,
+      attributeKey,
+      attributeValue,
       sort,
       limit,
       offset,
@@ -79,6 +93,8 @@ export function usePublicListings({
             min_price: minPrice,
             max_price: maxPrice,
             seller: sellerHandle,
+            attributeKey,
+            attributeValue,
             sort,
             limit,
             offset,

@@ -36,6 +36,9 @@ export interface Listing {
   latitude: number | null;
   longitude: number | null;
   countryCode: string | null;
+  negotiable: boolean;
+  attributes: Record<string, string>;
+  videoFileId: string | null;
   updatedAt: string | null;
   analysis: ListingAnalysis | null;
 }
@@ -51,11 +54,15 @@ export interface ListingPayload {
   price?: number | null;
   currency?: string | null;
   category?: ListingCategory | null;
+  condition?: string | null;
   city?: string | null;
   area?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   countryCode?: string | null;
+  negotiable: boolean;
+  attributes?: Record<string, string>;
+  videoFileId?: string | null;
 }
 
 export function useListings({ limit = 20, offset = 0 } = {}) {
@@ -158,6 +165,7 @@ export interface ListingImage {
   width: number | null;
   height: number | null;
   url: string | null;
+  thumbnailUrl: string | null;
 }
 
 export interface AddListingImageResponse {

@@ -1,11 +1,14 @@
 'use client';
 
 import { uploadFile } from '@/lib/upload';
+import { toApiError } from '@trustlens/api-client';
 import { Alert, Spinner } from '@trustlens/ui';
 import { Camera, Plus } from 'lucide-react';
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { useAddListingImage, useListingImages } from '../hooks/use-listings';
+
+const MAX_IMAGES = 10;
 
 export function ListingImages({ listingId }: { listingId: string }) {
   const { data: images = [], isPending } = useListingImages(listingId);
@@ -16,12 +19,12 @@ export function ListingImages({ listingId }: { listingId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [duplicateWarning, setDuplicateWarning] = useState<string | null>(null);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
-    if (images.length + files.length > 5) {
-      setError('A listing may have at most 5 images.');
+    if (images.length + files.length > MAX_IMAGES) {
+      setError(`A listing may have at most ${MAX_IMAGES} images.`);
       return;
     }
 
@@ -33,7 +36,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (!file) continue;
-        if (images.length + i >= 5) break;
+        if (images.length + i >= MAX_IMAGES) break;
 
         const fileId = await uploadFile('LISTING_IMAGE', file);
         const result = await addImage.mutateAsync(fileId);
@@ -44,13 +47,13 @@ export function ListingImages({ listingId }: { listingId: string }) {
           );
         }
       }
-    } catch (err: any) {
-      setError(err.message || 'Upload failed.');
+    } catch (err) {
+      setError(toApiError(err).message || 'Upload failed.');
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
-  };
+  }
 
   if (isPending) {
     return <Spinner label="Loading images..." />;
@@ -61,8 +64,8 @@ export function ListingImages({ listingId }: { listingId: string }) {
       <div>
         <h3 className="font-semibold">Photos</h3>
         <p className="text-sm text-muted-foreground">
-          Upload up to 5 images. The first image will be the primary image. Good photos increase
-          buyer trust.
+          Upload up to {MAX_IMAGES} images. The first image will be the primary image. Good photos
+          increase buyer trust.
         </p>
       </div>
 
@@ -83,9 +86,9 @@ export function ListingImages({ listingId }: { listingId: string }) {
             key={img.imageId}
             className="group relative aspect-square overflow-hidden rounded-md border border-border bg-muted/50"
           >
-            {img.url ? (
+            {img.thumbnailUrl || img.url ? (
               <Image
-                src={img.url}
+                src={img.thumbnailUrl ?? img.url ?? ''}
                 alt="Listing image"
                 fill
                 className="object-cover"
@@ -104,7 +107,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
           </div>
         ))}
 
-        {images.length < 5 && (
+        {images.length < MAX_IMAGES && (
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
@@ -129,7 +132,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
         accept="image/jpeg,image/png,image/webp"
         multiple
         className="hidden"
-        onChange={handleFileSelect}
+        onChange={(e) => void handleFileSelect(e)}
       />
     </div>
   );

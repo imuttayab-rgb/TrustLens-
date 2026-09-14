@@ -4,7 +4,7 @@ import { useSession } from '@/lib/auth/use-session';
 import { ReportButton } from '@/features/moderation';
 import { Button } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Handshake, Heart, MapPin, MessageCircle } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAddFavorite, useFavoriteIds, useRemoveFavorite } from '../hooks/use-favorites';
 
@@ -59,6 +59,30 @@ export function ListingDetailActions({ listingId }: { listingId: string }) {
         >
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
           Message seller
+        </Button>
+      </div>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => {
+            if (!requireSession()) return;
+            router.push(`/dashboard/messages/new?listingId=${listingId}&intent=offer`);
+          }}
+        >
+          <Handshake className="h-4 w-4" aria-hidden="true" />
+          Make an offer
+        </Button>
+        <Button
+          variant="outline"
+          className="flex-1"
+          onClick={() => {
+            if (!requireSession()) return;
+            router.push(`/dashboard/messages/new?listingId=${listingId}&intent=safemeet`);
+          }}
+        >
+          <MapPin className="h-4 w-4" aria-hidden="true" />
+          Propose SafeMeet
         </Button>
       </div>
       <ReportButton targetType="LISTING" targetId={listingId} label="Report this listing" />

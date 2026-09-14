@@ -49,16 +49,20 @@ export function OfferPanel({
   conversationId,
   listingId,
   currentUserId,
+  autoOpen = false,
 }: {
   conversationId: string;
   listingId: string;
   currentUserId: string;
+  /** Opens the "make an offer" form immediately - a buyer arriving here
+   * from the listing page's "Make an offer" button, not the chat list. */
+  autoOpen?: boolean;
 }) {
   const { data: offers, isPending } = useOffers(conversationId);
   const { data: transactions } = useMyTransactions();
   const createOffer = useCreateOffer(conversationId);
   const respondToOffer = useRespondToOffer(conversationId);
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(autoOpen);
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
