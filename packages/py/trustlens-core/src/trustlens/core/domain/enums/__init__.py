@@ -45,6 +45,17 @@ class VerificationStatus(StrEnum):
         }
 
 
+class SellerAccountType(StrEnum):
+    """Individual vs company seller (BUS-01) - drives whether the business
+    verification step (legal name, registration number, a registration
+    document) applies at all. Replaces `business_type`'s former informal
+    role as "is this a business" - that field stays a free-text category
+    (e.g. "Retailer") a seller can optionally set either way."""
+
+    INDIVIDUAL = "INDIVIDUAL"
+    BUSINESS = "BUSINESS"
+
+
 class DocumentType(StrEnum):
     CNIC_FRONT = "CNIC_FRONT"
     CNIC_BACK = "CNIC_BACK"
@@ -209,6 +220,10 @@ class ReviewCaseType(StrEnum):
     FRAUD_FLAG = "FRAUD_FLAG"
     APPEAL = "APPEAL"
     DEVICE_CLUSTER = "DEVICE_CLUSTER"
+    #: A business registration document awaiting staff review (BUS-01) -
+    #: always manual, there is no automated OCR/matching pipeline for it the
+    #: way identity verification has.
+    BUSINESS_VERIFICATION = "BUSINESS_VERIFICATION"
 
 
 class ReportTargetType(StrEnum):
@@ -325,12 +340,20 @@ class FilePurpose(StrEnum):
     LISTING_VIDEO = "LISTING_VIDEO"
     APPEAL_EVIDENCE = "APPEAL_EVIDENCE"
     MODEL_ARTIFACT = "MODEL_ARTIFACT"
+    #: A business registration/tax certificate (BUS-01) - identity-adjacent
+    #: evidence about a company, not a public listing asset.
+    BUSINESS_REGISTRATION = "BUSINESS_REGISTRATION"
 
     @property
     def is_sensitive(self) -> bool:
         """Sensitive purposes go to the private documents bucket and are purged
         after MEDIA_RETENTION_DAYS_IDENTITY."""
-        return self in {FilePurpose.CNIC_FRONT, FilePurpose.CNIC_BACK, FilePurpose.SELFIE}
+        return self in {
+            FilePurpose.CNIC_FRONT,
+            FilePurpose.CNIC_BACK,
+            FilePurpose.SELFIE,
+            FilePurpose.BUSINESS_REGISTRATION,
+        }
 
 
 class ScanStatus(StrEnum):
@@ -416,6 +439,7 @@ __all__ = [
     "RiskLevel",
     "ScanStatus",
     "ScoreTrigger",
+    "SellerAccountType",
     "SignalCategory",
     "SignalCode",
     "SignalStatus",

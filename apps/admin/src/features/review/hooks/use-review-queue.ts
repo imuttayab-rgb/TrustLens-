@@ -7,7 +7,8 @@ import { toApiError } from '@trustlens/api-client';
 export interface ReviewCase {
   id: string;
   seller_id: string;
-  case_type: 'IDENTITY_REVIEW' | 'FRAUD_FLAG' | 'APPEAL' | 'DEVICE_CLUSTER';
+  case_type:
+    'IDENTITY_REVIEW' | 'FRAUD_FLAG' | 'APPEAL' | 'DEVICE_CLUSTER' | 'BUSINESS_VERIFICATION';
   status: 'QUEUED' | 'ASSIGNED' | 'APPROVED' | 'REJECTED' | 'ESCALATED';
   priority: number;
   created_at: string;
@@ -80,3 +81,5 @@ export function useDecideCase() {
 
 export { useIdentityReview } from './use-identity-review';
 export type { IdentityReview, IdentityReviewDocument } from './use-identity-review';
+export { useBusinessReview } from './use-business-review';
+export type { BusinessReview } from './use-business-review';

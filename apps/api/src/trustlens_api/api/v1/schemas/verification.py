@@ -86,6 +86,12 @@ class VerifyOtpRequest(Schema):
     code: str = Field(min_length=4, max_length=8, pattern=r"^\d+$")
 
 
+class SubmitBusinessVerificationRequest(Schema):
+    legal_name: str = Field(min_length=2, max_length=200)
+    registration_number: str = Field(min_length=2, max_length=80)
+    document_file_id: UUID
+
+
 class DeviceFingerprintRequest(Schema):
     fingerprint: str = Field(min_length=16, max_length=256)
     user_agent: str | None = None
@@ -115,6 +121,7 @@ __all__ = [
     "IdentityStatusResponse",
     "RequestOtpRequest",
     "RequestOtpResponse",
+    "SubmitBusinessVerificationRequest",
     "SubmitIdentityRequest",
     "UploadIntentRequest",
     "UploadIntentResponse",

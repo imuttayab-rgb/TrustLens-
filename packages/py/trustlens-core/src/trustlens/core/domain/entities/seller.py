@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
-from trustlens.core.domain.enums import VerificationStatus
+from trustlens.core.domain.enums import SellerAccountType, VerificationStatus
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +51,14 @@ class SellerProfile:
     identity_status: VerificationStatus = VerificationStatus.NOT_STARTED
     phone_status: VerificationStatus = VerificationStatus.NOT_STARTED
     email_status: VerificationStatus = VerificationStatus.NOT_STARTED
+    #: Individual vs company (BUS-01). The four fields below only mean
+    #: anything once this is BUSINESS - an individual seller's registration
+    #: number/legal name/document stay null.
+    account_type: SellerAccountType = SellerAccountType.INDIVIDUAL
+    business_legal_name: str | None = None
+    business_registration_number: str | None = None
+    business_document_file_id: UUID | None = None
+    business_verification_status: VerificationStatus = VerificationStatus.NOT_STARTED
     is_flagged: bool = False
     updated_at: datetime | None = None
     deleted_at: datetime | None = None

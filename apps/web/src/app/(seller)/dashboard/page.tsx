@@ -90,6 +90,26 @@ export default function DashboardPage() {
         </Card>
       </div>
 
+      {seller.accountType === 'BUSINESS' && seller.businessVerificationStatus !== 'VERIFIED' && (
+        <Card className="mt-6">
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 pt-6">
+            <div>
+              <p className="font-medium">Verify your business</p>
+              <p className="text-sm text-muted-foreground">
+                {seller.businessVerificationStatus === 'PENDING'
+                  ? 'Your registration document is with a staff reviewer.'
+                  : 'Shows a "Verified business" badge on your storefront.'}
+              </p>
+            </div>
+            {seller.businessVerificationStatus !== 'PENDING' && (
+              <Button asChild variant="outline">
+                <Link href="/dashboard/verification/business">Verify now</Link>
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       <div className="mt-6">
         <Button variant="outline" asChild>
           <Link href="/dashboard/trust-score">See your full score breakdown</Link>

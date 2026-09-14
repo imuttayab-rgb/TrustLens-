@@ -24,6 +24,8 @@ from fastapi import APIRouter, Depends, status
 from trustlens.core.application.use_cases.verification import (
     RequestOtpCommand,
     RequestPhoneOtp,
+    SubmitBusinessVerification,
+    SubmitBusinessVerificationCommand,
     SubmitIdentityCommand,
     SubmitIdentityDocuments,
     VerifyOtpCommand,
@@ -52,6 +54,7 @@ from trustlens_api.api.v1.schemas.verification import (
     IdentityStatusResponse,
     RequestOtpRequest,
     RequestOtpResponse,
+    SubmitBusinessVerificationRequest,
     SubmitIdentityRequest,
     UploadIntentRequest,
     UploadIntentResponse,
@@ -296,6 +299,38 @@ async def identity_status(seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict
             else None,
             submitted_at=front.created_at if front else None,
         ).model_dump(by_alias=True),
+        request_id=meta.request_id,
+    )
+
+
+@router.post(
+    "/verification/business",
+    summary="Submit a business registration document for review (BUS-01)",
+    description=(
+        "Always goes straight to a human reviewer - there is no automated "
+        "OCR/matching pipeline for a business registration certificate the "
+        "way identity verification has."
+    ),
+)
+async def submit_business_verification(
+    body: SubmitBusinessVerificationRequest,
+    seller: SellerDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    result = await SubmitBusinessVerification(
+        uow=uow, clock=container.clock, ids=container.ids
+    ).execute(
+        SubmitBusinessVerificationCommand(
+            seller_id=seller.id,
+            legal_name=body.legal_name,
+            registration_number=body.registration_number,
+            document_file_id=body.document_file_id,
+        )
+    )
+    return envelope(
+        {"status": result.status.value},
         request_id=meta.request_id,
     )
 

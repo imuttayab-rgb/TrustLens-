@@ -76,6 +76,18 @@
       "BecomeSellerRequest": {
         "additionalProperties": false,
         "properties": {
+          "accountType": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accounttype"
+          },
           "businessType": {
             "anyOf": [
               {
@@ -1395,6 +1407,31 @@
         "title": "SubmitAppealRequest",
         "type": "object"
       },
+      "SubmitBusinessVerificationRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "documentFileId": {
+            "format": "uuid",
+            "title": "Documentfileid",
+            "type": "string"
+          },
+          "legalName": {
+            "maxLength": 200,
+            "minLength": 2,
+            "title": "Legalname",
+            "type": "string"
+          },
+          "registrationNumber": {
+            "maxLength": 80,
+            "minLength": 2,
+            "title": "Registrationnumber",
+            "type": "string"
+          }
+        },
+        "required": ["legalName", "registrationNumber", "documentFileId"],
+        "title": "SubmitBusinessVerificationRequest",
+        "type": "object"
+      },
       "SubmitIdentityRequest": {
         "additionalProperties": false,
         "properties": {
@@ -1425,6 +1462,18 @@
       "UpdateSellerRequest": {
         "additionalProperties": false,
         "properties": {
+          "accountType": {
+            "anyOf": [
+              {
+                "maxLength": 20,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Accounttype"
+          },
           "bio": {
             "anyOf": [
               {
@@ -3485,6 +3534,65 @@
           }
         },
         "summary": "Get seller details",
+        "tags": ["admin"]
+      }
+    },
+    "/api/v1/admin/sellers/{seller_id}/business-review": {
+      "get": {
+        "operationId": "get_business_review_api_v1_admin_sellers__seller_id__business_review_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "seller_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Seller Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Business Review Api V1 Admin Sellers  Seller Id  Business Review Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review a business registration submission (BUS-01)",
         "tags": ["admin"]
       }
     },
@@ -8751,6 +8859,66 @@
         },
         "summary": "My own review of this transaction, if I've left one",
         "tags": ["Reputation"]
+      }
+    },
+    "/api/v1/verification/business": {
+      "post": {
+        "description": "Always goes straight to a human reviewer - there is no automated OCR/matching pipeline for a business registration certificate the way identity verification has.",
+        "operationId": "submit_business_verification_api_v1_verification_business_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubmitBusinessVerificationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Submit Business Verification Api V1 Verification Business Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Submit a business registration document for review (BUS-01)",
+        "tags": ["Verification"]
       }
     },
     "/api/v1/verification/device": {

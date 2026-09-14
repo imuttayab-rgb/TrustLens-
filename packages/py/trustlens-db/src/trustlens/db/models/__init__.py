@@ -379,6 +379,23 @@ class SellerProfile(Base, TimestampMixin, SoftDeleteMixin):
         nullable=False,
         default=e.VerificationStatus.NOT_STARTED,
     )
+    #: Individual vs company (BUS-01) - the four columns below only mean
+    #: anything once this is BUSINESS.
+    account_type: Mapped[e.SellerAccountType] = mapped_column(
+        pg_enum(e.SellerAccountType, "seller_account_type"),
+        nullable=False,
+        default=e.SellerAccountType.INDIVIDUAL,
+    )
+    business_legal_name: Mapped[str | None] = mapped_column(String(200))
+    business_registration_number: Mapped[str | None] = mapped_column(String(80))
+    business_document_file_id: Mapped[UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("files.id", ondelete="SET NULL")
+    )
+    business_verification_status: Mapped[e.VerificationStatus] = mapped_column(
+        pg_enum(e.VerificationStatus, "verification_status"),
+        nullable=False,
+        default=e.VerificationStatus.NOT_STARTED,
+    )
     is_flagged: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 

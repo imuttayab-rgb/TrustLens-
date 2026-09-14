@@ -15,6 +15,7 @@ from trustlens.core.domain.entities import SellerProfile, SignalDefinition, Trus
 from trustlens.core.domain.enums import (
     RiskLevel,
     ScoreTrigger,
+    SellerAccountType,
     SignalCategory,
     SignalCode,
     SignalStatus,
@@ -141,6 +142,19 @@ class GetPublicTrustScore:
             return await self._uow.sellers.get_by_handle(ref)
 
 
+def _public_verifications(seller: SellerProfile) -> dict[str, str]:
+    verifications = {
+        "identity": seller.identity_status.value,
+        "phone": seller.phone_status.value,
+        "email": seller.email_status.value,
+    }
+    # Only shown for a business account (BUS-01) - an individual seller's
+    # storefront has no reason to show a "business: NOT_STARTED" row.
+    if seller.account_type == SellerAccountType.BUSINESS:
+        verifications["business"] = seller.business_verification_status.value
+    return verifications
+
+
 def to_public(
     seller_ref: str,
     score: TrustScore,
@@ -166,11 +180,7 @@ def to_public(
         risk_level=score.risk_level.value,
         risk_label=band_label(score.risk_level),
         confidence=float(score.confidence),
-        verifications={
-            "identity": seller.identity_status.value,
-            "phone": seller.phone_status.value,
-            "email": seller.email_status.value,
-        },
+        verifications=_public_verifications(seller),
         reasons=reasons,
         model_version=score.scoring_model_version,
         computed_at=score.computed_at.isoformat(),
@@ -188,11 +198,7 @@ def _unscored_payload(seller_ref: str, seller: SellerProfile) -> PublicTrustScor
         risk_level=RiskLevel.UNKNOWN.value,
         risk_label=band_label(RiskLevel.UNKNOWN),
         confidence=0.0,
-        verifications={
-            "identity": seller.identity_status.value,
-            "phone": seller.phone_status.value,
-            "email": seller.email_status.value,
-        },
+        verifications=_public_verifications(seller),
         reasons=[
             PublicReason(
                 code="INSUFFICIENT_EVIDENCE",

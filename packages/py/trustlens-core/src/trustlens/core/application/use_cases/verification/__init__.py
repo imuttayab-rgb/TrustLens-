@@ -1,3 +1,8 @@
+from trustlens.core.application.use_cases.verification.business import (
+    SubmitBusinessVerification,
+    SubmitBusinessVerificationCommand,
+    SubmitBusinessVerificationResult,
+)
 from trustlens.core.application.use_cases.verification.identity import (
     FinalizeIdentityCommand,
     FinalizeIdentityVerification,
@@ -19,6 +24,9 @@ __all__ = [
     "OtpGenerator",
     "RequestOtpCommand",
     "RequestPhoneOtp",
+    "SubmitBusinessVerification",
+    "SubmitBusinessVerificationCommand",
+    "SubmitBusinessVerificationResult",
     "SubmitIdentityCommand",
     "SubmitIdentityDocuments",
     "SubmitIdentityResult",

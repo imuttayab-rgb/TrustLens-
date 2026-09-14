@@ -44,7 +44,13 @@ export function BecomeSellerForm() {
     formState: { errors, isSubmitting },
   } = useForm<BecomeSellerInput>({
     resolver: zodResolver(becomeSellerSchema),
-    defaultValues: { displayName: '', businessType: '', city: '', countryCode: 'PK' },
+    defaultValues: {
+      displayName: '',
+      businessType: '',
+      city: '',
+      countryCode: 'PK',
+      accountType: 'INDIVIDUAL',
+    },
   });
 
   const { submit, formError } = useApiForm<BecomeSellerInput>(setError);
@@ -60,6 +66,7 @@ export function BecomeSellerForm() {
           ...(values.businessType ? { businessType: values.businessType } : {}),
           ...(values.city ? { city: values.city } : {}),
           ...(values.countryCode ? { countryCode: values.countryCode.toUpperCase() } : {}),
+          ...(values.accountType ? { accountType: values.accountType } : {}),
         },
       });
       if (result.error) throw toApiError(result.error);
@@ -101,6 +108,21 @@ export function BecomeSellerForm() {
           If that address is taken we add a number to the end.
         </p>
       )}
+
+      <Field
+        htmlFor="accountType"
+        label="Account type"
+        hint="A business account unlocks a registration-document verification step, shown as a badge on your storefront once approved."
+      >
+        <select
+          {...fieldAria('accountType')}
+          className="h-11 w-full rounded-md border border-input bg-background px-3 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:text-sm"
+          {...register('accountType')}
+        >
+          <option value="INDIVIDUAL">Individual</option>
+          <option value="BUSINESS">Business / company</option>
+        </select>
+      </Field>
 
       <Field htmlFor="businessType" label="Business type" error={errors.businessType?.message}>
         <Input

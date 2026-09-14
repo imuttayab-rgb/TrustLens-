@@ -25,7 +25,7 @@ from trustlens.core.application.use_cases.saved_searches import (
     ListSavedSearches,
 )
 from trustlens.core.domain.entities import SellerProfile, TrustScore
-from trustlens.core.domain.enums import UserRole, VerificationStatus
+from trustlens.core.domain.enums import SellerAccountType, UserRole, VerificationStatus
 from trustlens.core.domain.errors import ConflictError, EntityNotFound, ValidationError
 from trustlens.core.domain.policies import (
     MAX_HANDLE_LENGTH,
@@ -95,6 +95,16 @@ async def become_seller(
 
     now = container.clock.now()
     handle = await _unique_handle(uow, body.display_name)
+    try:
+        account_type = (
+            SellerAccountType(body.account_type)
+            if body.account_type
+            else SellerAccountType.INDIVIDUAL
+        )
+    except ValueError as exc:
+        raise ValidationError(
+            f"Invalid account type: {body.account_type}", field="accountType"
+        ) from exc
     seller = await uow.sellers.create(
         SellerProfile(
             id=container.ids.new(),
@@ -104,6 +114,7 @@ async def become_seller(
             business_type=body.business_type,
             city=body.city,
             country_code=body.country_code,
+            account_type=account_type,
             # Account age is measured from registration, not from the seller
             # upgrade: a long-standing buyer should not be treated as brand new.
             account_opened_at=user.created_at,
@@ -154,6 +165,17 @@ async def update_my_seller(
         raise EntityNotFound("seller_profile", actor.user_id)
 
     changes = body.model_dump(exclude_unset=True, by_alias=False)
+    # account_type is the one field here that isn't a plain string on the
+    # entity - splatting the raw request string in would write an invalid
+    # enum value straight through to the database.
+    if "account_type" in changes:
+        raw = changes.pop("account_type")
+        try:
+            changes["account_type"] = (
+                SellerAccountType(raw) if raw else SellerAccountType.INDIVIDUAL
+            )
+        except ValueError as exc:
+            raise ValidationError(f"Invalid account type: {raw}", field="accountType") from exc
     updated = dataclasses.replace(seller, **changes, updated_at=container.clock.now())
     await uow.sellers.update(updated)
     await uow.commit()
@@ -212,6 +234,10 @@ def _seller_response(seller: SellerProfile, score: TrustScore | None = None) -> 
         identity_status=seller.identity_status.value,
         phone_status=seller.phone_status.value,
         email_status=seller.email_status.value,
+        account_type=seller.account_type.value,
+        business_legal_name=seller.business_legal_name,
+        business_registration_number=seller.business_registration_number,
+        business_verification_status=seller.business_verification_status.value,
         is_flagged=seller.is_flagged,
         score=int(score.score) if score else None,
         risk_level=score.risk_level.value if score else None,

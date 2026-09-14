@@ -1,4 +1,5 @@
 /** Public surface of the verification feature. */
+export { BusinessVerification } from './components/BusinessVerification';
 export { DeviceCheck } from './components/DeviceCheck';
 export { EmailVerification } from './components/EmailVerification';
 export { IdentityVerification } from './components/IdentityVerification';

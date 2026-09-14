@@ -222,6 +222,11 @@ class SqlSellerRepository:
                 identity_status=seller.identity_status,
                 phone_status=seller.phone_status,
                 email_status=seller.email_status,
+                account_type=seller.account_type,
+                business_legal_name=seller.business_legal_name,
+                business_registration_number=seller.business_registration_number,
+                business_document_file_id=seller.business_document_file_id,
+                business_verification_status=seller.business_verification_status,
                 created_at=seller.created_at,
                 updated_at=seller.created_at,
             )
@@ -243,6 +248,11 @@ class SqlSellerRepository:
                 identity_status=seller.identity_status,
                 phone_status=seller.phone_status,
                 email_status=seller.email_status,
+                account_type=seller.account_type,
+                business_legal_name=seller.business_legal_name,
+                business_registration_number=seller.business_registration_number,
+                business_document_file_id=seller.business_document_file_id,
+                business_verification_status=seller.business_verification_status,
                 is_flagged=seller.is_flagged,
                 version=m.SellerProfile.version + 1,
             )

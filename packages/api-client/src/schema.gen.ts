@@ -449,6 +449,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/sellers/{seller_id}/business-review': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Review a business registration submission (BUS-01) */
+    get: operations['get_business_review_api_v1_admin_sellers__seller_id__business_review_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/sellers/{seller_id}/identity-review': {
     parameters: {
       query?: never;
@@ -1790,6 +1807,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/verification/business': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit a business registration document for review (BUS-01)
+     * @description Always goes straight to a human reviewer - there is no automated OCR/matching pipeline for a business registration certificate the way identity verification has.
+     */
+    post: operations['submit_business_verification_api_v1_verification_business_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/verification/device': {
     parameters: {
       query?: never;
@@ -2043,6 +2080,8 @@ export interface components {
     };
     /** BecomeSellerRequest */
     BecomeSellerRequest: {
+      /** Accounttype */
+      accountType?: string | null;
       /** Businesstype */
       businessType?: string | null;
       /** City */
@@ -2558,6 +2597,18 @@ export interface components {
        */
       trustScoreId: string;
     };
+    /** SubmitBusinessVerificationRequest */
+    SubmitBusinessVerificationRequest: {
+      /**
+       * Documentfileid
+       * Format: uuid
+       */
+      documentFileId: string;
+      /** Legalname */
+      legalName: string;
+      /** Registrationnumber */
+      registrationNumber: string;
+    };
     /** SubmitIdentityRequest */
     SubmitIdentityRequest: {
       /** Biometricconsent */
@@ -2580,6 +2631,8 @@ export interface components {
     };
     /** UpdateSellerRequest */
     UpdateSellerRequest: {
+      /** Accounttype */
+      accountType?: string | null;
       /** Bio */
       bio?: string | null;
       /** Businesstype */
@@ -3620,6 +3673,41 @@ export interface operations {
     };
   };
   get_seller_detail_api_v1_admin_sellers__seller_id__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        seller_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_business_review_api_v1_admin_sellers__seller_id__business_review_get: {
     parameters: {
       query?: never;
       header?: {
@@ -6702,6 +6790,43 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  submit_business_verification_api_v1_verification_business_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SubmitBusinessVerificationRequest'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

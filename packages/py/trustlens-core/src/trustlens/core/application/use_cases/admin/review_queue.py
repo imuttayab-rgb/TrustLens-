@@ -23,7 +23,12 @@ from dataclasses import dataclass
 from uuid import UUID
 
 from trustlens.core.domain.entities import AuditLogEntry, ReviewCase
-from trustlens.core.domain.enums import ReviewStatus, ScoreTrigger, VerificationStatus
+from trustlens.core.domain.enums import (
+    ReviewCaseType,
+    ReviewStatus,
+    ScoreTrigger,
+    VerificationStatus,
+)
 from trustlens.core.domain.errors import EntityNotFound, InvalidStateError, ValidationError
 from trustlens.core.domain.ports import Clock, IdGenerator, JobQueue, UnitOfWork
 
@@ -163,8 +168,8 @@ class DecideReviewCase:
                 )
             )
 
-            # An identity case is the one kind whose verdict changes a
-            # verification record rather than only the queue.
+            # An identity or business-verification case is the kind whose
+            # verdict changes a verification record, not just the queue.
             seller = await self._uow.sellers.get(case.seller_id)
             if seller is not None and case.related_entity_type == "identity_verifications":
                 new_status = (
@@ -174,6 +179,15 @@ class DecideReviewCase:
                     dataclasses.replace(seller, identity_status=new_status, updated_at=now)
                 )
                 identity_updated = True
+            elif seller is not None and case.case_type == ReviewCaseType.BUSINESS_VERIFICATION:
+                new_status = (
+                    VerificationStatus.VERIFIED if cmd.approve else VerificationStatus.REJECTED
+                )
+                await self._uow.sellers.update(
+                    dataclasses.replace(
+                        seller, business_verification_status=new_status, updated_at=now
+                    )
+                )
 
             await self._uow.audit_logs.record(
                 AuditLogEntry(

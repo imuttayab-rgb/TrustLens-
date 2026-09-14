@@ -25,6 +25,7 @@ import {
   type SignalRow,
 } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
+import { Building2 } from 'lucide-react';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -162,7 +163,15 @@ export default async function SellerPage({ params }: { params: Promise<{ handle:
         />
         <div className="space-y-1">
           <h1 className="text-xl font-bold sm:text-2xl">{handle}</h1>
-          <RiskBadge riskLevel={score.riskLevel} />
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <RiskBadge riskLevel={score.riskLevel} />
+            {score.verifications.business === 'VERIFIED' && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                <Building2 className="h-3 w-3" aria-hidden="true" />
+                Verified business
+              </span>
+            )}
+          </div>
         </div>
         <p className="text-xs text-muted-foreground sm:text-sm">
           Last checked {formatDateTime(score.computedAt)} · scoring model {score.modelVersion}

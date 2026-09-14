@@ -2,17 +2,19 @@
 
 import { MIN_DECISION_NOTE_CHARS } from '../constants';
 import {
+  useBusinessReview,
   useClaimCase,
   useDecideCase,
   useIdentityReview,
   useReviewQueue,
   type ReviewCase,
 } from '../hooks/use-review-queue';
+import { BusinessEvidence } from './BusinessEvidence';
 import { IdentityEvidence } from './IdentityEvidence';
 import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Card, CardContent, Spinner, cn } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
-import { ShieldAlert, ShieldCheck, TriangleAlert, UserSearch } from 'lucide-react';
+import { Building2, ShieldAlert, ShieldCheck, TriangleAlert, UserSearch } from 'lucide-react';
 import { useState } from 'react';
 
 const CASE_ICON = {
@@ -20,6 +22,7 @@ const CASE_ICON = {
   FRAUD_FLAG: ShieldAlert,
   APPEAL: TriangleAlert,
   DEVICE_CLUSTER: ShieldAlert,
+  BUSINESS_VERIFICATION: Building2,
 } as const;
 
 /** Lower number = more urgent, matching the queue's own ordering. */
@@ -128,6 +131,10 @@ function CaseRow({
     item.seller_id,
     expanded && item.case_type === 'IDENTITY_REVIEW',
   );
+  const business = useBusinessReview(
+    item.seller_id,
+    expanded && item.case_type === 'BUSINESS_VERIFICATION',
+  );
   const [note, setNote] = useState('');
   const [failure, setFailure] = useState<string | null>(null);
 
@@ -190,6 +197,9 @@ function CaseRow({
             ) : (
               <>
                 {item.case_type === 'IDENTITY_REVIEW' && <IdentityEvidence identity={identity} />}
+                {item.case_type === 'BUSINESS_VERIFICATION' && (
+                  <BusinessEvidence business={business} />
+                )}
 
                 <div>
                   <label htmlFor={`note-${item.id}`} className="block text-sm font-medium">

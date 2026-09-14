@@ -144,6 +144,15 @@ class IdentityReviewDocumentModel(Schema):
     expiry_date: Any
 
 
+class BusinessReviewModel(Schema):
+    seller_id: UUID
+    legal_name: str | None
+    registration_number: str | None
+    status: str
+    preview_url: str | None
+    url_expires_at: Any
+
+
 class IdentityReviewModel(Schema):
     seller_id: UUID
     verification_id: UUID
@@ -579,6 +588,62 @@ async def get_identity_review(
         name_match_score=verification.name_match_score,
         decision_reason=verification.decision_reason,
         documents=review_documents,
+    )
+    return envelope(review.model_dump(by_alias=True), request_id=meta.request_id)
+
+
+@router.get(
+    "/sellers/{seller_id}/business-review",
+    summary="Review a business registration submission (BUS-01)",
+    dependencies=[Depends(require_permissions("identity:read:any"))],
+)
+async def get_business_review(
+    seller_id: UUID,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    from datetime import timedelta
+
+    seller = await uow.sellers.get(seller_id)
+    if seller is None:
+        raise EntityNotFound("seller", seller_id)
+    if seller.business_document_file_id is None:
+        raise EntityNotFound("business_verification", seller_id)
+
+    stored_file = await uow.files.get(seller.business_document_file_id)
+    ttl_seconds = container.settings.storage.storage_presign_ttl_seconds
+    preview_url = (
+        await container.storage.presign_download(
+            bucket=stored_file.bucket, object_key=stored_file.object_key, ttl_seconds=ttl_seconds
+        )
+        if stored_file is not None
+        else None
+    )
+
+    if actor.user_id is not None:
+        await uow.audit_logs.record(
+            AuditLogEntry(
+                id=container.ids.new(),
+                action="business_verification.evidence_viewed",
+                entity_type="seller_profiles",
+                entity_id=seller.id,
+                actor_id=actor.user_id,
+                occurred_at=container.clock.now(),
+                before={},
+                after={"seller_id": str(seller_id)},
+            )
+        )
+        await uow.commit()
+
+    review = BusinessReviewModel(
+        seller_id=seller.id,
+        legal_name=seller.business_legal_name,
+        registration_number=seller.business_registration_number,
+        status=seller.business_verification_status.value,
+        preview_url=preview_url,
+        url_expires_at=container.clock.now() + timedelta(seconds=ttl_seconds),
     )
     return envelope(review.model_dump(by_alias=True), request_id=meta.request_id)
 

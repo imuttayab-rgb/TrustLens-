@@ -205,6 +205,7 @@ export const becomeSellerSchema = z.object({
   businessType: z.string().max(50).optional(),
   city: z.string().max(80).optional(),
   countryCode: z.string().length(2, 'Use a 2-letter country code.').optional(),
+  accountType: z.enum(['INDIVIDUAL', 'BUSINESS']).optional(),
 });
 export type BecomeSellerInput = z.infer<typeof becomeSellerSchema>;
 

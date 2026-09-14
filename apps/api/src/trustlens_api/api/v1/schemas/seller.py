@@ -23,6 +23,12 @@ class SellerResponse(Schema):
     identity_status: str
     phone_status: str
     email_status: str
+    #: Individual vs company (BUS-01) - the three fields below only mean
+    #: anything once this is "BUSINESS".
+    account_type: str = "INDIVIDUAL"
+    business_legal_name: str | None = None
+    business_registration_number: str | None = None
+    business_verification_status: str = "NOT_STARTED"
     is_flagged: bool = False
     score: int | None = None
     risk_level: str | None = None
@@ -34,6 +40,9 @@ class UpdateSellerRequest(Schema):
     city: str | None = Field(default=None, max_length=80)
     country_code: str | None = Field(default=None, min_length=2, max_length=2)
     bio: str | None = Field(default=None, max_length=2000)
+    #: "INDIVIDUAL" or "BUSINESS" - switching to BUSINESS just unlocks the
+    #: business-verification step, it doesn't require the seller submit it.
+    account_type: str | None = Field(default=None, max_length=20)
 
 
 class BecomeSellerRequest(Schema):
@@ -41,6 +50,7 @@ class BecomeSellerRequest(Schema):
     business_type: str | None = Field(default=None, max_length=50)
     city: str | None = Field(default=None, max_length=80)
     country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    account_type: str | None = Field(default=None, max_length=20)
 
 
 class ListingResponse(Schema):
