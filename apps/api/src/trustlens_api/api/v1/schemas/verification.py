@@ -11,7 +11,9 @@ from trustlens_api.api.v1.schemas.common import Schema
 
 
 class UploadIntentRequest(Schema):
-    purpose: str = Field(description="CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE")
+    purpose: str = Field(
+        description="CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE | LISTING_VIDEO"
+    )
     content_type: str
     size_bytes: int = Field(gt=0)
     filename: str | None = Field(default=None, max_length=255)
@@ -19,10 +21,12 @@ class UploadIntentRequest(Schema):
     @field_validator("content_type")
     @classmethod
     def _allowed(cls, v: str) -> str:
-        # Advisory only. The real check is magic-byte sniffing after upload -
-        # a client-declared content type is not evidence of anything.
-        if v not in {"image/jpeg", "image/png", "image/webp"}:
-            raise ValueError("Only JPEG, PNG and WEBP images are accepted.")
+        # Advisory only. The real check (including the actual per-purpose
+        # size/mime limits) happens in the handler, which knows the
+        # purpose; this is just a first, purpose-blind filter against
+        # anything that couldn't ever be a valid upload.
+        if v not in {"image/jpeg", "image/png", "image/webp", "video/mp4"}:
+            raise ValueError("Only JPEG, PNG, WEBP images or an MP4 video are accepted.")
         return v
 
 

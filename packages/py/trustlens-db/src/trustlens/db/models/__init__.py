@@ -710,6 +710,11 @@ class ListingModel(Base, TimestampMixin, SoftDeleteMixin):
         pg_enum(e.ListingStatus, "listing_status"), nullable=False, default=e.ListingStatus.DRAFT
     )
     latest_analysis_id: Mapped[UUID | None] = mapped_column(PgUUID(as_uuid=True))
+    negotiable: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    attributes: Mapped[dict[str, str]] = mapped_column(JSONB, nullable=False, default=dict)
+    video_file_id: Mapped[UUID | None] = mapped_column(
+        PgUUID(as_uuid=True), ForeignKey("files.id", ondelete="SET NULL")
+    )
     version: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
 
     __table_args__ = (
@@ -747,6 +752,7 @@ class ListingImageModel(Base):
     perceptual_hash: Mapped[bytes | None] = mapped_column(LargeBinary)
     sha256: Mapped[bytes | None] = mapped_column(LargeBinary)
     is_primary: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    thumbnail_object_key: Mapped[str | None] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

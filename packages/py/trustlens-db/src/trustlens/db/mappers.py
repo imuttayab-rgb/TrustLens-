@@ -230,6 +230,9 @@ def to_listing(row: m.ListingModel, analysis: ent.ListingAnalysis | None = None)
         country_code=row.country_code,
         external_url=row.external_url,
         posted_at=row.posted_at,
+        negotiable=row.negotiable,
+        attributes=dict(row.attributes or {}),
+        video_file_id=row.video_file_id,
         latest_analysis=analysis,
         updated_at=row.updated_at,
         deleted_at=row.deleted_at,
@@ -285,6 +288,7 @@ def to_listing_image(row: m.ListingImageModel) -> ent.ListingImage:
         perceptual_hash=row.perceptual_hash,
         sha256=row.sha256,
         is_primary=row.is_primary,
+        thumbnail_object_key=row.thumbnail_object_key,
     )
 
 

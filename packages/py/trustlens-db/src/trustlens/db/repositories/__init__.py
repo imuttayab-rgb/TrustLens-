@@ -773,13 +773,27 @@ class SqlListingRepository:
         min_price: float | None = None,
         max_price: float | None = None,
         seller_handle: str | None = None,
+        attribute_key: str | None = None,
+        attribute_value: str | None = None,
+        include_sold: bool = False,
     ) -> Select[Any]:
         stmt = (
-            select(m.ListingModel, m.SellerProfile).join(
-                m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id
+            select(m.ListingModel, m.SellerProfile, m.TrustScoreModel.risk_level)
+            .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
+            .outerjoin(
+                m.TrustScoreModel, m.TrustScoreModel.id == m.SellerProfile.current_trust_score_id
             )
         ).where(
-            m.ListingModel.status == e.ListingStatus.ACTIVE,
+            # The storefront (MKT-04) also wants a seller's RESERVED/SOLD
+            # listings, for their sold-listing history - the anonymous
+            # catalog and search never do.
+            (
+                m.ListingModel.status.in_(
+                    [e.ListingStatus.ACTIVE, e.ListingStatus.RESERVED, e.ListingStatus.SOLD]
+                )
+                if include_sold
+                else m.ListingModel.status == e.ListingStatus.ACTIVE
+            ),
             m.ListingModel.deleted_at.is_(None),
             m.SellerProfile.deleted_at.is_(None),
         )
@@ -801,6 +815,11 @@ class SqlListingRepository:
             # Powers the public seller storefront (MKT-04) - a seller's own
             # active listings, same PII-free projection as the catalog.
             stmt = stmt.where(m.SellerProfile.handle == seller_handle)
+        if attribute_key and attribute_value:
+            # MKT-01's attribute search - a JSONB containment check against
+            # the freeform {key: value} spec bag (LST-01), not a per-category
+            # schema, so this matches whatever a seller actually entered.
+            stmt = stmt.where(m.ListingModel.attributes.contains({attribute_key: attribute_value}))
         return stmt
 
     def _order_by(self, stmt: Select[Any], sort: str) -> Select[Any]:
@@ -821,6 +840,9 @@ class SqlListingRepository:
         min_price: float | None = None,
         max_price: float | None = None,
         seller_handle: str | None = None,
+        attribute_key: str | None = None,
+        attribute_value: str | None = None,
+        include_sold: bool = False,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -833,13 +855,19 @@ class SqlListingRepository:
             min_price=min_price,
             max_price=max_price,
             seller_handle=seller_handle,
+            attribute_key=attribute_key,
+            attribute_value=attribute_value,
+            include_sold=include_sold,
         )
         stmt = self._order_by(stmt, sort).limit(limit).offset(offset)
         rows = (await self._s.execute(stmt)).all()
-        listing_ids = [listing.id for listing, _seller in rows]
+        listing_ids = [listing.id for listing, _seller, _risk in rows]
         primary_images = await _primary_image_ids(self._s, listing_ids)
 
-        return [_to_public_summary(listing, seller, primary_images) for listing, seller in rows]
+        return [
+            _to_public_summary(listing, seller, risk_level, primary_images)
+            for listing, seller, risk_level in rows
+        ]
 
     async def count_public(
         self,
@@ -851,6 +879,9 @@ class SqlListingRepository:
         min_price: float | None = None,
         max_price: float | None = None,
         seller_handle: str | None = None,
+        attribute_key: str | None = None,
+        attribute_value: str | None = None,
+        include_sold: bool = False,
     ) -> int:
         stmt = select(func.count()).select_from(
             self._public_query_base(
@@ -861,17 +892,27 @@ class SqlListingRepository:
                 min_price=min_price,
                 max_price=max_price,
                 seller_handle=seller_handle,
+                attribute_key=attribute_key,
+                attribute_value=attribute_value,
+                include_sold=include_sold,
             ).subquery()
         )
         return int((await self._s.execute(stmt)).scalar_one())
 
     async def get_public_detail(self, listing_id: UUID) -> ent.PublicListingDetail | None:
         stmt = (
-            select(m.ListingModel, m.SellerProfile)
+            select(m.ListingModel, m.SellerProfile, m.TrustScoreModel.risk_level)
             .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
+            .outerjoin(
+                m.TrustScoreModel, m.TrustScoreModel.id == m.SellerProfile.current_trust_score_id
+            )
             .where(
                 m.ListingModel.id == listing_id,
-                m.ListingModel.status == e.ListingStatus.ACTIVE,
+                # A buyer can still open a listing they're mid-deal on (or
+                # already bought) via a direct link - not ever from search.
+                m.ListingModel.status.in_(
+                    [e.ListingStatus.ACTIVE, e.ListingStatus.RESERVED, e.ListingStatus.SOLD]
+                ),
                 m.ListingModel.deleted_at.is_(None),
                 m.SellerProfile.deleted_at.is_(None),
             )
@@ -879,16 +920,22 @@ class SqlListingRepository:
         row = (await self._s.execute(stmt)).first()
         if row is None:
             return None
-        listing, seller = row
+        listing, seller, risk_level = row
 
         image_rows = await self._s.execute(
-            select(m.ListingImageModel.file_id, m.ListingImageModel.is_primary)
+            select(
+                m.ListingImageModel.file_id,
+                m.ListingImageModel.is_primary,
+                m.ListingImageModel.thumbnail_object_key,
+            )
             .where(m.ListingImageModel.listing_id == listing_id)
             .order_by(m.ListingImageModel.position)
         )
         images = tuple(
-            ent.PublicListingImage(file_id=file_id, is_primary=is_primary)
-            for file_id, is_primary in image_rows
+            ent.PublicListingImage(
+                file_id=file_id, is_primary=is_primary, thumbnail_object_key=thumb_key
+            )
+            for file_id, is_primary, thumb_key in image_rows
         )
 
         return ent.PublicListingDetail(
@@ -898,12 +945,20 @@ class SqlListingRepository:
             price=float(listing.price) if listing.price is not None else None,
             currency=listing.currency,
             category=listing.category,
+            condition=listing.condition,
             city=listing.city,
             area=listing.area,
             created_at=listing.created_at,
             seller_id=seller.id,
             seller_handle=seller.handle,
             seller_display_name=seller.display_name,
+            status=listing.status.value,
+            negotiable=listing.negotiable,
+            attributes=dict(listing.attributes or {}),
+            video_file_id=listing.video_file_id,
+            risk_level=risk_level.value if risk_level is not None else None,
+            identity_verified=seller.identity_status == e.VerificationStatus.VERIFIED,
+            phone_verified=seller.phone_status == e.VerificationStatus.VERIFIED,
             images=images,
             latitude=_approximate_coordinate(
                 float(listing.latitude) if listing.latitude is not None else None
@@ -935,6 +990,9 @@ class SqlListingRepository:
                 external_url=listing.external_url,
                 posted_at=listing.posted_at,
                 status=listing.status,
+                negotiable=listing.negotiable,
+                attributes=listing.attributes,
+                video_file_id=listing.video_file_id,
                 created_at=listing.created_at,
                 updated_at=listing.created_at,
             )
@@ -962,6 +1020,9 @@ class SqlListingRepository:
                 longitude=listing.longitude,
                 country_code=listing.country_code,
                 status=listing.status,
+                negotiable=listing.negotiable,
+                attributes=listing.attributes,
+                video_file_id=listing.video_file_id,
                 latest_analysis_id=(
                     listing.latest_analysis.id if listing.latest_analysis else None
                 ),
@@ -1141,37 +1202,54 @@ def _approximate_coordinate(value: float | None) -> float | None:
     return round(value, 2) if value is not None else None
 
 
-async def _primary_image_ids(session: AsyncSession, listing_ids: list[UUID]) -> dict[UUID, UUID]:
+async def _primary_image_ids(
+    session: AsyncSession, listing_ids: list[UUID]
+) -> dict[UUID, tuple[UUID, str | None]]:
     """Shared by the public catalog and favorites reads - both project a
-    listing down to its primary image in one batched query rather than one
-    per row."""
+    listing down to its primary image (and that image's thumbnail, if one
+    was generated) in one batched query rather than one per row."""
     if not listing_ids:
         return {}
     rows = await session.execute(
-        select(m.ListingImageModel.listing_id, m.ListingImageModel.file_id).where(
+        select(
+            m.ListingImageModel.listing_id,
+            m.ListingImageModel.file_id,
+            m.ListingImageModel.thumbnail_object_key,
+        ).where(
             m.ListingImageModel.listing_id.in_(listing_ids),
             m.ListingImageModel.is_primary.is_(True),
         )
     )
-    return dict(rows.tuples())
+    return {listing_id: (file_id, thumb_key) for listing_id, file_id, thumb_key in rows}
 
 
 def _to_public_summary(
-    listing: m.ListingModel, seller: m.SellerProfile, primary_images: dict[UUID, UUID]
+    listing: m.ListingModel,
+    seller: m.SellerProfile,
+    risk_level: e.RiskLevel | None,
+    primary_images: dict[UUID, tuple[UUID, str | None]],
 ) -> ent.PublicListingSummary:
+    image = primary_images.get(listing.id)
     return ent.PublicListingSummary(
         id=listing.id,
         title=listing.title,
         price=float(listing.price) if listing.price is not None else None,
         currency=listing.currency,
         category=listing.category,
+        condition=listing.condition,
         city=listing.city,
         area=listing.area,
         created_at=listing.created_at,
         seller_id=seller.id,
         seller_handle=seller.handle,
         seller_display_name=seller.display_name,
-        primary_image_file_id=primary_images.get(listing.id),
+        status=listing.status.value,
+        negotiable=listing.negotiable,
+        risk_level=risk_level.value if risk_level is not None else None,
+        identity_verified=seller.identity_status == e.VerificationStatus.VERIFIED,
+        phone_verified=seller.phone_status == e.VerificationStatus.VERIFIED,
+        primary_image_file_id=image[0] if image else None,
+        primary_image_thumbnail_key=image[1] if image else None,
         latitude=_approximate_coordinate(
             float(listing.latitude) if listing.latitude is not None else None
         ),
@@ -1224,9 +1302,17 @@ class SqlFavoriteRepository:
         self, user_id: UUID, *, limit: int = 20, offset: int = 0
     ) -> list[ent.PublicListingSummary]:
         stmt = (
-            select(m.ListingModel, m.SellerProfile, m.FavoriteModel.created_at)
+            select(
+                m.ListingModel,
+                m.SellerProfile,
+                m.FavoriteModel.created_at,
+                m.TrustScoreModel.risk_level,
+            )
             .join(m.FavoriteModel, m.FavoriteModel.listing_id == m.ListingModel.id)
             .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
+            .outerjoin(
+                m.TrustScoreModel, m.TrustScoreModel.id == m.SellerProfile.current_trust_score_id
+            )
             .where(
                 m.FavoriteModel.user_id == user_id,
                 m.ListingModel.deleted_at.is_(None),
@@ -1237,12 +1323,12 @@ class SqlFavoriteRepository:
             .offset(offset)
         )
         rows = (await self._s.execute(stmt)).all()
-        listing_ids = [listing.id for listing, _seller, _favorited_at in rows]
+        listing_ids = [listing.id for listing, _seller, _favorited_at, _risk in rows]
         primary_images = await _primary_image_ids(self._s, listing_ids)
 
         return [
-            _to_public_summary(listing, seller, primary_images)
-            for listing, seller, _favorited_at in rows
+            _to_public_summary(listing, seller, risk_level, primary_images)
+            for listing, seller, _favorited_at, risk_level in rows
         ]
 
     async def count_for_user(self, user_id: UUID) -> int:

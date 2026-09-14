@@ -560,6 +560,14 @@
             ],
             "title": "Area"
           },
+          "attributes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "maxProperties": 20,
+            "title": "Attributes",
+            "type": "object"
+          },
           "category": {
             "anyOf": [
               {
@@ -654,6 +662,11 @@
             ],
             "title": "Longitude"
           },
+          "negotiable": {
+            "default": false,
+            "title": "Negotiable",
+            "type": "boolean"
+          },
           "price": {
             "anyOf": [
               {
@@ -671,6 +684,18 @@
             "minLength": 3,
             "title": "Title",
             "type": "string"
+          },
+          "videoFileId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Videofileid"
           }
         },
         "required": ["title", "description"],
@@ -1362,7 +1387,7 @@
             "title": "Filename"
           },
           "purpose": {
-            "description": "CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE",
+            "description": "CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE | LISTING_VIDEO",
             "title": "Purpose",
             "type": "string"
           },
@@ -6968,7 +6993,7 @@
             }
           },
           {
-            "description": "Filter to one seller's active listings, by handle - the public storefront.",
+            "description": "Filter to one seller's listings, by handle - the public storefront. Unlike the anonymous catalog, this also includes their reserved/sold history.",
             "in": "query",
             "name": "seller",
             "required": false,
@@ -6982,8 +7007,42 @@
                   "type": "null"
                 }
               ],
-              "description": "Filter to one seller's active listings, by handle - the public storefront.",
+              "description": "Filter to one seller's listings, by handle - the public storefront. Unlike the anonymous catalog, this also includes their reserved/sold history.",
               "title": "Seller"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attributeKey",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Attributekey"
+            }
+          },
+          {
+            "in": "query",
+            "name": "attributeValue",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Attributevalue"
             }
           },
           {

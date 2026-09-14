@@ -14,7 +14,7 @@ verdict can only ever move one signal worth a bounded number of points.
 from __future__ import annotations
 
 import dataclasses
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from uuid import UUID
 
 from trustlens.core.domain.entities import Listing
@@ -46,6 +46,9 @@ class ListingInput:
     latitude: float | None = None
     longitude: float | None = None
     country_code: str | None = None
+    negotiable: bool = False
+    attributes: dict[str, str] = field(default_factory=dict)
+    video_file_id: UUID | None = None
 
     def money(self) -> Money | None:
         if self.price is None:
@@ -62,6 +65,20 @@ def _clean(value: str, *, field: str, maximum: int) -> str:
     if len(text) > maximum:
         raise ValidationError(f"Keep this under {maximum} characters.", field=field)
     return text
+
+
+async def _validate_video(
+    uow: UnitOfWork, video_file_id: UUID | None, *, owner_user_id: UUID
+) -> None:
+    if video_file_id is None:
+        return
+    stored = await uow.files.get(video_file_id)
+    if stored is None or stored.owner_user_id != owner_user_id:
+        raise EntityNotFound("file", video_file_id)
+    if stored.purpose.value != "LISTING_VIDEO":
+        raise ValidationError(
+            "File must have been uploaded with purpose=LISTING_VIDEO.", field="videoFileId"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -96,6 +113,7 @@ class CreateListing:
             seller = await self._uow.sellers.get(cmd.seller_id)
             if seller is None:
                 raise EntityNotFound("seller", cmd.seller_id)
+            await _validate_video(self._uow, cmd.data.video_file_id, owner_user_id=seller.user_id)
 
             listing = await self._uow.listings.add(
                 Listing(
@@ -116,6 +134,9 @@ class CreateListing:
                     latitude=cmd.data.latitude,
                     longitude=cmd.data.longitude,
                     country_code=cmd.data.country_code,
+                    negotiable=cmd.data.negotiable,
+                    attributes=cmd.data.attributes,
+                    video_file_id=cmd.data.video_file_id,
                 )
             )
             await self._uow.publish(
@@ -162,6 +183,9 @@ class UpdateListing:
             listing = await self._require_own_listing(cmd.listing_id, cmd.seller_id)
             if listing.status in _LOCKED_STATUSES:
                 raise ValidationError("This listing has been removed and cannot be edited.")
+            seller = await self._uow.sellers.get(cmd.seller_id)
+            assert seller is not None  # _require_own_listing already proved this seller owns it
+            await _validate_video(self._uow, cmd.data.video_file_id, owner_user_id=seller.user_id)
 
             text_changed = title != listing.title or description != listing.description
             updated = await self._uow.listings.update(
@@ -177,6 +201,9 @@ class UpdateListing:
                     latitude=cmd.data.latitude,
                     longitude=cmd.data.longitude,
                     country_code=cmd.data.country_code,
+                    negotiable=cmd.data.negotiable,
+                    attributes=cmd.data.attributes,
+                    video_file_id=cmd.data.video_file_id,
                     status=ListingStatus.ANALYSING if text_changed else listing.status,
                     updated_at=now,
                 )

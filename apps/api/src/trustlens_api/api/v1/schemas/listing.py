@@ -35,6 +35,11 @@ class ListingWriteRequest(Schema):
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
     country_code: str | None = Field(default=None, min_length=2, max_length=2)
+    negotiable: bool = False
+    #: Freeform spec bag - {"Brand": "Samsung", "RAM": "8GB"} - no
+    #: per-category schema (LST-01).
+    attributes: dict[str, str] = Field(default_factory=dict, max_length=20)
+    video_file_id: UUID | None = None
 
 
 class ListingAnalysisResponse(Schema):
@@ -68,6 +73,9 @@ class ListingResponse(Schema):
     latitude: float | None = None
     longitude: float | None = None
     country_code: str | None = None
+    negotiable: bool = False
+    attributes: dict[str, str] = Field(default_factory=dict)
+    video_file_id: UUID | None = None
     updated_at: datetime | None = None
     analysis: ListingAnalysisResponse | None = None
 

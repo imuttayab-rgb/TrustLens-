@@ -251,8 +251,9 @@ class ListingRepository(Protocol):
 
     async def get_public_detail(self, listing_id: UUID) -> PublicListingDetail | None:
         """The full "view this listing" page - every image, the
-        description, still no seller contact details. Only ever returns an
-        ACTIVE listing; anything else is treated as not found."""
+        description, still no seller contact details. Reachable for a
+        RESERVED/SOLD listing too (a direct link a buyer already has should
+        not 404 just because the deal moved on); never from search."""
         ...
 
     async def search_public(
@@ -265,6 +266,9 @@ class ListingRepository(Protocol):
         min_price: float | None = None,
         max_price: float | None = None,
         seller_handle: str | None = None,
+        attribute_key: str | None = None,
+        attribute_value: str | None = None,
+        include_sold: bool = False,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -280,6 +284,9 @@ class ListingRepository(Protocol):
         min_price: float | None = None,
         max_price: float | None = None,
         seller_handle: str | None = None,
+        attribute_key: str | None = None,
+        attribute_value: str | None = None,
+        include_sold: bool = False,
     ) -> int: ...
 
 

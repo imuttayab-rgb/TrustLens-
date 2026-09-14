@@ -317,6 +317,11 @@ class StorageSettings(_Base):
     storage_allowed_mime: CsvList = Field(
         default_factory=lambda: ["image/jpeg", "image/png", "image/webp"]
     )
+    #: A listing video (LST-01) is the one upload purpose that isn't a
+    #: still image - its own, larger cap rather than raising the shared one
+    #: for every purpose (CNIC, selfie, appeal evidence) that doesn't need it.
+    storage_max_video_upload_bytes: int = 50 * 1024 * 1024
+    storage_allowed_video_mime: CsvList = Field(default_factory=lambda: ["video/mp4"])
     media_retention_days_identity: int = 90
 
 

@@ -26,6 +26,11 @@ class ListingImage:
     perceptual_hash: bytes | None = None
     sha256: bytes | None = None
     is_primary: bool = False
+    #: A resized (~400px) derivative, stored alongside the original under a
+    #: `_thumb` suffix on the same object key - cards load this, not the
+    #: full-size upload. None on rows written before thumbnailing existed,
+    #: or if generation failed (non-fatal, same as a missing perceptual hash).
+    thumbnail_object_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -93,6 +98,15 @@ class Listing:
     country_code: str | None = None
     external_url: str | None = None
     posted_at: datetime | None = None
+    #: Whether the seller will accept offers below the listed price - shown
+    #: as a badge; OFF-01's offer flow works either way, this is purely a
+    #: buyer-facing signal of intent.
+    negotiable: bool = False
+    #: Freeform key/value specs (e.g. {"Brand": "Samsung", "RAM": "8GB"}) -
+    #: no per-category schema, so a seller can describe anything without a
+    #: migration, and MKT-01's attribute search matches on these keys.
+    attributes: dict[str, str] = field(default_factory=dict)
+    video_file_id: UUID | None = None
     images: tuple[ListingImage, ...] = ()
     latest_analysis: ListingAnalysis | None = None
     updated_at: datetime | None = None
@@ -124,7 +138,17 @@ class PublicListingSummary:
     seller_id: UUID
     seller_handle: str
     seller_display_name: str
+    condition: str | None = None
+    #: ACTIVE/RESERVED/SOLD as a plain string - a buyer's own favorites and
+    #: a seller's storefront both now show a deal in progress or done, not
+    #: just what's currently buyable.
+    status: str = "ACTIVE"
+    negotiable: bool = False
+    risk_level: str | None = None
+    identity_verified: bool = False
+    phone_verified: bool = False
     primary_image_file_id: UUID | None = None
+    primary_image_thumbnail_key: str | None = None
     latitude: float | None = None
     longitude: float | None = None
 
@@ -133,6 +157,7 @@ class PublicListingSummary:
 class PublicListingImage:
     file_id: UUID
     is_primary: bool
+    thumbnail_object_key: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,7 +168,9 @@ class PublicListingDetail:
     image, not just the primary one - a buyer deciding whether to message a
     seller needs the whole listing, not a card's worth. Still no seller
     contact details: that boundary doesn't move just because the page got
-    bigger. Only ever built from an ACTIVE listing.
+    bigger. Reachable for a RESERVED/SOLD listing too (a direct link a buyer
+    already has should not 404 just because the deal moved on), never from
+    search.
     """
 
     id: UUID
@@ -158,6 +185,14 @@ class PublicListingDetail:
     seller_id: UUID
     seller_handle: str
     seller_display_name: str
+    condition: str | None = None
+    status: str = "ACTIVE"
+    negotiable: bool = False
+    attributes: dict[str, str] = field(default_factory=dict)
+    video_file_id: UUID | None = None
+    risk_level: str | None = None
+    identity_verified: bool = False
+    phone_verified: bool = False
     images: tuple[PublicListingImage, ...] = ()
     latitude: float | None = None
     longitude: float | None = None

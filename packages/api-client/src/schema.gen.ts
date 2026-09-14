@@ -2059,6 +2059,10 @@ export interface components {
     ListingWriteRequest: {
       /** Area */
       area?: string | null;
+      /** Attributes */
+      attributes?: {
+        [key: string]: string;
+      };
       /** Category */
       category?: string | null;
       /** City */
@@ -2075,10 +2079,17 @@ export interface components {
       latitude?: number | null;
       /** Longitude */
       longitude?: number | null;
+      /**
+       * Negotiable
+       * @default false
+       */
+      negotiable: boolean;
       /** Price */
       price?: number | null;
       /** Title */
       title: string;
+      /** Videofileid */
+      videoFileId?: string | null;
     };
     /** LoginRequest */
     LoginRequest: {
@@ -2388,7 +2399,7 @@ export interface components {
       filename?: string | null;
       /**
        * Purpose
-       * @description CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE
+       * @description CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE | LISTING_VIDEO
        */
       purpose: string;
       /** Sizebytes */
@@ -5620,8 +5631,10 @@ export interface operations {
         area?: string | null;
         min_price?: number | null;
         max_price?: number | null;
-        /** @description Filter to one seller's active listings, by handle - the public storefront. */
+        /** @description Filter to one seller's listings, by handle - the public storefront. Unlike the anonymous catalog, this also includes their reserved/sold history. */
         seller?: string | null;
+        attributeKey?: string | null;
+        attributeValue?: string | null;
         sort?: string;
         limit?: number;
         offset?: number;

@@ -23,6 +23,7 @@ from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ContainerDep, MetaDep, UowDep
 from trustlens_api.api.v1.routers._public_listing_presentation import (
     image_url,
+    thumbnail_url,
     to_public_listing_response,
 )
 from trustlens_api.api.v1.schemas.common import PageMeta, envelope
@@ -58,8 +59,11 @@ async def browse_public_listings(
     seller: str | None = Query(
         default=None,
         max_length=64,
-        description="Filter to one seller's active listings, by handle - the public storefront.",
+        description="Filter to one seller's listings, by handle - the public storefront. "
+        "Unlike the anonymous catalog, this also includes their reserved/sold history.",
     ),
+    attribute_key: str | None = Query(default=None, max_length=80, alias="attributeKey"),
+    attribute_value: str | None = Query(default=None, max_length=200, alias="attributeValue"),
     sort: str = Query(default="newest"),
     limit: int = Query(default=20, ge=1, le=50),
     offset: int = Query(default=0, ge=0),
@@ -75,6 +79,9 @@ async def browse_public_listings(
             min_price=min_price,
             max_price=max_price,
             seller_handle=seller,
+            attribute_key=attribute_key,
+            attribute_value=attribute_value,
+            include_sold=seller is not None,
             sort=sort,
             limit=limit,
             offset=offset,
@@ -112,11 +119,20 @@ async def get_public_listing(
     await _throttle(container, meta)
 
     detail = await GetPublicListing(uow=uow).execute(listing_id)
-    images = [
-        PublicListingImageResponse(image_url=url, is_primary=image.is_primary)
-        for image in detail.images
-        if (url := await image_url(container, uow, image.file_id)) is not None
-    ]
+    images = []
+    for image in detail.images:
+        url = await image_url(container, uow, image.file_id)
+        if url is None:
+            continue
+        images.append(
+            PublicListingImageResponse(
+                image_url=url,
+                thumbnail_url=await thumbnail_url(
+                    container, uow, image.file_id, image.thumbnail_object_key
+                ),
+                is_primary=image.is_primary,
+            )
+        )
     response = PublicListingDetailResponse(
         id=detail.id,
         title=detail.title,
@@ -124,11 +140,19 @@ async def get_public_listing(
         price=detail.price,
         currency=detail.currency,
         category=detail.category,
+        condition=detail.condition,
         city=detail.city,
         area=detail.area,
         created_at=detail.created_at,
         seller_handle=detail.seller_handle,
         seller_display_name=detail.seller_display_name,
+        status=detail.status,
+        negotiable=detail.negotiable,
+        attributes=detail.attributes,
+        video_url=await image_url(container, uow, detail.video_file_id),
+        risk_level=detail.risk_level,
+        identity_verified=detail.identity_verified,
+        phone_verified=detail.phone_verified,
         images=images,
         latitude=detail.latitude,
         longitude=detail.longitude,

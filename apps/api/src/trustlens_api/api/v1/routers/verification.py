@@ -100,18 +100,37 @@ async def upload_intent(
 ) -> dict[str, Any]:
     settings = container.settings.storage
 
-    if body.size_bytes > settings.storage_max_upload_bytes:
-        raise ValidationError(
-            f"Files must be {settings.storage_max_upload_bytes // 1_048_576} MB or smaller.",
-            field="sizeBytes",
-        )
-    if body.content_type not in settings.storage_allowed_mime:
-        raise ValidationError("Only JPEG, PNG and WEBP images are accepted.", field="contentType")
-
     try:
         purpose = FilePurpose(body.purpose)
     except ValueError:
         raise ValidationError("Unknown upload purpose.", field="purpose") from None
+
+    # A listing video is the one upload purpose that isn't a still image -
+    # its own, larger size cap and its own mime allowlist, so a 50 MB video
+    # doesn't require raising the shared 10 MB cap for CNIC/selfie/appeal
+    # uploads too.
+    is_video = purpose == FilePurpose.LISTING_VIDEO
+    max_bytes = (
+        settings.storage_max_video_upload_bytes if is_video else settings.storage_max_upload_bytes
+    )
+    allowed_mime = (
+        settings.storage_allowed_video_mime if is_video else settings.storage_allowed_mime
+    )
+    extensions = (
+        {"video/mp4": "mp4"}
+        if is_video
+        else {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+    )
+
+    if body.size_bytes > max_bytes:
+        raise ValidationError(
+            f"Files must be {max_bytes // 1_048_576} MB or smaller.", field="sizeBytes"
+        )
+    if body.content_type not in allowed_mime:
+        raise ValidationError(
+            "MP4 only." if is_video else "Only JPEG, PNG and WEBP images are accepted.",
+            field="contentType",
+        )
 
     file_id = container.ids.new()
     bucket = (
@@ -119,7 +138,7 @@ async def upload_intent(
         if purpose.is_sensitive
         else settings.storage_bucket_listings
     )
-    extension = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}[body.content_type]
+    extension = extensions[body.content_type]
     # Server-generated key. The client's filename is metadata only and is
     # never used as a path component - that is a path-traversal vector.
     object_key = f"{purpose.value.lower()}/{actor.user_id}/{file_id}.{extension}"
@@ -128,7 +147,7 @@ async def upload_intent(
         bucket=bucket,
         object_key=object_key,
         content_type=body.content_type,
-        max_bytes=settings.storage_max_upload_bytes,
+        max_bytes=max_bytes,
         ttl_seconds=settings.storage_presign_ttl_seconds,
     )
 

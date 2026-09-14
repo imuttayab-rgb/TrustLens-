@@ -47,6 +47,9 @@ log = get_logger(__name__)
 
 router = APIRouter(prefix="/listings", tags=["Listings"])
 
+#: Spec asks for 1-10, not the previous hard-coded 5 (LST-01).
+MAX_LISTING_IMAGES = 10
+
 
 def _to_response(listing: Listing) -> ListingResponse:
     analysis = None
@@ -84,6 +87,9 @@ def _to_response(listing: Listing) -> ListingResponse:
         latitude=listing.latitude,
         longitude=listing.longitude,
         country_code=listing.country_code,
+        negotiable=listing.negotiable,
+        attributes=listing.attributes,
+        video_file_id=listing.video_file_id,
         updated_at=listing.updated_at,
         analysis=analysis,
     )
@@ -102,6 +108,9 @@ def _to_input(body: ListingWriteRequest) -> ListingInput:
         latitude=body.latitude,
         longitude=body.longitude,
         country_code=body.country_code,
+        negotiable=body.negotiable,
+        attributes=body.attributes,
+        video_file_id=body.video_file_id,
     )
 
 
@@ -275,10 +284,12 @@ async def add_listing_image(
     if listing is None:
         raise EntityNotFound("listing", listing_id)
 
-    # Max 5 images per listing.
+    # Max 10 images per listing (LST-01 - was hard-coded at 5).
     count = await uow.listings.count_images(listing_id)
-    if count >= 5:
-        raise ValidationError("A listing may have at most 5 images.", field="fileId")
+    if count >= MAX_LISTING_IMAGES:
+        raise ValidationError(
+            f"A listing may have at most {MAX_LISTING_IMAGES} images.", field="fileId"
+        )
 
     # Validate the file exists and belongs to this user.
     stored_file = await uow.files.get(body.file_id)
@@ -289,23 +300,23 @@ async def add_listing_image(
             "File must have been uploaded with purpose=LISTING_IMAGE.", field="fileId"
         )
 
-    # Download the image bytes to compute perceptual hash.
-    # This is the only case where bytes pass through the API: the payload is
-    # at most 10 MB, the hash computation is CPU-cheap, and the alternative
-    # (a separate worker job) would add a round trip for a feature sellers see
-    # immediately.
+    # Download the image bytes to compute perceptual hash, strip EXIF, and
+    # generate a thumbnail. This is the only case where bytes pass through
+    # the API: the payload is at most 10 MB, the processing is CPU-cheap,
+    # and the alternative (a separate worker job) would add a round trip
+    # for a feature sellers see immediately.
     phash_bytes: bytes | None = None
     sha256_bytes: bytes | None = None
     width: int | None = None
     height: int | None = None
     duplicate_of: str | None = None
+    thumbnail_object_key: str | None = None
 
     try:
         raw = await container.storage.get(
             bucket=stored_file.bucket,
             object_key=stored_file.object_key,
         )
-        sha256_bytes = hashlib.sha256(raw).digest()
         img = Image.open(BytesIO(raw)).convert("RGB")
         width, height = img.size
         phash = imagehash.dhash(img, hash_size=8)
@@ -318,10 +329,44 @@ async def add_listing_image(
         )
         if dupe is not None:
             duplicate_of = str(dupe.id)
+
+        # EXIF strip: re-encode from the already-decoded RGB image and
+        # overwrite the original object. `img.save` only writes an `exif`
+        # segment when one is explicitly passed - it is not here - so a
+        # phone's GPS/orientation/device metadata does not survive this
+        # round trip, even though the original bytes (briefly, in memory
+        # above) had it.
+        stripped = BytesIO()
+        img.save(stripped, format="JPEG", quality=90)
+        stripped_bytes = stripped.getvalue()
+        sha256_bytes = hashlib.sha256(stripped_bytes).digest()
+        await container.storage.put(
+            bucket=stored_file.bucket,
+            object_key=stored_file.object_key,
+            data=stripped_bytes,
+            content_type="image/jpeg",
+        )
+
+        # A ~400px-wide derivative for cards - the full-size original is
+        # what next/image would normally downscale client-side, but
+        # presigned URLs bypass that optimizer entirely (unoptimized=true),
+        # so without this every card downloads the full upload.
+        thumb = img.copy()
+        thumb.thumbnail((400, 400))
+        thumb_buffer = BytesIO()
+        thumb.save(thumb_buffer, format="JPEG", quality=85)
+        thumbnail_object_key = f"{stored_file.object_key}_thumb.jpg"
+        await container.storage.put(
+            bucket=stored_file.bucket,
+            object_key=thumbnail_object_key,
+            data=thumb_buffer.getvalue(),
+            content_type="image/jpeg",
+        )
     except Exception:
-        # Hash failure is non-fatal: the image is still stored and associated.
-        # The hash column stays None, and find_near_duplicate_hash skips None rows.
-        log.warning("listing_image_hash_failed", listing_id=str(listing_id), exc_info=True)
+        # Processing failure is non-fatal: the image is still stored (as
+        # originally uploaded) and associated. The hash/thumbnail columns
+        # stay None; find_near_duplicate_hash skips None rows.
+        log.warning("listing_image_processing_failed", listing_id=str(listing_id), exc_info=True)
 
     now = container.clock.now()
     image = ListingImage(
@@ -335,6 +380,7 @@ async def add_listing_image(
         perceptual_hash=phash_bytes,
         sha256=sha256_bytes,
         is_primary=(count == 0),
+        thumbnail_object_key=thumbnail_object_key,
     )
     await uow.listings.create_image(image)
     await uow.commit()
@@ -378,12 +424,19 @@ async def list_listing_images(
     for img in images:
         stored = await uow.files.get(img.file_id)
         url = None
+        thumbnail_url = None
         if stored:
             url = await container.storage.presign_download(
                 bucket=stored.bucket,
                 object_key=stored.object_key,
                 ttl_seconds=ttl,
             )
+            if img.thumbnail_object_key:
+                thumbnail_url = await container.storage.presign_download(
+                    bucket=stored.bucket,
+                    object_key=img.thumbnail_object_key,
+                    ttl_seconds=ttl,
+                )
         result.append(
             {
                 "imageId": str(img.id),
@@ -392,6 +445,7 @@ async def list_listing_images(
                 "width": img.width,
                 "height": img.height,
                 "url": url,
+                "thumbnailUrl": thumbnail_url,
             }
         )
 

@@ -43,6 +43,14 @@ class BrowsePublicListingsQuery:
     #: active listings, reusing the same catalog search rather than a
     #: separate read path.
     seller_handle: str | None = None
+    #: MKT-01's attribute search - both required together, against the
+    #: freeform {key: value} spec bag LST-01 added to each listing.
+    attribute_key: str | None = None
+    attribute_value: str | None = None
+    #: The storefront (seller_handle set) also wants RESERVED/SOLD - its
+    #: own past deals, not just what's currently buyable. The anonymous
+    #: catalog never sets this.
+    include_sold: bool = False
     sort: str = "newest"
     limit: int = 20
     offset: int = 0
@@ -92,6 +100,9 @@ class BrowsePublicListings:
                 min_price=query.min_price,
                 max_price=query.max_price,
                 seller_handle=seller_handle,
+                attribute_key=query.attribute_key,
+                attribute_value=query.attribute_value,
+                include_sold=query.include_sold,
                 sort=query.sort,
                 limit=limit,
                 offset=offset,
@@ -104,6 +115,9 @@ class BrowsePublicListings:
                 min_price=query.min_price,
                 max_price=query.max_price,
                 seller_handle=seller_handle,
+                attribute_key=query.attribute_key,
+                attribute_value=query.attribute_value,
+                include_sold=query.include_sold,
             )
 
         return PublicListingPage(items=tuple(items), total=total, limit=limit, offset=offset)
