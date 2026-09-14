@@ -24,6 +24,7 @@ from trustlens.core.domain.ports import (
     OfferRepository,
     ReportRepository,
     ReviewRepository,
+    SavedSearchRepository,
     TransactionRepository,
 )
 from trustlens.db import models as m
@@ -93,6 +94,7 @@ class SqlAlchemyUnitOfWork:
         self.devices = repo.SqlDeviceRepository(s)
         self.listings = repo.SqlListingRepository(s)
         self.favorites = repo.SqlFavoriteRepository(s)
+        self.saved_searches: SavedSearchRepository = repo.SqlSavedSearchRepository(s)
         self.messaging = repo.SqlMessagingRepository(s)
         # Typed to the port, not the concrete class: unlike every other
         # repository attribute here (which mypy happens to infer as `Any`,

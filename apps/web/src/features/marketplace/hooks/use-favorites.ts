@@ -54,19 +54,54 @@ function useInvalidateFavorites() {
   };
 }
 
+/**
+ * Shared optimistic-toggle logic for add/remove - the heart on a catalog
+ * card should flip the instant it's clicked, not after a round trip. Both
+ * mutations below cancel any in-flight refetch of the id set first (so it
+ * can't overwrite the optimistic value), snapshot it for rollback, then
+ * flip the one id being toggled.
+ */
+interface OptimisticContext {
+  previous: Set<string> | undefined;
+}
+
+function useOptimisticToggle(nextHasId: (listingId: string) => boolean) {
+  const queryClient = useQueryClient();
+  return {
+    onMutate: async (listingId: string): Promise<OptimisticContext> => {
+      await queryClient.cancelQueries({ queryKey: qk.favorite.ids });
+      const previous = queryClient.getQueryData<Set<string>>(qk.favorite.ids);
+      queryClient.setQueryData<Set<string>>(qk.favorite.ids, (current) => {
+        const next = new Set(current ?? []);
+        if (nextHasId(listingId)) next.add(listingId);
+        else next.delete(listingId);
+        return next;
+      });
+      return { previous };
+    },
+    onError: (_error: unknown, _listingId: string, context: OptimisticContext | undefined) => {
+      if (context?.previous) queryClient.setQueryData(qk.favorite.ids, context.previous);
+    },
+  };
+}
+
 export function useAddFavorite() {
   const invalidate = useInvalidateFavorites();
+  const optimistic = useOptimisticToggle(() => true);
   return useMutation({
     mutationFn: async (listingId: string) => {
       const result = await api.POST('/api/v1/me/favorites', { body: { listingId } });
       if (result.error) throw toApiError(result.error);
     },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSuccess: invalidate,
   });
 }
 
 export function useRemoveFavorite() {
   const invalidate = useInvalidateFavorites();
+  const optimistic = useOptimisticToggle(() => false);
   return useMutation({
     mutationFn: async (listingId: string) => {
       const result = await api.DELETE('/api/v1/me/favorites/{listing_id}', {
@@ -74,6 +109,8 @@ export function useRemoveFavorite() {
       });
       if (result.error) throw toApiError(result.error);
     },
+    onMutate: optimistic.onMutate,
+    onError: optimistic.onError,
     onSuccess: invalidate,
   });
 }

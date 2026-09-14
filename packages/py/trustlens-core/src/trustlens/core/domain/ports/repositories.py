@@ -54,6 +54,7 @@ if TYPE_CHECKING:
         Report,
         Review,
         ReviewCase,
+        SavedSearch,
         ScoringModel,
         SellerProfile,
         SellerRatingSummary,
@@ -318,6 +319,19 @@ class FavoriteRepository(Protocol):
     ) -> list[PublicListingSummary]: ...
 
     async def count_for_user(self, user_id: UUID) -> int: ...
+
+
+@runtime_checkable
+class SavedSearchRepository(Protocol):
+    async def add(self, search: SavedSearch) -> SavedSearch: ...
+
+    async def list_for_user(self, user_id: UUID) -> list[SavedSearch]: ...
+
+    async def count_for_user(self, user_id: UUID) -> int: ...
+
+    async def get(self, search_id: UUID) -> SavedSearch | None: ...
+
+    async def remove(self, *, user_id: UUID, search_id: UUID) -> None: ...
 
 
 @runtime_checkable

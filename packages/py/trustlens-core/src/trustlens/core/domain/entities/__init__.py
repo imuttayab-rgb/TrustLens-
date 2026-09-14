@@ -18,6 +18,7 @@ from trustlens.core.domain.entities.listing import (
     PublicListingDetail,
     PublicListingImage,
     PublicListingSummary,
+    SavedSearch,
     ScamLabel,
 )
 from trustlens.core.domain.entities.messaging import Conversation, ConversationSummary, Message
@@ -101,6 +102,7 @@ __all__ = [
     "Review",
     "ReviewCase",
     "Role",
+    "SavedSearch",
     "ScamLabel",
     "ScoringModel",
     "ScoringWeight",

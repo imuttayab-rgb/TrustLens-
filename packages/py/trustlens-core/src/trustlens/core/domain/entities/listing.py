@@ -213,6 +213,26 @@ class Favorite:
     created_at: datetime
 
 
+@dataclass(frozen=True, slots=True)
+class SavedSearch:
+    """A buyer's remembered browse filter (FAV-01), re-runnable with one
+    click instead of rebuilding a search from scratch. Mirrors the
+    filterable fields of `BrowsePublicListingsQuery`, minus sort/paging and
+    the newer attribute/radius filters - the ones a buyer is most likely to
+    want reproduced verbatim."""
+
+    id: UUID
+    user_id: UUID
+    name: str
+    category: str | None = None
+    q: str | None = None
+    city: str | None = None
+    area: str | None = None
+    min_price: float | None = None
+    max_price: float | None = None
+    created_at: datetime | None = None
+
+
 __all__ = [
     "Favorite",
     "Listing",
@@ -221,5 +241,6 @@ __all__ = [
     "PublicListingDetail",
     "PublicListingImage",
     "PublicListingSummary",
+    "SavedSearch",
     "ScamLabel",
 ]

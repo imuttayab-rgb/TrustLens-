@@ -821,6 +821,28 @@ class FavoriteModel(Base):
     )
 
 
+class SavedSearchModel(Base):
+    """A buyer's remembered browse filter (FAV-01) - re-runnable with one
+    click. Same "bookmark, not evidence" reasoning as FavoriteModel."""
+
+    __tablename__ = "saved_searches"
+
+    id: Mapped[UUID] = uuid_pk()
+    user_id: Mapped[UUID] = uuid_fk("users.id")
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    category: Mapped[str | None] = mapped_column(String(80))
+    q: Mapped[str | None] = mapped_column(String(200))
+    city: Mapped[str | None] = mapped_column(String(80))
+    area: Mapped[str | None] = mapped_column(String(120))
+    min_price: Mapped[float | None] = mapped_column(Numeric(14, 2))
+    max_price: Mapped[float | None] = mapped_column(Numeric(14, 2))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (Index("ix_saved_searches_user_created", "user_id", "created_at"),)
+
+
 class ConversationModel(Base):
     """A buyer<->seller thread, optionally anchored to the listing that
     started it. `last_message_at` is denormalised for one-query inbox

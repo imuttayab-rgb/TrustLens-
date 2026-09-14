@@ -17,6 +17,13 @@ from trustlens.core.application.use_cases.favorites import (
     RemoveFavorite,
     RemoveFavoriteCommand,
 )
+from trustlens.core.application.use_cases.saved_searches import (
+    CreateSavedSearch,
+    CreateSavedSearchCommand,
+    DeleteSavedSearch,
+    DeleteSavedSearchCommand,
+    ListSavedSearches,
+)
 from trustlens.core.domain.entities import SellerProfile, TrustScore
 from trustlens.core.domain.enums import UserRole, VerificationStatus
 from trustlens.core.domain.errors import ConflictError, EntityNotFound, ValidationError
@@ -32,6 +39,7 @@ from trustlens_api.api.v1.routers._public_listing_presentation import to_public_
 from trustlens_api.api.v1.schemas.auth import UserSummary
 from trustlens_api.api.v1.schemas.common import PageMeta, envelope
 from trustlens_api.api.v1.schemas.favorite import AddFavoriteRequest, FavoriteIdsResponse
+from trustlens_api.api.v1.schemas.saved_search import CreateSavedSearchRequest, SavedSearchResponse
 from trustlens_api.api.v1.schemas.seller import (
     BecomeSellerRequest,
     SellerResponse,
@@ -284,6 +292,77 @@ async def list_favorite_ids(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict
     return envelope(
         FavoriteIdsResponse(listing_ids=sorted(ids)).model_dump(by_alias=True),
         request_id=meta.request_id,
+    )
+
+
+# ── Saved searches ───────────────────────────────────────────────────
+# A remembered browse filter (FAV-01), re-runnable with one click - the
+# same "any signed-in user, no role check" reasoning as favorites above.
+
+
+def _to_saved_search_response(search: Any) -> SavedSearchResponse:
+    return SavedSearchResponse(
+        id=search.id,
+        name=search.name,
+        category=search.category,
+        q=search.q,
+        city=search.city,
+        area=search.area,
+        min_price=search.min_price,
+        max_price=search.max_price,
+        created_at=search.created_at,
+    )
+
+
+@router.post(
+    "/me/saved-searches",
+    status_code=status.HTTP_201_CREATED,
+    summary="Save the current browse filter",
+)
+async def create_saved_search(
+    body: CreateSavedSearchRequest,
+    actor: ActorDep,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    search = await CreateSavedSearch(uow=uow, clock=container.clock, ids=container.ids).execute(
+        CreateSavedSearchCommand(
+            user_id=actor.user_id,
+            name=body.name,
+            category=body.category,
+            q=body.q,
+            city=body.city,
+            area=body.area,
+            min_price=body.min_price,
+            max_price=body.max_price,
+        )
+    )
+    return envelope(
+        _to_saved_search_response(search).model_dump(by_alias=True), request_id=meta.request_id
+    )
+
+
+@router.get("/me/saved-searches", summary="List saved searches")
+async def list_saved_searches(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
+    assert actor.user_id is not None
+    searches = await ListSavedSearches(uow=uow).execute(actor.user_id)
+    return envelope(
+        [_to_saved_search_response(item).model_dump(by_alias=True) for item in searches],
+        request_id=meta.request_id,
+    )
+
+
+@router.delete(
+    "/me/saved-searches/{search_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete a saved search",
+)
+async def delete_saved_search(search_id: UUID, actor: ActorDep, uow: UowDep) -> None:
+    assert actor.user_id is not None
+    await DeleteSavedSearch(uow=uow).execute(
+        DeleteSavedSearchCommand(user_id=actor.user_id, search_id=search_id)
     )
 
 

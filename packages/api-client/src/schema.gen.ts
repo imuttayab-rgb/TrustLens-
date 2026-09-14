@@ -1311,6 +1311,41 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/saved-searches': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List saved searches */
+    get: operations['list_saved_searches_api_v1_me_saved_searches_get'];
+    put?: never;
+    /** Save the current browse filter */
+    post: operations['create_saved_search_api_v1_me_saved_searches_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/saved-searches/{search_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a saved search */
+    delete: operations['delete_saved_search_api_v1_me_saved_searches__search_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me/transactions': {
     parameters: {
       query?: never;
@@ -1980,6 +2015,23 @@ export interface components {
       comment?: string | null;
       /** Rating */
       rating: number;
+    };
+    /** CreateSavedSearchRequest */
+    CreateSavedSearchRequest: {
+      /** Area */
+      area?: string | null;
+      /** Category */
+      category?: string | null;
+      /** City */
+      city?: string | null;
+      /** Maxprice */
+      maxPrice?: number | null;
+      /** Minprice */
+      minPrice?: number | null;
+      /** Name */
+      name: string;
+      /** Q */
+      q?: string | null;
     };
     /** CreateScoringModelRequest */
     CreateScoringModelRequest: {
@@ -5527,6 +5579,105 @@ export interface operations {
             [key: string]: unknown;
           };
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  list_saved_searches_api_v1_me_saved_searches_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  create_saved_search_api_v1_me_saved_searches_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSavedSearchRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  delete_saved_search_api_v1_me_saved_searches__search_id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        search_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {

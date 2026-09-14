@@ -1373,6 +1373,74 @@ class SqlFavoriteRepository:
         )
 
 
+def _to_saved_search(row: m.SavedSearchModel) -> ent.SavedSearch:
+    return ent.SavedSearch(
+        id=row.id,
+        user_id=row.user_id,
+        name=row.name,
+        category=row.category,
+        q=row.q,
+        city=row.city,
+        area=row.area,
+        min_price=float(row.min_price) if row.min_price is not None else None,
+        max_price=float(row.max_price) if row.max_price is not None else None,
+        created_at=row.created_at,
+    )
+
+
+class SqlSavedSearchRepository:
+    def __init__(self, session: AsyncSession) -> None:
+        self._s = session
+
+    async def add(self, search: ent.SavedSearch) -> ent.SavedSearch:
+        self._s.add(
+            m.SavedSearchModel(
+                id=search.id,
+                user_id=search.user_id,
+                name=search.name,
+                category=search.category,
+                q=search.q,
+                city=search.city,
+                area=search.area,
+                min_price=search.min_price,
+                max_price=search.max_price,
+            )
+        )
+        await self._s.flush()
+        return search
+
+    async def list_for_user(self, user_id: UUID) -> list[ent.SavedSearch]:
+        stmt = (
+            select(m.SavedSearchModel)
+            .where(m.SavedSearchModel.user_id == user_id)
+            .order_by(m.SavedSearchModel.created_at.desc())
+        )
+        rows = (await self._s.execute(stmt)).scalars().all()
+        return [_to_saved_search(row) for row in rows]
+
+    async def count_for_user(self, user_id: UUID) -> int:
+        return int(
+            (
+                await self._s.execute(
+                    select(func.count())
+                    .select_from(m.SavedSearchModel)
+                    .where(m.SavedSearchModel.user_id == user_id)
+                )
+            ).scalar_one()
+        )
+
+    async def get(self, search_id: UUID) -> ent.SavedSearch | None:
+        row = await self._s.get(m.SavedSearchModel, search_id)
+        return _to_saved_search(row) if row else None
+
+    async def remove(self, *, user_id: UUID, search_id: UUID) -> None:
+        await self._s.execute(
+            delete(m.SavedSearchModel).where(
+                m.SavedSearchModel.id == search_id, m.SavedSearchModel.user_id == user_id
+            )
+        )
+
+
 def _to_conversation(row: m.ConversationModel) -> ent.Conversation:
     return ent.Conversation(
         id=row.id,

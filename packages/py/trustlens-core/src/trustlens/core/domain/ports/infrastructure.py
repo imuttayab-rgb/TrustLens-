@@ -37,6 +37,7 @@ if TYPE_CHECKING:
         ReportRepository,
         ReviewCaseRepository,
         ReviewRepository,
+        SavedSearchRepository,
         ScoringModelRepository,
         SellerRepository,
         TransactionRepository,
@@ -87,6 +88,7 @@ class UnitOfWork(Protocol):
     devices: DeviceRepository
     listings: ListingRepository
     favorites: FavoriteRepository
+    saved_searches: SavedSearchRepository
     messaging: MessagingRepository
     reports: ReportRepository
     blocks: BlockRepository

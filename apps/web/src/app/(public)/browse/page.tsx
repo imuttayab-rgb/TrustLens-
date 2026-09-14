@@ -3,6 +3,7 @@
 import {
   ListingCard,
   RecentlyViewedStrip,
+  SavedSearchBar,
   useAddFavorite,
   useFavoriteIds,
   usePublicListings,
@@ -110,7 +111,8 @@ export default function BrowsePage() {
 
   function toggleFavorite(listingId: string) {
     if (!session) {
-      router.push('/login');
+      const next = `${window.location.pathname}${window.location.search}`;
+      router.push(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
     if (favoriteIds?.has(listingId)) {
@@ -189,6 +191,9 @@ export default function BrowsePage() {
   const hasFilters = Boolean(
     qParam || category || city || area || minPrice || maxPrice || attributeKey || nearLatitude,
   );
+  // Only the fields a saved search can actually reproduce - not the
+  // attribute/nearby filters, which SavedSearch doesn't carry.
+  const hasSavableFilters = Boolean(qParam || category || city || area || minPrice || maxPrice);
 
   return (
     <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
@@ -241,6 +246,11 @@ export default function BrowsePage() {
         )}
       </form>
       {locationError && <p className="mt-1 text-xs text-destructive">{locationError}</p>}
+
+      <SavedSearchBar
+        hasFilters={hasSavableFilters}
+        currentFilters={{ category, q: qParam || null, city, area, minPrice, maxPrice }}
+      />
 
       <div className="mt-4 flex flex-wrap gap-2">
         <button
