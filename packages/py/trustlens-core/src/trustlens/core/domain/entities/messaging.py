@@ -30,6 +30,16 @@ class Conversation:
     created_at: datetime
     last_message_at: datetime
     listing_id: UUID | None = None
+    #: A snapshot of the listing at the moment the conversation started -
+    #: the FK itself is live (`ondelete="SET NULL"`), so without this a
+    #: price edit or listing deletion would silently change what a thread
+    #: appears to be about, mid-conversation. Null for conversations that
+    #: predate this field.
+    listing_title: str | None = None
+    listing_price: float | None = None
+    listing_currency: str | None = None
+    muted_by_buyer: bool = False
+    muted_by_seller: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -48,6 +58,9 @@ class ConversationSummary:
     listing_title: str | None
     last_message_preview: str | None
     unread_count: int
+    #: Resolved for whichever side the requesting user is on - the two
+    #: `muted_by_*` columns on Conversation collapse to one flag from here.
+    muted: bool
 
 
 __all__ = ["Conversation", "ConversationSummary", "Message"]

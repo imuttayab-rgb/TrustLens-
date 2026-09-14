@@ -20,16 +20,48 @@ from trustlens.core.application.use_cases.messaging import (
     ListMessagesQuery,
     SendMessage,
     SendMessageCommand,
+    SetConversationMuted,
+    SetConversationMutedCommand,
 )
+from trustlens.core.domain.errors import RateLimitExceeded
+from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
 from trustlens_api.api.v1.schemas.common import PageMeta, envelope
 from trustlens_api.api.v1.schemas.messaging import (
     ConversationResponse,
     MessageResponse,
     SendMessageRequest,
+    SetMutedRequest,
 )
 
+log = get_logger(__name__)
+
 router = APIRouter(tags=["Messaging"])
+
+
+async def _throttle_send(container: ContainerDep, actor: ActorDep) -> None:
+    """Per-sender limit against message spam/flooding (SOC-01) - separate
+    from the anonymous per-IP limiters elsewhere, since the attacker here is
+    a signed-in account, not an anonymous scraper. Fails open, same policy
+    as every other rate limit in this codebase: a Redis blip must not stop
+    real conversations from sending."""
+    limits = container.settings.rate_limit
+    if not limits.enabled or actor.user_id is None:
+        return
+    try:
+        allowed, _remaining, retry_after = await container.rate_limiter.hit(
+            f"message:send:{actor.user_id}",
+            limit=limits.message_send_per_minute,
+            window_seconds=60,
+        )
+    except Exception:
+        log.warning("message_send_throttle_unavailable_failing_open", user_id=str(actor.user_id))
+        return
+    if not allowed:
+        raise RateLimitExceeded(
+            "You're sending messages too quickly. Slow down a moment.",
+            retry_after=retry_after,
+        )
 
 
 def _to_message_response(message: Any) -> MessageResponse:
@@ -55,6 +87,7 @@ def _to_conversation_response(summary: Any) -> ConversationResponse:
         last_message_preview=summary.last_message_preview,
         unread_count=summary.unread_count,
         created_at=c.created_at,
+        muted=summary.muted,
     )
 
 
@@ -71,6 +104,7 @@ async def send_message(
     meta: MetaDep,
 ) -> dict[str, Any]:
     assert actor.user_id is not None
+    await _throttle_send(container, actor)
     result = await SendMessage(uow=uow, clock=container.clock, ids=container.ids).execute(
         SendMessageCommand(
             sender_id=actor.user_id,
@@ -132,6 +166,30 @@ async def list_messages(
         [_to_message_response(item).model_dump(by_alias=True) for item in page.items],
         request_id=meta.request_id,
     )
+
+
+@router.put(
+    "/me/conversations/{conversation_id}/muted",
+    summary="Mute or unmute a conversation",
+    description=(
+        "A lighter tool than blocking (MOD-01) - stops this thread from "
+        "standing out in the inbox without cutting the other party off."
+    ),
+)
+async def set_conversation_muted(
+    conversation_id: UUID,
+    body: SetMutedRequest,
+    actor: ActorDep,
+    uow: UowDep,
+    meta: MetaDep,
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    await SetConversationMuted(uow=uow).execute(
+        SetConversationMutedCommand(
+            conversation_id=conversation_id, user_id=actor.user_id, muted=body.muted
+        )
+    )
+    return envelope({"muted": body.muted}, request_id=meta.request_id)
 
 
 __all__ = ["router"]

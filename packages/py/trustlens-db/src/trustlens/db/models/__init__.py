@@ -838,6 +838,14 @@ class ConversationModel(Base):
     last_message_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
+    #: Captured from the listing at creation time (SOC-01) - the FK above
+    #: is live and SETs NULL on delete, so this is what keeps a thread's
+    #: displayed subject stable even if the listing is later edited or removed.
+    listing_title_snapshot: Mapped[str | None] = mapped_column(String(200))
+    listing_price_snapshot: Mapped[float | None] = mapped_column(Numeric(14, 2))
+    listing_currency_snapshot: Mapped[str | None] = mapped_column(String(3))
+    muted_by_buyer: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
+    muted_by_seller: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     __table_args__ = (
         Index("ix_conversations_buyer", "buyer_id", "last_message_at"),

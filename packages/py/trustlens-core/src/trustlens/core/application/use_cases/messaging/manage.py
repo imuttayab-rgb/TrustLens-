@@ -125,6 +125,9 @@ class SendMessage:
                 created_at=now,
                 last_message_at=now,
                 listing_id=listing.id,
+                listing_title=listing.title,
+                listing_price=listing.price.amount if listing.price is not None else None,
+                listing_currency=listing.price.currency if listing.price is not None else None,
             )
         )
 
@@ -205,6 +208,34 @@ class ListMessages:
         return MessagePage(items=tuple(items), total=len(items), limit=limit, offset=offset)
 
 
+@dataclass(frozen=True, slots=True)
+class SetConversationMutedCommand:
+    conversation_id: UUID
+    user_id: UUID
+    muted: bool
+
+
+class SetConversationMuted:
+    """Mutes/unmutes one side of a thread (SOC-01) - block already exists for
+    "stop this person entirely"; this is the lighter "stop pestering me
+    about it" case, e.g. a haggling buyer who won't take no for an answer."""
+
+    def __init__(self, *, uow: UnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, cmd: SetConversationMutedCommand) -> None:
+        async with self._uow:
+            participants = await self._uow.messaging.get_participants(cmd.conversation_id)
+            if participants is None:
+                raise EntityNotFound("conversation", cmd.conversation_id)
+            if cmd.user_id not in participants:
+                raise PermissionDenied("This conversation belongs to someone else.")
+            await self._uow.messaging.set_muted(
+                cmd.conversation_id, user_id=cmd.user_id, muted=cmd.muted
+            )
+            await self._uow.commit()
+
+
 __all__ = [
     "MAX_MESSAGE_CHARS",
     "ConversationPage",
@@ -216,4 +247,6 @@ __all__ = [
     "SendMessage",
     "SendMessageCommand",
     "SendMessageResult",
+    "SetConversationMuted",
+    "SetConversationMutedCommand",
 ]

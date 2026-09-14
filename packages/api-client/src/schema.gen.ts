@@ -1106,6 +1106,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/conversations/{conversation_id}/muted': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Mute or unmute a conversation
+     * @description A lighter tool than blocking (MOD-01) - stops this thread from standing out in the inbox without cutting the other party off.
+     */
+    put: operations['set_conversation_muted_api_v1_me_conversations__conversation_id__muted_put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me/favorites': {
     parameters: {
       query?: never;
@@ -2336,6 +2356,11 @@ export interface components {
       conversationId?: string | null;
       /** Listingid */
       listingId?: string | null;
+    };
+    /** SetMutedRequest */
+    SetMutedRequest: {
+      /** Muted */
+      muted: boolean;
     };
     /** SetStatusRequest */
     SetStatusRequest: {
@@ -5020,6 +5045,45 @@ export interface operations {
       cookie?: never;
     };
     requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  set_conversation_muted_api_v1_me_conversations__conversation_id__muted_put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetMutedRequest'];
+      };
+    };
     responses: {
       /** @description Successful Response */
       200: {

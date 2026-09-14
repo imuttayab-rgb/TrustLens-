@@ -7,9 +7,15 @@ import { BlockButton } from '@/features/moderation';
 import { MeetupPanel } from '@/features/safemeet';
 import { Alert, Button, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
-import { Send } from 'lucide-react';
+import { BellOff, Send, TriangleAlert } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { useConversations, useMessages, useSendMessage } from '../hooks/use-messaging';
+import {
+  useConversations,
+  useMessages,
+  useSendMessage,
+  useSetConversationMuted,
+} from '../hooks/use-messaging';
+import { assessMessageRisk, hasRiskFlags } from '../lib/risk-heuristics';
 
 export function MessageThread({
   conversationId,
@@ -25,6 +31,7 @@ export function MessageThread({
   const { data: messages, isPending, isError } = useMessages(conversationId);
   const { data: conversations } = useConversations();
   const sendMessage = useSendMessage();
+  const setMuted = useSetConversationMuted();
   const [draft, setDraft] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
   const conversation = conversations?.items.find((item) => item.id === conversationId);
@@ -46,10 +53,22 @@ export function MessageThread({
       {conversation && (
         <div className="flex items-center justify-between gap-2 border-b border-border p-3">
           <p className="truncate text-sm font-medium">{conversation.counterpartName}</p>
-          <BlockButton
-            userId={conversation.counterpartUserId}
-            userName={conversation.counterpartName}
-          />
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={setMuted.isPending}
+              aria-pressed={conversation.muted}
+              onClick={() => setMuted.mutate({ conversationId, muted: !conversation.muted })}
+            >
+              <BellOff className="h-4 w-4" aria-hidden="true" />
+              {conversation.muted ? 'Unmute' : 'Mute'}
+            </Button>
+            <BlockButton
+              userId={conversation.counterpartUserId}
+              userName={conversation.counterpartName}
+            />
+          </div>
         </div>
       )}
       {conversation?.listingId && session?.id && (
@@ -84,8 +103,12 @@ export function MessageThread({
         ) : (
           messages.map((message) => {
             const mine = message.senderId === session?.id;
+            const risk = assessMessageRisk(message.body);
             return (
-              <div key={message.id} className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
+              <div
+                key={message.id}
+                className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}
+              >
                 <div
                   className={cn(
                     'max-w-[75%] rounded-lg px-3 py-2 text-sm',
@@ -94,6 +117,14 @@ export function MessageThread({
                 >
                   <p className="whitespace-pre-wrap break-words">{message.body}</p>
                 </div>
+                {!mine && hasRiskFlags(risk) && (
+                  <p className="mt-1 flex max-w-[75%] items-start gap-1 text-xs text-amber-600">
+                    <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                    {risk.paymentPressure
+                      ? "Be cautious - never pay in advance for something you haven't seen. Use SafeMeet and pay in person."
+                      : 'Be cautious with links from people you just met - verify before clicking.'}
+                  </p>
+                )}
               </div>
             );
           })

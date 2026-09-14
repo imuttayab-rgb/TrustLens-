@@ -391,6 +391,10 @@ class RateLimitSettings(_Base):
     #: thirty times - while still being low enough to make spraying pointless.
     #: Raise it if the product ends up behind a shared NAT with many users.
     login_ip_per_15min: int = 30
+    #: SOC-01's anti-spam/flood guard on sending a message - generous for a
+    #: real conversation (a burst of quick replies), low enough to blunt a
+    #: scripted spam/flood attempt.
+    message_send_per_minute: int = 20
     public_api_free_per_minute: int = 60
     public_api_partner_per_minute: int = 600
     #: Public API fails CLOSED (protects cost and data); auth fails OPEN

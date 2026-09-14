@@ -1236,6 +1236,18 @@
         "title": "SendMessageRequest",
         "type": "object"
       },
+      "SetMutedRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "muted": {
+            "title": "Muted",
+            "type": "boolean"
+          }
+        },
+        "required": ["muted"],
+        "title": "SetMutedRequest",
+        "type": "object"
+      },
       "SetStatusRequest": {
         "properties": {
           "status": {
@@ -6000,6 +6012,76 @@
           }
         },
         "summary": "Read a conversation (marks the other party's messages as read)",
+        "tags": ["Messaging"]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/muted": {
+      "put": {
+        "description": "A lighter tool than blocking (MOD-01) - stops this thread from standing out in the inbox without cutting the other party off.",
+        "operationId": "set_conversation_muted_api_v1_me_conversations__conversation_id__muted_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetMutedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Set Conversation Muted Api V1 Me Conversations  Conversation Id  Muted Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mute or unmute a conversation",
         "tags": ["Messaging"]
       }
     },

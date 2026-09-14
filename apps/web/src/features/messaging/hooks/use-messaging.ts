@@ -14,6 +14,7 @@ export interface ConversationSummary {
   lastMessagePreview: string | null;
   unreadCount: number;
   createdAt: string;
+  muted: boolean;
 }
 
 export interface Message {
@@ -81,6 +82,23 @@ export function useSendMessage() {
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: qk.conversations });
       await queryClient.invalidateQueries({ queryKey: qk.messages(data.conversationId) });
+    },
+  });
+}
+
+export function useSetConversationMuted() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { conversationId: string; muted: boolean }) => {
+      const result = await api.PUT('/api/v1/me/conversations/{conversation_id}/muted', {
+        params: { path: { conversation_id: input.conversationId } },
+        body: { muted: input.muted },
+      });
+      if (result.error) throw toApiError(result.error);
+      return input;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: qk.conversations });
     },
   });
 }

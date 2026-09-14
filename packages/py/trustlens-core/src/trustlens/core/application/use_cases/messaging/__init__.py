@@ -11,6 +11,8 @@ from trustlens.core.application.use_cases.messaging.manage import (
     SendMessage,
     SendMessageCommand,
     SendMessageResult,
+    SetConversationMuted,
+    SetConversationMutedCommand,
 )
 
 __all__ = [
@@ -24,4 +26,6 @@ __all__ = [
     "SendMessage",
     "SendMessageCommand",
     "SendMessageResult",
+    "SetConversationMuted",
+    "SetConversationMutedCommand",
 ]

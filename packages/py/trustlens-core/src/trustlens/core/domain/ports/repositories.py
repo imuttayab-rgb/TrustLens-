@@ -381,6 +381,11 @@ class MessagingRepository(Protocol):
 
     async def touch_conversation(self, conversation_id: UUID, *, at: datetime) -> None: ...
 
+    async def set_muted(self, conversation_id: UUID, *, user_id: UUID, muted: bool) -> None:
+        """Mutes/unmutes the conversation for whichever side `user_id` is on -
+        the other participant's mute state is untouched."""
+        ...
+
     async def list_conversations_for_user(
         self, user_id: UUID, *, limit: int = 20, offset: int = 0
     ) -> list[ConversationSummary]:

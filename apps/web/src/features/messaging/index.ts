@@ -4,6 +4,7 @@ export {
   useConversations,
   useMessages,
   useSendMessage,
+  useSetConversationMuted,
   type ConversationSummary,
   type Message,
 } from './hooks/use-messaging';

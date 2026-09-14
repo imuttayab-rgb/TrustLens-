@@ -1381,6 +1381,13 @@ def _to_conversation(row: m.ConversationModel) -> ent.Conversation:
         created_at=row.created_at,
         last_message_at=row.last_message_at,
         listing_id=row.listing_id,
+        listing_title=row.listing_title_snapshot,
+        listing_price=float(row.listing_price_snapshot)
+        if row.listing_price_snapshot is not None
+        else None,
+        listing_currency=row.listing_currency_snapshot,
+        muted_by_buyer=row.muted_by_buyer,
+        muted_by_seller=row.muted_by_seller,
     )
 
 
@@ -1426,6 +1433,9 @@ class SqlMessagingRepository:
                 buyer_id=conversation.buyer_id,
                 created_at=conversation.created_at,
                 last_message_at=conversation.last_message_at,
+                listing_title_snapshot=conversation.listing_title,
+                listing_price_snapshot=conversation.listing_price,
+                listing_currency_snapshot=conversation.listing_currency,
             )
         )
         await self._s.flush()
@@ -1437,6 +1447,19 @@ class SqlMessagingRepository:
             .where(m.ConversationModel.id == conversation_id)
             .values(last_message_at=at)
         )
+
+    async def set_muted(self, conversation_id: UUID, *, user_id: UUID, muted: bool) -> None:
+        participants = await self.get_participants(conversation_id)
+        if participants is None:
+            return
+        buyer_user_id, _seller_user_id = participants
+        stmt = update(m.ConversationModel).where(m.ConversationModel.id == conversation_id)
+        stmt = (
+            stmt.values(muted_by_buyer=muted)
+            if user_id == buyer_user_id
+            else stmt.values(muted_by_seller=muted)
+        )
+        await self._s.execute(stmt)
 
     async def get_participants(self, conversation_id: UUID) -> tuple[UUID, UUID] | None:
         row = (
@@ -1469,14 +1492,20 @@ class SqlMessagingRepository:
         summaries = []
         for conversation, seller, buyer, listing in rows:
             is_seller_side = seller.user_id == user_id
+            entity = _to_conversation(conversation)
             summaries.append(
                 ent.ConversationSummary(
-                    conversation=_to_conversation(conversation),
+                    conversation=entity,
                     counterpart_name=seller.display_name if not is_seller_side else buyer.full_name,
                     counterpart_user_id=seller.user_id if not is_seller_side else buyer.id,
-                    listing_title=listing.title if listing is not None else None,
+                    # The snapshot taken at creation, not the live listing -
+                    # falls back to the live title only for conversations
+                    # that predate the snapshot column (SOC-01).
+                    listing_title=entity.listing_title
+                    or (listing.title if listing is not None else None),
                     last_message_preview=previews.get(conversation.id),
                     unread_count=unread.get(conversation.id, 0),
+                    muted=entity.muted_by_seller if is_seller_side else entity.muted_by_buyer,
                 )
             )
         return summaries

@@ -38,6 +38,11 @@ class ConversationResponse(Schema):
     last_message_preview: str | None = None
     unread_count: int = 0
     created_at: datetime
+    muted: bool = False
 
 
-__all__ = ["ConversationResponse", "MessageResponse", "SendMessageRequest"]
+class SetMutedRequest(Schema):
+    muted: bool
+
+
+__all__ = ["ConversationResponse", "MessageResponse", "SendMessageRequest", "SetMutedRequest"]
