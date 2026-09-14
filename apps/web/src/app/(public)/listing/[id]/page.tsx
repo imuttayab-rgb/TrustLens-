@@ -6,6 +6,7 @@
  * should not wait on a client round trip just to read a description.
  * Only the save/message buttons cross into a client component.
  */
+import { AuctionPanel } from '@/features/commerce';
 import { ListingDetailActions, RecordRecentlyViewed } from '@/features/marketplace';
 import { serverFetch } from '@/lib/api/server';
 import {
@@ -242,6 +243,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
               {listing.riskLevel && <RiskBadge riskLevel={listing.riskLevel} />}
             </div>
           </div>
+
+          <AuctionPanel listingId={listing.id} />
 
           <div className="mt-4">
             <ListingDetailActions listingId={listing.id} />

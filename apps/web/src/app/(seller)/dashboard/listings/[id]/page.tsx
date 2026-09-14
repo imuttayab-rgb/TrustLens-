@@ -1,5 +1,6 @@
 'use client';
 
+import { StartAuctionCard } from '@/features/commerce';
 import {
   ListingForm,
   ListingImages,
@@ -62,6 +63,15 @@ export default function ListingDetailPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {!removed && (
+        <StartAuctionCard
+          listingId={id}
+          listingStatus={listing.status}
+          suggestedPrice={listing.price}
+          currency={listing.currency}
+        />
+      )}
 
       {removed ? (
         <Alert tone="warning" title="This item has been removed" className="mt-6">

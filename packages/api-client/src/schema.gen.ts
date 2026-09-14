@@ -1114,7 +1114,8 @@ export interface paths {
       path?: never;
       cookie?: never;
     };
-    get?: never;
+    /** The most recent auction for a listing, if any */
+    get: operations['get_auction_for_listing_api_v1_listings__listing_id__auction_get'];
     put?: never;
     /** List a listing as an auction instead of a fixed price */
     post: operations['create_auction_api_v1_listings__listing_id__auction_post'];
@@ -5348,6 +5349,41 @@ export interface operations {
     responses: {
       /** @description Successful Response */
       202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_auction_for_listing_api_v1_listings__listing_id__auction_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
         headers: {
           [name: string]: unknown;
         };

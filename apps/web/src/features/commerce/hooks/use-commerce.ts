@@ -174,3 +174,226 @@ export function useRaiseDispute() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: qk.myTransactions }),
   });
 }
+
+// ── Installments (PAY-01) - a payment schedule, not a payment processor;
+// see the backend use-case module for why "sandbox" is the honest word. ──
+
+export type InstallmentPlanStatus = 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+export type InstallmentStatus = 'PENDING' | 'PAID';
+
+export interface Installment {
+  id: string;
+  sequenceNumber: number;
+  amount: number;
+  dueAt: string;
+  status: InstallmentStatus;
+  paidAt: string | null;
+  paidBy: string | null;
+}
+
+export interface InstallmentPlan {
+  id: string;
+  transactionId: string;
+  buyerId: string;
+  sellerId: string;
+  totalAmount: number;
+  currency: string;
+  installmentCount: number;
+  status: InstallmentPlanStatus;
+  createdAt: string;
+  cancelledAt: string | null;
+  installments: Installment[];
+}
+
+const commerceQk = {
+  installmentPlan: (transactionId: string) =>
+    ['commerce', 'installment-plan', transactionId] as const,
+  auction: (auctionId: string) => ['commerce', 'auction', auctionId] as const,
+  auctionBids: (auctionId: string) => ['commerce', 'auction', auctionId, 'bids'] as const,
+};
+
+export function useInstallmentPlan(transactionId: string | null) {
+  return useQuery<InstallmentPlan | null>({
+    queryKey: commerceQk.installmentPlan(transactionId ?? 'none'),
+    enabled: Boolean(transactionId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/transactions/{transaction_id}/installment-plan', {
+        params: { path: { transaction_id: transactionId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: InstallmentPlan | null }).data;
+    },
+  });
+}
+
+export function useCreateInstallmentPlan() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      transactionId: string;
+      installmentCount: number;
+      frequencyDays: number;
+    }) => {
+      const result = await api.POST('/api/v1/transactions/{transaction_id}/installment-plan', {
+        params: { path: { transaction_id: input.transactionId } },
+        body: { installmentCount: input.installmentCount, frequencyDays: input.frequencyDays },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: InstallmentPlan }).data;
+    },
+    onSuccess: async (_data, input) => {
+      await queryClient.invalidateQueries({
+        queryKey: commerceQk.installmentPlan(input.transactionId),
+      });
+      await queryClient.invalidateQueries({ queryKey: qk.myTransactions });
+    },
+  });
+}
+
+export function usePayInstallment(transactionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (installmentId: string) => {
+      const result = await api.POST('/api/v1/installments/{installment_id}/pay', {
+        params: { path: { installment_id: installmentId } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Installment }).data;
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: commerceQk.installmentPlan(transactionId) }),
+  });
+}
+
+export function useCancelInstallmentPlan(transactionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (planId: string) => {
+      const result = await api.POST('/api/v1/installment-plans/{plan_id}/cancel', {
+        params: { path: { plan_id: planId } },
+      });
+      if (result.error) throw toApiError(result.error);
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: commerceQk.installmentPlan(transactionId) }),
+  });
+}
+
+// ── Auctions (AUC-01) ─────────────────────────────────────────────────
+
+export type AuctionStatus = 'ACTIVE' | 'ENDED' | 'CANCELLED';
+
+export interface Auction {
+  id: string;
+  listingId: string;
+  sellerId: string;
+  startingPrice: number;
+  currency: string;
+  endsAt: string;
+  status: AuctionStatus;
+  createdAt: string;
+  reservePrice: number | null;
+  winningBidId: string | null;
+  endedAt: string | null;
+  currentPrice: number | null;
+  bidCount: number;
+}
+
+export interface Bid {
+  id: string;
+  auctionId: string;
+  bidderId: string;
+  amount: number;
+  createdAt: string;
+}
+
+export function useCreateAuction(listingId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: {
+      startingPrice: number;
+      currency?: string;
+      durationHours: number;
+      reservePrice?: number;
+    }) => {
+      const result = await api.POST('/api/v1/listings/{listing_id}/auction', {
+        params: { path: { listing_id: listingId } },
+        body: {
+          startingPrice: input.startingPrice,
+          currency: input.currency ?? 'PKR',
+          durationHours: input.durationHours,
+          reservePrice: input.reservePrice ?? null,
+        },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Auction }).data;
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData(commerceQk.auction(data.id), data);
+      queryClient.setQueryData(['commerce', 'listing-auction', listingId] as const, data);
+    },
+  });
+}
+
+export function useAuctionForListing(listingId: string | null) {
+  return useQuery<Auction | null>({
+    queryKey: ['commerce', 'listing-auction', listingId ?? 'none'] as const,
+    enabled: Boolean(listingId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/listings/{listing_id}/auction', {
+        params: { path: { listing_id: listingId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Auction | null }).data;
+    },
+    refetchInterval: 10_000,
+  });
+}
+
+export function useAuction(auctionId: string | null) {
+  return useQuery<Auction | null>({
+    queryKey: commerceQk.auction(auctionId ?? 'none'),
+    enabled: Boolean(auctionId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/auctions/{auction_id}', {
+        params: { path: { auction_id: auctionId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Auction }).data;
+    },
+    refetchInterval: 10_000,
+  });
+}
+
+export function useAuctionBids(auctionId: string | null) {
+  return useQuery<Bid[]>({
+    queryKey: commerceQk.auctionBids(auctionId ?? 'none'),
+    enabled: Boolean(auctionId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/auctions/{auction_id}/bids', {
+        params: { path: { auction_id: auctionId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Bid[] }).data;
+    },
+    refetchInterval: 10_000,
+  });
+}
+
+export function usePlaceBid(auctionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (amount: number) => {
+      const result = await api.POST('/api/v1/auctions/{auction_id}/bids', {
+        params: { path: { auction_id: auctionId } },
+        body: { amount },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: Bid }).data;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: commerceQk.auction(auctionId) });
+      await queryClient.invalidateQueries({ queryKey: commerceQk.auctionBids(auctionId) });
+    },
+  });
+}

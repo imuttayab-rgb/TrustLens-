@@ -348,6 +348,19 @@ class GetAuction:
         return auction
 
 
+class GetAuctionForListing:
+    """The most recent auction for a listing, whatever its status - lets a
+    seller's dashboard or the public listing page find an auction without
+    already knowing its id."""
+
+    def __init__(self, *, uow: UnitOfWork) -> None:
+        self._uow = uow
+
+    async def execute(self, listing_id: UUID) -> Auction | None:
+        async with self._uow:
+            return await self._uow.auctions.get_for_listing(listing_id)
+
+
 class ListBidsForAuction:
     def __init__(self, *, uow: UnitOfWork) -> None:
         self._uow = uow
@@ -364,6 +377,7 @@ __all__ = [
     "CreateAuction",
     "CreateAuctionCommand",
     "GetAuction",
+    "GetAuctionForListing",
     "ListBidsForAuction",
     "PlaceBid",
     "PlaceBidCommand",

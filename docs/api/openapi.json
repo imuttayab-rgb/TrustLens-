@@ -6181,6 +6181,63 @@
       }
     },
     "/api/v1/listings/{listing_id}/auction": {
+      "get": {
+        "operationId": "get_auction_for_listing_api_v1_listings__listing_id__auction_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Get Auction For Listing Api V1 Listings  Listing Id  Auction Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "The most recent auction for a listing, if any",
+        "tags": ["Commerce"]
+      },
       "post": {
         "operationId": "create_auction_api_v1_listings__listing_id__auction_post",
         "parameters": [

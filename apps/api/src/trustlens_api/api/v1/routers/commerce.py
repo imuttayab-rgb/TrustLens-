@@ -33,6 +33,7 @@ from trustlens.core.application.use_cases.commerce import (
     CreateOffer,
     CreateOfferCommand,
     GetAuction,
+    GetAuctionForListing,
     GetInstallmentPlan,
     ListBidsForAuction,
     ListMyTransactions,
@@ -450,6 +451,27 @@ async def create_auction(
     )
     return envelope(
         _to_auction_response(auction, current_price=None, bid_count=0).model_dump(by_alias=True),
+        request_id=meta.request_id,
+    )
+
+
+@router.get(
+    "/listings/{listing_id}/auction",
+    summary="The most recent auction for a listing, if any",
+)
+async def get_auction_for_listing(
+    listing_id: UUID, actor: ActorDep, uow: UowDep, meta: MetaDep
+) -> dict[str, Any]:
+    assert actor.user_id is not None
+    auction = await GetAuctionForListing(uow=uow).execute(listing_id)
+    if auction is None:
+        return envelope(None, request_id=meta.request_id)
+    bids = await ListBidsForAuction(uow=uow).execute(auction.id)
+    current_price = bids[0].amount if bids else None
+    return envelope(
+        _to_auction_response(auction, current_price=current_price, bid_count=len(bids)).model_dump(
+            by_alias=True
+        ),
         request_id=meta.request_id,
     )
 

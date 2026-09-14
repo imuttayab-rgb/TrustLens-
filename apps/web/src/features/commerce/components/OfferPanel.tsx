@@ -6,6 +6,7 @@ import { Alert, Button, Field, fieldAria, Input, Spinner } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { useState } from 'react';
 import { HandoverQrCode } from './HandoverQrCode';
+import { InstallmentPanel } from './InstallmentPanel';
 import {
   useCancelTransaction,
   useCompleteTransaction,
@@ -275,6 +276,12 @@ function TransactionCard({
           </Button>
         </div>
       )}
+      <InstallmentPanel
+        transactionId={transaction.id}
+        transactionAmount={transaction.amount}
+        currency={transaction.currency}
+        disabled={transaction.status === 'HANDED_OVER'}
+      />
     </div>
   );
 }
