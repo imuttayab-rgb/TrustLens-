@@ -110,6 +110,25 @@ class RequestPhoneOtp:
                     "Daily limit for verification codes reached.", retry_after=86400
                 )
 
+            # A first-class "locked" state (VER-02), not just an error thrown
+            # at verify time: exceeding attempts on the current code blocks
+            # *requesting a new one* too, for whatever's left of that code's
+            # TTL. Without this, five wrong guesses were free to route around
+            # by immediately asking for a fresh code - the guess counter
+            # reset, the lockout never actually happened.
+            active = await self._uow.otps.get_active(
+                cmd.user_id, purpose=OtpPurpose.PHONE_VERIFICATION
+            )
+            if (
+                active is not None
+                and active.attempts >= active.max_attempts
+                and now < active.expires_at
+            ):
+                raise RateLimitExceeded(
+                    "Too many incorrect attempts. Try again in a few minutes.",
+                    retry_after=int((active.expires_at - now).total_seconds()),
+                )
+
             phone = await self._find_or_create(cmd.user_id, e164, now)
 
             code = self._otp.generate(self._code_length)
@@ -140,7 +159,8 @@ class RequestPhoneOtp:
         )
 
     async def _find_or_create(self, user_id: UUID, e164: PhoneE164, now: datetime) -> PhoneNumber:
-        for existing in await self._uow.phone_numbers.list_for_user(user_id):
+        existing_numbers = await self._uow.phone_numbers.list_for_user(user_id)
+        for existing in existing_numbers:
             if existing.e164.value == e164.value:
                 return existing
         return await self._uow.phone_numbers.add(
@@ -149,7 +169,13 @@ class RequestPhoneOtp:
                 user_id=user_id,
                 e164=e164,
                 created_at=now,
-                is_primary=True,
+                # Only the very first number defaults to primary - a second
+                # or later one (VER-02's "changing phone number" case) stays
+                # a candidate, not the account's number of record, until it
+                # actually clears OTP verification. Without this, every new
+                # unverified number silently outranked an already-verified
+                # one the moment it was created.
+                is_primary=not existing_numbers,
             )
         )
 
@@ -211,7 +237,18 @@ class VerifyPhoneOtp:
             if phone is None:
                 raise EntityNotFound("phone_number", active.phone_number_id)
 
-            await self._uow.phone_numbers.update(dataclasses.replace(phone, verified_at=now))
+            await self._uow.phone_numbers.update(
+                dataclasses.replace(phone, verified_at=now, is_primary=True)
+            )
+            # Confirming a new number is what actually completes a phone
+            # change (VER-02) - demote every other number for this user so
+            # `get_primary` reflects the one that just passed OTP, not
+            # whichever was added first.
+            for other in await self._uow.phone_numbers.list_for_user(cmd.user_id):
+                if other.id != phone.id and other.is_primary:
+                    await self._uow.phone_numbers.update(
+                        dataclasses.replace(other, is_primary=False)
+                    )
 
             seller = await self._uow.sellers.get_by_user(cmd.user_id)
             if seller is not None:

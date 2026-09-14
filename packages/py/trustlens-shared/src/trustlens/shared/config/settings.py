@@ -399,6 +399,11 @@ class RateLimitSettings(_Base):
     #: (resend-verification, forgot-password) - low, since a real person
     #: retries at most a couple of times an hour, not dozens.
     email_send_per_hour: int = 5
+    #: VER-02's IP-level guard on phone OTP requests - the existing hourly/
+    #: daily caps are per-account, so many throwaway accounts from one
+    #: address were free to each request their own SMS quota. Higher than
+    #: the per-account limit since a shared NAT/office network is normal.
+    otp_request_per_ip_per_hour: int = 10
     public_api_free_per_minute: int = 60
     public_api_partner_per_minute: int = 600
     #: Public API fails CLOSED (protects cost and data); auth fails OPEN

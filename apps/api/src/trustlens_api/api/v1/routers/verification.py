@@ -36,7 +36,8 @@ from trustlens.core.domain.entities import (
     StoredFile,
 )
 from trustlens.core.domain.enums import ConsentType, FilePurpose
-from trustlens.core.domain.errors import PermissionDenied, ValidationError
+from trustlens.core.domain.errors import PermissionDenied, RateLimitExceeded, ValidationError
+from trustlens.shared.logging import get_logger
 from trustlens_api.api.deps import (
     ActorDep,
     ContainerDep,
@@ -71,7 +72,34 @@ def _require_user_id(actor: AuthenticatedActor) -> UUID:
     return actor.user_id
 
 
+log = get_logger(__name__)
+
 router = APIRouter(tags=["Verification"])
+
+
+async def _throttle_otp_request(container: ContainerDep, meta: MetaDep) -> None:
+    """Per-IP limit on top of the use case's per-account hourly/daily caps
+    (VER-02) - those alone do nothing about many throwaway accounts each
+    requesting SMS from the same address. Fails open, same policy as every
+    other limiter here."""
+    limits = container.settings.rate_limit
+    if not limits.enabled or meta.ip is None:
+        return
+    try:
+        allowed, _remaining, retry_after = await container.rate_limiter.hit(
+            f"otp-request:ip:{meta.ip}",
+            limit=limits.otp_request_per_ip_per_hour,
+            window_seconds=3600,
+        )
+    except Exception:
+        log.warning("otp_request_throttle_unavailable_failing_open", ip=meta.ip)
+        return
+    if not allowed:
+        raise RateLimitExceeded(
+            "Too many verification codes requested from this network. Try again later.",
+            retry_after=retry_after,
+        )
+
 
 #: Points each check is worth under scoring model v1, shown in the checklist so
 #: a seller can see what completing it buys them.
@@ -280,6 +308,7 @@ async def request_otp(
     uow: UowDep,
     meta: MetaDep,
 ) -> dict[str, Any]:
+    await _throttle_otp_request(container, meta)
     notifications = container.settings.notifications
     result = await RequestPhoneOtp(
         uow=uow,
