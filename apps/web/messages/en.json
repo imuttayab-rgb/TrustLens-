@@ -20,8 +20,9 @@
     "howItWorks": "How it works",
     "whatWeCheck": "What we check",
     "whyExplainable": "Why explainable",
-    "apiDocs": "API docs",
-    "tagline": "Trust before you deal."
+    "tagline": "Trust before you deal.",
+    "help": "Help",
+    "safety": "Safety"
   },
   "DashboardNav": {
     "overview": "Overview",
@@ -31,5 +32,24 @@
     "score": "Score",
     "myReports": "My reports",
     "settings": "Settings"
+  },
+  "SiteFooter": {
+    "product": "Product",
+    "support": "Support",
+    "trustSafety": "Trust & Safety",
+    "legal": "Legal",
+    "browse": "Browse",
+    "checkSeller": "Check a seller",
+    "getVerified": "Get verified",
+    "apiDocs": "API docs",
+    "help": "Help centre",
+    "contact": "Contact us",
+    "reportIssue": "Report an issue",
+    "safety": "Safety tips",
+    "guidelines": "Community guidelines",
+    "terms": "Terms of service",
+    "privacy": "Privacy policy",
+    "blurb": "Check a seller's identity, phone and listings before you pay.",
+    "copyright": "© {year} TrustLens. All rights reserved."
   }
 }

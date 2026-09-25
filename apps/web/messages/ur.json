@@ -20,8 +20,9 @@
     "howItWorks": "یہ کیسے کام کرتا ہے",
     "whatWeCheck": "ہم کیا جانچتے ہیں",
     "whyExplainable": "قابلِ وضاحت کیوں",
-    "apiDocs": "API دستاویزات",
-    "tagline": "ڈیل کرنے سے پہلے اعتماد۔"
+    "tagline": "ڈیل کرنے سے پہلے اعتماد۔",
+    "help": "مدد",
+    "safety": "تحفظ"
   },
   "DashboardNav": {
     "overview": "جائزہ",
@@ -31,5 +32,24 @@
     "score": "اسکور",
     "myReports": "میری رپورٹس",
     "settings": "ترتیبات"
+  },
+  "SiteFooter": {
+    "product": "پروڈکٹ",
+    "support": "معاونت",
+    "trustSafety": "اعتماد اور تحفظ",
+    "legal": "قانونی",
+    "browse": "براؤز کریں",
+    "checkSeller": "بیچنے والے کی جانچ",
+    "getVerified": "تصدیق کروائیں",
+    "apiDocs": "API دستاویزات",
+    "help": "مدد مرکز",
+    "contact": "ہم سے رابطہ کریں",
+    "reportIssue": "مسئلہ رپورٹ کریں",
+    "safety": "حفاظتی تجاویز",
+    "guidelines": "کمیونٹی رہنما اصول",
+    "terms": "شرائطِ خدمت",
+    "privacy": "رازداری کی پالیسی",
+    "blurb": "ادائیگی سے پہلے بیچنے والے کی شناخت، فون اور لسٹنگز کی جانچ کریں۔",
+    "copyright": "© {year} TrustLens۔ جملہ حقوق محفوظ ہیں۔"
   }
 }

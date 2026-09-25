@@ -1,4 +1,4 @@
-import { SiteNav } from '@/features/marketing';
+import { SiteFooter, SiteNav } from '@/features/marketing';
 import { Ambient } from '@trustlens/ui';
 
 /**
@@ -16,6 +16,7 @@ export default function PublicLayout({ children }: { children: React.ReactNode }
       <main id="main-content" className="flex-1">
         {children}
       </main>
+      <SiteFooter />
     </div>
   );
 }

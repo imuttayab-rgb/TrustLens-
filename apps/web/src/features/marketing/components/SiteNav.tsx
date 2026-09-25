@@ -19,7 +19,8 @@ const LINKS = [
   { href: '/#how-it-works', key: 'howItWorks' },
   { href: '/#checks', key: 'whatWeCheck' },
   { href: '/#explainable', key: 'whyExplainable' },
-  { href: '/docs/api', key: 'apiDocs' },
+  { href: '/help', key: 'help' },
+  { href: '/safety', key: 'safety' },
 ] as const;
 
 export function SiteNav() {
