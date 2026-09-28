@@ -1601,7 +1601,12 @@ class SqlMessagingRepository:
             .distinct(m.MessageModel.conversation_id)
         )
         rows = await self._s.execute(stmt)
-        return dict(rows.tuples())
+        # `dict(rows.tuples())` is broken: `Result` exposes `.keys()` (the
+        # column names), so the dict constructor mistakes it for a mapping
+        # and does `rows[key]`, which `Result` doesn't support - `.all()`
+        # materialises to a plain list first, which has no `.keys()` to
+        # trip that fast path.
+        return dict(rows.tuples().all())
 
     async def _unread_counts(
         self, conversation_ids: list[UUID], *, reader_id: UUID
@@ -1618,7 +1623,7 @@ class SqlMessagingRepository:
             .group_by(m.MessageModel.conversation_id)
         )
         rows = await self._s.execute(stmt)
-        return dict(rows.tuples())
+        return dict(rows.tuples().all())
 
     async def count_conversations_for_user(self, user_id: UUID) -> int:
         stmt = (
