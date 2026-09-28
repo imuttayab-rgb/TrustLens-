@@ -1,4 +1,4 @@
-import { RequireStaff } from '@/features/auth';
+import { LogoutButton, RequireStaff } from '@/features/auth';
 import { ADMIN_ROUTES } from '@trustlens/constants';
 import { Ambient, ThemeToggle } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
@@ -47,6 +47,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           ))}
         </nav>
+
+        <div className="mt-6 border-t border-border/60 pt-3">
+          <LogoutButton className="w-full justify-start" />
+        </div>
       </aside>
 
       <div className="min-w-0 flex-1">

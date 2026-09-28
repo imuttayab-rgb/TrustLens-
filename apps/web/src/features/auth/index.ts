@@ -1,4 +1,5 @@
 /** Public surface of the auth feature. Nothing outside imports its internals. */
+export { LogoutButton } from './components/LogoutButton';
 export { RequireSession } from './components/RequireSession';
 export { ForgotPasswordForm } from './components/ForgotPasswordForm';
 export { LoginForm } from './components/LoginForm';

@@ -1,4 +1,4 @@
-import { RequireSession } from '@/features/auth';
+import { LogoutButton, RequireSession } from '@/features/auth';
 import { LocaleSwitcher } from '@/i18n/LocaleSwitcher';
 import { NotificationBell } from '@/features/notifications';
 import { DeviceCheck } from '@/features/verification';
@@ -60,6 +60,7 @@ export default async function SellerLayout({ children }: { children: React.React
             <NotificationBell />
             <LocaleSwitcher className="ml-1 hidden sm:flex" />
             <ThemeToggle className="ml-1" />
+            <LogoutButton className="ml-1" />
           </nav>
         </div>
       </header>
