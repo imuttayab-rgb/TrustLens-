@@ -1,11 +1,10 @@
-import { LogoutButton, RequireSession } from '@/features/auth';
-import { LocaleSwitcher } from '@/i18n/LocaleSwitcher';
-import { NotificationBell } from '@/features/notifications';
+import { RequireSession } from '@/features/auth';
 import { DeviceCheck } from '@/features/verification';
-import { Ambient, ThemeToggle } from '@trustlens/ui';
+import { Ambient } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';
+import { DashboardNav } from './DashboardNav';
 
 const NAV = [
   { href: '/dashboard', key: 'overview' },
@@ -47,21 +46,7 @@ export default async function SellerLayout({ children }: { children: React.React
             <span className="text-sm font-bold tracking-tight">TrustLens</span>
           </Link>
 
-          <nav className="flex items-center gap-1 text-sm">
-            {NAV.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="rounded-md px-3 py-2 text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                {t(item.key)}
-              </Link>
-            ))}
-            <NotificationBell />
-            <LocaleSwitcher className="ml-1 hidden sm:flex" />
-            <ThemeToggle className="ml-1" />
-            <LogoutButton className="ml-1" />
-          </nav>
+          <DashboardNav items={NAV.map((item) => ({ href: item.href, label: t(item.key) }))} />
         </div>
       </header>
 
