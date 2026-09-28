@@ -28,7 +28,11 @@ export function ConversationList() {
   if (data.items.length === 0) {
     return (
       <Alert tone="info" title="No conversations yet">
-        Message a seller from a listing on Browse to start one.
+        Message a seller from a listing on{' '}
+        <Link href="/browse" className="font-medium text-primary hover:underline">
+          Browse
+        </Link>{' '}
+        to start one.
       </Alert>
     );
   }

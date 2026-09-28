@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { DashboardNav } from './DashboardNav';
 
 const NAV = [
+  { href: '/browse', key: 'browse' },
   { href: '/dashboard', key: 'overview' },
   { href: '/dashboard/listings', key: 'selling' },
   { href: '/dashboard/favorites', key: 'favorites' },
