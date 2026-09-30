@@ -2,7 +2,6 @@
 
 import { api } from '@/lib/api/client';
 import { qk } from '@/lib/api/query-keys';
-import { getAccessToken, refreshSession, setAccessToken } from '@/lib/auth/session';
 import { useQuery } from '@tanstack/react-query';
 
 export interface SessionUser {
@@ -36,17 +35,20 @@ export interface SessionUser {
  * On a hard navigation the in-memory token is empty, so the first call 401s,
  * the client middleware exchanges the refresh cookie for a new access token
  * and retries. That path is already built; this hook just primes it.
+ *
+ * Deliberately does NOT pre-emptively call `refreshSession()` itself: doing
+ * that here as well as in the api-client's `onUnauthorized` middleware gave
+ * a hard navigation two independent, un-deduplicated refresh calls (this
+ * hook's, and whichever other authenticated query 401ed first) racing the
+ * same rotating refresh cookie - the loser got a 401 the server correctly
+ * treats as token reuse and revokes the whole session, signing the user back
+ * out. Always going through the single request below routes every refresh
+ * through the client's one deduped `refreshing` promise instead.
  */
 export function useSession() {
   return useQuery<SessionUser | null>({
     queryKey: qk.me,
     queryFn: async () => {
-      if (!getAccessToken()) {
-        const token = await refreshSession();
-        setAccessToken(token);
-        if (!token) return null;
-      }
-
       const result = await api.GET('/api/v1/me');
       if (result.error) return null;
       return (result.data as { data: SessionUser }).data;

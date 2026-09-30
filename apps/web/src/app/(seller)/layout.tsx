@@ -10,7 +10,7 @@ const NAV = [
   { href: '/browse', key: 'browse' },
   { href: '/dashboard', key: 'overview' },
   { href: '/dashboard/listings', key: 'selling' },
-  { href: '/dashboard/favorites', key: 'favorites' },
+  { href: '/favourites', key: 'favorites' },
   { href: '/dashboard/messages', key: 'messages' },
   { href: '/dashboard/trust-score', key: 'score' },
   { href: '/dashboard/reports', key: 'myReports' },

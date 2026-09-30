@@ -181,7 +181,7 @@ export function SiteNav() {
             />
           </Link>
           <Link
-            href="/dashboard/favorites"
+            href="/favourites"
             className="group relative flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Heart
@@ -282,7 +282,7 @@ export function SiteNav() {
               {t('messages')}
             </Link>
             <Link
-              href="/dashboard/favorites"
+              href="/favourites"
               onClick={() => setMenuOpen(false)}
               className="rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >
