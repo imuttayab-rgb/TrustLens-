@@ -2534,6 +2534,12 @@ export interface components {
       confidence: number;
       /** Expiresat */
       expiresAt: string;
+      /**
+       * Membersince
+       * @description ISO timestamp the seller account opened.
+       * @default
+       */
+      memberSince: string;
       /** Modelversion */
       modelVersion: string;
       /** Reasons */

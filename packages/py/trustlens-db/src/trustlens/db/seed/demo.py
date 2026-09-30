@@ -44,16 +44,29 @@ NS_DEMO = UUID("6f1a9c30-0000-4000-8000-0000000000d0")
 #: Deterministic per-category palettes so re-seeding always produces the same
 #: images (matters for reproducible screenshots and E2E snapshots).
 _PLACEHOLDER_PALETTES: dict[str, tuple[str, str]] = {
-    "Mobile Phones": ("#0f766e", "#5eead4"),
-    "Cars": ("#334155", "#93c5fd"),
-    "Property": ("#78350f", "#fbbf24"),
-    "Electronics": ("#1e3a8a", "#93c5fd"),
-    "Home Appliances": ("#4c1d95", "#c4b5fd"),
-    "Services": ("#155e75", "#67e8f9"),
-    "Fashion": ("#831843", "#f9a8d4"),
+    "mobiles": ("#0f766e", "#5eead4"),
+    "vehicles": ("#334155", "#93c5fd"),
+    "property-sale": ("#78350f", "#fbbf24"),
+    "electronics": ("#1e3a8a", "#93c5fd"),
+    "home-appliances": ("#4c1d95", "#c4b5fd"),
+    "services": ("#155e75", "#67e8f9"),
+    "fashion": ("#831843", "#f9a8d4"),
 }
 _PLACEHOLDER_FALLBACK = ("#374151", "#9ca3af")
 _PLACEHOLDER_SIZE = (1024, 768)
+
+#: Mirrors `LISTING_CATEGORY_LABELS` in packages/constants for the handful of
+#: categories demo listings actually use - the stored `category` stays the
+#: real slug (so filtering works), this is display text only.
+_CATEGORY_LABELS: dict[str, str] = {
+    "mobiles": "Mobile Phones",
+    "vehicles": "Vehicles",
+    "property-sale": "Property for Sale",
+    "electronics": "Electronics",
+    "home-appliances": "Home Appliances",
+    "services": "Services",
+    "fashion": "Fashion",
+}
 
 
 def _generate_placeholder_image(title: str, category: str) -> bytes:
@@ -87,7 +100,7 @@ def _generate_placeholder_image(title: str, category: str) -> bytes:
     category_font = ImageFont.load_default(size=56)
     caption_font = ImageFont.load_default(size=28)
 
-    category_text = category.upper()
+    category_text = _CATEGORY_LABELS.get(category, category).upper()
     bbox = draw.textbbox((0, 0), category_text, font=category_font)
     text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
     draw.text(
@@ -250,7 +263,7 @@ DEMO_LISTINGS: dict[RiskLevel, tuple[tuple[str, str, float, str], ...]] = {
             "Used for 8 months, box and receipt included. Meet at a public place, "
             "inspection welcome before payment.",
             72000,
-            "Mobile Phones",
+            "mobiles",
         ),
     ),
     RiskLevel.MEDIUM: (
@@ -259,7 +272,7 @@ DEMO_LISTINGS: dict[RiskLevel, tuple[tuple[str, str, float, str], ...]] = {
             "Well maintained, single owner. Serious buyers only. Contact on WhatsApp "
             "for faster response.",
             3_450_000,
-            "Cars",
+            "vehicles",
         ),
     ),
     RiskLevel.HIGH: (
@@ -269,7 +282,7 @@ DEMO_LISTINGS: dict[RiskLevel, tuple[tuple[str, str, float, str], ...]] = {
             "payment to reserve, first come first served. Contact me on WhatsApp only, "
             "do not message here.",
             95_000,
-            "Mobile Phones",
+            "mobiles",
         ),
     ),
 }
@@ -428,15 +441,25 @@ async def _ensure_demo_listing_images(
     band: RiskLevel,
     now: datetime,
 ) -> int:
-    """Backfill photos for demo listings seeded before image generation existed.
+    """Bring demo listings already in the DB in line with the current
+    `DEMO_LISTINGS` - photos for rows seeded before image generation existed,
+    and the category corrected for rows seeded back when it held a display
+    label ("Mobile Phones") instead of the real filter slug ("mobiles"),
+    which silently broke category search for exactly these listings.
 
-    Only inserts what's missing, so re-running against a dev DB that already
-    has real listing images (or ones already exercised via live testing) is a
+    Only touches what's actually out of date, so re-running against a dev DB
+    that's already current (or already exercised via live testing) is a
     no-op for those rows.
     """
     added = 0
     for index, (title, _description, _price, category) in enumerate(DEMO_LISTINGS[band]):
         listing_id = _demo_id("listing", f"{handle}-{index}")
+
+        listing = await session.get(m.ListingModel, listing_id)
+        if listing is not None and listing.category != category:
+            listing.category = category
+            listing.updated_at = now
+
         existing = await session.execute(
             select(m.ListingImageModel.id).where(m.ListingImageModel.listing_id == listing_id)
         )

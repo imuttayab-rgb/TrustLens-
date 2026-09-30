@@ -4,21 +4,27 @@
  * Server-rendered with ISR for the same reasons as /seller/[handle]: it
  * must be linkable with a proper preview card, crawlable, and a buyer
  * should not wait on a client round trip just to read a description.
- * Only the save/message buttons cross into a client component.
+ * Only the gallery, actions, and similar-listings rail cross into client
+ * components.
  */
-import { AuctionPanel } from '@/features/commerce';
-import { ListingDetailActions, RecordRecentlyViewed } from '@/features/marketplace';
+import {
+  attributeIcon,
+  ListingDescription,
+  ListingGallery,
+  ListingLocationCard,
+  ListingSellerCard,
+  RecordRecentlyViewed,
+  SimilarListings,
+} from '@/features/marketplace';
 import { serverFetch } from '@/lib/api/server';
 import {
   LISTING_CATEGORY_LABELS,
   type ListingCategory,
   type RiskLevel,
 } from '@trustlens/constants';
-import { RiskBadge } from '@trustlens/ui';
-import { formatDateTime } from '@trustlens/utils';
-import { BadgeCheck, ShieldCheck } from 'lucide-react';
+import { formatRelative } from '@trustlens/utils';
+import { ChevronRight, ExternalLink, ShieldCheck } from 'lucide-react';
 import type { Metadata } from 'next';
-import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -54,8 +60,45 @@ interface PublicListingDetail {
   longitude: number | null;
 }
 
+interface SellerScore {
+  score: number;
+  riskLevel: RiskLevel;
+  verifications: Record<string, string>;
+  memberSince: string;
+}
+
+interface SellerListing {
+  id: string;
+  status: string;
+}
+
+interface SellerReviews {
+  summary: { averageRating: number | null; reviewCount: number };
+}
+
 async function getListing(id: string): Promise<PublicListingDetail | null> {
   return serverFetch<PublicListingDetail>(`/api/v1/public/listings/${encodeURIComponent(id)}`);
+}
+
+async function getSellerScore(handle: string): Promise<SellerScore | null> {
+  return serverFetch<SellerScore>(
+    `/api/v1/public/sellers/${encodeURIComponent(handle)}/trust-score`,
+  );
+}
+
+async function getSellerActiveListingsCount(handle: string): Promise<number> {
+  const listings = await serverFetch<SellerListing[]>(
+    `/api/v1/public/listings?seller=${encodeURIComponent(handle)}&limit=12`,
+  );
+  return (listings ?? []).filter((l) => l.status === 'ACTIVE').length;
+}
+
+async function getSellerReviews(handle: string): Promise<SellerReviews> {
+  return (
+    (await serverFetch<SellerReviews>(
+      `/api/v1/public/sellers/${encodeURIComponent(handle)}/reviews`,
+    )) ?? { summary: { averageRating: null, reviewCount: 0 } }
+  );
 }
 
 export async function generateMetadata({
@@ -84,10 +127,17 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   const listing = await getListing(id);
   if (!listing) notFound();
 
+  const [sellerScore, activeListingsCount, reviews] = await Promise.all([
+    getSellerScore(listing.sellerHandle),
+    getSellerActiveListingsCount(listing.sellerHandle),
+    getSellerReviews(listing.sellerHandle),
+  ]);
+
   const images = listing.images.length > 0 ? listing.images : [];
+  const categoryLabel = listing.category ? LISTING_CATEGORY_LABELS[listing.category] : null;
 
   return (
-    <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 sm:py-12">
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
       <RecordRecentlyViewed
         listing={{
           id: listing.id,
@@ -116,9 +166,28 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           longitude: listing.longitude,
         }}
       />
-      <Link href="/browse" className="text-sm text-muted-foreground hover:underline">
-        ← Back to Browse
-      </Link>
+
+      <nav
+        aria-label="Breadcrumb"
+        className="flex items-center gap-1.5 text-sm text-muted-foreground"
+      >
+        <Link href="/" className="hover:text-foreground hover:underline">
+          Home
+        </Link>
+        {categoryLabel && listing.category && (
+          <>
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+            <Link
+              href={`/browse?category=${listing.category}`}
+              className="hover:text-foreground hover:underline"
+            >
+              {categoryLabel}
+            </Link>
+          </>
+        )}
+        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+        <span className="truncate text-foreground">{listing.title}</span>
+      </nav>
 
       {listing.status !== 'ACTIVE' && (
         <div className="mt-4 rounded-lg border border-border bg-muted/50 px-4 py-2 text-sm font-medium">
@@ -126,145 +195,104 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
         </div>
       )}
 
-      <div className="mt-4 grid gap-8 sm:grid-cols-2">
-        <div>
-          {images.length > 0 ? (
-            <div className="space-y-2">
-              <div className="relative aspect-square overflow-hidden rounded-lg border border-border bg-muted">
-                <Image
-                  src={images[0]!.imageUrl}
-                  alt={listing.title}
-                  fill
-                  className="object-cover"
-                  unoptimized
-                  priority
-                />
-              </div>
-              {images.length > 1 && (
-                <div className="grid grid-cols-4 gap-2">
-                  {images.slice(1).map((image, i) => (
-                    <div
-                      key={i}
-                      className="relative aspect-square overflow-hidden rounded-md border border-border bg-muted"
-                    >
-                      <Image
-                        src={image.thumbnailUrl ?? image.imageUrl}
-                        alt={`${listing.title} photo ${i + 2}`}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-              {listing.videoUrl && (
-                // eslint-disable-next-line jsx-a11y/media-has-caption -- a seller's own upload, no captions to source
-                <video
-                  src={listing.videoUrl}
-                  controls
-                  className="aspect-video w-full rounded-lg border border-border bg-black"
-                />
-              )}
-            </div>
-          ) : (
-            <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-border bg-muted/50 text-sm text-muted-foreground">
-              No photos
-            </div>
-          )}
-        </div>
+      <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_360px]">
+        <div className="min-w-0">
+          <ListingGallery images={images} title={listing.title} />
 
-        <div>
-          <h1 className="text-2xl font-bold">{listing.title}</h1>
-          <p className="mt-1 text-2xl font-semibold">
+          {listing.videoUrl && (
+            // eslint-disable-next-line jsx-a11y/media-has-caption -- a seller's own upload, no captions to source
+            <video
+              src={listing.videoUrl}
+              controls
+              className="mt-2 aspect-video w-full rounded-lg border border-border bg-black"
+            />
+          )}
+
+          <h1 className="mt-5 text-2xl font-bold sm:text-3xl">{listing.title}</h1>
+          <p className="mt-1 text-2xl font-semibold text-brand">
             {listing.price !== null
               ? `${listing.currency ?? ''} ${listing.price.toLocaleString()}`
               : 'Price on request'}
             {listing.negotiable && (
-              <span className="ml-2 text-sm font-normal text-muted-foreground">negotiable</span>
+              <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-sm font-normal text-muted-foreground">
+                Negotiable
+              </span>
             )}
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {listing.category ? LISTING_CATEGORY_LABELS[listing.category] : 'Uncategorised'}
-            {listing.condition ? ` · ${listing.condition.replace(/_/g, ' ').toLowerCase()}` : ''}
-            {listing.area
-              ? ` · ${listing.area}, ${listing.city}`
-              : listing.city
-                ? ` · ${listing.city}`
-                : ''}
-          </p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+            {listing.condition && <span>{listing.condition.replace(/_/g, ' ').toLowerCase()}</span>}
+            {categoryLabel && <span>· {categoryLabel}</span>}
+            <span>· Listing ID: #{listing.id.slice(0, 8).toUpperCase()}</span>
+            <span>· Posted {formatRelative(listing.createdAt)}</span>
+          </div>
 
           {Object.keys(listing.attributes).length > 0 && (
-            <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
-              {Object.entries(listing.attributes).map(([key, value]) => (
-                <div key={key} className="contents">
-                  <dt className="text-muted-foreground">{key}</dt>
-                  <dd>{value}</dd>
-                </div>
-              ))}
+            <dl className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {Object.entries(listing.attributes).map(([key, value]) => {
+                const Icon = attributeIcon(key);
+                return (
+                  <div
+                    key={key}
+                    className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
+                  >
+                    <Icon className="h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+                    <div className="min-w-0">
+                      <dt className="truncate text-xs text-muted-foreground">{key}</dt>
+                      <dd className="truncate text-sm font-medium">{value}</dd>
+                    </div>
+                  </div>
+                );
+              })}
             </dl>
           )}
 
-          {listing.latitude !== null && listing.longitude !== null && (
-            // Zoom 14, not a street-level 16+: the API already rounds this
-            // coordinate to ~1.1km (LOC-01), and a wide "this neighborhood"
-            // view keeps the framing honest about what the pin represents.
-            <a
-              href={`https://www.openstreetmap.org/?mlat=${listing.latitude}&mlon=${listing.longitude}#map=14/${listing.latitude}/${listing.longitude}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-1 inline-block text-sm text-primary underline-offset-4 hover:underline"
-            >
-              View on map
-            </a>
-          )}
-
-          <div className="mt-4 rounded-lg border border-border p-4">
-            <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="flex items-center gap-1.5 truncate text-sm font-medium">
-                  <span className="truncate">{listing.sellerDisplayName}</span>
-                  {listing.identityVerified && (
-                    <ShieldCheck
-                      className="h-4 w-4 shrink-0 text-risk-low"
-                      aria-label="Identity verified"
-                    />
-                  )}
-                  {listing.phoneVerified && (
-                    <BadgeCheck
-                      className="h-4 w-4 shrink-0 text-muted-foreground"
-                      aria-label="Phone verified"
-                    />
-                  )}
-                </p>
-                <Link
-                  href={`/seller/${encodeURIComponent(listing.sellerHandle)}`}
-                  className="text-sm text-primary underline-offset-4 hover:underline"
-                >
-                  View seller&apos;s Trust Score
-                </Link>
-              </div>
-              {listing.riskLevel && <RiskBadge riskLevel={listing.riskLevel} />}
+          <div className="mt-6 border-t border-border pt-6">
+            <h2 className="text-lg font-semibold">Description</h2>
+            <div className="mt-2">
+              <ListingDescription description={listing.description} />
             </div>
           </div>
 
-          <AuctionPanel listingId={listing.id} />
-
-          <div className="mt-4">
-            <ListingDetailActions listingId={listing.id} />
+          <div className="mt-6 flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 p-3 text-sm text-muted-foreground">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-brand" aria-hidden="true" />
+            <p>
+              Never pay in advance. Inspect the item first, and meet in public.{' '}
+              <Link
+                href="/safety"
+                className="inline-flex items-center gap-0.5 font-medium text-brand hover:underline"
+              >
+                Safety tips
+                <ExternalLink className="h-3 w-3" aria-hidden="true" />
+              </Link>
+            </p>
           </div>
 
-          <p className="mt-4 text-xs text-muted-foreground">
-            Listed {formatDateTime(listing.createdAt)}
-          </p>
+          <SimilarListings category={listing.category} excludeListingId={listing.id} />
         </div>
-      </div>
 
-      <div className="mt-8 border-t border-border pt-6">
-        <h2 className="text-lg font-semibold">Description</h2>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
-          {listing.description}
-        </p>
+        <div className="space-y-5 lg:sticky lg:top-20 lg:self-start">
+          {sellerScore && (
+            <ListingSellerCard
+              sellerHandle={listing.sellerHandle}
+              sellerDisplayName={listing.sellerDisplayName}
+              listingId={listing.id}
+              listingTitle={listing.title}
+              score={sellerScore}
+              activeListingsCount={activeListingsCount}
+              reviews={reviews.summary}
+            />
+          )}
+
+          {listing.latitude !== null && listing.longitude !== null && (
+            <ListingLocationCard
+              latitude={listing.latitude}
+              longitude={listing.longitude}
+              city={listing.city}
+              area={listing.area}
+            />
+          )}
+        </div>
       </div>
     </main>
   );

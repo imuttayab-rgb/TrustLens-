@@ -1,8 +1,14 @@
 export { ListingCard } from './components/ListingCard';
+export { ListingDescription } from './components/ListingDescription';
 export { ListingDetailActions } from './components/ListingDetailActions';
+export { ListingGallery } from './components/ListingGallery';
+export { ListingLocationCard } from './components/ListingLocationCard';
+export { ListingSellerCard } from './components/ListingSellerCard';
 export { RecentlyViewedStrip } from './components/RecentlyViewedStrip';
 export { RecordRecentlyViewed } from './components/RecordRecentlyViewed';
 export { SavedSearchBar } from './components/SavedSearchBar';
+export { SimilarListings } from './components/SimilarListings';
+export { attributeIcon } from './lib/attribute-icons';
 export {
   useAddFavorite,
   useFavoriteIds,

@@ -50,6 +50,7 @@ class PublicScoreResponse(PublicSchema):
             "score rather than counted as failures."
         ),
     )
+    member_since: str = Field(default="", description="ISO timestamp the seller account opened.")
 
 
 class BatchLookupRequest(PublicSchema):

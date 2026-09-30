@@ -114,6 +114,7 @@ async def get_trust_score(
         computed_at=payload.computed_at,
         expires_at=payload.expires_at,
         unavailable_signals=payload.unavailable_signals,
+        member_since=payload.member_since,
     )
     return _signed(body, response, container, meta)
 

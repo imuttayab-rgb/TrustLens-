@@ -60,6 +60,12 @@ class PublicTrustScore:
     computed_at: str
     expires_at: str
     unavailable_signals: list[str] = field(default_factory=list)
+    #: When the seller account opened - not PII, just an age signal a buyer
+    #: already infers from "member since" on any marketplace. Defaulted for
+    #: the same reason `PublicReason.category` is: an entry written to the
+    #: score cache before this field existed deserialises without it rather
+    #: than raising for the length of one cache TTL.
+    member_since: str = ""
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), separators=(",", ":"))
@@ -186,6 +192,7 @@ def to_public(
         computed_at=score.computed_at.isoformat(),
         expires_at=score.valid_until.isoformat(),
         unavailable_signals=[c.value for c in score.unavailable_signal_codes],
+        member_since=seller.account_opened_at.isoformat(),
     )
 
 
@@ -210,6 +217,7 @@ def _unscored_payload(seller_ref: str, seller: SellerProfile) -> PublicTrustScor
         model_version="-",
         computed_at=now.isoformat(),
         expires_at=now.isoformat(),
+        member_since=seller.account_opened_at.isoformat(),
     )
 
 

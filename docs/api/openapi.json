@@ -1044,6 +1044,12 @@
             "title": "Expiresat",
             "type": "string"
           },
+          "memberSince": {
+            "default": "",
+            "description": "ISO timestamp the seller account opened.",
+            "title": "Membersince",
+            "type": "string"
+          },
           "modelVersion": {
             "title": "Modelversion",
             "type": "string"
