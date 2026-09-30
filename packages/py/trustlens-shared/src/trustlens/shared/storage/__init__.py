@@ -119,16 +119,30 @@ class S3ObjectStorage(ObjectStorage):
 
         return await asyncio.to_thread(_get)
 
-    async def put(self, *, bucket: str, object_key: str, data: bytes, content_type: str) -> None:
+    async def put(
+        self,
+        *,
+        bucket: str,
+        object_key: str,
+        data: bytes,
+        content_type: str,
+        server_side_encryption: bool = True,
+    ) -> None:
         def _put() -> None:
+            extra: dict[str, str] = {}
+            if server_side_encryption:
+                # Server-side encryption, on top of the app-level envelope
+                # encryption applied to extracted CNIC fields. Skippable for
+                # non-sensitive, publicly-servable objects (e.g. listing
+                # photos) against S3-compatible backends whose SSE-S3 support
+                # requires an external KMS that dev/test setups don't have.
+                extra["ServerSideEncryption"] = "AES256"
             self._client.put_object(
                 Bucket=bucket,
                 Key=object_key,
                 Body=data,
                 ContentType=content_type,
-                # Server-side encryption, on top of the app-level envelope
-                # encryption applied to extracted CNIC fields.
-                ServerSideEncryption="AES256",
+                **extra,
             )
 
         await asyncio.to_thread(_put)
@@ -192,7 +206,15 @@ class LocalObjectStorage(ObjectStorage):
     async def get(self, *, bucket: str, object_key: str) -> bytes:
         return self._path(bucket, object_key).read_bytes()
 
-    async def put(self, *, bucket: str, object_key: str, data: bytes, content_type: str) -> None:
+    async def put(
+        self,
+        *,
+        bucket: str,
+        object_key: str,
+        data: bytes,
+        content_type: str,
+        server_side_encryption: bool = True,
+    ) -> None:
         path = self._path(bucket, object_key)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)

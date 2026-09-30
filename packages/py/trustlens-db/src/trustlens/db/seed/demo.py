@@ -7,15 +7,20 @@ run in production (see seed/run.py).
 
 from __future__ import annotations
 
+import hashlib
+import io
 from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from uuid import UUID, uuid5
 
+from PIL import Image, ImageDraw, ImageFont
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from trustlens.core.domain.enums import (
     AccountStatus,
     DocumentType,
+    FilePurpose,
     LineType,
     ListingSource,
     ListingStatus,
@@ -27,12 +32,85 @@ from trustlens.core.domain.enums import (
     UserRole,
     VerificationStatus,
 )
+from trustlens.core.domain.ports import ObjectStorage
 from trustlens.db import models as m
 from trustlens.db.seed.reference import SCORING_MODEL_ID, SIGNALS, _id
 from trustlens.shared.config.settings import Settings
 from trustlens.shared.crypto import Argon2PasswordHasher
+from trustlens.shared.storage import build_storage
 
 NS_DEMO = UUID("6f1a9c30-0000-4000-8000-0000000000d0")
+
+#: Deterministic per-category palettes so re-seeding always produces the same
+#: images (matters for reproducible screenshots and E2E snapshots).
+_PLACEHOLDER_PALETTES: dict[str, tuple[str, str]] = {
+    "Mobile Phones": ("#0f766e", "#5eead4"),
+    "Cars": ("#334155", "#93c5fd"),
+    "Property": ("#78350f", "#fbbf24"),
+    "Electronics": ("#1e3a8a", "#93c5fd"),
+    "Home Appliances": ("#4c1d95", "#c4b5fd"),
+    "Services": ("#155e75", "#67e8f9"),
+    "Fashion": ("#831843", "#f9a8d4"),
+}
+_PLACEHOLDER_FALLBACK = ("#374151", "#9ca3af")
+_PLACEHOLDER_SIZE = (1024, 768)
+
+
+def _generate_placeholder_image(title: str, category: str) -> bytes:
+    """Render a simple branded placeholder JPEG for a demo listing photo.
+
+    Not stock photography - just an abstract, category-labelled graphic so
+    listing cards render a real image instead of the broken-image icon. Pure
+    Pillow, no external font/asset dependency, so it runs anywhere.
+    """
+    bg_hex, accent_hex = _PLACEHOLDER_PALETTES.get(category, _PLACEHOLDER_FALLBACK)
+    bg = tuple(int(bg_hex[i : i + 2], 16) for i in (1, 3, 5))
+    accent = tuple(int(accent_hex[i : i + 2], 16) for i in (1, 3, 5))
+
+    width, height = _PLACEHOLDER_SIZE
+    image = Image.new("RGB", (width, height), bg)
+    draw = ImageDraw.Draw(image)
+
+    # A couple of soft decorative circles, positioned deterministically from
+    # the title so different listings in the same category still look distinct.
+    seed = int(hashlib.sha256(title.encode()).hexdigest(), 16)
+    for i in range(3):
+        r = 90 + ((seed >> (i * 8)) % 160)
+        cx = (seed >> (i * 16 + 8)) % width
+        cy = (seed >> (i * 16 + 16)) % height
+        draw.ellipse(
+            [cx - r, cy - r, cx + r, cy + r],
+            outline=accent,
+            width=6,
+        )
+
+    category_font = ImageFont.load_default(size=56)
+    caption_font = ImageFont.load_default(size=28)
+
+    category_text = category.upper()
+    bbox = draw.textbbox((0, 0), category_text, font=category_font)
+    text_w, text_h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    draw.text(
+        ((width - text_w) / 2, (height - text_h) / 2 - 10),
+        category_text,
+        font=category_font,
+        fill=accent,
+        anchor=None,
+    )
+
+    caption = "Demo listing photo"
+    cap_bbox = draw.textbbox((0, 0), caption, font=caption_font)
+    cap_w = cap_bbox[2] - cap_bbox[0]
+    draw.text(
+        ((width - cap_w) / 2, height - 60),
+        caption,
+        font=caption_font,
+        fill=accent,
+    )
+
+    buffer = io.BytesIO()
+    image.save(buffer, format="JPEG", quality=85)
+    return buffer.getvalue()
 
 
 def _demo_id(kind: str, key: str) -> UUID:
@@ -199,8 +277,9 @@ DEMO_LISTINGS: dict[RiskLevel, tuple[tuple[str, str, float, str], ...]] = {
 
 async def seed_demo_data(session: AsyncSession, settings: Settings) -> dict[str, int]:
     hasher = Argon2PasswordHasher(settings.security)
+    storage = build_storage(settings.storage)
     now = datetime.now(UTC)
-    created = {"users": 0, "sellers": 0, "listings": 0, "scores": 0}
+    created = {"users": 0, "sellers": 0, "listings": 0, "scores": 0, "images_backfilled": 0}
 
     definitions = {
         code: (_id("signal", code.value), category, float(points), cap)
@@ -210,6 +289,14 @@ async def seed_demo_data(session: AsyncSession, settings: Settings) -> dict[str,
     for email, full_name, role, handle, band, age_days in DEMO_USERS:
         user_id = _demo_id("user", email)
         if await session.get(m.User, user_id) is not None:
+            # Already seeded in an earlier run. Still backfill listing photos
+            # for dev DBs created before image generation existed, without
+            # touching anything else about this user (real conversations,
+            # offers, etc. may already hang off it from live testing).
+            if handle is not None and band is not None:
+                created["images_backfilled"] += await _ensure_demo_listing_images(
+                    session, storage, settings, user_id, handle, band, now
+                )
             continue
 
         session.add(
@@ -263,13 +350,103 @@ async def seed_demo_data(session: AsyncSession, settings: Settings) -> dict[str,
         if handle is None or band is None:
             continue
 
-        await _seed_seller(session, user_id, handle, full_name, band, age_days, now, definitions)
+        await _seed_seller(
+            session, user_id, handle, full_name, band, age_days, now, definitions, storage, settings
+        )
         created["sellers"] += 1
         created["listings"] += len(DEMO_LISTINGS[band])
         created["scores"] += 1
 
     await session.flush()
     return created
+
+
+async def _seed_listing_image(
+    session: AsyncSession,
+    storage: ObjectStorage,
+    settings: Settings,
+    user_id: UUID,
+    listing_id: UUID,
+    handle: str,
+    index: int,
+    title: str,
+    category: str,
+    now: datetime,
+) -> None:
+    file_id = _demo_id("file", f"{handle}-{index}-image")
+    object_key = f"demo/listings/{handle}-{index}.jpg"
+    image_bytes = _generate_placeholder_image(title, category)
+
+    await storage.put(
+        bucket=settings.storage.storage_bucket_listings,
+        object_key=object_key,
+        data=image_bytes,
+        content_type="image/jpeg",
+        # Public listing photos, not sensitive documents - and dev/test S3
+        # backends (MinIO) often can't do SSE-S3 without a KMS they don't have.
+        server_side_encryption=False,
+    )
+
+    session.add(
+        m.StoredFileModel(
+            id=file_id,
+            owner_user_id=user_id,
+            purpose=FilePurpose.LISTING_IMAGE,
+            bucket=settings.storage.storage_bucket_listings,
+            object_key=object_key,
+            mime_type="image/jpeg",
+            size_bytes=len(image_bytes),
+            sha256=hashlib.sha256(image_bytes).digest(),
+            width=_PLACEHOLDER_SIZE[0],
+            height=_PLACEHOLDER_SIZE[1],
+            created_at=now,
+            updated_at=now,
+        )
+    )
+    await session.flush()
+    session.add(
+        m.ListingImageModel(
+            id=_demo_id("listing_image", f"{handle}-{index}"),
+            listing_id=listing_id,
+            file_id=file_id,
+            position=0,
+            width=_PLACEHOLDER_SIZE[0],
+            height=_PLACEHOLDER_SIZE[1],
+            sha256=hashlib.sha256(image_bytes).digest(),
+            is_primary=True,
+            created_at=now,
+        )
+    )
+
+
+async def _ensure_demo_listing_images(
+    session: AsyncSession,
+    storage: ObjectStorage,
+    settings: Settings,
+    user_id: UUID,
+    handle: str,
+    band: RiskLevel,
+    now: datetime,
+) -> int:
+    """Backfill photos for demo listings seeded before image generation existed.
+
+    Only inserts what's missing, so re-running against a dev DB that already
+    has real listing images (or ones already exercised via live testing) is a
+    no-op for those rows.
+    """
+    added = 0
+    for index, (title, _description, _price, category) in enumerate(DEMO_LISTINGS[band]):
+        listing_id = _demo_id("listing", f"{handle}-{index}")
+        existing = await session.execute(
+            select(m.ListingImageModel.id).where(m.ListingImageModel.listing_id == listing_id)
+        )
+        if existing.first() is not None:
+            continue
+        await _seed_listing_image(
+            session, storage, settings, user_id, listing_id, handle, index, title, category, now
+        )
+        added += 1
+    return added
 
 
 async def _seed_seller(
@@ -281,6 +458,8 @@ async def _seed_seller(
     age_days: int,
     now: datetime,
     definitions: Mapping[SignalCode, tuple[UUID, SignalCategory, float, int | None]],
+    storage: ObjectStorage,
+    settings: Settings,
 ) -> None:
     seller_id = _demo_id("seller", handle)
     opened = now - timedelta(days=age_days)
@@ -376,6 +555,14 @@ async def _seed_seller(
                 created_at=now - timedelta(days=index + 1),
                 updated_at=now,
             )
+        )
+
+    await session.flush()
+
+    for index, (title, _description, _price, category) in enumerate(DEMO_LISTINGS[band]):
+        listing_id = _demo_id("listing", f"{handle}-{index}")
+        await _seed_listing_image(
+            session, storage, settings, user_id, listing_id, handle, index, title, category, now
         )
 
     await session.flush()

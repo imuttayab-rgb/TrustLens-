@@ -11,6 +11,7 @@ import {
   type SortOrder,
 } from '@/features/marketplace';
 import { useSession } from '@/lib/auth/use-session';
+import { stagger, usePrefersReducedMotion } from '@/lib/motion';
 import {
   areasForCity,
   citiesInProvince,
@@ -83,6 +84,7 @@ function FilterSection({ title, children }: { title: string; children: React.Rea
 export default function BrowsePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const reduced = usePrefersReducedMotion();
 
   const categoryParam = searchParams.get('category');
   const category: ListingCategory | null =
@@ -356,8 +358,6 @@ export default function BrowsePage() {
         {isPending ? 'Loading listings…' : `${total.toLocaleString()} verified listings near you`}
       </p>
 
-      <RecentlyViewedStrip />
-
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -413,13 +413,15 @@ export default function BrowsePage() {
       />
 
       {chips.length > 0 && (
-        <div className="mt-4 flex flex-wrap items-center gap-2">
+        <div
+          className={cn('mt-4 flex flex-wrap items-center gap-2', !reduced && 'animate-fade-in')}
+        >
           {chips.map((chip) => (
             <button
               key={chip.key}
               type="button"
               onClick={chip.onRemove}
-              className="flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-medium text-brand transition-colors hover:bg-brand/15"
+              className="flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-medium text-brand transition-all hover:scale-[1.03] hover:bg-brand/15"
             >
               {chip.label}
               <X className="h-3 w-3" aria-hidden="true" />
@@ -435,8 +437,12 @@ export default function BrowsePage() {
         </div>
       )}
 
+      <div className="mt-6">
+        <RecentlyViewedStrip />
+      </div>
+
       <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        <aside className={cn('lg:sticky lg:top-20 lg:self-start', !reduced && 'animate-fade-up')}>
           <FilterSection title="Category">
             <ul className="space-y-1">
               <li>
@@ -625,7 +631,10 @@ export default function BrowsePage() {
             </label>
           </FilterSection>
 
-          <Button onClick={applyDraft} className="mt-4 w-full">
+          <Button
+            onClick={applyDraft}
+            className="mt-4 w-full transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
+          >
             Apply Filters
           </Button>
         </aside>
@@ -636,15 +645,19 @@ export default function BrowsePage() {
               <Spinner label="Loading listings" />
             </div>
           ) : isError ? (
-            <Alert tone="error" title="Could not load listings">
-              Try again in a moment.
-            </Alert>
+            <div className={!reduced ? 'animate-fade-in' : undefined}>
+              <Alert tone="error" title="Could not load listings">
+                Try again in a moment.
+              </Alert>
+            </div>
           ) : data.items.length === 0 ? (
-            <Alert tone="info" title="No listings found">
-              {hasFilters
-                ? 'Try a different search, area, or price range.'
-                : 'Nobody has listed anything yet.'}
-            </Alert>
+            <div className={!reduced ? 'animate-fade-in' : undefined}>
+              <Alert tone="info" title="No listings found">
+                {hasFilters
+                  ? 'Try a different search, area, or price range.'
+                  : 'Nobody has listed anything yet.'}
+              </Alert>
+            </div>
           ) : (
             <>
               <div className="flex items-center justify-between gap-3">
@@ -702,8 +715,16 @@ export default function BrowsePage() {
                   view === 'list' ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3',
                 )}
               >
-                {data.items.map((listing) => (
-                  <div key={listing.id} className={view === 'list' ? 'max-w-md' : undefined}>
+                {data.items.map((listing, index) => (
+                  <div
+                    key={listing.id}
+                    style={!reduced ? stagger(index, 45) : undefined}
+                    className={cn(
+                      view === 'list' ? 'max-w-md' : undefined,
+                      'transition-transform duration-200 hover:-translate-y-1',
+                      !reduced && 'animate-fade-up',
+                    )}
+                  >
                     <ListingCard
                       listing={listing}
                       favorited={favoriteIds?.has(listing.id) ?? false}
@@ -726,7 +747,7 @@ export default function BrowsePage() {
                     type="button"
                     disabled={page <= 1}
                     onClick={() => updateParams({ page: String(page - 1) }, false)}
-                    className="rounded-md border border-border px-2.5 py-1.5 text-sm disabled:pointer-events-none disabled:opacity-40"
+                    className="rounded-md border border-border px-2.5 py-1.5 text-sm transition-transform hover:scale-110 hover:bg-muted disabled:pointer-events-none disabled:opacity-40 disabled:hover:scale-100"
                   >
                     ‹
                   </button>
@@ -747,10 +768,10 @@ export default function BrowsePage() {
                         }
                         aria-current={entry === page ? 'page' : undefined}
                         className={cn(
-                          'h-8 w-8 rounded-md text-sm transition-colors',
+                          'h-8 w-8 rounded-md text-sm transition-all',
                           entry === page
                             ? 'bg-brand text-[hsl(var(--background))]'
-                            : 'text-muted-foreground hover:bg-muted',
+                            : 'text-muted-foreground hover:scale-110 hover:bg-muted',
                         )}
                       >
                         {entry}
@@ -761,7 +782,7 @@ export default function BrowsePage() {
                     type="button"
                     disabled={page >= totalPages}
                     onClick={() => updateParams({ page: String(page + 1) }, false)}
-                    className="rounded-md border border-border px-2.5 py-1.5 text-sm disabled:pointer-events-none disabled:opacity-40"
+                    className="rounded-md border border-border px-2.5 py-1.5 text-sm transition-transform hover:scale-110 hover:bg-muted disabled:pointer-events-none disabled:opacity-40 disabled:hover:scale-100"
                   >
                     ›
                   </button>

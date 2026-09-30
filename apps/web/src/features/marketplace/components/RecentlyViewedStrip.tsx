@@ -1,23 +1,39 @@
 'use client';
 
+import { stagger, usePrefersReducedMotion } from '@/lib/motion';
+import { cn } from '@trustlens/utils';
+import { History } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRecentlyViewed } from '../hooks/use-recently-viewed';
 
 /** MKT-01's "recently viewed" rail - local history only, see `use-recently-viewed`. */
 export function RecentlyViewedStrip({ excludeId }: { excludeId?: string }) {
+  const reduced = usePrefersReducedMotion();
   const items = useRecentlyViewed(excludeId);
   if (items.length === 0) return null;
 
   return (
-    <section className="mt-6">
-      <h2 className="text-sm font-semibold text-muted-foreground">Recently viewed</h2>
-      <div className="mt-2 flex gap-3 overflow-x-auto pb-2">
-        {items.map((listing) => (
+    <section
+      className={cn(
+        'rounded-xl border border-border bg-card p-4 shadow-sm',
+        !reduced && 'animate-fade-up',
+      )}
+    >
+      <h2 className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
+        <History className="h-4 w-4" aria-hidden="true" />
+        Recently viewed
+      </h2>
+      <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
+        {items.map((listing, index) => (
           <Link
             key={listing.id}
             href={`/listing/${listing.id}`}
-            className="w-28 shrink-0 overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-foreground/30"
+            style={!reduced ? stagger(index, 50) : undefined}
+            className={cn(
+              'w-32 shrink-0 overflow-hidden rounded-lg border border-border bg-background transition-all duration-200 hover:-translate-y-0.5 hover:border-brand/40 hover:shadow-md',
+              !reduced && 'animate-fade-in',
+            )}
           >
             <div className="relative aspect-square w-full bg-muted/50">
               {(listing.thumbnailUrl ?? listing.imageUrl) && (

@@ -216,7 +216,13 @@ class ObjectStorage(Protocol):
     async def get(self, *, bucket: str, object_key: str) -> bytes: ...
 
     async def put(
-        self, *, bucket: str, object_key: str, data: bytes, content_type: str
+        self,
+        *,
+        bucket: str,
+        object_key: str,
+        data: bytes,
+        content_type: str,
+        server_side_encryption: bool = True,
     ) -> None: ...
 
     async def delete(self, *, bucket: str, object_key: str) -> None: ...
