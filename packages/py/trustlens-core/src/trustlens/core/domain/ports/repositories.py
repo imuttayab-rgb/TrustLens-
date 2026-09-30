@@ -477,6 +477,11 @@ class TransactionRepository(Protocol):
         most recent first."""
         ...
 
+    async def count_completed_for_seller(self, seller_user_id: UUID) -> int:
+        """How many deals this seller has actually completed - the public
+        seller page's "completed sales" figure."""
+        ...
+
     async def update_status(
         self,
         transaction_id: UUID,

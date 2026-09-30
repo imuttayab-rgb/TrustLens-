@@ -1951,6 +1951,18 @@ class SqlTransactionRepository:
         rows = (await self._s.execute(stmt)).scalars().all()
         return [map_.to_transaction(r) for r in rows]
 
+    async def count_completed_for_seller(self, seller_user_id: UUID) -> int:
+        return int(
+            (
+                await self._s.execute(
+                    select(func.count(m.TransactionModel.id)).where(
+                        m.TransactionModel.seller_id == seller_user_id,
+                        m.TransactionModel.status == e.TransactionStatus.COMPLETED,
+                    )
+                )
+            ).scalar_one()
+        )
+
     async def update_status(
         self,
         transaction_id: UUID,

@@ -66,6 +66,16 @@ class PublicTrustScore:
     #: score cache before this field existed deserialises without it rather
     #: than raising for the length of one cache TTL.
     member_since: str = ""
+    #: Self-authored storefront copy and city - the same trust level as a
+    #: listing's own description, not PII. Both `None`-able: most sellers
+    #: haven't written a bio, and city is optional on the profile.
+    bio: str | None = None
+    city: str | None = None
+    #: Real aggregates, not estimates - `count_followers`/
+    #: `count_completed_for_seller` are exact counts, computed alongside the
+    #: score read rather than a separate round trip.
+    follower_count: int = 0
+    completed_sales: int = 0
 
     def to_json(self) -> str:
         return json.dumps(asdict(self), separators=(",", ":"))
@@ -114,9 +124,18 @@ class GetPublicTrustScore:
             definitions = {
                 d.code: d for d in await self._uow.scoring_models.list_signal_definitions()
             }
+            follower_count = await self._uow.follows.count_followers(seller.user_id)
+            completed_sales = await self._uow.transactions.count_completed_for_seller(
+                seller.user_id
+            )
 
         if score is None:
-            payload = _unscored_payload(cmd.seller_ref, seller)
+            payload = _unscored_payload(
+                cmd.seller_ref,
+                seller,
+                follower_count=follower_count,
+                completed_sales=completed_sales,
+            )
             # No score yet: kick off a computation so the next call succeeds,
             # rather than making every future request miss identically.
             await self._queue.enqueue(
@@ -125,7 +144,14 @@ class GetPublicTrustScore:
                 trigger=ScoreTrigger.API_REQUEST.value,
             )
         else:
-            payload = to_public(cmd.seller_ref, score, seller, definitions)
+            payload = to_public(
+                cmd.seller_ref,
+                score,
+                seller,
+                definitions,
+                follower_count=follower_count,
+                completed_sales=completed_sales,
+            )
             if score.is_stale_at(self._clock.now()):
                 await self._queue.enqueue(
                     "scoring.recompute_trust_score",
@@ -166,6 +192,9 @@ def to_public(
     score: TrustScore,
     seller: SellerProfile,
     definitions: dict[SignalCode, SignalDefinition],
+    *,
+    follower_count: int = 0,
+    completed_sales: int = 0,
 ) -> PublicTrustScore:
     reasons = [
         PublicReason(
@@ -193,10 +222,20 @@ def to_public(
         expires_at=score.valid_until.isoformat(),
         unavailable_signals=[c.value for c in score.unavailable_signal_codes],
         member_since=seller.account_opened_at.isoformat(),
+        bio=seller.bio,
+        city=seller.city,
+        follower_count=follower_count,
+        completed_sales=completed_sales,
     )
 
 
-def _unscored_payload(seller_ref: str, seller: SellerProfile) -> PublicTrustScore:
+def _unscored_payload(
+    seller_ref: str,
+    seller: SellerProfile,
+    *,
+    follower_count: int = 0,
+    completed_sales: int = 0,
+) -> PublicTrustScore:
     """A seller with no score yet is UNKNOWN, never HIGH risk."""
     now = seller.created_at
     return PublicTrustScore(
@@ -218,6 +257,10 @@ def _unscored_payload(seller_ref: str, seller: SellerProfile) -> PublicTrustScor
         computed_at=now.isoformat(),
         expires_at=now.isoformat(),
         member_since=seller.account_opened_at.isoformat(),
+        bio=seller.bio,
+        city=seller.city,
+        follower_count=follower_count,
+        completed_sales=completed_sales,
     )
 
 

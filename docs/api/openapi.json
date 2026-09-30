@@ -1029,6 +1029,35 @@
       "PublicScoreResponse": {
         "additionalProperties": false,
         "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Seller-authored storefront description.",
+            "title": "Bio"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "completedSales": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Completedsales",
+            "type": "integer"
+          },
           "computedAt": {
             "title": "Computedat",
             "type": "string"
@@ -1043,6 +1072,12 @@
           "expiresAt": {
             "title": "Expiresat",
             "type": "string"
+          },
+          "followerCount": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Followercount",
+            "type": "integer"
           },
           "memberSince": {
             "default": "",

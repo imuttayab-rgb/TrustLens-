@@ -2525,6 +2525,18 @@ export interface components {
     };
     /** PublicScoreResponse */
     PublicScoreResponse: {
+      /**
+       * Bio
+       * @description Seller-authored storefront description.
+       */
+      bio?: string | null;
+      /** City */
+      city?: string | null;
+      /**
+       * Completedsales
+       * @default 0
+       */
+      completedSales: number;
       /** Computedat */
       computedAt: string;
       /**
@@ -2534,6 +2546,11 @@ export interface components {
       confidence: number;
       /** Expiresat */
       expiresAt: string;
+      /**
+       * Followercount
+       * @default 0
+       */
+      followerCount: number;
       /**
        * Membersince
        * @description ISO timestamp the seller account opened.

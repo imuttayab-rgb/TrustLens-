@@ -51,6 +51,10 @@ class PublicScoreResponse(PublicSchema):
         ),
     )
     member_since: str = Field(default="", description="ISO timestamp the seller account opened.")
+    bio: str | None = Field(default=None, description="Seller-authored storefront description.")
+    city: str | None = Field(default=None)
+    follower_count: int = Field(default=0, ge=0)
+    completed_sales: int = Field(default=0, ge=0)
 
 
 class BatchLookupRequest(PublicSchema):

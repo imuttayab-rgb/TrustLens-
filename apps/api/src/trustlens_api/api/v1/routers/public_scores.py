@@ -111,6 +111,10 @@ async def get_public_trust_score(
         expires_at=payload.expires_at,
         unavailable_signals=payload.unavailable_signals,
         member_since=payload.member_since,
+        bio=payload.bio,
+        city=payload.city,
+        follower_count=payload.follower_count,
+        completed_sales=payload.completed_sales,
     )
     return envelope(body.model_dump(by_alias=True), request_id=meta.request_id, cached=was_cached)
 
