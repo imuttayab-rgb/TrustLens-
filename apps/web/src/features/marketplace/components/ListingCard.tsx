@@ -141,7 +141,7 @@ export function ListingCard({
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
-            router.push(`/dashboard/messages/new?listingId=${listing.id}`);
+            router.push(`/messages/new?listingId=${listing.id}`);
           }}
           className={cn(
             'absolute right-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110',

@@ -1,27 +1,16 @@
-'use client';
+import { redirect } from 'next/navigation';
 
-import { MessageThread } from '@/features/messaging';
-import Link from 'next/link';
-import { useParams, useSearchParams } from 'next/navigation';
-
-export default function ConversationPage() {
-  const params = useParams<{ id: string }>();
-  const searchParams = useSearchParams();
-  const intent = searchParams.get('intent');
-
-  return (
-    <div>
-      <Link href="/dashboard/messages" className="text-sm text-muted-foreground hover:underline">
-        ← Back to messages
-      </Link>
-      <h1 className="mt-2 text-2xl font-bold">Conversation</h1>
-
-      <div className="mt-6">
-        <MessageThread
-          conversationId={params.id}
-          intent={intent === 'offer' || intent === 'safemeet' ? intent : undefined}
-        />
-      </div>
-    </div>
-  );
+/** Messages moved to `/messages/[id]` - see `/dashboard/messages`. */
+export default async function ConversationRedirect({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const { id } = await params;
+  const query = await searchParams;
+  const intent = query.intent;
+  const suffix = typeof intent === 'string' ? `?intent=${encodeURIComponent(intent)}` : '';
+  redirect(`/messages/${id}${suffix}`);
 }

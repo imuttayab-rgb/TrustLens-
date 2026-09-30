@@ -1593,22 +1593,32 @@ class SqlMessagingRepository:
         self, user_id: UUID, *, limit: int = 20, offset: int = 0
     ) -> list[ent.ConversationSummary]:
         stmt = (
-            select(m.ConversationModel, m.SellerProfile, m.User, m.ListingModel)
+            select(
+                m.ConversationModel,
+                m.SellerProfile,
+                m.User,
+                m.ListingModel,
+                m.TrustScoreModel.risk_level,
+                m.TrustScoreModel.score,
+            )
             .join(m.SellerProfile, m.SellerProfile.id == m.ConversationModel.seller_id)
             .join(m.User, m.User.id == m.ConversationModel.buyer_id)
             .outerjoin(m.ListingModel, m.ListingModel.id == m.ConversationModel.listing_id)
+            .outerjoin(
+                m.TrustScoreModel, m.TrustScoreModel.id == m.SellerProfile.current_trust_score_id
+            )
             .where((m.ConversationModel.buyer_id == user_id) | (m.SellerProfile.user_id == user_id))
             .order_by(m.ConversationModel.last_message_at.desc())
             .limit(limit)
             .offset(offset)
         )
         rows = (await self._s.execute(stmt)).all()
-        conversation_ids = [c.id for c, _seller, _buyer, _listing in rows]
+        conversation_ids = [c.id for c, _seller, _buyer, _listing, _risk, _score in rows]
         previews = await self._previews(conversation_ids)
         unread = await self._unread_counts(conversation_ids, reader_id=user_id)
 
         summaries = []
-        for conversation, seller, buyer, listing in rows:
+        for conversation, seller, buyer, listing, risk_level, score in rows:
             is_seller_side = seller.user_id == user_id
             entity = _to_conversation(conversation)
             summaries.append(
@@ -1624,6 +1634,11 @@ class SqlMessagingRepository:
                     last_message_preview=previews.get(conversation.id),
                     unread_count=unread.get(conversation.id, 0),
                     muted=entity.muted_by_seller if is_seller_side else entity.muted_by_buyer,
+                    counterpart_seller_handle=seller.handle if not is_seller_side else None,
+                    counterpart_risk_level=(
+                        risk_level.value if not is_seller_side and risk_level is not None else None
+                    ),
+                    counterpart_score=score if not is_seller_side else None,
                 )
             )
         return summaries

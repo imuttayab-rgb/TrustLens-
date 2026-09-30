@@ -58,7 +58,7 @@ export function ListingDetailActions({ listingId, title }: { listingId: string; 
           className="flex-1 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
           onClick={() => {
             if (!requireSession()) return;
-            router.push(`/dashboard/messages/new?listingId=${listingId}`);
+            router.push(`/messages/new?listingId=${listingId}`);
           }}
         >
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
@@ -69,7 +69,7 @@ export function ListingDetailActions({ listingId, title }: { listingId: string; 
           className="flex-1 transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
           onClick={() => {
             if (!requireSession()) return;
-            router.push(`/dashboard/messages/new?listingId=${listingId}&intent=offer`);
+            router.push(`/messages/new?listingId=${listingId}&intent=offer`);
           }}
         >
           <Handshake className="h-4 w-4" aria-hidden="true" />
@@ -82,7 +82,7 @@ export function ListingDetailActions({ listingId, title }: { listingId: string; 
         className="w-full transition-transform duration-150 hover:scale-[1.01] active:scale-[0.98]"
         onClick={() => {
           if (!requireSession()) return;
-          router.push(`/dashboard/messages/new?listingId=${listingId}&intent=safemeet`);
+          router.push(`/messages/new?listingId=${listingId}&intent=safemeet`);
         }}
       >
         <MapPin className="h-4 w-4" aria-hidden="true" />

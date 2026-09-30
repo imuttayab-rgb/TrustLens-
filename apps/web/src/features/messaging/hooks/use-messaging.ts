@@ -15,6 +15,11 @@ export interface ConversationSummary {
   unreadCount: number;
   createdAt: string;
   muted: boolean;
+  /** Only set when the counterpart is the seller side (i.e. the current
+   * user is the buyer here) - a buyer counterpart has no trust score. */
+  counterpartSellerHandle: string | null;
+  counterpartRiskLevel: string | null;
+  counterpartScore: number | null;
 }
 
 export interface Message {

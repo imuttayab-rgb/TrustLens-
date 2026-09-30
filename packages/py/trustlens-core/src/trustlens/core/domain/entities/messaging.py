@@ -61,6 +61,11 @@ class ConversationSummary:
     #: Resolved for whichever side the requesting user is on - the two
     #: `muted_by_*` columns on Conversation collapse to one flag from here.
     muted: bool
+    #: Only set when the counterpart is the seller (i.e. the requesting user
+    #: is the buyer) - a buyer has no seller profile or trust score to show.
+    counterpart_seller_handle: str | None = None
+    counterpart_risk_level: str | None = None
+    counterpart_score: int | None = None
 
 
 __all__ = ["Conversation", "ConversationSummary", "Message"]

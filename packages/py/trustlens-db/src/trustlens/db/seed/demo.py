@@ -287,12 +287,71 @@ DEMO_LISTINGS: dict[RiskLevel, tuple[tuple[str, str, float, str], ...]] = {
     ),
 }
 
+#: Real, well-known public places in Lahore - every demo seller uses that
+#: city, and SafeMeet has nothing to suggest without at least a few curated
+#: venues to pick from (SAFE-01 is staff-curated, never a party's home
+#: address). Approximate coordinates, good enough for a demo map pin.
+DEMO_MEETING_VENUES: tuple[tuple[str, str, str, float, float], ...] = (
+    (
+        "Packages Mall",
+        "Package Mall Road, Walton Road, Lahore",
+        "Walton",
+        31.4697,
+        74.2728,
+    ),
+    (
+        "Emporium Mall",
+        "Bedian Road, Lahore",
+        "Bedian Road",
+        31.4790,
+        74.2728,
+    ),
+    (
+        "Fortress Square Mall",
+        "Fortress Stadium, Lahore Cantt",
+        "Cantt",
+        31.5075,
+        74.3540,
+    ),
+)
+
+
+async def _ensure_demo_meeting_venues(session: AsyncSession, now: datetime) -> int:
+    added = 0
+    for name, address, area, latitude, longitude in DEMO_MEETING_VENUES:
+        venue_id = _demo_id("venue", name)
+        if await session.get(m.MeetingVenueModel, venue_id) is not None:
+            continue
+        session.add(
+            m.MeetingVenueModel(
+                id=venue_id,
+                name=name,
+                address=address,
+                city="Lahore",
+                area=area,
+                latitude=latitude,
+                longitude=longitude,
+                is_active=True,
+                notes="Seeded demo venue.",
+                created_at=now,
+            )
+        )
+        added += 1
+    return added
+
 
 async def seed_demo_data(session: AsyncSession, settings: Settings) -> dict[str, int]:
     hasher = Argon2PasswordHasher(settings.security)
     storage = build_storage(settings.storage)
     now = datetime.now(UTC)
-    created = {"users": 0, "sellers": 0, "listings": 0, "scores": 0, "images_backfilled": 0}
+    created = {
+        "users": 0,
+        "sellers": 0,
+        "listings": 0,
+        "scores": 0,
+        "images_backfilled": 0,
+        "venues": 0,
+    }
 
     definitions = {
         code: (_id("signal", code.value), category, float(points), cap)
@@ -369,6 +428,8 @@ async def seed_demo_data(session: AsyncSession, settings: Settings) -> dict[str,
         created["sellers"] += 1
         created["listings"] += len(DEMO_LISTINGS[band])
         created["scores"] += 1
+
+    created["venues"] = await _ensure_demo_meeting_venues(session, now)
 
     await session.flush()
     return created

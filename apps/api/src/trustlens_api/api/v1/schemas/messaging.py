@@ -39,6 +39,11 @@ class ConversationResponse(Schema):
     unread_count: int = 0
     created_at: datetime
     muted: bool = False
+    #: Only set when the counterpart is the seller side of this
+    #: conversation - a buyer counterpart has no trust score to show.
+    counterpart_seller_handle: str | None = None
+    counterpart_risk_level: str | None = None
+    counterpart_score: int | None = None
 
 
 class SetMutedRequest(Schema):

@@ -1,14 +1,7 @@
-import { ConversationList } from '@/features/messaging';
+import { redirect } from 'next/navigation';
 
-export default function MessagesPage() {
-  return (
-    <div>
-      <h1 className="text-2xl font-bold">Messages</h1>
-      <p className="mt-1 text-sm text-muted-foreground">Conversations with buyers and sellers.</p>
-
-      <div className="mt-8">
-        <ConversationList />
-      </div>
-    </div>
-  );
+/** Messages moved to `/messages`, in the public site's own chrome - same
+ * reasoning as `/browse` and `/favourites`. Keeps the old bookmark working. */
+export default function MessagesRedirect() {
+  redirect('/messages');
 }

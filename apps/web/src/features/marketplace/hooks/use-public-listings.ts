@@ -159,3 +159,30 @@ export function useListingCity(listingId: string | null) {
     },
   });
 }
+
+export interface MessageThreadListing {
+  id: string;
+  title: string;
+  price: number | null;
+  currency: string | null;
+  status: string;
+  createdAt: string;
+  sellerHandle: string;
+  images: { imageUrl: string; thumbnailUrl: string | null }[];
+}
+
+/** Just enough of the public listing detail to render the "what this
+ * conversation is about" card at the top of a message thread. */
+export function useMessageThreadListing(listingId: string | null) {
+  return useQuery<MessageThreadListing>({
+    queryKey: [...qk.listing.publicById(listingId ?? 'none'), 'thread-card'],
+    enabled: Boolean(listingId),
+    queryFn: async () => {
+      const result = await api.GET('/api/v1/public/listings/{listing_id}', {
+        params: { path: { listing_id: listingId as string } },
+      });
+      if (result.error) throw toApiError(result.error);
+      return (result.data as unknown as { data: MessageThreadListing }).data;
+    },
+  });
+}

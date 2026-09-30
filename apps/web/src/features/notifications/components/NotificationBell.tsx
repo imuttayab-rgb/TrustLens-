@@ -24,7 +24,7 @@ function linkFor(notification: AppNotification): string | null {
     case 'MEETUP_PROPOSED':
     case 'MEETUP_ACCEPTED':
     case 'MEETUP_DECLINED':
-      return conversationId ? `/dashboard/messages/${conversationId}` : null;
+      return conversationId ? `/messages/${conversationId}` : null;
     case 'HANDOVER_CONFIRMED':
     case 'TRANSACTION_COMPLETED':
     case 'TRANSACTION_CANCELLED':

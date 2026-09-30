@@ -8,21 +8,38 @@ import type { RiskLevel } from '@trustlens/constants';
 export interface SellerScoreSummary {
   score: number;
   riskLevel: RiskLevel;
+  verifications: Record<string, string>;
+  memberSince: string;
 }
 
 /** The same PII-free public score `/seller/[handle]` reads server-side,
  * fetched client-side for a list of followed sellers - there's no bulk
  * lookup endpoint for a handful of handles, so each row fetches its own. */
-export function useSellerScore(handle: string) {
+export function useSellerScore(handle: string | null) {
   return useQuery<SellerScoreSummary>({
-    queryKey: ['reputation', 'seller-score', handle],
+    queryKey: ['reputation', 'seller-score', handle ?? 'none'],
+    enabled: Boolean(handle),
     queryFn: async () => {
       const result = await api.GET('/api/v1/public/sellers/{seller_ref}/trust-score', {
-        params: { path: { seller_ref: handle } },
+        params: { path: { seller_ref: handle as string } },
       });
       if (result.error) throw toApiError(result.error);
-      const body = (result.data as { data: { score: number; riskLevel: RiskLevel } }).data;
-      return { score: body.score, riskLevel: body.riskLevel };
+      const body = (
+        result.data as {
+          data: {
+            score: number;
+            riskLevel: RiskLevel;
+            verifications: Record<string, string>;
+            memberSince: string;
+          };
+        }
+      ).data;
+      return {
+        score: body.score,
+        riskLevel: body.riskLevel,
+        verifications: body.verifications,
+        memberSince: body.memberSince,
+      };
     },
     staleTime: 60_000,
   });

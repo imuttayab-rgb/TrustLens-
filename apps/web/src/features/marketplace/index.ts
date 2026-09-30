@@ -25,8 +25,10 @@ export {
 } from './hooks/use-saved-searches';
 export {
   useListingCity,
+  useMessageThreadListing,
   usePublicListings,
   type BrowseListingsParams,
+  type MessageThreadListing,
   type PublicListing,
   type SortOrder,
 } from './hooks/use-public-listings';

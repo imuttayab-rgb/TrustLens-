@@ -88,6 +88,9 @@ def _to_conversation_response(summary: Any) -> ConversationResponse:
         unread_count=summary.unread_count,
         created_at=c.created_at,
         muted=summary.muted,
+        counterpart_seller_handle=summary.counterpart_seller_handle,
+        counterpart_risk_level=summary.counterpart_risk_level,
+        counterpart_score=summary.counterpart_score,
     )
 
 

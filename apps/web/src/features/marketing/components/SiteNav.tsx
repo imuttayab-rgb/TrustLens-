@@ -161,7 +161,7 @@ export function SiteNav() {
             );
           })}
           <Link
-            href="/dashboard/messages"
+            href="/messages"
             className="group relative flex items-center gap-1.5 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <MessageCircle
@@ -275,7 +275,7 @@ export function SiteNav() {
               {t('safeMeet')}
             </Link>
             <Link
-              href="/dashboard/messages"
+              href="/messages"
               onClick={() => setMenuOpen(false)}
               className="rounded-md px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             >

@@ -42,7 +42,7 @@ export function ConversationList() {
       {data.items.map((conversation) => (
         <li key={conversation.id}>
           <Link
-            href={`/dashboard/messages/${conversation.id}`}
+            href={`/messages/${conversation.id}`}
             className={cn(
               'flex items-start gap-3 p-4 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring',
               conversation.muted && 'opacity-60',

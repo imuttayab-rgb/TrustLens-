@@ -45,7 +45,7 @@ export function SellerProfileActions({
       router.push(`/login?next=${encodeURIComponent(`/seller/${handle}`)}`);
       return;
     }
-    router.push(`/dashboard/messages/new?listingId=${primaryListingId}`);
+    router.push(`/messages/new?listingId=${primaryListingId}`);
   }
 
   return (

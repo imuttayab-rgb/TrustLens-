@@ -8,3 +8,4 @@ export {
   type ConversationSummary,
   type Message,
 } from './hooks/use-messaging';
+export { assessMessageRisk, hasRiskFlags, type MessageRiskFlags } from './lib/risk-heuristics';
