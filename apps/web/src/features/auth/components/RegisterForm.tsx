@@ -8,11 +8,18 @@ import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Field, fieldAria, Input, PasswordInput } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { registerSchema, type RegisterInput } from '@trustlens/validation';
+import { Lock, Mail, ScanFace, ShoppingBag, Smartphone, Store } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { GoogleAuthButton } from './GoogleAuthButton';
+
+const ONBOARDING_STEPS = [
+  { icon: Mail, label: 'Email verified' },
+  { icon: Smartphone, label: 'Phone verified' },
+  { icon: ScanFace, label: 'Live ID check' },
+] as const;
 
 export function RegisterForm({ className }: { className?: string }) {
   const router = useRouter();
@@ -22,11 +29,15 @@ export function RegisterForm({ className }: { className?: string }) {
     register,
     handleSubmit,
     setError,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { asSeller: true, acceptedTerms: false as unknown as true },
   });
+
+  const asSeller = watch('asSeller');
 
   const { submit, formError } = useApiForm<RegisterInput>(setError);
 
@@ -137,21 +148,43 @@ export function RegisterForm({ className }: { className?: string }) {
         />
       </Field>
 
-      <div className="space-y-3 pt-1">
-        <label className="flex cursor-pointer items-start gap-3 text-sm">
-          <input
-            type="checkbox"
-            className="mt-0.5 h-4 w-4 shrink-0 rounded border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"
-            {...register('asSeller')}
-          />
-          <span>
-            I want to sell, and to earn a Trust Score
-            <span className="block text-muted-foreground">
-              Buyers can look up your score before dealing with you.
+      <div className="space-y-2">
+        <p className="text-sm font-medium">I want to:</p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => setValue('asSeller', false)}
+            aria-pressed={!asSeller}
+            className={cn(
+              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+              !asSeller ? 'border-brand bg-brand/5' : 'border-input hover:bg-muted',
+            )}
+          >
+            <ShoppingBag className="h-5 w-5 text-brand" aria-hidden="true" />
+            <span className="text-sm font-semibold">Buy only</span>
+            <span className="text-xs text-muted-foreground">
+              Browse and buy items from trusted sellers.
             </span>
-          </span>
-        </label>
+          </button>
+          <button
+            type="button"
+            onClick={() => setValue('asSeller', true)}
+            aria-pressed={asSeller}
+            className={cn(
+              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
+              asSeller ? 'border-brand bg-brand/5' : 'border-input hover:bg-muted',
+            )}
+          >
+            <Store className="h-5 w-5 text-brand" aria-hidden="true" />
+            <span className="text-sm font-semibold">Buy &amp; Sell</span>
+            <span className="text-xs text-muted-foreground">
+              Buy items and earn a Trust Score selling your own.
+            </span>
+          </button>
+        </div>
+      </div>
 
+      <div className="space-y-3 pt-1">
         <label className="flex cursor-pointer items-start gap-3 text-sm">
           <input
             type="checkbox"
@@ -206,6 +239,40 @@ export function RegisterForm({ className }: { className?: string }) {
         </Link>
         .
       </p>
+
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-xs font-semibold text-muted-foreground">After registration</p>
+        <div className="mt-3 flex items-center justify-between">
+          {[
+            ...ONBOARDING_STEPS,
+            {
+              icon: asSeller ? Store : ShoppingBag,
+              label: asSeller ? 'Start selling' : 'Start browsing',
+            },
+          ].map((step, index, all) => {
+            const Icon = step.icon;
+            return (
+              <div key={step.label} className="flex items-center">
+                <div className="flex flex-col items-center gap-1.5 text-center">
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-brand/10 text-brand">
+                    <Icon className="h-4 w-4" aria-hidden="true" />
+                  </span>
+                  <span className="max-w-16 text-[11px] leading-tight text-muted-foreground">
+                    {step.label}
+                  </span>
+                </div>
+                {index < all.length - 1 && (
+                  <span className="mx-1 h-px w-4 shrink-0 bg-border sm:w-6" aria-hidden="true" />
+                )}
+              </div>
+            );
+          })}
+        </div>
+        <p className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Lock className="h-3 w-3 shrink-0" aria-hidden="true" />
+          Your identity details are stored encrypted and only used to verify you.
+        </p>
+      </div>
     </form>
   );
 }
