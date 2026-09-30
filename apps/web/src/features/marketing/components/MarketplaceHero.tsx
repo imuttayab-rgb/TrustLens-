@@ -96,7 +96,7 @@ function TrustScoreCard() {
   const score = useCountUp(92, inView);
   const shown = Math.round(score);
 
-  const RADIUS = 46;
+  const RADIUS = 38;
   const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
   const offset = CIRCUMFERENCE * (1 - (reduced ? 92 : score) / 100);
 
@@ -111,52 +111,63 @@ function TrustScoreCard() {
     >
       <p className="text-sm font-semibold">{t('safetyPriority')}</p>
 
-      <div className="mt-4 flex items-center gap-4">
-        <div className="relative shrink-0" style={{ width: 112, height: 112 }}>
-          <svg
-            width={112}
-            height={112}
-            viewBox="0 0 112 112"
-            role="img"
-            aria-label={`Trust Score ${shown} out of 100, low risk`}
-            className="-rotate-90"
-          >
-            <circle
-              cx={56}
-              cy={56}
-              r={RADIUS}
-              fill="none"
-              strokeWidth={10}
-              className="stroke-muted"
-            />
-            <circle
-              cx={56}
-              cy={56}
-              r={RADIUS}
-              fill="none"
-              strokeWidth={10}
-              strokeLinecap="round"
-              strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={offset}
-              className="stroke-risk-low"
-              style={{ transition: reduced ? 'none' : 'stroke-dashoffset 100ms linear' }}
-            />
-          </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-extrabold tabular-nums leading-none text-risk-low">
-              {shown}
-            </span>
-            <span className="mt-0.5 text-[10px] text-muted-foreground">out of 100</span>
+      <div className="mt-4 flex flex-col gap-5 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-4 sm:flex-1">
+          <div className="relative shrink-0" style={{ width: 88, height: 88 }}>
+            <svg
+              width={88}
+              height={88}
+              viewBox="0 0 88 88"
+              role="img"
+              aria-label={`Trust Score ${shown} out of 100, low risk`}
+              className="-rotate-90"
+            >
+              <circle
+                cx={44}
+                cy={44}
+                r={RADIUS}
+                fill="none"
+                strokeWidth={8}
+                className="stroke-muted"
+              />
+              <circle
+                cx={44}
+                cy={44}
+                r={RADIUS}
+                fill="none"
+                strokeWidth={8}
+                strokeLinecap="round"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={offset}
+                className="stroke-risk-low"
+                style={{ transition: reduced ? 'none' : 'stroke-dashoffset 100ms linear' }}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-2xl font-extrabold tabular-nums leading-none text-risk-low">
+                {shown}
+              </span>
+            </div>
+            {!reduced && inView && (
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-sheen bg-gradient-to-r from-transparent via-white/20 to-transparent"
+              />
+            )}
           </div>
-          {!reduced && inView && (
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 animate-sheen bg-gradient-to-r from-transparent via-white/20 to-transparent"
-            />
-          )}
+
+          <div className="min-w-0">
+            <p className="text-base font-bold">{t('trustScore')}</p>
+            <span className="mt-1 inline-block rounded-full bg-risk-low-bg px-2.5 py-0.5 text-xs font-bold uppercase tracking-wide text-risk-low">
+              {t('lowRisk')}
+            </span>
+            <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">
+              {t('scoreCaption')}
+            </p>
+          </div>
         </div>
 
-        <div className="min-w-0 flex-1 space-y-1.5">
+        <div className="min-w-0 space-y-1.5 sm:w-[13rem] sm:shrink-0 sm:border-l sm:border-border/70 sm:pl-4">
           {CHECKLIST.map((item, index) => {
             const Icon = item.icon;
             return (
@@ -192,11 +203,6 @@ function TrustScoreCard() {
           })}
         </div>
       </div>
-
-      <p className="mt-3 text-center text-xs font-semibold uppercase tracking-wide text-risk-low">
-        {t('lowRisk')}
-      </p>
-      <p className="mt-1 text-center text-xs text-muted-foreground">{t('scoreCaption')}</p>
 
       <div className="mt-4 flex items-center justify-between border-t border-border/70 pt-3">
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
