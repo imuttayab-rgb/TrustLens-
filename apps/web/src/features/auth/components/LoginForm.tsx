@@ -64,7 +64,9 @@ export function LoginForm({ className }: { className?: string }) {
       noValidate
     >
       {googleError && (
-        <Alert tone="error">Could not sign in with Google. Try again, or use your password.</Alert>
+        <Alert tone="error" className="animate-fade-in">
+          Could not sign in with Google. Try again, or use your password.
+        </Alert>
       )}
 
       <Field htmlFor="email" label="Email address" error={errors.email?.message}>
@@ -74,6 +76,7 @@ export function LoginForm({ className }: { className?: string }) {
           inputMode="email"
           autoComplete="email"
           autoCapitalize="none"
+          placeholder="Enter your email address"
           {...register('email')}
         />
       </Field>
@@ -82,6 +85,7 @@ export function LoginForm({ className }: { className?: string }) {
         <PasswordInput
           {...fieldAria('password', errors.password?.message)}
           autoComplete="current-password"
+          placeholder="Enter your password"
           {...register('password')}
         />
       </Field>
@@ -96,12 +100,17 @@ export function LoginForm({ className }: { className?: string }) {
       </div>
 
       {formError && (
-        <Alert tone="error" requestId={formError.requestId}>
+        <Alert tone="error" requestId={formError.requestId} className="animate-fade-in">
           {formError.message}
         </Alert>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? 'Signing in…' : 'Sign in'}
       </Button>
 

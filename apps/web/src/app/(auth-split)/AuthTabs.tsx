@@ -22,13 +22,15 @@ export function AuthTabs() {
             href={tab.href}
             aria-current={active ? 'page' : undefined}
             className={cn(
-              'relative pb-3 text-sm font-semibold transition-colors',
-              active ? 'text-brand' : 'text-muted-foreground hover:text-foreground',
+              'relative inline-block pb-3 text-sm font-semibold transition-all duration-200',
+              active
+                ? 'text-brand'
+                : 'text-muted-foreground hover:scale-[1.03] hover:text-foreground',
             )}
           >
             {tab.label}
             {active && (
-              <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand" />
+              <span className="absolute inset-x-0 -bottom-px h-0.5 animate-fade-in rounded-full bg-brand" />
             )}
           </Link>
         );

@@ -12,7 +12,7 @@ export function GoogleAuthButton({ label = 'Continue with Google' }: { label?: s
   return (
     <a
       href={`${apiBase}/api/v1/auth/google/login`}
-      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-6 text-base font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-6 text-base font-medium transition-all duration-150 hover:scale-[1.01] hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99]"
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">
         <path

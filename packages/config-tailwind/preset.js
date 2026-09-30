@@ -70,6 +70,13 @@ module.exports = {
           '0%, 100%': { transform: 'translate3d(0,0,0) scale(1)' },
           '50%': { transform: 'translate3d(3%, -4%, 0) scale(1.08)' },
         },
+        // A few pixels of vertical bob for a foreground illustration - unlike
+        // `drift`, this one IS meant to read as gently alive, so it moves far
+        // less and far slower than anything interactive on the page.
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-10px)' },
+        },
         // Runs once behind the score arc as it settles.
         sheen: {
           from: { transform: 'translateX(-120%)' },
@@ -82,6 +89,7 @@ module.exports = {
         'fade-in': 'fade-in 500ms ease-out both',
         'pop-in': 'pop-in 420ms cubic-bezier(0.16, 1, 0.3, 1) both',
         drift: 'drift 22s ease-in-out infinite',
+        float: 'float 6s ease-in-out infinite',
         sheen: 'sheen 1400ms ease-out 700ms both',
       },
     },

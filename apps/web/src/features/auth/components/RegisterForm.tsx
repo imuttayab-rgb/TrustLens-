@@ -71,7 +71,7 @@ export function RegisterForm({ className }: { className?: string }) {
 
   if (done) {
     return (
-      <div className={cn('space-y-4', className)}>
+      <div className={cn('animate-fade-up space-y-4', className)}>
         <Alert tone="success" title="Check your email">
           We sent a confirmation link to <strong>{done}</strong>. Open it to activate your account.
         </Alert>
@@ -100,6 +100,7 @@ export function RegisterForm({ className }: { className?: string }) {
           {...fieldAria('fullName', errors.fullName?.message)}
           autoComplete="name"
           autoCapitalize="words"
+          placeholder="Enter your full name"
           {...register('fullName')}
         />
       </Field>
@@ -117,6 +118,7 @@ export function RegisterForm({ className }: { className?: string }) {
           inputMode="email"
           autoComplete="email"
           autoCapitalize="none"
+          placeholder="Enter your email address"
           {...register('email')}
         />
       </Field>
@@ -131,6 +133,7 @@ export function RegisterForm({ className }: { className?: string }) {
         <PasswordInput
           {...fieldAria('password', errors.password?.message, 'hint')}
           autoComplete="new-password"
+          placeholder="Create a strong password"
           {...register('password')}
         />
       </Field>
@@ -144,6 +147,7 @@ export function RegisterForm({ className }: { className?: string }) {
         <PasswordInput
           {...fieldAria('confirmPassword', errors.confirmPassword?.message)}
           autoComplete="new-password"
+          placeholder="Confirm your password"
           {...register('confirmPassword')}
         />
       </Field>
@@ -156,8 +160,8 @@ export function RegisterForm({ className }: { className?: string }) {
             onClick={() => setValue('asSeller', false)}
             aria-pressed={!asSeller}
             className={cn(
-              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
-              !asSeller ? 'border-brand bg-brand/5' : 'border-input hover:bg-muted',
+              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]',
+              !asSeller ? 'border-brand bg-brand/5 shadow-sm' : 'border-input hover:bg-muted',
             )}
           >
             <ShoppingBag className="h-5 w-5 text-brand" aria-hidden="true" />
@@ -171,8 +175,8 @@ export function RegisterForm({ className }: { className?: string }) {
             onClick={() => setValue('asSeller', true)}
             aria-pressed={asSeller}
             className={cn(
-              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-colors',
-              asSeller ? 'border-brand bg-brand/5' : 'border-input hover:bg-muted',
+              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]',
+              asSeller ? 'border-brand bg-brand/5 shadow-sm' : 'border-input hover:bg-muted',
             )}
           >
             <Store className="h-5 w-5 text-brand" aria-hidden="true" />
@@ -205,19 +209,24 @@ export function RegisterForm({ className }: { className?: string }) {
           </span>
         </label>
         {errors.acceptedTerms && (
-          <p id="terms-error" role="alert" className="text-sm text-destructive">
+          <p id="terms-error" role="alert" className="animate-fade-in text-sm text-destructive">
             {errors.acceptedTerms.message}
           </p>
         )}
       </div>
 
       {formError && (
-        <Alert tone="error" requestId={formError.requestId}>
+        <Alert tone="error" requestId={formError.requestId} className="animate-fade-in">
           {formError.message}
         </Alert>
       )}
 
-      <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full transition-transform duration-150 hover:scale-[1.01] active:scale-[0.99]"
+        disabled={isSubmitting}
+      >
         {isSubmitting ? 'Creating your account…' : 'Create account'}
       </Button>
 
