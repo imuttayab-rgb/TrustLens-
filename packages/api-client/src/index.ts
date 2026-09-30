@@ -68,6 +68,22 @@ export interface ClientOptions {
   onUnauthorized?: () => Promise<string | null>;
 }
 
+/**
+ * Endpoints where a 401 is a normal business response about the credential
+ * or token *in the request itself* (wrong password, wrong MFA code, an
+ * expired reset/verification link) rather than a sign that the caller's
+ * access token needs refreshing - these calls only ever run signed out, so
+ * there was never a session token to expire in the first place.
+ */
+const CREDENTIAL_ENDPOINTS = [
+  '/auth/login',
+  '/auth/register',
+  '/auth/refresh',
+  '/auth/mfa/verify',
+  '/auth/forgot-password',
+  '/auth/reset-password',
+];
+
 export function createApiClient(options: ClientOptions) {
   const client = createClient<ApiPaths>({
     baseUrl: options.baseUrl,
@@ -83,32 +99,35 @@ export function createApiClient(options: ClientOptions) {
   // throws "body is already used" for any POST/PUT/PATCH (the failure the
   // login form hit). Cloning eagerly in `onRequest`, before the request is
   // ever sent, keeps a fresh, unread copy ready for the retry below.
-  const retryBodies = new Map<string, { request: Request; authenticated: boolean }>();
+  const retryBodies = new Map<string, Request>();
 
   const auth: Middleware = {
     async onRequest({ request, id }) {
       const token = options.getAccessToken?.();
       if (token) request.headers.set('Authorization', `Bearer ${token}`);
       request.headers.set('Accept', 'application/json');
-      retryBodies.set(id, { request: request.clone(), authenticated: Boolean(token) });
+      retryBodies.set(id, request.clone());
       return request;
     },
 
     async onResponse({ request, response, id }) {
-      const stashed = retryBodies.get(id);
+      const stashedRequest = retryBodies.get(id);
       retryBodies.delete(id);
 
       if (response.status !== 401 || !options.onUnauthorized) return response;
-      // A 401 only means "the access token expired" for a request that sent
-      // one. An unauthenticated call 401ing (wrong login credentials, most
-      // often) isn't a session to refresh - retrying it here would replay the
-      // same rejected credentials and, if a refresh cookie from some other
-      // session happens to be sitting in the browser, could quietly log the
-      // form in as someone else instead of surfacing the "wrong password" it
-      // actually received.
-      if (!stashed?.authenticated) return response;
-      // Never retry the refresh call itself - that is an infinite loop.
-      if (request.url.includes('/auth/refresh')) return response;
+      // These endpoints establish or replace credentials rather than using
+      // an existing session, so their 401 means "wrong password" / "wrong
+      // code" / "expired reset link" - never "the access token expired".
+      // Retrying them after a refresh would replay the same rejected
+      // credentials and, if a refresh cookie from some other session
+      // happens to be sitting in the browser, could quietly sign the form
+      // in as someone else instead of surfacing the real rejection.
+      // Every other 401 (including a hard navigation's very first call,
+      // which never had a token to attach in the first place) is treated
+      // as "the session needs refreshing", matching how this client has
+      // always worked.
+      const isCredentialEndpoint = CREDENTIAL_ENDPOINTS.some((path) => request.url.includes(path));
+      if (isCredentialEndpoint) return response;
 
       // Collapse concurrent 401s into ONE refresh. Without this, five parallel
       // requests each rotate the token and four of them present a token the
@@ -118,9 +137,9 @@ export function createApiClient(options: ClientOptions) {
         refreshing = null;
       });
       const token = await refreshing;
-      if (!token) return response;
+      if (!token || !stashedRequest) return response;
 
-      const retried = stashed.request;
+      const retried = stashedRequest;
       retried.headers.set('Authorization', `Bearer ${token}`);
       return fetch(retried);
     },
