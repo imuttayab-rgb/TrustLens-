@@ -5,7 +5,7 @@ import { setAccessToken } from '@/lib/auth/session';
 import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toApiError } from '@trustlens/api-client';
-import { Alert, Button, Field, fieldAria, Input } from '@trustlens/ui';
+import { Alert, Button, Field, fieldAria, Input, PasswordInput } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { registerSchema, type RegisterInput } from '@trustlens/validation';
 import Link from 'next/link';
@@ -117,9 +117,8 @@ export function RegisterForm({ className }: { className?: string }) {
         error={errors.password?.message}
         hint="At least 12 characters."
       >
-        <Input
+        <PasswordInput
           {...fieldAria('password', errors.password?.message, 'hint')}
-          type="password"
           autoComplete="new-password"
           {...register('password')}
         />
@@ -131,9 +130,8 @@ export function RegisterForm({ className }: { className?: string }) {
         required
         error={errors.confirmPassword?.message}
       >
-        <Input
+        <PasswordInput
           {...fieldAria('confirmPassword', errors.confirmPassword?.message)}
-          type="password"
           autoComplete="new-password"
           {...register('confirmPassword')}
         />

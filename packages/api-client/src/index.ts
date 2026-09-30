@@ -77,16 +77,36 @@ export function createApiClient(options: ClientOptions) {
 
   let refreshing: Promise<string | null> | null = null;
 
+  // A `Request` can only be `.clone()`d before its body stream is read - and
+  // `fetch(request)` reads it. By the time `onResponse` sees a 401, the
+  // request that produced it has already been sent, so cloning it there
+  // throws "body is already used" for any POST/PUT/PATCH (the failure the
+  // login form hit). Cloning eagerly in `onRequest`, before the request is
+  // ever sent, keeps a fresh, unread copy ready for the retry below.
+  const retryBodies = new Map<string, { request: Request; authenticated: boolean }>();
+
   const auth: Middleware = {
-    async onRequest({ request }) {
+    async onRequest({ request, id }) {
       const token = options.getAccessToken?.();
       if (token) request.headers.set('Authorization', `Bearer ${token}`);
       request.headers.set('Accept', 'application/json');
+      retryBodies.set(id, { request: request.clone(), authenticated: Boolean(token) });
       return request;
     },
 
-    async onResponse({ request, response }) {
+    async onResponse({ request, response, id }) {
+      const stashed = retryBodies.get(id);
+      retryBodies.delete(id);
+
       if (response.status !== 401 || !options.onUnauthorized) return response;
+      // A 401 only means "the access token expired" for a request that sent
+      // one. An unauthenticated call 401ing (wrong login credentials, most
+      // often) isn't a session to refresh - retrying it here would replay the
+      // same rejected credentials and, if a refresh cookie from some other
+      // session happens to be sitting in the browser, could quietly log the
+      // form in as someone else instead of surfacing the "wrong password" it
+      // actually received.
+      if (!stashed?.authenticated) return response;
       // Never retry the refresh call itself - that is an infinite loop.
       if (request.url.includes('/auth/refresh')) return response;
 
@@ -100,9 +120,13 @@ export function createApiClient(options: ClientOptions) {
       const token = await refreshing;
       if (!token) return response;
 
-      const retried = request.clone();
+      const retried = stashed.request;
       retried.headers.set('Authorization', `Bearer ${token}`);
       return fetch(retried);
+    },
+
+    async onError({ id }) {
+      retryBodies.delete(id);
     },
   };
 

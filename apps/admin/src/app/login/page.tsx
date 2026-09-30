@@ -4,7 +4,7 @@ import { api } from '@/lib/api/client';
 import { setAccessToken } from '@/lib/auth/session';
 import { useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
-import { Alert, Ambient, Button, Field, fieldAria, Input } from '@trustlens/ui';
+import { Alert, Ambient, Button, Field, fieldAria, Input, PasswordInput } from '@trustlens/ui';
 import { ShieldCheck } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Suspense, useState } from 'react';
@@ -147,9 +147,8 @@ function LoginForm() {
       </Field>
 
       <Field htmlFor="password" label="Password">
-        <Input
+        <PasswordInput
           {...fieldAria('password')}
-          type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

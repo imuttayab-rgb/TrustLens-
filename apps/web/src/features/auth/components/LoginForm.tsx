@@ -7,7 +7,7 @@ import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
-import { Alert, Button, Field, fieldAria, Input } from '@trustlens/ui';
+import { Alert, Button, Field, fieldAria, Input, PasswordInput } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { loginSchema, type LoginInput } from '@trustlens/validation';
 import Link from 'next/link';
@@ -79,9 +79,8 @@ export function LoginForm({ className }: { className?: string }) {
       </Field>
 
       <Field htmlFor="password" label="Password" error={errors.password?.message}>
-        <Input
+        <PasswordInput
           {...fieldAria('password', errors.password?.message)}
-          type="password"
           autoComplete="current-password"
           {...register('password')}
         />

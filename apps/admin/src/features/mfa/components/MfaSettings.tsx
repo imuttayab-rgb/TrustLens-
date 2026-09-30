@@ -1,7 +1,17 @@
 'use client';
 
 import { toApiError } from '@trustlens/api-client';
-import { Alert, Button, Card, CardContent, Field, fieldAria, Input, Spinner } from '@trustlens/ui';
+import {
+  Alert,
+  Button,
+  Card,
+  CardContent,
+  Field,
+  fieldAria,
+  Input,
+  PasswordInput,
+  Spinner,
+} from '@trustlens/ui';
 import QRCode from 'qrcode';
 import { useEffect, useState } from 'react';
 import {
@@ -212,9 +222,8 @@ function DisableMfaFlow() {
   return (
     <div className="space-y-2 rounded-lg border border-destructive/40 p-4">
       <Field htmlFor="mfa-disable-password" label="Confirm your password" required>
-        <Input
+        <PasswordInput
           {...fieldAria('mfa-disable-password')}
-          type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

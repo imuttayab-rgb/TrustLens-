@@ -4,6 +4,7 @@ export { Ambient } from './primitives/Ambient';
 export { Button, buttonVariants, type ButtonProps } from './primitives/Button';
 export { Field, fieldAria, type FieldProps } from './primitives/Field';
 export { Input, type InputProps } from './primitives/Input';
+export { PasswordInput, type PasswordInputProps } from './primitives/PasswordInput';
 export { Progress, Spinner } from './primitives/Spinner';
 export { ThemeToggle } from './primitives/ThemeToggle';
 // Not from ThemeToggle: it is a client module, and a server component that
