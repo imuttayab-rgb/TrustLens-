@@ -6,6 +6,7 @@ import { PAKISTAN_CITIES } from '@trustlens/constants';
 import {
   ArrowRight,
   BadgeCheck,
+  IdCard,
   Lock,
   Mail,
   Phone,
@@ -19,10 +20,10 @@ import { useTranslations } from 'next-intl';
 import { useState } from 'react';
 
 const CHECKLIST = [
-  { icon: ScanFace, key: 'identity' },
+  { icon: IdCard, key: 'identity' },
   { icon: Phone, key: 'phone' },
   { icon: Mail, key: 'email' },
-  { icon: BadgeCheck, key: 'liveId', badge: 'New' },
+  { icon: ScanFace, key: 'liveId', badge: 'New' },
 ] as const;
 
 function SearchBar({ className }: { className?: string }) {
