@@ -1,7 +1,6 @@
 'use client';
 
-import type { RiskLevel } from '@trustlens/constants';
-import { RiskBadge } from '@trustlens/ui';
+import { RISK_PRESENTATION, type RiskLevel } from '@trustlens/constants';
 import { cn, formatRelative } from '@trustlens/utils';
 import { BadgeCheck, Heart, ImageOff, MessageCircle, Share2, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
@@ -13,6 +12,33 @@ const STATUS_LABEL: Record<string, string> = {
   RESERVED: 'Reserved',
   SOLD: 'Sold',
 };
+
+const TRUST_BADGE_COLOR: Record<RiskLevel, string> = {
+  LOW: 'border-risk-low text-risk-low',
+  MEDIUM: 'border-risk-medium text-risk-medium',
+  HIGH: 'border-risk-high text-risk-high',
+  UNKNOWN: 'border-risk-unknown text-risk-unknown',
+};
+
+/**
+ * A denser, outlined "Trust 92" badge for the catalog card's tight bottom
+ * row - the shared `RiskBadge` (a filled pill with the full "Low risk"
+ * label) stays as it is everywhere else it's used; this is local to how a
+ * card in a grid needs to read at a glance. Falls back to the risk label
+ * when a seller has no score yet (a brand-new UNKNOWN account).
+ */
+function TrustBadge({ riskLevel, score }: { riskLevel: RiskLevel; score: number | null }) {
+  return (
+    <span
+      className={cn(
+        'shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold',
+        TRUST_BADGE_COLOR[riskLevel],
+      )}
+    >
+      {score !== null ? `Trust ${score}` : RISK_PRESENTATION[riskLevel].label}
+    </span>
+  );
+}
 
 export function ListingCard({
   listing,
@@ -168,10 +194,7 @@ export function ListingCard({
             )}
           </p>
           {listing.riskLevel && (
-            <RiskBadge
-              riskLevel={listing.riskLevel as RiskLevel}
-              className="shrink-0 px-1.5 py-0 text-[10px]"
-            />
+            <TrustBadge riskLevel={listing.riskLevel as RiskLevel} score={listing.score} />
           )}
         </div>
         {listing.latitude !== null && listing.longitude !== null && (

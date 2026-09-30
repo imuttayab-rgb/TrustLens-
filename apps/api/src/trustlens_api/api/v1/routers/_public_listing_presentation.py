@@ -58,6 +58,7 @@ async def to_public_listing_response(
         status=item.status,
         negotiable=item.negotiable,
         risk_level=item.risk_level,
+        score=item.score,
         identity_verified=item.identity_verified,
         phone_verified=item.phone_verified,
         image_url=await image_url(container, uow, item.primary_image_file_id),

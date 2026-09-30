@@ -30,6 +30,7 @@ class PublicListingResponse(Schema):
     status: str = "ACTIVE"
     negotiable: bool = False
     risk_level: str | None = None
+    score: int | None = None
     identity_verified: bool = False
     phone_verified: bool = False
     image_url: str | None = None

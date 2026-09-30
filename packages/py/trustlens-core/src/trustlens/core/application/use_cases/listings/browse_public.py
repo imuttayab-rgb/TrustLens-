@@ -30,6 +30,12 @@ MAX_QUERY_CHARS = 200
 #: smuggle through here.
 SORT_ORDERS = frozenset({"newest", "price_asc", "price_desc"})
 
+#: Mirrors `LISTING_CONDITIONS` in `@trustlens/validation` - the same
+#: vocabulary a listing's own `condition` field is validated against when a
+#: seller sets it, so a filter value can never diverge from what a listing
+#: could actually be tagged with.
+LISTING_CONDITIONS = frozenset({"NEW", "LIKE_NEW", "USED", "FOR_PARTS"})
+
 
 @dataclass(frozen=True, slots=True)
 class BrowsePublicListingsQuery:
@@ -55,6 +61,10 @@ class BrowsePublicListingsQuery:
     near_latitude: float | None = None
     near_longitude: float | None = None
     radius_km: float | None = None
+    condition: str | None = None
+    min_trust_score: int | None = None
+    max_trust_score: int | None = None
+    verified_only: bool = False
     sort: str = "newest"
     limit: int = 20
     offset: int = 0
@@ -81,9 +91,24 @@ class BrowsePublicListings:
         city = query.city.strip() if query.city else None
         area = query.area.strip() if query.area else None
         seller_handle = query.seller_handle.strip() if query.seller_handle else None
+        condition = query.condition.strip().upper() if query.condition else None
 
         if query.sort not in SORT_ORDERS:
             raise ValidationError("Choose a valid sort order.", field="sort")
+        if condition is not None and condition not in LISTING_CONDITIONS:
+            raise ValidationError("Choose a valid condition.", field="condition")
+        if query.min_trust_score is not None and not (0 <= query.min_trust_score <= 100):
+            raise ValidationError("Trust score must be between 0 and 100.", field="minTrustScore")
+        if query.max_trust_score is not None and not (0 <= query.max_trust_score <= 100):
+            raise ValidationError("Trust score must be between 0 and 100.", field="maxTrustScore")
+        if (
+            query.min_trust_score is not None
+            and query.max_trust_score is not None
+            and query.min_trust_score > query.max_trust_score
+        ):
+            raise ValidationError(
+                "Minimum trust score cannot exceed maximum.", field="minTrustScore"
+            )
         if query.min_price is not None and query.min_price < 0:
             raise ValidationError("Minimum price cannot be negative.", field="minPrice")
         if query.max_price is not None and query.max_price < 0:
@@ -114,6 +139,10 @@ class BrowsePublicListings:
                 near_latitude=query.near_latitude,
                 near_longitude=query.near_longitude,
                 radius_km=query.radius_km,
+                condition=condition,
+                min_trust_score=query.min_trust_score,
+                max_trust_score=query.max_trust_score,
+                verified_only=query.verified_only,
                 sort=query.sort,
                 limit=limit,
                 offset=offset,
@@ -132,6 +161,10 @@ class BrowsePublicListings:
                 near_latitude=query.near_latitude,
                 near_longitude=query.near_longitude,
                 radius_km=query.radius_km,
+                condition=condition,
+                min_trust_score=query.min_trust_score,
+                max_trust_score=query.max_trust_score,
+                verified_only=query.verified_only,
             )
 
         return PublicListingPage(items=tuple(items), total=total, limit=limit, offset=offset)
@@ -152,6 +185,7 @@ class GetPublicListing:
 
 
 __all__ = [
+    "LISTING_CONDITIONS",
     "MAX_QUERY_CHARS",
     "SORT_ORDERS",
     "BrowsePublicListings",

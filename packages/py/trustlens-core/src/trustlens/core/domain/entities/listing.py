@@ -145,6 +145,10 @@ class PublicListingSummary:
     status: str = "ACTIVE"
     negotiable: bool = False
     risk_level: str | None = None
+    #: Alongside `risk_level`, not instead of it - the band is what a
+    #: `RiskBadge` always shows (WCAG 1.4.1, colour is never the only
+    #: signal), the number is the honest "Trust 92" a buyer also wants.
+    score: int | None = None
     identity_verified: bool = False
     phone_verified: bool = False
     primary_image_file_id: UUID | None = None

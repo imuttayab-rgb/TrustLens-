@@ -104,6 +104,10 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
           status: listing.status,
           negotiable: listing.negotiable,
           riskLevel: listing.riskLevel,
+          // The detail page's own response doesn't carry a numeric score
+          // (only the risk band) - recently-viewed is a lightweight
+          // localStorage record, not a card render, so this is fine null.
+          score: null,
           identityVerified: listing.identityVerified,
           phoneVerified: listing.phoneVerified,
           imageUrl: images[0]?.imageUrl ?? null,

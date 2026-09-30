@@ -23,6 +23,7 @@ export interface PublicListing {
   status: string;
   negotiable: boolean;
   riskLevel: string | null;
+  score: number | null;
   identityVerified: boolean;
   phoneVerified: boolean;
   imageUrl: string | null;
@@ -47,6 +48,10 @@ export interface BrowseListingsParams {
   nearLatitude?: number | null;
   nearLongitude?: number | null;
   radiusKm?: number | null;
+  condition?: string | null;
+  minTrustScore?: number | null;
+  maxTrustScore?: number | null;
+  verifiedOnly?: boolean;
   sort?: SortOrder;
   limit?: number;
   offset?: number;
@@ -70,6 +75,10 @@ export function usePublicListings({
   nearLatitude = null,
   nearLongitude = null,
   radiusKm = null,
+  condition = null,
+  minTrustScore = null,
+  maxTrustScore = null,
+  verifiedOnly = false,
   sort = 'newest',
   limit = 20,
   offset = 0,
@@ -88,6 +97,10 @@ export function usePublicListings({
       nearLatitude,
       nearLongitude,
       radiusKm,
+      condition,
+      minTrustScore,
+      maxTrustScore,
+      verifiedOnly,
       sort,
       limit,
       offset,
@@ -108,6 +121,10 @@ export function usePublicListings({
             nearLatitude,
             nearLongitude,
             radiusKm,
+            condition,
+            minTrustScore,
+            maxTrustScore,
+            verifiedOnly,
             sort,
             limit,
             offset,

@@ -8327,6 +8327,69 @@
           },
           {
             "in": "query",
+            "name": "condition",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 20,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Condition"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minTrustScore",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Mintrustscore"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxTrustScore",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 100,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxtrustscore"
+            }
+          },
+          {
+            "in": "query",
+            "name": "verifiedOnly",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Verifiedonly",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
             "name": "sort",
             "required": false,
             "schema": {

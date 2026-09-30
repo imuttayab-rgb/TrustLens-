@@ -789,9 +789,18 @@ class SqlListingRepository:
         near_latitude: float | None = None,
         near_longitude: float | None = None,
         radius_km: float | None = None,
+        condition: str | None = None,
+        min_trust_score: int | None = None,
+        max_trust_score: int | None = None,
+        verified_only: bool = False,
     ) -> Select[Any]:
         stmt = (
-            select(m.ListingModel, m.SellerProfile, m.TrustScoreModel.risk_level)
+            select(
+                m.ListingModel,
+                m.SellerProfile,
+                m.TrustScoreModel.risk_level,
+                m.TrustScoreModel.score,
+            )
             .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
             .outerjoin(
                 m.TrustScoreModel, m.TrustScoreModel.id == m.SellerProfile.current_trust_score_id
@@ -812,6 +821,18 @@ class SqlListingRepository:
         )
         if category is not None:
             stmt = stmt.where(m.ListingModel.category == category)
+        if condition is not None:
+            stmt = stmt.where(m.ListingModel.condition == condition)
+        if min_trust_score is not None:
+            # An inner-join-shaped filter via an outer-joined column: a
+            # seller with no score row yet (TrustScoreModel.score is NULL)
+            # correctly fails every "N+" threshold rather than matching one
+            # by SQL NULL-comparison accident.
+            stmt = stmt.where(m.TrustScoreModel.score >= min_trust_score)
+        if max_trust_score is not None:
+            stmt = stmt.where(m.TrustScoreModel.score <= max_trust_score)
+        if verified_only:
+            stmt = stmt.where(m.SellerProfile.identity_status == e.VerificationStatus.VERIFIED)
         if q:
             # The trigram GIN index on `title` (ix_listings_title_trgm) makes
             # this ILIKE cheap even without a leading anchor.
@@ -874,6 +895,10 @@ class SqlListingRepository:
         near_latitude: float | None = None,
         near_longitude: float | None = None,
         radius_km: float | None = None,
+        condition: str | None = None,
+        min_trust_score: int | None = None,
+        max_trust_score: int | None = None,
+        verified_only: bool = False,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -892,15 +917,19 @@ class SqlListingRepository:
             near_latitude=near_latitude,
             near_longitude=near_longitude,
             radius_km=radius_km,
+            condition=condition,
+            min_trust_score=min_trust_score,
+            max_trust_score=max_trust_score,
+            verified_only=verified_only,
         )
         stmt = self._order_by(stmt, sort).limit(limit).offset(offset)
         rows = (await self._s.execute(stmt)).all()
-        listing_ids = [listing.id for listing, _seller, _risk in rows]
+        listing_ids = [listing.id for listing, _seller, _risk, _score in rows]
         primary_images = await _primary_image_ids(self._s, listing_ids)
 
         return [
-            _to_public_summary(listing, seller, risk_level, primary_images)
-            for listing, seller, risk_level in rows
+            _to_public_summary(listing, seller, risk_level, score, primary_images)
+            for listing, seller, risk_level, score in rows
         ]
 
     async def count_public(
@@ -919,6 +948,10 @@ class SqlListingRepository:
         near_latitude: float | None = None,
         near_longitude: float | None = None,
         radius_km: float | None = None,
+        condition: str | None = None,
+        min_trust_score: int | None = None,
+        max_trust_score: int | None = None,
+        verified_only: bool = False,
     ) -> int:
         stmt = select(func.count()).select_from(
             self._public_query_base(
@@ -935,6 +968,10 @@ class SqlListingRepository:
                 near_latitude=near_latitude,
                 near_longitude=near_longitude,
                 radius_km=radius_km,
+                condition=condition,
+                min_trust_score=min_trust_score,
+                max_trust_score=max_trust_score,
+                verified_only=verified_only,
             ).subquery()
         )
         return int((await self._s.execute(stmt)).scalar_one())
@@ -1267,6 +1304,7 @@ def _to_public_summary(
     listing: m.ListingModel,
     seller: m.SellerProfile,
     risk_level: e.RiskLevel | None,
+    score: int | None,
     primary_images: dict[UUID, tuple[UUID, str | None]],
 ) -> ent.PublicListingSummary:
     image = primary_images.get(listing.id)
@@ -1286,6 +1324,7 @@ def _to_public_summary(
         status=listing.status.value,
         negotiable=listing.negotiable,
         risk_level=risk_level.value if risk_level is not None else None,
+        score=score,
         identity_verified=seller.identity_status == e.VerificationStatus.VERIFIED,
         phone_verified=seller.phone_status == e.VerificationStatus.VERIFIED,
         primary_image_file_id=image[0] if image else None,
@@ -1347,6 +1386,7 @@ class SqlFavoriteRepository:
                 m.SellerProfile,
                 m.FavoriteModel.created_at,
                 m.TrustScoreModel.risk_level,
+                m.TrustScoreModel.score,
             )
             .join(m.FavoriteModel, m.FavoriteModel.listing_id == m.ListingModel.id)
             .join(m.SellerProfile, m.SellerProfile.id == m.ListingModel.seller_id)
@@ -1363,12 +1403,12 @@ class SqlFavoriteRepository:
             .offset(offset)
         )
         rows = (await self._s.execute(stmt)).all()
-        listing_ids = [listing.id for listing, _seller, _favorited_at, _risk in rows]
+        listing_ids = [listing.id for listing, _seller, _favorited_at, _risk, _score in rows]
         primary_images = await _primary_image_ids(self._s, listing_ids)
 
         return [
-            _to_public_summary(listing, seller, risk_level, primary_images)
-            for listing, seller, _favorited_at, risk_level in rows
+            _to_public_summary(listing, seller, risk_level, score, primary_images)
+            for listing, seller, _favorited_at, risk_level, score in rows
         ]
 
     async def count_for_user(self, user_id: UUID) -> int:

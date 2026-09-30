@@ -6622,6 +6622,10 @@ export interface operations {
         nearLatitude?: number | null;
         nearLongitude?: number | null;
         radiusKm?: number | null;
+        condition?: string | null;
+        minTrustScore?: number | null;
+        maxTrustScore?: number | null;
+        verifiedOnly?: boolean;
         sort?: string;
         limit?: number;
         offset?: number;

@@ -277,6 +277,10 @@ class ListingRepository(Protocol):
         near_latitude: float | None = None,
         near_longitude: float | None = None,
         radius_km: float | None = None,
+        condition: str | None = None,
+        min_trust_score: int | None = None,
+        max_trust_score: int | None = None,
+        verified_only: bool = False,
         sort: str = "newest",
         limit: int = 20,
         offset: int = 0,
@@ -298,6 +302,10 @@ class ListingRepository(Protocol):
         near_latitude: float | None = None,
         near_longitude: float | None = None,
         radius_km: float | None = None,
+        condition: str | None = None,
+        min_trust_score: int | None = None,
+        max_trust_score: int | None = None,
+        verified_only: bool = False,
     ) -> int: ...
 
 

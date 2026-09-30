@@ -304,3 +304,35 @@ export function areasForCity(city: string | null | undefined): readonly string[]
   }
   return PAKISTAN_LOCATIONS.Other;
 }
+
+/**
+ * Real geography, not app data - grouping the same 10 hardcoded cities by
+ * the actual province/territory they sit in. A client-side filtering aid
+ * only: picking a province narrows the City dropdown to real cities in it,
+ * it never reaches the API as its own query param (the backend has no
+ * province column to filter on, and city already does the real filtering).
+ */
+export const PAKISTAN_PROVINCES = {
+  Punjab: ['Lahore', 'Faisalabad', 'Multan', 'Gujranwala', 'Sialkot', 'Rawalpindi'],
+  Sindh: ['Karachi'],
+  'Khyber Pakhtunkhwa': ['Peshawar'],
+  Balochistan: ['Quetta'],
+  'Islamabad Capital Territory': ['Islamabad'],
+} as const satisfies Record<string, PakistanCity[]>;
+
+export type PakistanProvince = keyof typeof PAKISTAN_PROVINCES;
+
+export function provinceOfCity(city: string | null | undefined): PakistanProvince | null {
+  if (!city) return null;
+  for (const [province, cities] of Object.entries(PAKISTAN_PROVINCES)) {
+    if ((cities as readonly string[]).includes(city)) return province as PakistanProvince;
+  }
+  return null;
+}
+
+export function citiesInProvince(province: string | null | undefined): readonly PakistanCity[] {
+  if (province && province in PAKISTAN_PROVINCES) {
+    return PAKISTAN_PROVINCES[province as PakistanProvince];
+  }
+  return PAKISTAN_CITIES;
+}
