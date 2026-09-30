@@ -26,7 +26,11 @@ export const metadata: Metadata = {
  * rather than being applied by script after the browser has already painted.
  */
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const theme = resolveTheme((await cookies()).get(THEME_COOKIE)?.value);
+  // Light is this app's own default, not the shared package's - the admin
+  // app keeps dark as its default via the same `resolveTheme`, since only
+  // the public-facing marketplace redesign called for a light-first look.
+  const cookieValue = (await cookies()).get(THEME_COOKIE)?.value;
+  const theme = cookieValue ? resolveTheme(cookieValue) : 'light';
   const locale = await getLocale();
   const messages = await getMessages();
   const t = await getTranslations('Common');

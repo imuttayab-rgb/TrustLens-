@@ -1,6 +1,9 @@
+export { CategoryRow } from './components/CategoryRow';
 export { ChecksGrid } from './components/ChecksGrid';
-export { Hero } from './components/Hero';
+export { FreshListings } from './components/FreshListings';
+export { MarketplaceHero } from './components/MarketplaceHero';
 export { Reveal } from './components/Reveal';
-export { ScorePreview } from './components/ScorePreview';
+export { SafetyBanner } from './components/SafetyBanner';
 export { SiteFooter } from './components/SiteFooter';
 export { SiteNav } from './components/SiteNav';
+export { WhyChooseUs } from './components/WhyChooseUs';

@@ -13,16 +13,17 @@
     "loading": "لوڈ ہو رہا ہے",
     "openMenu": "مینو کھولیں",
     "closeMenu": "مینو بند کریں",
-    "language": "زبان"
+    "language": "زبان",
+    "dashboard": "ڈیش بورڈ"
   },
   "SiteNav": {
-    "browse": "براؤز کریں",
-    "howItWorks": "یہ کیسے کام کرتا ہے",
-    "whatWeCheck": "ہم کیا جانچتے ہیں",
-    "whyExplainable": "قابلِ وضاحت کیوں",
-    "tagline": "ڈیل کرنے سے پہلے اعتماد۔",
-    "help": "مدد",
-    "safety": "تحفظ"
+    "marketplace": "مارکیٹ پلیس",
+    "categories": "زمرہ جات",
+    "trustCheck": "اعتماد کی جانچ",
+    "safeMeet": "SafeMeet",
+    "messages": "پیغامات",
+    "favourites": "پسندیدہ",
+    "postAnAd": "اشتہار لگائیں"
   },
   "DashboardNav": {
     "browse": "براؤز کریں",
@@ -35,14 +36,16 @@
     "settings": "ترتیبات"
   },
   "SiteFooter": {
-    "product": "پروڈکٹ",
+    "marketplace": "مارکیٹ پلیس",
     "support": "معاونت",
     "trustSafety": "اعتماد اور تحفظ",
+    "forBusinesses": "کاروباری اداروں کے لیے",
     "legal": "قانونی",
-    "browse": "براؤز کریں",
+    "browse": "لسٹنگز دیکھیں",
     "checkSeller": "بیچنے والے کی جانچ",
     "getVerified": "تصدیق کروائیں",
     "apiDocs": "API دستاویزات",
+    "businessAccounts": "کاروباری اکاؤنٹس",
     "help": "مدد مرکز",
     "contact": "ہم سے رابطہ کریں",
     "reportIssue": "مسئلہ رپورٹ کریں",
@@ -50,7 +53,52 @@
     "guidelines": "کمیونٹی رہنما اصول",
     "terms": "شرائطِ خدمت",
     "privacy": "رازداری کی پالیسی",
-    "blurb": "ادائیگی سے پہلے بیچنے والے کی شناخت، فون اور لسٹنگز کی جانچ کریں۔",
+    "blurb": "پاکستان کی قابلِ اعتماد مارکیٹ پلیس۔ اعتماد کے ساتھ خرید و فروخت کریں۔",
     "copyright": "© {year} TrustLens۔ جملہ حقوق محفوظ ہیں۔"
+  },
+  "Home": {
+    "searchPlaceholder": "آپ کیا تلاش کر رہے ہیں؟",
+    "locationLabel": "مقام",
+    "allPakistan": "پورا پاکستان",
+    "search": "تلاش کریں",
+    "headline": "اعتماد کے ساتھ خرید و فروخت کریں",
+    "subheadline": "اپنے قریب پروڈکٹس دیکھیں۔ ہر بیچنے والے کا قابلِ وضاحت Trust Score موجود ہے۔",
+    "checkSeller": "بیچنے والے کی جانچ کریں",
+    "safetyPriority": "آپ کی حفاظت، ہماری ترجیح",
+    "checklist": {
+      "identity": "شناخت کی تصدیق شدہ",
+      "phone": "فون تصدیق شدہ",
+      "email": "ای میل تصدیق شدہ",
+      "liveId": "لائیو ID جانچ"
+    },
+    "lowRisk": "کم خطرہ",
+    "scoreCaption": "تصدیق شدہ شناخت، سرگرمی اور کمیونٹی فیڈبیک پر مبنی۔",
+    "dataPromise": "ہم آپ کا ڈیٹا کسی کے ساتھ شیئر نہیں کرتے۔ کبھی نہیں۔",
+    "howItWorks": "یہ کیسے کام کرتا ہے",
+    "freshListings": "آپ کے قریب تازہ لسٹنگز",
+    "viewAll": "سب دیکھیں",
+    "loadingListings": "لسٹنگز لوڈ ہو رہی ہیں",
+    "whyChoose": "خریدار TrustLens کیوں چنتے ہیں",
+    "features": {
+      "liveIdentity": {
+        "title": "لائیو شناختی تصدیق",
+        "body": "بیچنے والے لائیو ID جانچ سے شناخت کی تصدیق کرتے ہیں۔"
+      },
+      "explainableScore": {
+        "title": "قابلِ وضاحت Trust Score",
+        "body": "تصدیق شدہ ڈیٹا اور رویے پر مبنی واضح اسکور۔"
+      },
+      "safeChat": {
+        "title": "محفوظ ان-ایپ چیٹ",
+        "body": "محفوظ پیغام رسانی سے محفوظ رہیں۔"
+      },
+      "safeMeet": {
+        "title": "پلیٹ فارم کی تجویز کردہ SafeMeet",
+        "body": "عوامی، تصدیق شدہ مقامات پر ملیں۔"
+      }
+    },
+    "safetyReminder": "پیشگی ادائیگی نہ کریں۔ پہلے معائنہ کریں۔ عوامی جگہ پر ملیں۔",
+    "safetyFirst": "آپ کی حفاظت سب سے پہلے۔",
+    "safetyTips": "حفاظتی تجاویز"
   }
 }

@@ -13,16 +13,17 @@
     "loading": "Loading",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "language": "Language"
+    "language": "Language",
+    "dashboard": "Dashboard"
   },
   "SiteNav": {
-    "browse": "Browse",
-    "howItWorks": "How it works",
-    "whatWeCheck": "What we check",
-    "whyExplainable": "Why explainable",
-    "tagline": "Trust before you deal.",
-    "help": "Help",
-    "safety": "Safety"
+    "marketplace": "Marketplace",
+    "categories": "Categories",
+    "trustCheck": "Trust Check",
+    "safeMeet": "SafeMeet",
+    "messages": "Messages",
+    "favourites": "Favourites",
+    "postAnAd": "Post an Ad"
   },
   "DashboardNav": {
     "browse": "Browse",
@@ -35,14 +36,16 @@
     "settings": "Settings"
   },
   "SiteFooter": {
-    "product": "Product",
+    "marketplace": "Marketplace",
     "support": "Support",
     "trustSafety": "Trust & Safety",
+    "forBusinesses": "For Businesses",
     "legal": "Legal",
-    "browse": "Browse",
+    "browse": "Browse listings",
     "checkSeller": "Check a seller",
     "getVerified": "Get verified",
     "apiDocs": "API docs",
+    "businessAccounts": "Business accounts",
     "help": "Help centre",
     "contact": "Contact us",
     "reportIssue": "Report an issue",
@@ -50,7 +53,52 @@
     "guidelines": "Community guidelines",
     "terms": "Terms of service",
     "privacy": "Privacy policy",
-    "blurb": "Check a seller's identity, phone and listings before you pay.",
+    "blurb": "Pakistan's trusted marketplace. Buy and sell with confidence.",
     "copyright": "© {year} TrustLens. All rights reserved."
+  },
+  "Home": {
+    "searchPlaceholder": "What are you looking for?",
+    "locationLabel": "Location",
+    "allPakistan": "All Pakistan",
+    "search": "Search",
+    "headline": "Buy & Sell with Confidence",
+    "subheadline": "Discover products near you. Every seller has an explainable Trust Score.",
+    "checkSeller": "Check a Seller",
+    "safetyPriority": "Your safety, our priority",
+    "checklist": {
+      "identity": "Identity verified",
+      "phone": "Phone verified",
+      "email": "Email verified",
+      "liveId": "Live ID check"
+    },
+    "lowRisk": "Low risk",
+    "scoreCaption": "Based on verified identity, activity and community feedback.",
+    "dataPromise": "We don't share your data with anyone. Ever.",
+    "howItWorks": "How it works",
+    "freshListings": "Fresh Listings Near You",
+    "viewAll": "View all",
+    "loadingListings": "Loading listings",
+    "whyChoose": "Why buyers choose TrustLens",
+    "features": {
+      "liveIdentity": {
+        "title": "Live identity verification",
+        "body": "Sellers verify identity with live ID checks."
+      },
+      "explainableScore": {
+        "title": "Explainable Trust Score",
+        "body": "Clear score based on verified data and behaviour."
+      },
+      "safeChat": {
+        "title": "Safe in-app chat",
+        "body": "Stay protected with secure messaging."
+      },
+      "safeMeet": {
+        "title": "Platform-curated SafeMeet",
+        "body": "Meet in public, verified locations."
+      }
+    },
+    "safetyReminder": "Never pay in advance. Inspect first. Meet in public.",
+    "safetyFirst": "Your safety comes first.",
+    "safetyTips": "Safety tips"
   }
 }

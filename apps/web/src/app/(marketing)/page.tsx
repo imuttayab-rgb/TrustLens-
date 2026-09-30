@@ -1,10 +1,18 @@
-import { ChecksGrid, Hero, Reveal } from '@/features/marketing';
+import {
+  CategoryRow,
+  ChecksGrid,
+  FreshListings,
+  MarketplaceHero,
+  Reveal,
+  SafetyBanner,
+  WhyChooseUs,
+} from '@/features/marketing';
 import { Button } from '@trustlens/ui';
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Know your seller before you pay',
+  title: 'Buy & sell with confidence',
   description:
     'TrustLens checks a seller’s ID, phone, email, device and listings, then gives you one score ' +
     'out of 100 — and tells you exactly which check earned or cost each point.',
@@ -55,9 +63,13 @@ const LIMITS = [
 export default function LandingPage() {
   return (
     <main>
-      <Hero />
+      <MarketplaceHero />
+      <CategoryRow />
+      <SafetyBanner />
+      <FreshListings />
+      <WhyChooseUs />
 
-      <section id="checks" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8">
+      <section id="checks" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-8">
         <Reveal>
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
             Six checks a scammer has to beat separately
@@ -74,7 +86,7 @@ export default function LandingPage() {
       </section>
 
       <section id="how-it-works" className="scroll-mt-20 border-y border-border/70">
-        <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8">
+        <div className="mx-auto max-w-7xl px-5 py-20 sm:px-8">
           <Reveal>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">How a score is made</h2>
           </Reveal>
@@ -93,21 +105,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="explainable" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20 sm:px-8">
+      <section id="explainable" className="mx-auto max-w-7xl scroll-mt-20 px-5 py-20 sm:px-8">
         <div className="grid items-start gap-10 lg:grid-cols-2">
           <Reveal>
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               A number you can argue with
             </h2>
             <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Most trust signals are a badge you either have or you don&apos;t. That tells a buyer
-              nothing once everyone has one, and it gives a seller no way to disagree.
-            </p>
-            <p className="mt-4 text-base leading-relaxed text-muted-foreground">
-              Every TrustLens score arrives with its full working: which checks ran, what each was
-              worth, and what it scored. A check that could not run is excluded rather than counted
-              as a failure — nobody is penalised for our outage. And any seller who believes a check
-              is wrong can appeal it.
+              Most trust signals are a badge you either have or you don&apos;t. Every TrustLens
+              score arrives with its full working: which checks ran, what each was worth, and what
+              it scored — and any seller who believes a check is wrong can appeal it.
             </p>
             <div className="mt-7 flex flex-wrap gap-3">
               <Button

@@ -22,9 +22,10 @@ const qk = { list: ['notifications'] as const };
  * and a periodic poll is indistinguishable from push for a notification
  * bell nobody is staring at continuously.
  */
-export function useNotifications() {
+export function useNotifications(enabled = true) {
   return useQuery<{ items: AppNotification[]; unreadCount: number }>({
     queryKey: qk.list,
+    enabled,
     queryFn: async () => {
       const result = await api.GET('/api/v1/me/notifications', {
         params: { query: { limit: 30 } },

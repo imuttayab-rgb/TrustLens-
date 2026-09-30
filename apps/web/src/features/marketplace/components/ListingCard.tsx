@@ -1,6 +1,6 @@
 'use client';
 
-import { LISTING_CATEGORY_LABELS, type RiskLevel } from '@trustlens/constants';
+import type { RiskLevel } from '@trustlens/constants';
 import { RiskBadge } from '@trustlens/ui';
 import { cn, formatRelative } from '@trustlens/utils';
 import { BadgeCheck, Heart, ImageOff, MessageCircle, Share2, ShieldCheck } from 'lucide-react';
@@ -125,7 +125,7 @@ export function ListingCard({
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="space-y-1 p-3">
+      <div className="space-y-1.5 p-3">
         <p className="truncate text-sm font-medium">{listing.title}</p>
         <p className="text-sm font-semibold">
           {listing.price !== null
@@ -136,17 +136,24 @@ export function ListingCard({
           )}
         </p>
         <p className="truncate text-xs text-muted-foreground">
-          {listing.category ? LISTING_CATEGORY_LABELS[listing.category] : 'Uncategorised'}
-          {listing.condition ? ` · ${listing.condition.replace(/_/g, ' ').toLowerCase()}` : ''}
+          {listing.condition ? listing.condition.replace(/_/g, ' ').toLowerCase() : 'Used'}
           {listing.area
             ? ` · ${listing.area}, ${listing.city}`
             : listing.city
               ? ` · ${listing.city}`
               : ''}
+          {' · '}
+          {formatRelative(listing.createdAt)}
         </p>
-        <div className="flex items-center justify-between gap-2">
-          <p className="flex min-w-0 items-center gap-1 truncate text-xs text-muted-foreground">
-            <span className="truncate">by {listing.sellerDisplayName}</span>
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <p className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
+            <span
+              aria-hidden="true"
+              className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand/15 text-[10px] font-bold uppercase text-brand"
+            >
+              {listing.sellerDisplayName.charAt(0)}
+            </span>
+            <span className="truncate">{listing.sellerDisplayName}</span>
             {listing.identityVerified && (
               <ShieldCheck
                 className="h-3.5 w-3.5 shrink-0 text-risk-low"
@@ -167,9 +174,6 @@ export function ListingCard({
             />
           )}
         </div>
-        <p className="truncate text-xs text-muted-foreground">
-          Listed {formatRelative(listing.createdAt)}
-        </p>
         {listing.latitude !== null && listing.longitude !== null && (
           <button
             type="button"
