@@ -1,3 +1,5 @@
+import { RelatedRecommendations } from '@/features/marketplace';
+import { categoryLabel as nodeLabel, categoryPath, categoryBrowseHref } from '@trustlens/constants';
 /**
  * The "view this listing" page a Browse card opens into.
  *
@@ -14,7 +16,6 @@ import {
   ListingLocationCard,
   ListingSellerCard,
   RecordRecentlyViewed,
-  SimilarListings,
 } from '@/features/marketplace';
 import { serverFetch } from '@/lib/api/server';
 import {
@@ -28,7 +29,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
-export const revalidate = 300;
+export const revalidate = 0;
 
 const STATUS_LABEL: Record<string, string> = {
   RESERVED: 'Reserved - a deal is in progress',
@@ -42,12 +43,16 @@ interface PublicListingDetail {
   price: number | null;
   currency: string | null;
   category: ListingCategory | null;
+  categoryNodeId?: string | null;
+  categoryData?: Record<string, string | number>;
+  publicPhone?: string | null;
   condition: string | null;
   city: string | null;
   area: string | null;
   createdAt: string;
   sellerHandle: string;
   sellerDisplayName: string;
+  sellerPhotoUrl?: string | null;
   status: string;
   negotiable: boolean;
   attributes: Record<string, string>;
@@ -77,7 +82,9 @@ interface SellerReviews {
 }
 
 async function getListing(id: string): Promise<PublicListingDetail | null> {
-  return serverFetch<PublicListingDetail>(`/api/v1/public/listings/${encodeURIComponent(id)}`);
+  return serverFetch<PublicListingDetail>(`/api/v1/public/listings/${encodeURIComponent(id)}`, {
+    next: { revalidate: 0 },
+  });
 }
 
 async function getSellerScore(handle: string): Promise<SellerScore | null> {
@@ -128,16 +135,30 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
   if (!listing) notFound();
 
   const [sellerScore, activeListingsCount, reviews] = await Promise.all([
-    getSellerScore(listing.sellerHandle),
-    getSellerActiveListingsCount(listing.sellerHandle),
-    getSellerReviews(listing.sellerHandle),
+    getSellerScore(listing.sellerHandle).catch(() => null),
+    getSellerActiveListingsCount(listing.sellerHandle).catch(() => null),
+    getSellerReviews(listing.sellerHandle).catch(() => null),
   ]);
 
   const images = listing.images.length > 0 ? listing.images : [];
-  const categoryLabel = listing.category ? LISTING_CATEGORY_LABELS[listing.category] : null;
+  const categoryLabel =
+    nodeLabel(listing.categoryNodeId) ||
+    (listing.category ? LISTING_CATEGORY_LABELS[listing.category] : null);
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8">
+      {listing.categoryNodeId && (
+        <nav
+          className="mb-3 flex flex-wrap gap-2 text-xs text-muted-foreground"
+          aria-label="Category breadcrumb"
+        >
+          {categoryPath(listing.categoryNodeId).map((n) => (
+            <Link key={n.id} href={categoryBrowseHref(n.id)} className="hover:text-brand">
+              {n.label} /
+            </Link>
+          ))}
+        </nav>
+      )}
       <RecordRecentlyViewed
         listing={{
           id: listing.id,
@@ -197,16 +218,8 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
 
       <div className="mt-4 grid gap-8 lg:grid-cols-[1fr_360px]">
         <div className="min-w-0">
-          <ListingGallery images={images} title={listing.title} />
-
-          {listing.videoUrl && (
-            // eslint-disable-next-line jsx-a11y/media-has-caption -- a seller's own upload, no captions to source
-            <video
-              src={listing.videoUrl}
-              controls
-              className="mt-2 aspect-video w-full rounded-lg border border-border bg-black"
-            />
-          )}
+          {/* Post-an-Ad v2: the seller's product video is the gallery's first slide. */}
+          <ListingGallery images={images} title={listing.title} videoUrl={listing.videoUrl} />
 
           <h1 className="mt-5 text-2xl font-bold sm:text-3xl">{listing.title}</h1>
           <p className="mt-1 text-2xl font-semibold text-brand">
@@ -268,21 +281,36 @@ export default async function ListingDetailPage({ params }: { params: Promise<{ 
             </p>
           </div>
 
-          <SimilarListings category={listing.category} excludeListingId={listing.id} />
+          <RelatedRecommendations
+            listingId={listing.id}
+            category={listing.category}
+            nodeId={listing.categoryNodeId ?? null}
+            model={
+              typeof listing.categoryData?.model === 'string' ? listing.categoryData.model : null
+            }
+            exclude={[listing.id]}
+          />
         </div>
 
         <div className="space-y-5 lg:sticky lg:top-20 lg:self-start">
-          {sellerScore && (
-            <ListingSellerCard
-              sellerHandle={listing.sellerHandle}
-              sellerDisplayName={listing.sellerDisplayName}
-              listingId={listing.id}
-              listingTitle={listing.title}
-              score={sellerScore}
-              activeListingsCount={activeListingsCount}
-              reviews={reviews.summary}
-            />
+          {listing.publicPhone && (
+            <a
+              href={`tel:${listing.publicPhone}`}
+              className="mb-4 block rounded-xl border border-brand/30 bg-brand/5 p-4 text-center font-semibold text-brand"
+            >
+              Call seller · {listing.publicPhone}
+            </a>
           )}
+          <ListingSellerCard
+            sellerHandle={listing.sellerHandle}
+            sellerDisplayName={listing.sellerDisplayName}
+            sellerPhotoUrl={listing.sellerPhotoUrl ?? null}
+            listingId={listing.id}
+            listingTitle={listing.title}
+            score={sellerScore}
+            activeListingsCount={activeListingsCount}
+            reviews={reviews?.summary ?? null}
+          />
 
           {listing.latitude !== null && listing.longitude !== null && (
             <ListingLocationCard

@@ -1,3 +1,4 @@
+/** Index module in commerce. */
 export { AuctionPanel } from './components/AuctionPanel';
 export { OfferPanel } from './components/OfferPanel';
 export { StartAuctionCard } from './components/StartAuctionCard';

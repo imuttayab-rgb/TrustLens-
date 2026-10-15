@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/messages: page. */
 import { MessageCircle } from 'lucide-react';
 
 export default function MessagesIndexPage() {

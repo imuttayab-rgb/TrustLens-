@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use public listings. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -6,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 import type { ListingCategory } from '@trustlens/constants';
 
-export type SortOrder = 'newest' | 'price_asc' | 'price_desc';
+export type SortOrder = 'newest' | 'price_asc' | 'price_desc' | 'relevance';
 
 export interface PublicListing {
   id: string;
@@ -14,12 +15,15 @@ export interface PublicListing {
   price: number | null;
   currency: string | null;
   category: ListingCategory | null;
+  categoryNodeId?: string | null;
+  categoryData?: Record<string, string | number>;
   condition: string | null;
   city: string | null;
   area: string | null;
   createdAt: string;
   sellerHandle: string;
   sellerDisplayName: string;
+  sellerPhotoUrl?: string | null;
   status: string;
   negotiable: boolean;
   riskLevel: string | null;
@@ -34,6 +38,9 @@ export interface PublicListing {
 
 export interface BrowseListingsParams {
   category?: ListingCategory | null;
+  categoryNodeId?: string | null;
+  facets?: Record<string, unknown>;
+  enabled?: boolean;
   q?: string | null;
   city?: string | null;
   area?: string | null;
@@ -64,6 +71,9 @@ export interface BrowseListingsParams {
  */
 export function usePublicListings({
   category = null,
+  categoryNodeId = null,
+  facets = {},
+  enabled = true,
   q = null,
   city = null,
   area = null,
@@ -84,8 +94,12 @@ export function usePublicListings({
   offset = 0,
 }: BrowseListingsParams = {}) {
   return useQuery<{ items: PublicListing[]; total: number }>({
+    enabled,
+    staleTime: 30_000,
     queryKey: qk.listing.public({
       category,
+      categoryNodeId,
+      facets,
       q,
       city,
       area,
@@ -110,6 +124,8 @@ export function usePublicListings({
         params: {
           query: {
             category,
+            categoryNodeId,
+            facets: Object.keys(facets).length ? JSON.stringify(facets) : null,
             q,
             city,
             area,

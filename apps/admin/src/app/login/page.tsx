@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for login: page. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -40,13 +41,13 @@ function LoginForm() {
   const raw = params.get('next');
   const next = raw && raw.startsWith('/') && !raw.startsWith('//') ? raw : '/';
 
-  async function finishLogin() {
-    // The guard already asked "who is this?" before the redirect here and
-    // cached the answer: nobody. Without dropping that, it re-reads the
-    // cached null and bounces straight back to this page.
-    await queryClient.invalidateQueries({ queryKey: ['me'] });
+  function finishLogin() {
+    // Invalidation alone retains the cached `null` while /me is refetched;
+    // the staff guard may redirect before that refetch finishes. Remove the
+    // anonymous answer so the next mount begins in a pending state.
+    queryClient.removeQueries({ queryKey: ['me'] });
     router.replace(next);
-    router.refresh();
+    // No server-side auth here; an immediate refresh races the navigation.
   }
 
   async function submitPassword(event: React.FormEvent) {
@@ -61,7 +62,7 @@ function LoginForm() {
         setMfaToken(data.mfaToken);
       } else {
         setAccessToken(data.accessToken);
-        await finishLogin();
+        finishLogin();
       }
     } catch (raw_) {
       const apiError = toApiError(raw_);
@@ -82,7 +83,7 @@ function LoginForm() {
       });
       if (result.error) throw toApiError(result.error);
       setAccessToken((result.data as { data: LoginSuccess }).data.accessToken);
-      await finishLogin();
+      finishLogin();
     } catch (raw_) {
       const apiError = toApiError(raw_);
       setError({ message: apiError.message, requestId: apiError.requestId });

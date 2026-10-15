@@ -1,3 +1,4 @@
+/** Next module in config-eslint. */
 const base = require('./index.js');
 const reactHooks = require('eslint-plugin-react-hooks');
 const jsxA11y = require('eslint-plugin-jsx-a11y');

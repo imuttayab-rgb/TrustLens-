@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: ListingForm. */
 'use client';
 
 import { useApiForm } from '@/lib/forms/use-api-form';
@@ -126,6 +127,9 @@ export function ListingForm({
         condition: values.condition ?? null,
         city: values.city || null,
         area: values.area || null,
+        // PUT replaces every field, so the private address typed in the
+        // Post-an-Ad wizard must be carried through an edit unchanged.
+        addressLine: listing?.addressLine ?? null,
         latitude: values.latitude ?? null,
         longitude: values.longitude ?? null,
         negotiable: values.negotiable ?? false,
@@ -336,7 +340,7 @@ export function ListingForm({
 
       <div className="space-y-2">
         <p className="text-sm font-medium">Video</p>
-        <p className="text-sm text-muted-foreground">Optional, MP4 up to 50 MB.</p>
+        <p className="text-sm text-muted-foreground">Required to go live: a short MP4 or WebM clip, up to 50 MB.</p>
         {videoFileId ? (
           <div className="flex items-center gap-2 text-sm">
             <span className="text-muted-foreground">Video attached.</span>
@@ -353,7 +357,7 @@ export function ListingForm({
           <div className="flex items-center gap-2">
             <input
               type="file"
-              accept="video/mp4"
+              accept="video/mp4,video/webm"
               disabled={videoUploading}
               onChange={(e) => void handleVideoSelect(e)}
               className="text-sm"

@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: SafetyBanner. */
 import { ExternalLink, ShieldCheck } from 'lucide-react';
 import { getTranslations } from 'next-intl/server';
 import Link from 'next/link';

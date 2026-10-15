@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (seller)/dashboard/reports: page. */
 'use client';
 
 import { useMyReports, type ReportCategory, type ReportTargetType } from '@/features/moderation';

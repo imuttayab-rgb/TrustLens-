@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: RegisterForm. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -8,7 +9,7 @@ import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Field, fieldAria, Input, PasswordInput } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
 import { registerSchema, type RegisterInput } from '@trustlens/validation';
-import { Lock, Mail, ScanFace, ShoppingBag, Smartphone, Store } from 'lucide-react';
+import { Lock, Mail, ScanFace, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -29,15 +30,11 @@ export function RegisterForm({ className }: { className?: string }) {
     register,
     handleSubmit,
     setError,
-    watch,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
     defaultValues: { asSeller: true, acceptedTerms: false as unknown as true },
   });
-
-  const asSeller = watch('asSeller');
 
   const { submit, formError } = useApiForm<RegisterInput>(setError);
 
@@ -50,7 +47,7 @@ export function RegisterForm({ className }: { className?: string }) {
           email: values.email,
           password: values.password,
           fullName: values.fullName,
-          asSeller: values.asSeller,
+          asSeller: true,
           acceptedTerms: values.acceptedTerms,
         },
       });
@@ -95,7 +92,12 @@ export function RegisterForm({ className }: { className?: string }) {
       className={cn('space-y-4', className)}
       noValidate
     >
-      <Field htmlFor="fullName" label="Full name" required error={errors.fullName?.message}>
+      <Field
+        htmlFor="fullName"
+        label="Full name as on your ID"
+        required
+        error={errors.fullName?.message}
+      >
         <Input
           {...fieldAria('fullName', errors.fullName?.message)}
           autoComplete="name"
@@ -152,41 +154,11 @@ export function RegisterForm({ className }: { className?: string }) {
         />
       </Field>
 
-      <div className="space-y-2">
-        <p className="text-sm font-medium">I want to:</p>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => setValue('asSeller', false)}
-            aria-pressed={!asSeller}
-            className={cn(
-              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]',
-              !asSeller ? 'border-brand bg-brand/5 shadow-sm' : 'border-input hover:bg-muted',
-            )}
-          >
-            <ShoppingBag className="h-5 w-5 text-brand" aria-hidden="true" />
-            <span className="text-sm font-semibold">Buy only</span>
-            <span className="text-xs text-muted-foreground">
-              Browse and buy items from trusted sellers.
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setValue('asSeller', true)}
-            aria-pressed={asSeller}
-            className={cn(
-              'flex flex-col items-start gap-2 rounded-lg border p-3 text-left transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]',
-              asSeller ? 'border-brand bg-brand/5 shadow-sm' : 'border-input hover:bg-muted',
-            )}
-          >
-            <Store className="h-5 w-5 text-brand" aria-hidden="true" />
-            <span className="text-sm font-semibold">Buy &amp; Sell</span>
-            <span className="text-xs text-muted-foreground">
-              Buy items and earn a Trust Score selling your own.
-            </span>
-          </button>
-        </div>
-      </div>
+      <p className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+        One account to buy and sell. Before posting publicly or sending messages, confirm your
+        ID-matched name and add your own approved face photo. Your public profile shows your first
+        and last name and approved photo.
+      </p>
 
       <div className="space-y-3 pt-1">
         <label className="flex cursor-pointer items-start gap-3 text-sm">
@@ -255,8 +227,8 @@ export function RegisterForm({ className }: { className?: string }) {
           {[
             ...ONBOARDING_STEPS,
             {
-              icon: asSeller ? Store : ShoppingBag,
-              label: asSeller ? 'Start selling' : 'Start browsing',
+              icon: ScanFace,
+              label: 'Complete profile',
             },
           ].map((step, index, all) => {
             const Icon = step.icon;

@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/safemeet: MeetingVenuesClient. */
 'use client';
 
 import {

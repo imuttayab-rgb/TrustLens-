@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/favourites: CompareTable. */
 'use client';
 
 import { type PublicListing } from '@/features/marketplace';

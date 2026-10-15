@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/check: page. */
 'use client';
 
 import { Button, Card, CardContent } from '@trustlens/ui';

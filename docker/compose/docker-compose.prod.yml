@@ -35,6 +35,15 @@ x-postgres-env: &postgres-env
 
 # Shared by api, worker and the migrate job so the three cannot drift apart.
 x-backend-env: &backend-env
+  # Browser voice calls; keys remain server-side.
+  CALLS_ENABLED: ${CALLS_ENABLED:-false}
+  CALLS_LIVEKIT_URL: ${CALLS_LIVEKIT_URL:-}
+  CALLS_LIVEKIT_INTERNAL_URL: ${CALLS_LIVEKIT_INTERNAL_URL:-}
+  CALLS_LIVEKIT_API_KEY: ${CALLS_LIVEKIT_API_KEY:-}
+  CALLS_LIVEKIT_API_SECRET: ${CALLS_LIVEKIT_API_SECRET:-}
+  CALLS_VAPID_PUBLIC_KEY: ${CALLS_VAPID_PUBLIC_KEY:-}
+  CALLS_VAPID_PRIVATE_KEY: ${CALLS_VAPID_PRIVATE_KEY:-}
+  CALLS_VAPID_SUBJECT: ${CALLS_VAPID_SUBJECT:-}
   # Taken from .env.production, not hardcoded.
   #
   # `ENV=production` turns on a hardening validator that REFUSES to boot
@@ -50,6 +59,9 @@ x-backend-env: &backend-env
   REDIS_URL: ${REDIS_URL}
   REDIS_QUEUE_URL: ${REDIS_QUEUE_URL}
   STORAGE_ENDPOINT_URL: ${STORAGE_ENDPOINT_URL}
+  # Sign browser upload/preview URLs at this external origin; server reads
+  # continue to use STORAGE_ENDPOINT_URL on the private Docker network.
+  STORAGE_PUBLIC_ENDPOINT_URL: ${STORAGE_PUBLIC_ENDPOINT_URL:-}
   STORAGE_ACCESS_KEY_ID: ${STORAGE_ACCESS_KEY_ID}
   STORAGE_SECRET_ACCESS_KEY: ${STORAGE_SECRET_ACCESS_KEY}
   SECURITY_JWT_PRIVATE_KEY: ${SECURITY_JWT_PRIVATE_KEY:?run scripts/generate-keys.sh >> .env.production}
@@ -71,6 +83,10 @@ x-backend-env: &backend-env
   RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
   RATE_LIMIT_LOGIN_IP_PER_15MIN: ${RATE_LIMIT_LOGIN_IP_PER_15MIN:-30}
   USE_FAKE_AI: ${USE_FAKE_AI:-true}
+  FACE_MATCH_REAL_IN_DEMO: ${FACE_MATCH_REAL_IN_DEMO:-false}
+  # Real local CNIC OCR for the demo while the LLM stays mocked. Off by default.
+  OCR_REAL_IN_DEMO: ${OCR_REAL_IN_DEMO:-false}
+  HOLD_ID_REQUIRED: ${HOLD_ID_REQUIRED:-false}
   OCR_ENGINE: ${OCR_ENGINE:-rapidocr}
   FACE_ENGINE: ${FACE_ENGINE:-insightface}
   EMAIL_PROVIDER: ${EMAIL_PROVIDER:-smtp}
@@ -86,6 +102,20 @@ x-restart: &restart
   restart: unless-stopped
 
 services:
+  # Start explicitly: docker compose ... --profile calls up -d livekit
+  # Loopback bindings are for same-computer localhost demos only.
+  livekit:
+    image: livekit/livekit-server:v1.13.9
+    profiles: [calls]
+    restart: unless-stopped
+    command: [--config, /etc/livekit.yaml]
+    volumes:
+      - ../../.trustlens-calls/livekit.yaml:/etc/livekit.yaml:ro
+    ports:
+      - '127.0.0.1:7880:7880'
+      - '127.0.0.1:7881:7881'
+      - '127.0.0.1:7882:7882/udp'
+
   # ── Backing services ───────────────────────────────────────────────
   # Delete any of these three once you point its URL at a managed provider.
 
@@ -136,8 +166,8 @@ services:
       # URLs built from STORAGE_ENDPOINT_URL are only reachable from inside
       # the compose network, never from a browser. See .env.production.example
       # for what to set STORAGE_ENDPOINT_URL to once this is published.
-      - '${STORAGE_PORT:-9000}:9000'
-      - '${MINIO_CONSOLE_PORT:-9001}:9001'
+      - '${LOCAL_BIND_ADDRESS:-127.0.0.1}:${STORAGE_PORT:-9000}:9000'
+      - '${LOCAL_BIND_ADDRESS:-127.0.0.1}:${MINIO_CONSOLE_PORT:-9001}:9001'
     command: server /data --console-address ":9001"
     healthcheck:
       test: ['CMD', 'mc', 'ready', 'local']
@@ -150,7 +180,7 @@ services:
     depends_on:
       minio: { condition: service_healthy }
     entrypoint: >
-      /bin/sh -c "
+      /bin/sh -ec "
       mc alias set local http://minio:9000 '${STORAGE_ACCESS_KEY_ID}' '${STORAGE_SECRET_ACCESS_KEY}';
       mc mb --ignore-existing local/trustlens-documents;
       mc mb --ignore-existing local/trustlens-listings;
@@ -165,7 +195,7 @@ services:
     image: axllent/mailpit:latest
     <<: *restart
     ports:
-      - '${MAILPIT_UI_PORT:-8025}:8025'
+      - '${LOCAL_BIND_ADDRESS:-127.0.0.1}:${MAILPIT_UI_PORT:-8025}:8025'
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
@@ -173,12 +203,14 @@ services:
   # ── Release step ───────────────────────────────────────────────────
 
   migrate:
+    # Keep optional typed settings (OAuth, providers, retention) in the same private file.
+    env_file: [../../.env.production]
     # The SAME image as the api service, not a second build of the same
     # Dockerfile. Without an explicit tag compose names it `trustlens-migrate`
     # and builds it separately - two identical 311 MB images, twice the build
     # time, and a startup that fails with "No such image" whenever the stack is
     # brought up with --no-build.
-    image: trustlens-api:latest
+    image: ${TRUSTLENS_IMAGE_PREFIX:-trustlens}-api:latest
     build:
       context: ../..
       dockerfile: docker/api.Dockerfile
@@ -194,7 +226,9 @@ services:
   # ── Application ────────────────────────────────────────────────────
 
   api:
-    image: trustlens-api:latest
+    # Keep optional typed settings (OAuth, providers, retention) in the same private file.
+    env_file: [../../.env.production]
+    image: ${TRUSTLENS_IMAGE_PREFIX:-trustlens}-api:latest
     build:
       context: ../..
       dockerfile: docker/api.Dockerfile
@@ -202,15 +236,23 @@ services:
     environment:
       <<: *backend-env
       WEB_CONCURRENCY: ${API_WORKERS:-2}
+      TRUSTLENS_CHAT_ENABLED: ${TRUSTLENS_CHAT_ENABLED:-false}
+      TRUSTLENS_GROQ_API_KEY: ${TRUSTLENS_GROQ_API_KEY:-}
+      TRUSTLENS_TAVILY_API_KEY: ${TRUSTLENS_TAVILY_API_KEY:-}
+      TRUSTLENS_CHAT_PER_MINUTE: ${TRUSTLENS_CHAT_PER_MINUTE:-4}
+      TRUSTLENS_CHAT_DAILY_REQUESTS: ${TRUSTLENS_CHAT_DAILY_REQUESTS:-120}
+      TRUSTLENS_SEARCH_MONTHLY_LIMIT: ${TRUSTLENS_SEARCH_MONTHLY_LIMIT:-900}
     ports:
-      - '${API_PORT:-8000}:8000'
+      - '${LOCAL_BIND_ADDRESS:-127.0.0.1}:${API_PORT:-8000}:8000'
     depends_on:
       postgres: { condition: service_healthy }
       redis: { condition: service_healthy }
       migrate: { condition: service_completed_successfully }
 
   worker:
-    image: trustlens-worker:latest
+    # Keep optional typed settings (OAuth, providers, retention) in the same private file.
+    env_file: [../../.env.production]
+    image: ${TRUSTLENS_IMAGE_PREFIX:-trustlens}-worker:latest
     build:
       context: ../..
       dockerfile: docker/worker.Dockerfile
@@ -229,7 +271,7 @@ services:
     mem_limit: ${WORKER_MEM_LIMIT:-768m}
 
   web:
-    image: trustlens-web:latest
+    image: ${TRUSTLENS_IMAGE_PREFIX:-trustlens}-web:latest
     build:
       context: ../..
       dockerfile: docker/web.Dockerfile
@@ -238,17 +280,29 @@ services:
         # Baked in at build time - a browser cannot read the compose
         # environment. Changing it means rebuilding, not restarting.
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+        # The new browser challenge is explicitly disabled on existing stacks.
+        NEXT_PUBLIC_LIVE_FACE_SCAN: ${NEXT_PUBLIC_LIVE_FACE_SCAN:-false}
+        # Separate opt-in: replaces only the seller's ID file inputs with webcam capture.
+        NEXT_PUBLIC_LIVE_ID_SCAN: ${NEXT_PUBLIC_LIVE_ID_SCAN:-false}
+        NEXT_PUBLIC_HOLD_ID_SCAN: ${NEXT_PUBLIC_HOLD_ID_SCAN:-false}
     <<: *restart
     environment:
+      CSP_APP_ORIGIN: ${WEB_BASE_URL:-http://localhost:3000}
+      CSP_API_ORIGIN: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      CSP_MEDIA_ORIGIN: ${CALLS_LIVEKIT_URL:-ws://localhost:7880}
+      CSP_CONNECT_ORIGINS: ${CSP_CONNECT_ORIGINS:-}
       API_BASE_URL_INTERNAL: http://api:8000
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      NEXT_PUBLIC_LIVE_FACE_SCAN: ${NEXT_PUBLIC_LIVE_FACE_SCAN:-false}
+      NEXT_PUBLIC_LIVE_ID_SCAN: ${NEXT_PUBLIC_LIVE_ID_SCAN:-false}
+      NEXT_PUBLIC_HOLD_ID_SCAN: ${NEXT_PUBLIC_HOLD_ID_SCAN:-false}
     ports:
-      - '${WEB_PORT:-3000}:3000'
+      - '${LOCAL_BIND_ADDRESS:-127.0.0.1}:${WEB_PORT:-3000}:3000'
     depends_on:
       api: { condition: service_started }
 
   admin:
-    image: trustlens-admin:latest
+    image: ${TRUSTLENS_IMAGE_PREFIX:-trustlens}-admin:latest
     build:
       context: ../..
       dockerfile: docker/web.Dockerfile
@@ -257,10 +311,13 @@ services:
         NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     <<: *restart
     environment:
+      CSP_APP_ORIGIN: ${ADMIN_BASE_URL:-http://localhost:3001}
+      CSP_API_ORIGIN: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
+      CSP_CONNECT_ORIGINS: ${CSP_CONNECT_ORIGINS:-}
       API_BASE_URL_INTERNAL: http://api:8000
       NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-http://localhost:8000}
     ports:
-      - '${ADMIN_PORT:-3001}:3000'
+      - '${LOCAL_BIND_ADDRESS:-127.0.0.1}:${ADMIN_PORT:-3001}:3000'
     depends_on:
       api: { condition: service_started }
 

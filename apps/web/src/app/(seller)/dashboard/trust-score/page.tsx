@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (seller)/dashboard/trust-score: page. */
 'use client';
 
 import { AppealForm, AppealList } from '@/features/appeals';

@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/seller/[handle]: SellerProfileTabs. */
 'use client';
 
 import { ListingCard, type PublicListing } from '@/features/marketplace';

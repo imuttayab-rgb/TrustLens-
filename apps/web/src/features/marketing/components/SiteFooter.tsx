@@ -1,21 +1,10 @@
-import { Facebook, Instagram, ShieldCheck, Twitter, Youtube } from 'lucide-react';
-import { getTranslations } from 'next-intl/server';
+/** Reusable UI rendering and interaction component: SiteFooter. */
+import { ShieldCheck } from 'lucide-react';
+import { getTranslations, getLocale } from 'next-intl/server';
 import Link from 'next/link';
 
 const LINK_CLASS =
   'rounded-sm transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
-
-/**
- * Placeholder destinations - swap each for TrustLens' real profile once one
- * exists. Kept as `#` rather than omitted so the icon row's layout (and the
- * "add your real link here" spot for each platform) is already in place.
- */
-const SOCIAL_LINKS = [
-  { icon: Facebook, label: 'Facebook', href: '#' },
-  { icon: Instagram, label: 'Instagram', href: '#' },
-  { icon: Youtube, label: 'YouTube', href: '#' },
-  { icon: Twitter, label: 'X (Twitter)', href: '#' },
-] as const;
 
 /**
  * Grouped by what a visitor is trying to do, not by when each page was
@@ -26,6 +15,7 @@ const SOCIAL_LINKS = [
  */
 export async function SiteFooter() {
   const t = await getTranslations('SiteFooter');
+  const ur = (await getLocale()) === 'ur';
 
   const columns = [
     {
@@ -48,6 +38,7 @@ export async function SiteFooter() {
       heading: t('support'),
       links: [
         { href: '/help', label: t('help') },
+        { href: '/guides', label: ur ? 'رہنمائی' : 'Marketplace guides' },
         { href: '/contact', label: t('contact') },
       ],
     },
@@ -85,22 +76,6 @@ export async function SiteFooter() {
               <span className="text-sm font-bold tracking-tight">TrustLens</span>
             </Link>
             <p className="mt-3 text-sm text-muted-foreground">{t('blurb')}</p>
-
-            <div className="mt-4 flex items-center gap-2">
-              {SOCIAL_LINKS.map((social) => {
-                const Icon = social.icon;
-                return (
-                  <a
-                    key={social.label}
-                    href={social.href}
-                    aria-label={social.label}
-                    className="grid h-8 w-8 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:border-brand/40 hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                  </a>
-                );
-              })}
-            </div>
           </div>
 
           {columns.map((column) => (

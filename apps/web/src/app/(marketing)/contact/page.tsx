@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (marketing)/contact: page. */
 import Link from 'next/link';
 
 export const metadata = {

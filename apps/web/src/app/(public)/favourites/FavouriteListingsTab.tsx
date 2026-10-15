@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/favourites: FavouriteListingsTab. */
 'use client';
 
 import { stagger, usePrefersReducedMotion } from '@/lib/motion';

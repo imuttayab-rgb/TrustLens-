@@ -1,3 +1,4 @@
+/** Localeswitcher module; defines LocaleSwitcher. */
 'use client';
 
 import { cn } from '@trustlens/utils';

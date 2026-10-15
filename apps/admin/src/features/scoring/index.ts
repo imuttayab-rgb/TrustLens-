@@ -1,3 +1,4 @@
+/** Index module in scoring. */
 export {
   useActivateScoringModel,
   useCreateScoringModel,

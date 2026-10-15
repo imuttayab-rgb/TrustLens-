@@ -1,1 +1,71 @@
 @import '@trustlens/config-tailwind/tokens.css';
+
+/* Native popup menus can ignore the transparent parent background on Windows. */
+select option,
+select optgroup {
+  color: hsl(var(--foreground));
+  background-color: hsl(var(--background));
+}
+
+/* Marketplace interactions: layout stays fixed; forms never translate on hover. */
+.tl-interactive {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+.tl-interactive:focus-within {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .tl-interactive:hover {
+    transform: translateY(-3px);
+    border-color: hsl(var(--brand) / 0.5);
+    box-shadow: 0 8px 20px hsl(var(--foreground) / 0.07);
+  }
+  .tl-category-picture {
+    transition: transform 180ms ease;
+  }
+  .tl-interactive:hover .tl-category-picture {
+    transform: scale(1.04);
+  }
+}
+/* Opaque mint/navy surface: do not depend on an undefined Tailwind token. */
+.tl-mega-panel {
+  position: fixed;
+  inset-inline: max(3vw, calc((100vw - 1280px) / 2));
+  top: var(--mega-top, 230px);
+  max-height: calc(100dvh - var(--mega-top, 230px) - 16px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: hsl(var(--foreground));
+  background-color: #f2f8f7;
+  z-index: 60;
+  scrollbar-gutter: stable;
+}
+.dark .tl-mega-panel {
+  background-color: #10232c;
+}
+@media (max-width: 767px) {
+  .tl-mega-panel {
+    inset-inline: 12px;
+    top: 12px;
+    max-height: calc(100dvh - 24px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .tl-interactive:hover,
+  .tl-interactive:hover .tl-category-picture,
+  .tl-listing-card:hover img {
+    transform: none !important;
+  }
+}

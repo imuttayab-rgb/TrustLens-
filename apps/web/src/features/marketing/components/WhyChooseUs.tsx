@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: WhyChooseUs. */
 'use client';
 
 import { stagger, useInView, usePrefersReducedMotion } from '@/lib/motion';

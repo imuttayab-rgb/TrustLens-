@@ -1,3 +1,4 @@
+/** Use session module; defines SessionUser, useSession. */
 'use client';
 
 import { api } from '@/lib/api/client';

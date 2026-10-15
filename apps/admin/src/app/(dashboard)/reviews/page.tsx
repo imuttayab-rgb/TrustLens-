@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/reviews: page. */
 'use client';
 
 import { ReviewQueue } from '@/features/review';

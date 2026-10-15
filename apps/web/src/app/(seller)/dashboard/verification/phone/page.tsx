@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (seller)/dashboard/verification/phone: page. */
 import { PhoneVerification } from '@/features/verification';
 import type { Metadata } from 'next';
 import Link from 'next/link';

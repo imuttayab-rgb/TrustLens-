@@ -1,6 +1,26 @@
 {
   "components": {
     "schemas": {
+      "AdAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "pause",
+              "resume",
+              "renew",
+              "sold"
+            ],
+            "title": "Action",
+            "type": "string"
+          }
+        },
+        "required": [
+          "action"
+        ],
+        "title": "AdAction",
+        "type": "object"
+      },
       "AddFavoriteRequest": {
         "additionalProperties": false,
         "properties": {
@@ -10,7 +30,9 @@
             "type": "string"
           }
         },
-        "required": ["listingId"],
+        "required": [
+          "listingId"
+        ],
         "title": "AddFavoriteRequest",
         "type": "object"
       },
@@ -29,8 +51,41 @@
             "type": "boolean"
           }
         },
-        "required": ["body"],
+        "required": [
+          "body"
+        ],
         "title": "AppealMessageRequest",
+        "type": "object"
+      },
+      "AssistantStatus": {
+        "additionalProperties": false,
+        "properties": {
+          "freePlanRequired": {
+            "default": true,
+            "title": "Freeplanrequired",
+            "type": "boolean"
+          },
+          "provider": {
+            "default": "Groq",
+            "title": "Provider",
+            "type": "string"
+          },
+          "ready": {
+            "title": "Ready",
+            "type": "boolean"
+          },
+          "webReady": {
+            "title": "Webready",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "ready",
+          "webReady",
+          "provider",
+          "freePlanRequired"
+        ],
+        "title": "AssistantStatus",
         "type": "object"
       },
       "BatchLookupRequest": {
@@ -46,7 +101,9 @@
             "type": "array"
           }
         },
-        "required": ["sellerRefs"],
+        "required": [
+          "sellerRefs"
+        ],
         "title": "BatchLookupRequest",
         "type": "object"
       },
@@ -69,7 +126,9 @@
             "type": "array"
           }
         },
-        "required": ["results"],
+        "required": [
+          "results"
+        ],
         "title": "BatchLookupResponse",
         "type": "object"
       },
@@ -132,7 +191,9 @@
             "type": "string"
           }
         },
-        "required": ["displayName"],
+        "required": [
+          "displayName"
+        ],
         "title": "BecomeSellerRequest",
         "type": "object"
       },
@@ -145,8 +206,58 @@
             "type": "string"
           }
         },
-        "required": ["blockedUserId"],
+        "required": [
+          "blockedUserId"
+        ],
         "title": "BlockUserRequest",
+        "type": "object"
+      },
+      "CallAction": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "ring",
+              "accept",
+              "reject",
+              "sync",
+              "end",
+              "failed"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "connected": {
+            "default": false,
+            "title": "Connected",
+            "type": "boolean"
+          },
+          "deviceId": {
+            "format": "uuid",
+            "title": "Deviceid",
+            "type": "string"
+          },
+          "health": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Health"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "muted": {
+            "default": false,
+            "title": "Muted",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deviceId",
+          "action"
+        ],
+        "title": "CallAction",
         "type": "object"
       },
       "CancelTransactionRequest": {
@@ -159,7 +270,9 @@
             "type": "string"
           }
         },
-        "required": ["reason"],
+        "required": [
+          "reason"
+        ],
         "title": "CancelTransactionRequest",
         "type": "object"
       },
@@ -179,8 +292,186 @@
             "type": "string"
           }
         },
-        "required": ["currentPassword", "newPassword"],
+        "required": [
+          "currentPassword",
+          "newPassword"
+        ],
         "title": "ChangePasswordRequest",
+        "type": "object"
+      },
+      "ChatMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "maxLength": 2500,
+            "minLength": 1,
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "ChatMessage",
+        "type": "object"
+      },
+      "ChatReply": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "title": "Answer",
+            "type": "string"
+          },
+          "listings": {
+            "$ref": "#/components/schemas/ListingResults"
+          },
+          "marketOptions": {
+            "items": {
+              "$ref": "#/components/schemas/MarketOption"
+            },
+            "title": "Marketoptions",
+            "type": "array"
+          },
+          "mode": {
+            "default": "ai",
+            "enum": [
+              "ai",
+              "listings-only"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/WebSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          },
+          "webSearched": {
+            "default": false,
+            "title": "Websearched",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "answer",
+          "listings",
+          "marketOptions",
+          "sources",
+          "webSearched",
+          "warnings",
+          "mode"
+        ],
+        "title": "ChatReply",
+        "type": "object"
+      },
+      "ChatReportRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 4000,
+            "minLength": 10,
+            "title": "Description",
+            "type": "string"
+          },
+          "messageId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Messageid"
+          },
+          "reason": {
+            "enum": [
+              "sensitive_information",
+              "delivery_issue",
+              "harassment",
+              "other"
+            ],
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "reason"
+        ],
+        "title": "ChatReportRequest",
+        "type": "object"
+      },
+      "ChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "compareIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Compareids",
+            "type": "array"
+          },
+          "currentListingId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currentlistingid"
+          },
+          "filters": {
+            "$ref": "#/components/schemas/SearchFilters-Input"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/ChatMessage"
+            },
+            "maxItems": 10,
+            "title": "History",
+            "type": "array"
+          },
+          "marketSearch": {
+            "default": true,
+            "title": "Marketsearch",
+            "type": "boolean"
+          },
+          "message": {
+            "maxLength": 1800,
+            "minLength": 1,
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "title": "ChatRequest",
         "type": "object"
       },
       "CreateAuctionRequest": {
@@ -217,7 +508,10 @@
             "type": "number"
           }
         },
-        "required": ["startingPrice", "durationHours"],
+        "required": [
+          "startingPrice",
+          "durationHours"
+        ],
         "title": "CreateAuctionRequest",
         "type": "object"
       },
@@ -237,7 +531,10 @@
             "type": "integer"
           }
         },
-        "required": ["installmentCount", "frequencyDays"],
+        "required": [
+          "installmentCount",
+          "frequencyDays"
+        ],
         "title": "CreateInstallmentPlanRequest",
         "type": "object"
       },
@@ -298,7 +595,13 @@
             "title": "Notes"
           }
         },
-        "required": ["name", "address", "city", "latitude", "longitude"],
+        "required": [
+          "name",
+          "address",
+          "city",
+          "latitude",
+          "longitude"
+        ],
         "title": "CreateMeetingVenueRequest",
         "type": "object"
       },
@@ -337,7 +640,9 @@
             "type": "integer"
           }
         },
-        "required": ["amount"],
+        "required": [
+          "amount"
+        ],
         "title": "CreateOfferRequest",
         "type": "object"
       },
@@ -364,7 +669,12 @@
             "type": "string"
           }
         },
-        "required": ["targetType", "targetId", "category", "description"],
+        "required": [
+          "targetType",
+          "targetId",
+          "category",
+          "description"
+        ],
         "title": "CreateReportRequest",
         "type": "object"
       },
@@ -390,7 +700,9 @@
             "type": "integer"
           }
         },
-        "required": ["rating"],
+        "required": [
+          "rating"
+        ],
         "title": "CreateReviewRequest",
         "type": "object"
       },
@@ -419,6 +731,18 @@
             ],
             "title": "Category"
           },
+          "categoryNodeId": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorynodeid"
+          },
           "city": {
             "anyOf": [
               {
@@ -429,6 +753,12 @@
               }
             ],
             "title": "City"
+          },
+          "facets": {
+            "additionalProperties": true,
+            "maxProperties": 12,
+            "title": "Facets",
+            "type": "object"
           },
           "maxPrice": {
             "anyOf": [
@@ -472,7 +802,9 @@
             "title": "Q"
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "CreateSavedSearchRequest",
         "type": "object"
       },
@@ -511,8 +843,46 @@
             "type": "array"
           }
         },
-        "required": ["version", "name", "weights"],
+        "required": [
+          "version",
+          "name",
+          "weights"
+        ],
         "title": "CreateScoringModelRequest",
+        "type": "object"
+      },
+      "CursorMeta": {
+        "additionalProperties": false,
+        "properties": {
+          "hasNext": {
+            "default": false,
+            "title": "Hasnext",
+            "type": "boolean"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next"
+          },
+          "prev": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev"
+          }
+        },
+        "title": "CursorMeta",
         "type": "object"
       },
       "DecideReviewRequest": {
@@ -529,7 +899,10 @@
             "type": "string"
           }
         },
-        "required": ["approve", "note"],
+        "required": [
+          "approve",
+          "note"
+        ],
         "title": "DecideReviewRequest",
         "type": "object"
       },
@@ -543,8 +916,117 @@
             "type": "string"
           }
         },
-        "required": ["password"],
+        "required": [
+          "password"
+        ],
         "title": "DeleteAccountRequest",
+        "type": "object"
+      },
+      "DescriptionReply": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Description",
+            "type": "string"
+          },
+          "missingDetails": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Missingdetails",
+            "type": "array"
+          },
+          "mode": {
+            "default": "ai",
+            "enum": [
+              "ai",
+              "template"
+            ],
+            "title": "Mode",
+            "type": "string"
+          }
+        },
+        "required": [
+          "description",
+          "missingDetails",
+          "mode"
+        ],
+        "title": "DescriptionReply",
+        "type": "object"
+      },
+      "DescriptionRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "maxLength": 80,
+            "title": "Category",
+            "type": "string"
+          },
+          "condition": {
+            "enum": [
+              "NEW",
+              "LIKE_NEW",
+              "USED",
+              "FOR_PARTS"
+            ],
+            "title": "Condition",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "maxProperties": 24,
+            "title": "Facts",
+            "type": "object"
+          },
+          "language": {
+            "default": "en",
+            "enum": [
+              "en",
+              "ur",
+              "roman-ur"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 1500,
+            "title": "Notes",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 3,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "category",
+          "condition"
+        ],
+        "title": "DescriptionRequest",
+        "type": "object"
+      },
+      "Device": {
+        "additionalProperties": false,
+        "properties": {
+          "deviceId": {
+            "format": "uuid",
+            "title": "Deviceid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "deviceId"
+        ],
+        "title": "Device",
         "type": "object"
       },
       "DeviceFingerprintRequest": {
@@ -604,8 +1086,309 @@
             "title": "Useragent"
           }
         },
-        "required": ["fingerprint"],
+        "required": [
+          "fingerprint"
+        ],
         "title": "DeviceFingerprintRequest",
+        "type": "object"
+      },
+      "EditChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "body": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Body",
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ],
+        "title": "EditChatRequest",
+        "type": "object"
+      },
+      "EnhanceReply": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "maxLength": 8000,
+            "minLength": 10,
+            "title": "Description",
+            "type": "string"
+          },
+          "missingDetails": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 5,
+            "title": "Missingdetails",
+            "type": "array"
+          },
+          "photoHints": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 3,
+            "title": "Photohints",
+            "type": "array"
+          },
+          "photosChecked": {
+            "default": 0,
+            "title": "Photoschecked",
+            "type": "integer"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/WebSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "specs": {
+            "items": {
+              "$ref": "#/components/schemas/ProductSpec"
+            },
+            "maxItems": 24,
+            "title": "Specs",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "maxItems": 8,
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "description",
+          "specs",
+          "sources",
+          "warnings",
+          "missingDetails",
+          "photoHints",
+          "photosChecked"
+        ],
+        "title": "EnhanceReply",
+        "type": "object"
+      },
+      "EnhanceRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "maxLength": 80,
+            "title": "Category",
+            "type": "string"
+          },
+          "categoryNodeId": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorynodeid"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "enum": [
+                  "NEW",
+                  "LIKE_NEW",
+                  "USED",
+                  "FOR_PARTS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "description": {
+            "default": "",
+            "maxLength": 8000,
+            "title": "Description",
+            "type": "string"
+          },
+          "facts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "maxProperties": 24,
+            "title": "Facts",
+            "type": "object"
+          },
+          "language": {
+            "default": "en",
+            "enum": [
+              "en",
+              "ur",
+              "roman-ur"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "listingId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Listingid"
+          },
+          "notes": {
+            "default": "",
+            "maxLength": 1500,
+            "title": "Notes",
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 80,
+            "minLength": 3,
+            "title": "Title",
+            "type": "string"
+          },
+          "usePhotos": {
+            "default": true,
+            "title": "Usephotos",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "title",
+          "category"
+        ],
+        "title": "EnhanceRequest",
+        "type": "object"
+      },
+      "Envelope_AssistantStatus_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/AssistantStatus"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[AssistantStatus]",
+        "type": "object"
+      },
+      "Envelope_ChatReply_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ChatReply"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[ChatReply]",
+        "type": "object"
+      },
+      "Envelope_DescriptionReply_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/DescriptionReply"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[DescriptionReply]",
+        "type": "object"
+      },
+      "Envelope_EnhanceReply_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/EnhanceReply"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[EnhanceReply]",
+        "type": "object"
+      },
+      "Envelope_ListingResults_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ListingResults"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[ListingResults]",
+        "type": "object"
+      },
+      "Envelope_ResearchReply_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/ResearchReply"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[ResearchReply]",
+        "type": "object"
+      },
+      "Envelope_SuggestionsReply_": {
+        "additionalProperties": false,
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/SuggestionsReply"
+          },
+          "meta": {
+            "$ref": "#/components/schemas/ResponseMeta"
+          }
+        },
+        "required": [
+          "data",
+          "meta"
+        ],
+        "title": "Envelope[SuggestionsReply]",
         "type": "object"
       },
       "FollowSellerRequest": {
@@ -618,7 +1401,9 @@
             "type": "string"
           }
         },
-        "required": ["handle"],
+        "required": [
+          "handle"
+        ],
         "title": "FollowSellerRequest",
         "type": "object"
       },
@@ -631,8 +1416,26 @@
             "type": "string"
           }
         },
-        "required": ["email"],
+        "required": [
+          "email"
+        ],
         "title": "ForgotPasswordRequest",
+        "type": "object"
+      },
+      "GoogleMfaRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Code",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code"
+        ],
+        "title": "GoogleMfaRequest",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -646,6 +1449,66 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "Health": {
+        "additionalProperties": false,
+        "properties": {
+          "packetsLost": {
+            "default": 0,
+            "maximum": 2147483647.0,
+            "minimum": 0.0,
+            "title": "Packetslost",
+            "type": "integer"
+          },
+          "quality": {
+            "default": "unknown",
+            "enum": [
+              "unknown",
+              "excellent",
+              "good",
+              "poor",
+              "lost"
+            ],
+            "title": "Quality",
+            "type": "string"
+          },
+          "receivedBytes": {
+            "default": 0,
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Receivedbytes",
+            "type": "integer"
+          },
+          "sentBytes": {
+            "default": 0,
+            "maximum": 9007199254740991.0,
+            "minimum": 0.0,
+            "title": "Sentbytes",
+            "type": "integer"
+          }
+        },
+        "title": "Health",
+        "type": "object"
+      },
+      "ImageOrderRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "imageIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Imageids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "imageIds"
+        ],
+        "title": "ImageOrderRequest",
         "type": "object"
       },
       "IssueKeyRequest": {
@@ -677,8 +1540,144 @@
             "type": "array"
           }
         },
-        "required": ["name"],
+        "required": [
+          "name"
+        ],
         "title": "IssueKeyRequest",
+        "type": "object"
+      },
+      "ListingCard": {
+        "additionalProperties": false,
+        "properties": {
+          "area": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Area"
+          },
+          "attributes": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Attributes",
+            "type": "object"
+          },
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Currency"
+          },
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "identityVerified": {
+            "default": false,
+            "title": "Identityverified",
+            "type": "boolean"
+          },
+          "imageUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Imageurl"
+          },
+          "price": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Price"
+          },
+          "score": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Score"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "price",
+          "currency",
+          "category",
+          "condition",
+          "city",
+          "area",
+          "imageUrl",
+          "href",
+          "score",
+          "identityVerified",
+          "attributes"
+        ],
+        "title": "ListingCard",
         "type": "object"
       },
       "ListingImageRequest": {
@@ -692,14 +1691,67 @@
             "type": "string"
           }
         },
-        "required": ["fileId"],
+        "required": [
+          "fileId"
+        ],
         "title": "ListingImageRequest",
+        "type": "object"
+      },
+      "ListingResults": {
+        "additionalProperties": false,
+        "properties": {
+          "filters": {
+            "$ref": "#/components/schemas/SearchFilters-Output"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ListingCard"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextOffset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextoffset"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total",
+          "nextOffset",
+          "filters"
+        ],
+        "title": "ListingResults",
         "type": "object"
       },
       "ListingWriteRequest": {
         "additionalProperties": false,
         "description": "Create or replace a listing.\n\nEvery field here is attacker-controlled - a seller writes it and an LLM\nlater reads it. The length caps are the first line of defence: they bound\nwhat can be pushed into a prompt at all. The second line is that the\nanalyser's verdict can only move one bounded signal (ADR-0002).",
         "properties": {
+          "addressLine": {
+            "anyOf": [
+              {
+                "maxLength": 300,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Addressline"
+          },
           "area": {
             "anyOf": [
               {
@@ -731,6 +1783,18 @@
               }
             ],
             "title": "Category"
+          },
+          "categoryNodeId": {
+            "anyOf": [
+              {
+                "maxLength": 240,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Categorynodeid"
           },
           "city": {
             "anyOf": [
@@ -831,6 +1895,17 @@
             ],
             "title": "Price"
           },
+          "showPhone": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Showphone"
+          },
           "title": {
             "maxLength": 250,
             "minLength": 3,
@@ -850,7 +1925,10 @@
             "title": "Videofileid"
           }
         },
-        "required": ["title", "description"],
+        "required": [
+          "title",
+          "description"
+        ],
         "title": "ListingWriteRequest",
         "type": "object"
       },
@@ -881,8 +1959,41 @@
             "type": "string"
           }
         },
-        "required": ["email", "password"],
+        "required": [
+          "email",
+          "password"
+        ],
         "title": "LoginRequest",
+        "type": "object"
+      },
+      "MarketOption": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "maxLength": 140,
+            "title": "Name",
+            "type": "string"
+          },
+          "sourceIds": {
+            "items": {
+              "type": "integer"
+            },
+            "maxItems": 6,
+            "title": "Sourceids",
+            "type": "array"
+          },
+          "summary": {
+            "maxLength": 500,
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "summary",
+          "sourceIds"
+        ],
+        "title": "MarketOption",
         "type": "object"
       },
       "MfaConfirmRequest": {
@@ -895,7 +2006,9 @@
             "type": "string"
           }
         },
-        "required": ["code"],
+        "required": [
+          "code"
+        ],
         "title": "MfaConfirmRequest",
         "type": "object"
       },
@@ -909,7 +2022,9 @@
             "type": "string"
           }
         },
-        "required": ["password"],
+        "required": [
+          "password"
+        ],
         "title": "MfaDisableRequest",
         "type": "object"
       },
@@ -930,8 +2045,87 @@
             "type": "string"
           }
         },
-        "required": ["mfaToken", "code"],
+        "required": [
+          "mfaToken",
+          "code"
+        ],
         "title": "MfaVerifyRequest",
+        "type": "object"
+      },
+      "ModerateChatRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "messageId": {
+            "format": "uuid",
+            "title": "Messageid",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "messageId",
+          "reason"
+        ],
+        "title": "ModerateChatRequest",
+        "type": "object"
+      },
+      "NameConfirmation": {
+        "additionalProperties": false,
+        "properties": {
+          "fullName": {
+            "maxLength": 150,
+            "minLength": 2,
+            "title": "Fullname",
+            "type": "string"
+          },
+          "note": {
+            "default": "",
+            "maxLength": 1000,
+            "title": "Note",
+            "type": "string"
+          },
+          "publicNameConsent": {
+            "const": true,
+            "title": "Publicnameconsent",
+            "type": "boolean"
+          },
+          "requestReview": {
+            "default": false,
+            "title": "Requestreview",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fullName",
+          "publicNameConsent"
+        ],
+        "title": "NameConfirmation",
+        "type": "object"
+      },
+      "NameDecision": {
+        "additionalProperties": false,
+        "properties": {
+          "approve": {
+            "title": "Approve",
+            "type": "boolean"
+          },
+          "note": {
+            "maxLength": 1000,
+            "minLength": 10,
+            "title": "Note",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approve",
+          "note"
+        ],
+        "title": "NameDecision",
         "type": "object"
       },
       "OverrideScoreRequest": {
@@ -950,8 +2144,50 @@
             "type": "integer"
           }
         },
-        "required": ["score", "reason"],
+        "required": [
+          "score",
+          "reason"
+        ],
         "title": "OverrideScoreRequest",
+        "type": "object"
+      },
+      "PageMeta": {
+        "additionalProperties": false,
+        "properties": {
+          "hasNext": {
+            "title": "Hasnext",
+            "type": "boolean"
+          },
+          "hasPrev": {
+            "title": "Hasprev",
+            "type": "boolean"
+          },
+          "page": {
+            "title": "Page",
+            "type": "integer"
+          },
+          "perPage": {
+            "title": "Perpage",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "totalPages": {
+            "title": "Totalpages",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "page",
+          "perPage",
+          "total",
+          "totalPages",
+          "hasNext",
+          "hasPrev"
+        ],
+        "title": "PageMeta",
         "type": "object"
       },
       "PlaceBidRequest": {
@@ -963,8 +2199,226 @@
             "type": "number"
           }
         },
-        "required": ["amount"],
+        "required": [
+          "amount"
+        ],
         "title": "PlaceBidRequest",
+        "type": "object"
+      },
+      "PrivateAddress": {
+        "additionalProperties": false,
+        "properties": {
+          "addressLine": {
+            "maxLength": 300,
+            "minLength": 5,
+            "title": "Addressline",
+            "type": "string"
+          },
+          "area": {
+            "default": "",
+            "maxLength": 120,
+            "title": "Area",
+            "type": "string"
+          },
+          "city": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "City",
+            "type": "string"
+          },
+          "id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "label": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Label",
+            "type": "string"
+          },
+          "province": {
+            "default": "",
+            "maxLength": 80,
+            "title": "Province",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "city",
+          "addressLine"
+        ],
+        "title": "PrivateAddress",
+        "type": "object"
+      },
+      "PrivateSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "addresses": {
+            "items": {
+              "$ref": "#/components/schemas/PrivateAddress"
+            },
+            "maxItems": 10,
+            "title": "Addresses",
+            "type": "array"
+          },
+          "dateOfBirth": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dateofbirth"
+          },
+          "gender": {
+            "anyOf": [
+              {
+                "enum": [
+                  "Woman",
+                  "Man",
+                  "Non-binary",
+                  "Self-described",
+                  "Prefer not to say"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gender"
+          },
+          "version": {
+            "default": 0,
+            "minimum": 0.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "title": "PrivateSettings",
+        "type": "object"
+      },
+      "ProductResearchRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "language": {
+            "default": "en",
+            "enum": [
+              "en",
+              "ur",
+              "roman-ur"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "product": {
+            "maxLength": 160,
+            "minLength": 3,
+            "title": "Product",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product"
+        ],
+        "title": "ProductResearchRequest",
+        "type": "object"
+      },
+      "ProductSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "key": {
+            "maxLength": 60,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "value": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ],
+        "title": "ProductSpec",
+        "type": "object"
+      },
+      "ProfileEdit": {
+        "additionalProperties": false,
+        "properties": {
+          "bio": {
+            "anyOf": [
+              {
+                "maxLength": 1000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bio"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "confirmUsername": {
+            "default": false,
+            "title": "Confirmusername",
+            "type": "boolean"
+          },
+          "handle": {
+            "maxLength": 64,
+            "minLength": 3,
+            "title": "Handle",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "handle",
+          "version"
+        ],
+        "title": "ProfileEdit",
         "type": "object"
       },
       "ProposeMeetupRequest": {
@@ -993,7 +2447,10 @@
             "type": "string"
           }
         },
-        "required": ["venueId", "proposedTime"],
+        "required": [
+          "venueId",
+          "proposedTime"
+        ],
         "title": "ProposeMeetupRequest",
         "type": "object"
       },
@@ -1022,7 +2479,11 @@
             "type": "string"
           }
         },
-        "required": ["code", "impact", "text"],
+        "required": [
+          "code",
+          "impact",
+          "text"
+        ],
         "title": "PublicReasonModel",
         "type": "object"
       },
@@ -1163,8 +2624,52 @@
             "type": "string"
           }
         },
-        "required": ["status", "scoringModelVersion", "apiVersion"],
+        "required": [
+          "status",
+          "scoringModelVersion",
+          "apiVersion"
+        ],
         "title": "PublicStatusResponse",
+        "type": "object"
+      },
+      "PushKeys": {
+        "additionalProperties": false,
+        "properties": {
+          "auth": {
+            "maxLength": 50,
+            "title": "Auth",
+            "type": "string"
+          },
+          "p256Dh": {
+            "maxLength": 150,
+            "title": "P256Dh",
+            "type": "string"
+          }
+        },
+        "required": [
+          "p256Dh",
+          "auth"
+        ],
+        "title": "PushKeys",
+        "type": "object"
+      },
+      "PushSubscription": {
+        "additionalProperties": false,
+        "properties": {
+          "endpoint": {
+            "maxLength": 2048,
+            "title": "Endpoint",
+            "type": "string"
+          },
+          "keys": {
+            "$ref": "#/components/schemas/PushKeys"
+          }
+        },
+        "required": [
+          "endpoint",
+          "keys"
+        ],
+        "title": "PushSubscription",
         "type": "object"
       },
       "RaiseDisputeRequest": {
@@ -1181,7 +2686,10 @@
             "type": "string"
           }
         },
-        "required": ["category", "description"],
+        "required": [
+          "category",
+          "description"
+        ],
         "title": "RaiseDisputeRequest",
         "type": "object"
       },
@@ -1226,7 +2734,11 @@
             "type": "string"
           }
         },
-        "required": ["name", "slug", "contactEmail"],
+        "required": [
+          "name",
+          "slug",
+          "contactEmail"
+        ],
         "title": "RegisterPartnerRequest",
         "type": "object"
       },
@@ -1261,7 +2773,12 @@
             "type": "string"
           }
         },
-        "required": ["email", "password", "fullName", "acceptedTerms"],
+        "required": [
+          "email",
+          "password",
+          "fullName",
+          "acceptedTerms"
+        ],
         "title": "RegisterRequest",
         "type": "object"
       },
@@ -1276,8 +2793,48 @@
             "type": "string"
           }
         },
-        "required": ["phoneNumber"],
+        "required": [
+          "phoneNumber"
+        ],
         "title": "RequestOtpRequest",
+        "type": "object"
+      },
+      "ResearchReply": {
+        "additionalProperties": false,
+        "properties": {
+          "questions": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Questions",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/WebSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "specs": {
+            "items": {
+              "$ref": "#/components/schemas/SourcedSpec"
+            },
+            "title": "Specs",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          }
+        },
+        "required": [
+          "summary",
+          "specs",
+          "sources",
+          "questions"
+        ],
+        "title": "ResearchReply",
         "type": "object"
       },
       "ResetPasswordRequest": {
@@ -1296,7 +2853,10 @@
             "type": "string"
           }
         },
-        "required": ["token", "password"],
+        "required": [
+          "token",
+          "password"
+        ],
         "title": "ResetPasswordRequest",
         "type": "object"
       },
@@ -1327,7 +2887,10 @@
             "title": "Overridescore"
           }
         },
-        "required": ["decision", "note"],
+        "required": [
+          "decision",
+          "note"
+        ],
         "title": "ResolveAppealRequest",
         "type": "object"
       },
@@ -1339,7 +2902,9 @@
             "type": "string"
           }
         },
-        "required": ["outcome"],
+        "required": [
+          "outcome"
+        ],
         "title": "ResolveDisputeRequest",
         "type": "object"
       },
@@ -1362,7 +2927,9 @@
             "type": "string"
           }
         },
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "title": "ResolveReportRequest",
         "type": "object"
       },
@@ -1374,7 +2941,9 @@
             "type": "boolean"
           }
         },
-        "required": ["accept"],
+        "required": [
+          "accept"
+        ],
         "title": "RespondToMeetupRequest",
         "type": "object"
       },
@@ -1386,12 +2955,90 @@
             "type": "boolean"
           }
         },
-        "required": ["accept"],
+        "required": [
+          "accept"
+        ],
         "title": "RespondToOfferRequest",
         "type": "object"
       },
+      "ResponseMeta": {
+        "additionalProperties": false,
+        "properties": {
+          "cached": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cached"
+          },
+          "cursor": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CursorMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "pagination": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PageMeta"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "requestId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requestid"
+          },
+          "timestamp": {
+            "format": "date-time",
+            "title": "Timestamp",
+            "type": "string"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "timestamp"
+        ],
+        "title": "ResponseMeta",
+        "type": "object"
+      },
       "RiskLevel": {
-        "enum": ["LOW", "MEDIUM", "HIGH", "UNKNOWN"],
+        "enum": [
+          "LOW",
+          "MEDIUM",
+          "HIGH",
+          "UNKNOWN"
+        ],
         "title": "RiskLevel",
         "type": "string"
       },
@@ -1430,18 +3077,228 @@
             "type": "number"
           }
         },
-        "required": ["signal_code", "weight"],
+        "required": [
+          "signal_code",
+          "weight"
+        ],
         "title": "ScoringWeightInput",
+        "type": "object"
+      },
+      "SearchFilters-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "enum": [
+                  "NEW",
+                  "LIKE_NEW",
+                  "USED",
+                  "FOR_PARTS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "maxPrice": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxprice"
+          },
+          "minPrice": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minprice"
+          },
+          "offset": {
+            "default": 0,
+            "maximum": 300.0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        },
+        "title": "SearchFilters",
+        "type": "object"
+      },
+      "SearchFilters-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "city": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "City"
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "enum": [
+                  "NEW",
+                  "LIKE_NEW",
+                  "USED",
+                  "FOR_PARTS"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Condition"
+          },
+          "maxPrice": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Maxprice"
+          },
+          "minPrice": {
+            "anyOf": [
+              {
+                "maximum": 1000000000.0,
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Minprice"
+          },
+          "offset": {
+            "default": 0,
+            "maximum": 300.0,
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "q": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Q"
+          }
+        },
+        "required": [
+          "category",
+          "q",
+          "city",
+          "condition",
+          "minPrice",
+          "maxPrice",
+          "offset"
+        ],
+        "title": "SearchFilters",
         "type": "object"
       },
       "SendMessageRequest": {
         "additionalProperties": false,
         "properties": {
           "body": {
+            "default": "",
             "maxLength": 4000,
-            "minLength": 1,
             "title": "Body",
             "type": "string"
+          },
+          "clientId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Clientid"
           },
           "conversationId": {
             "anyOf": [
@@ -1455,6 +3312,18 @@
             ],
             "title": "Conversationid"
           },
+          "forwardId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Forwardid"
+          },
           "listingId": {
             "anyOf": [
               {
@@ -1466,10 +3335,35 @@
               }
             ],
             "title": "Listingid"
+          },
+          "replyToId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Replytoid"
           }
         },
-        "required": ["body"],
         "title": "SendMessageRequest",
+        "type": "object"
+      },
+      "SetImportantRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "important": {
+            "title": "Important",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "important"
+        ],
+        "title": "SetImportantRequest",
         "type": "object"
       },
       "SetMutedRequest": {
@@ -1480,7 +3374,9 @@
             "type": "boolean"
           }
         },
-        "required": ["muted"],
+        "required": [
+          "muted"
+        ],
         "title": "SetMutedRequest",
         "type": "object"
       },
@@ -1492,8 +3388,72 @@
             "type": "string"
           }
         },
-        "required": ["status"],
+        "required": [
+          "status"
+        ],
         "title": "SetStatusRequest",
+        "type": "object"
+      },
+      "SourcedSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence": {
+            "maxLength": 350,
+            "minLength": 4,
+            "title": "Evidence",
+            "type": "string"
+          },
+          "key": {
+            "maxLength": 40,
+            "minLength": 1,
+            "title": "Key",
+            "type": "string"
+          },
+          "sourceId": {
+            "title": "Sourceid",
+            "type": "integer"
+          },
+          "value": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "key",
+          "value",
+          "sourceId",
+          "evidence"
+        ],
+        "title": "SourcedSpec",
+        "type": "object"
+      },
+      "StartCall": {
+        "additionalProperties": false,
+        "properties": {
+          "callId": {
+            "format": "uuid",
+            "title": "Callid",
+            "type": "string"
+          },
+          "conversationId": {
+            "format": "uuid",
+            "title": "Conversationid",
+            "type": "string"
+          },
+          "deviceId": {
+            "format": "uuid",
+            "title": "Deviceid",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conversationId",
+          "callId",
+          "deviceId"
+        ],
+        "title": "StartCall",
         "type": "object"
       },
       "SubmitAppealRequest": {
@@ -1515,7 +3475,11 @@
             "type": "string"
           }
         },
-        "required": ["trustScoreId", "reasonCategory", "reason"],
+        "required": [
+          "trustScoreId",
+          "reasonCategory",
+          "reason"
+        ],
         "title": "SubmitAppealRequest",
         "type": "object"
       },
@@ -1540,7 +3504,11 @@
             "type": "string"
           }
         },
-        "required": ["legalName", "registrationNumber", "documentFileId"],
+        "required": [
+          "legalName",
+          "registrationNumber",
+          "documentFileId"
+        ],
         "title": "SubmitBusinessVerificationRequest",
         "type": "object"
       },
@@ -1561,14 +3529,137 @@
             "title": "Cnicfrontfileid",
             "type": "string"
           },
+          "holdIdFileId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Holdidfileid"
+          },
           "selfieFileId": {
             "format": "uuid",
             "title": "Selfiefileid",
             "type": "string"
           }
         },
-        "required": ["cnicFrontFileId", "cnicBackFileId", "selfieFileId", "biometricConsent"],
+        "required": [
+          "cnicFrontFileId",
+          "cnicBackFileId",
+          "selfieFileId",
+          "biometricConsent"
+        ],
         "title": "SubmitIdentityRequest",
+        "type": "object"
+      },
+      "Suggestion": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Category"
+          },
+          "kind": {
+            "default": "suggestion",
+            "enum": [
+              "listing",
+              "suggestion"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "text",
+          "query",
+          "category",
+          "kind"
+        ],
+        "title": "Suggestion",
+        "type": "object"
+      },
+      "SuggestionsReply": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "nextOffset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Nextoffset"
+          },
+          "total": {
+            "default": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "fields",
+          "total",
+          "nextOffset"
+        ],
+        "title": "SuggestionsReply",
+        "type": "object"
+      },
+      "UndoClearRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "undoToken": {
+            "format": "uuid",
+            "title": "Undotoken",
+            "type": "string"
+          }
+        },
+        "required": [
+          "undoToken"
+        ],
+        "title": "UndoClearRequest",
         "type": "object"
       },
       "UpdateSellerRequest": {
@@ -1672,7 +3763,7 @@
             "title": "Filename"
           },
           "purpose": {
-            "description": "CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE | LISTING_VIDEO",
+            "description": "CNIC_FRONT | CNIC_BACK | SELFIE | HOLD_ID | LISTING_IMAGE | LISTING_VIDEO",
             "title": "Purpose",
             "type": "string"
           },
@@ -1682,7 +3773,11 @@
             "type": "integer"
           }
         },
-        "required": ["purpose", "contentType", "sizeBytes"],
+        "required": [
+          "purpose",
+          "contentType",
+          "sizeBytes"
+        ],
         "title": "UploadIntentRequest",
         "type": "object"
       },
@@ -1718,7 +3813,11 @@
             "type": "string"
           }
         },
-        "required": ["loc", "msg", "type"],
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
         "title": "ValidationError",
         "type": "object"
       },
@@ -1732,7 +3831,9 @@
             "type": "string"
           }
         },
-        "required": ["token"],
+        "required": [
+          "token"
+        ],
         "title": "VerifyEmailRequest",
         "type": "object"
       },
@@ -1747,8 +3848,44 @@
             "type": "string"
           }
         },
-        "required": ["code"],
+        "required": [
+          "code"
+        ],
         "title": "VerifyOtpRequest",
+        "type": "object"
+      },
+      "WebSource": {
+        "additionalProperties": false,
+        "properties": {
+          "checkedAt": {
+            "title": "Checkedat",
+            "type": "string"
+          },
+          "excerpt": {
+            "title": "Excerpt",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "url",
+          "excerpt",
+          "checkedAt"
+        ],
+        "title": "WebSource",
         "type": "object"
       }
     }
@@ -1858,7 +3995,9 @@
           }
         },
         "summary": "The appeal queue",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/appeals/{appeal_id}/claim": {
@@ -1917,7 +4056,9 @@
           }
         },
         "summary": "Claim an appeal before working on it",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/appeals/{appeal_id}/messages": {
@@ -1986,7 +4127,9 @@
           }
         },
         "summary": "Reply or add an internal note",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/appeals/{appeal_id}/resolve": {
@@ -2056,7 +4199,9 @@
           }
         },
         "summary": "Resolve an appeal",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/admin/audit-logs": {
@@ -2169,7 +4314,201 @@
           }
         },
         "summary": "List admin audit log entries",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
+      }
+    },
+    "/api/v1/admin/chat-cases/{report_id}": {
+      "get": {
+        "operationId": "review_chat_case_api_v1_admin_chat_cases__report_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Chat Case",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/admin/chat-cases/{report_id}/audio/{message_id}": {
+      "get": {
+        "operationId": "review_chat_audio_api_v1_admin_chat_cases__report_id__audio__message_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Chat Audio",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/admin/chat-cases/{report_id}/hide": {
+      "post": {
+        "operationId": "moderate_chat_api_v1_admin_chat_cases__report_id__hide_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "report_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Report Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ModerateChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Moderate Chat",
+        "tags": [
+          "Messaging"
+        ]
       }
     },
     "/api/v1/admin/dashboard/summary": {
@@ -2218,7 +4557,9 @@
           }
         },
         "summary": "Get admin seller summary",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/meeting-venues": {
@@ -2290,7 +4631,9 @@
           }
         },
         "summary": "The curated SafeMeet venue catalogue (SAFE-01)",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       },
       "post": {
         "operationId": "create_meeting_venue_api_v1_admin_meeting_venues_post",
@@ -2347,7 +4690,9 @@
           }
         },
         "summary": "Add a public meetup spot to the catalogue",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/meeting-venues/{venue_id}/activate": {
@@ -2406,7 +4751,9 @@
           }
         },
         "summary": "Reactivate a meeting venue",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/meeting-venues/{venue_id}/deactivate": {
@@ -2465,7 +4812,9 @@
           }
         },
         "summary": "Deactivate a meeting venue - it stops being suggested, past meetups are unaffected",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/partners": {
@@ -2514,7 +4863,9 @@
           }
         },
         "summary": "Every partner, with usage against quota",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       },
       "post": {
         "description": "Created as PENDING. Approve it before issuing a key.",
@@ -2572,7 +4923,9 @@
           }
         },
         "summary": "Register a partner",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/keys/{key_id}": {
@@ -2632,7 +4985,9 @@
           }
         },
         "summary": "Revoke a key immediately",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/keys/{key_id}/rotate": {
@@ -2692,7 +5047,9 @@
           }
         },
         "summary": "Rotate a key",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/scopes": {
@@ -2741,7 +5098,9 @@
           }
         },
         "summary": "Scopes a key can be granted",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/{client_id}/keys": {
@@ -2800,7 +5159,9 @@
           }
         },
         "summary": "Keys held by a partner",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       },
       "post": {
         "description": "The response contains the only copy of the key that will ever exist. It is argon2-hashed before storage, so it cannot be shown again - a lost key is rotated, not recovered.",
@@ -2868,7 +5229,9 @@
           }
         },
         "summary": "Issue a key",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
       }
     },
     "/api/v1/admin/partners/{client_id}/status": {
@@ -2938,7 +5301,123 @@
           }
         },
         "summary": "Approve, suspend or reinstate a partner",
-        "tags": ["partners"]
+        "tags": [
+          "partners"
+        ]
+      }
+    },
+    "/api/v1/admin/profile-name-reviews": {
+      "get": {
+        "operationId": "name_reviews_api_v1_admin_profile_name_reviews_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Name Reviews",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/admin/profile-name-reviews/{review_id}": {
+      "post": {
+        "operationId": "decide_name_api_v1_admin_profile_name_reviews__review_id__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "review_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Review Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameDecision"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Decide Name",
+        "tags": [
+          "Profiles"
+        ]
       }
     },
     "/api/v1/admin/reports": {
@@ -3027,7 +5506,9 @@
           }
         },
         "summary": "The reports queue (MOD-01)",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/reports/{report_id}/resolve": {
@@ -3096,7 +5577,9 @@
           }
         },
         "summary": "Resolve a report",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/review-cases": {
@@ -3169,7 +5652,9 @@
           }
         },
         "summary": "The review queue",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/review-cases/{case_id}/claim": {
@@ -3229,7 +5714,9 @@
           }
         },
         "summary": "Claim a case before working on it",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/review-cases/{case_id}/decide": {
@@ -3299,7 +5786,9 @@
           }
         },
         "summary": "Record a decision on a case",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/scoring-models": {
@@ -3348,7 +5837,9 @@
           }
         },
         "summary": "List scoring model versions",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       },
       "post": {
         "description": "Creates a new version as a draft (never active - activation is a separate, audited action via POST .../activate). Every submitted signal_code must match a known, active SignalDefinition: silently dropping an unrecognised code here, the way scoring itself does for safety, would let a model pass the sum-to-100 check while actually scoring against fewer than 100 points of real signals.",
@@ -3406,7 +5897,9 @@
           }
         },
         "summary": "Author a new scoring model version",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/scoring-models/{model_id}/activate": {
@@ -3465,7 +5958,9 @@
           }
         },
         "summary": "Activate a scoring model version",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers": {
@@ -3587,7 +6082,9 @@
           }
         },
         "summary": "Search sellers",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}": {
@@ -3646,7 +6143,9 @@
           }
         },
         "summary": "Get seller details",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}/business-review": {
@@ -3705,7 +6204,9 @@
           }
         },
         "summary": "Review a business registration submission (BUS-01)",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}/identity-review": {
@@ -3764,7 +6265,9 @@
           }
         },
         "summary": "Review identity evidence",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}/trust-score": {
@@ -3824,7 +6327,9 @@
           }
         },
         "summary": "Get a seller's full trust-score breakdown",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/admin/sellers/{seller_id}/trust-score/override": {
@@ -3894,7 +6399,9 @@
           }
         },
         "summary": "Override a computed score (ADMIN only)",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/admin/transactions/{transaction_id}/resolve-dispute": {
@@ -3964,7 +6471,9 @@
           }
         },
         "summary": "Resolve a disputed transaction",
-        "tags": ["admin"]
+        "tags": [
+          "admin"
+        ]
       }
     },
     "/api/v1/appeals": {
@@ -4014,7 +6523,9 @@
           }
         },
         "summary": "Own appeals",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       },
       "post": {
         "operationId": "submit_appeal_api_v1_appeals_post",
@@ -4071,7 +6582,9 @@
           }
         },
         "summary": "Appeal a trust score",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/appeals/{appeal_id}/messages": {
@@ -4140,7 +6653,9 @@
           }
         },
         "summary": "Reply on an appeal",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
       }
     },
     "/api/v1/appeals/{appeal_id}/withdraw": {
@@ -4200,7 +6715,485 @@
           }
         },
         "summary": "Withdraw an appeal",
-        "tags": ["appeals"]
+        "tags": [
+          "appeals"
+        ]
+      }
+    },
+    "/api/v1/assistant/chat": {
+      "post": {
+        "operationId": "chat_api_v1_assistant_chat_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_ChatReply_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat",
+        "tags": [
+          "Shopping Assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/description": {
+      "post": {
+        "operationId": "description_api_v1_assistant_description_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DescriptionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_DescriptionReply_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Description",
+        "tags": [
+          "Shopping Assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/enhance": {
+      "post": {
+        "operationId": "enhance_description_api_v1_assistant_enhance_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EnhanceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_EnhanceReply_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Enhance Description",
+        "tags": [
+          "Shopping Assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/listings": {
+      "post": {
+        "operationId": "listings_api_v1_assistant_listings_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchFilters-Input"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_ListingResults_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Listings",
+        "tags": [
+          "Shopping Assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/research": {
+      "post": {
+        "operationId": "research_api_v1_assistant_research_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductResearchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_ResearchReply_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Research",
+        "tags": [
+          "Shopping Assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/status": {
+      "get": {
+        "operationId": "status_api_v1_assistant_status_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_AssistantStatus_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "Shopping Assistant"
+        ]
+      }
+    },
+    "/api/v1/assistant/suggestions": {
+      "get": {
+        "operationId": "suggestions_api_v1_assistant_suggestions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          },
+          {
+            "in": "query",
+            "name": "mode",
+            "required": false,
+            "schema": {
+              "default": "buyer",
+              "enum": [
+                "buyer",
+                "seller"
+              ],
+              "title": "Mode",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 5000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 10,
+              "maximum": 20,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Envelope_SuggestionsReply_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Suggestions",
+        "tags": [
+          "Shopping Assistant"
+        ]
       }
     },
     "/api/v1/auctions/{auction_id}": {
@@ -4259,7 +7252,9 @@
           }
         },
         "summary": "View one auction",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/auctions/{auction_id}/bids": {
@@ -4318,7 +7313,9 @@
           }
         },
         "summary": "Bid history for one auction, highest first",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       },
       "post": {
         "operationId": "place_bid_api_v1_auctions__auction_id__bids_post",
@@ -4385,7 +7382,9 @@
           }
         },
         "summary": "Place a bid",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/auth/change-password": {
@@ -4444,7 +7443,9 @@
           }
         },
         "summary": "Change your password",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/forgot-password": {
@@ -4504,7 +7505,9 @@
           }
         },
         "summary": "Request a password reset",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/google/callback": {
@@ -4591,6 +7594,22 @@
               ],
               "title": "Tl Oauth State"
             }
+          },
+          {
+            "in": "cookie",
+            "name": "tl_oauth_next",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tl Oauth Next"
+            }
           }
         ],
         "responses": {
@@ -4614,13 +7633,33 @@
           }
         },
         "summary": "Google redirects back here after consent",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/google/login": {
       "get": {
         "description": "Redirects to Google's consent screen. Not JSON: the browser must navigate here directly (a link or `window.location`), not fetch it.",
         "operationId": "google_login_api_v1_auth_google_login_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "next",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Next"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -4629,10 +7668,99 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
         "summary": "Start Google sign-in",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
+      }
+    },
+    "/api/v1/auth/google/mfa/verify": {
+      "post": {
+        "operationId": "google_verify_mfa_api_v1_auth_google_mfa_verify_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "tl_google_mfa",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tl Google Mfa"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleMfaRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Google Verify Mfa Api V1 Auth Google Mfa Verify Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Finish Google sign-in with MFA",
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/login": {
@@ -4691,7 +7819,9 @@
           }
         },
         "summary": "Sign in",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/logout": {
@@ -4756,7 +7886,9 @@
           }
         },
         "summary": "Sign out of this session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/logout-all": {
@@ -4805,7 +7937,9 @@
           }
         },
         "summary": "Sign out of every session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/me": {
@@ -4864,7 +7998,9 @@
           }
         },
         "summary": "Delete your account",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/me/export": {
@@ -4913,7 +8049,9 @@
           }
         },
         "summary": "Export your data",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/mfa/verify": {
@@ -4973,7 +8111,9 @@
           }
         },
         "summary": "Complete a login held up by MFA",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/refresh": {
@@ -5039,7 +8179,9 @@
           }
         },
         "summary": "Rotate the session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/register": {
@@ -5099,7 +8241,9 @@
           }
         },
         "summary": "Register a new account",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/resend-verification-email": {
@@ -5159,7 +8303,9 @@
           }
         },
         "summary": "Resend the email confirmation link",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/reset-password": {
@@ -5218,7 +8364,9 @@
           }
         },
         "summary": "Complete a password reset",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/sessions": {
@@ -5267,7 +8415,9 @@
           }
         },
         "summary": "List active sessions",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/sessions/{session_id}": {
@@ -5325,7 +8475,9 @@
           }
         },
         "summary": "Revoke a specific session",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/auth/verify-email": {
@@ -5384,7 +8536,9 @@
           }
         },
         "summary": "Confirm an email address",
-        "tags": ["Authentication"]
+        "tags": [
+          "Authentication"
+        ]
       }
     },
     "/api/v1/conversations/{conversation_id}/meetups": {
@@ -5443,7 +8597,9 @@
           }
         },
         "summary": "The SafeMeet proposal history for one conversation",
-        "tags": ["SafeMeet"]
+        "tags": [
+          "SafeMeet"
+        ]
       },
       "post": {
         "operationId": "propose_meetup_api_v1_conversations__conversation_id__meetups_post",
@@ -5510,7 +8666,9 @@
           }
         },
         "summary": "Propose a SafeMeet",
-        "tags": ["SafeMeet"]
+        "tags": [
+          "SafeMeet"
+        ]
       }
     },
     "/api/v1/conversations/{conversation_id}/offers": {
@@ -5569,7 +8727,9 @@
           }
         },
         "summary": "The offer/counter-offer history for one conversation",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       },
       "post": {
         "operationId": "create_offer_api_v1_conversations__conversation_id__offers_post",
@@ -5636,7 +8796,9 @@
           }
         },
         "summary": "Make an offer or counter-offer",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/files/upload-intent": {
@@ -5696,7 +8858,9 @@
           }
         },
         "summary": "Get a presigned upload URL",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/installment-plans/{plan_id}/cancel": {
@@ -5755,7 +8919,9 @@
           }
         },
         "summary": "Cancel an installment plan",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/installments/{installment_id}/pay": {
@@ -5814,7 +8980,9 @@
           }
         },
         "summary": "Mark one installment paid",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/jobs/{job_id}": {
@@ -5872,7 +9040,9 @@
           }
         },
         "summary": "Poll a background job",
-        "tags": ["Jobs"]
+        "tags": [
+          "Jobs"
+        ]
       }
     },
     "/api/v1/listings": {
@@ -5944,7 +9114,9 @@
           }
         },
         "summary": "List your listings",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "post": {
         "operationId": "create_listing_api_v1_listings_post",
@@ -6001,7 +9173,9 @@
           }
         },
         "summary": "Create a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/listings/{listing_id}": {
@@ -6035,7 +9209,9 @@
           }
         },
         "summary": "Remove a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "get": {
         "operationId": "get_listing_api_v1_listings__listing_id__get",
@@ -6092,7 +9268,9 @@
           }
         },
         "summary": "Read one of your listings",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "put": {
         "operationId": "update_listing_api_v1_listings__listing_id__put",
@@ -6159,7 +9337,9 @@
           }
         },
         "summary": "Update a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/listings/{listing_id}/analyse": {
@@ -6218,7 +9398,9 @@
           }
         },
         "summary": "Re-run analysis on a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/listings/{listing_id}/auction": {
@@ -6277,7 +9459,9 @@
           }
         },
         "summary": "The most recent auction for a listing, if any",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       },
       "post": {
         "operationId": "create_auction_api_v1_listings__listing_id__auction_post",
@@ -6344,7 +9528,9 @@
           }
         },
         "summary": "List a listing as an auction instead of a fixed price",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/listings/{listing_id}/images": {
@@ -6403,10 +9589,12 @@
           }
         },
         "summary": "List images for a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
       },
       "post": {
-        "description": "Associates an already-uploaded file (obtained via /files/upload-intent with purpose=LISTING_IMAGE) with this listing and computes a perceptual hash for duplicate detection. A warning is returned if a near-identical image already exists in this seller's listings (Hamming distance ≤ 5).",
+        "description": "Checks an owned upload against other accounts' indexed photos before attaching an immutable copy. Failed/busy checks do not attach the photo.",
         "operationId": "add_listing_image_api_v1_listings__listing_id__images_post",
         "parameters": [
           {
@@ -6471,7 +9659,151 @@
           }
         },
         "summary": "Add an image to a listing",
-        "tags": ["Listings"]
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/listings/{listing_id}/images/order": {
+      "put": {
+        "operationId": "order_listing_images_api_v1_listings__listing_id__images_order_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImageOrderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Order Listing Images Api V1 Listings  Listing Id  Images Order Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Order Listing Images",
+        "tags": [
+          "Listings"
+        ]
+      }
+    },
+    "/api/v1/listings/{listing_id}/images/{image_id}": {
+      "delete": {
+        "operationId": "remove_listing_image_api_v1_listings__listing_id__images__image_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "image_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Image Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Remove Listing Image Api V1 Listings  Listing Id  Images  Image Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Remove Listing Image",
+        "tags": [
+          "Listings"
+        ]
       }
     },
     "/api/v1/me": {
@@ -6520,7 +9852,9 @@
           }
         },
         "summary": "Current user",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/become-seller": {
@@ -6579,7 +9913,9 @@
           }
         },
         "summary": "Upgrade a buyer account to also be a seller",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/blocks": {
@@ -6628,7 +9964,9 @@
           }
         },
         "summary": "Users I've blocked",
-        "tags": ["Moderation"]
+        "tags": [
+          "Moderation"
+        ]
       },
       "post": {
         "operationId": "block_user_api_v1_me_blocks_post",
@@ -6658,7 +9996,9 @@
           }
         },
         "summary": "Block a user - idempotent, safe to call repeatedly",
-        "tags": ["Moderation"]
+        "tags": [
+          "Moderation"
+        ]
       }
     },
     "/api/v1/me/blocks/{blocked_user_id}": {
@@ -6692,7 +10032,638 @@
           }
         },
         "summary": "Unblock a user",
-        "tags": ["Moderation"]
+        "tags": [
+          "Moderation"
+        ]
+      }
+    },
+    "/api/v1/me/calls": {
+      "post": {
+        "operationId": "start_api_v1_me_calls_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartCall"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Start",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/calls/active": {
+      "get": {
+        "operationId": "active_api_v1_me_calls_active_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "deviceId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Deviceid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Active",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/calls/config": {
+      "get": {
+        "operationId": "config_api_v1_me_calls_config_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Config",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/calls/push": {
+      "post": {
+        "operationId": "subscribe_api_v1_me_calls_push_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PushSubscription"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Subscribe",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/calls/push/{subscription_id}": {
+      "delete": {
+        "operationId": "unsubscribe_api_v1_me_calls_push__subscription_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "subscription_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Subscription Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unsubscribe",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/calls/{call_id}/actions": {
+      "post": {
+        "operationId": "action_api_v1_me_calls__call_id__actions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CallAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Action",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/calls/{call_id}/join": {
+      "post": {
+        "operationId": "join_api_v1_me_calls__call_id__join_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "call_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Call Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Device"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Join",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/chat-messages/{message_id}": {
+      "delete": {
+        "operationId": "delete_chat_api_v1_me_chat_messages__message_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Chat",
+        "tags": [
+          "Messaging"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_chat_api_v1_me_chat_messages__message_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EditChatRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Chat",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/chat-messages/{message_id}/audio": {
+      "get": {
+        "operationId": "chat_audio_api_v1_me_chat_messages__message_id__audio_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat Audio",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/chat-messages/{message_id}/played": {
+      "post": {
+        "operationId": "voice_played_api_v1_me_chat_messages__message_id__played_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "message_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Message Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Voice Played",
+        "tags": [
+          "Messaging"
+        ]
       }
     },
     "/api/v1/me/conversations": {
@@ -6720,6 +10691,34 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "folder",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "buying",
+                "selling",
+                "unread",
+                "important"
+              ],
+              "title": "Folder",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 100,
+              "title": "Q",
+              "type": "string"
             }
           },
           {
@@ -6764,7 +10763,9 @@
           }
         },
         "summary": "List my conversations",
-        "tags": ["Messaging"]
+        "tags": [
+          "Messaging"
+        ]
       },
       "post": {
         "operationId": "send_message_api_v1_me_conversations_post",
@@ -6821,7 +10822,314 @@
           }
         },
         "summary": "Send a message, starting a new conversation or replying to one",
-        "tags": ["Messaging"]
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}": {
+      "get": {
+        "operationId": "get_conversation_api_v1_me_conversations__conversation_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Conversation header for either participant",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/calls": {
+      "get": {
+        "operationId": "history_api_v1_me_conversations__conversation_id__calls_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "Voice calls"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/clear": {
+      "post": {
+        "operationId": "clear_chat_api_v1_me_conversations__conversation_id__clear_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Clear Chat",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/clear/undo": {
+      "post": {
+        "operationId": "undo_clear_api_v1_me_conversations__conversation_id__clear_undo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UndoClearRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Undo Clear",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/important": {
+      "put": {
+        "operationId": "set_conversation_important_api_v1_me_conversations__conversation_id__important_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetImportantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Mark a conversation important for yourself",
+        "tags": [
+          "Messaging"
+        ]
       }
     },
     "/api/v1/me/conversations/{conversation_id}/messages": {
@@ -6903,7 +11211,9 @@
           }
         },
         "summary": "Read a conversation (marks the other party's messages as read)",
-        "tags": ["Messaging"]
+        "tags": [
+          "Messaging"
+        ]
       }
     },
     "/api/v1/me/conversations/{conversation_id}/muted": {
@@ -6973,7 +11283,246 @@
           }
         },
         "summary": "Mute or unmute a conversation",
-        "tags": ["Messaging"]
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/support": {
+      "post": {
+        "operationId": "chat_support_api_v1_me_conversations__conversation_id__support_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChatReportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat Support",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/timeline": {
+      "get": {
+        "operationId": "chat_timeline_api_v1_me_conversations__conversation_id__timeline_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Chat Timeline",
+        "tags": [
+          "Messaging"
+        ]
+      }
+    },
+    "/api/v1/me/conversations/{conversation_id}/voice": {
+      "post": {
+        "operationId": "send_voice_api_v1_me_conversations__conversation_id__voice_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "conversation_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Conversation Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "clientId",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Clientid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "replyToId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Replytoid"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Send Voice",
+        "tags": [
+          "Messaging"
+        ]
       }
     },
     "/api/v1/me/favorites": {
@@ -7045,7 +11594,9 @@
           }
         },
         "summary": "List saved listings",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       },
       "post": {
         "operationId": "add_favorite_api_v1_me_favorites_post",
@@ -7075,7 +11626,9 @@
           }
         },
         "summary": "Save a listing",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/favorites/ids": {
@@ -7125,7 +11678,9 @@
           }
         },
         "summary": "Listing ids the current user has saved",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/favorites/{listing_id}": {
@@ -7159,7 +11714,9 @@
           }
         },
         "summary": "Unsave a listing",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/follows": {
@@ -7208,7 +11765,9 @@
           }
         },
         "summary": "Sellers I follow",
-        "tags": ["Reputation"]
+        "tags": [
+          "Reputation"
+        ]
       },
       "post": {
         "operationId": "follow_seller_api_v1_me_follows_post",
@@ -7238,7 +11797,9 @@
           }
         },
         "summary": "Follow a seller by handle",
-        "tags": ["Reputation"]
+        "tags": [
+          "Reputation"
+        ]
       }
     },
     "/api/v1/me/follows/{handle}": {
@@ -7271,7 +11832,9 @@
           }
         },
         "summary": "Unfollow a seller",
-        "tags": ["Reputation"]
+        "tags": [
+          "Reputation"
+        ]
       }
     },
     "/api/v1/me/mfa/confirm": {
@@ -7331,7 +11894,9 @@
           }
         },
         "summary": "Confirm MFA enrollment",
-        "tags": ["MFA"]
+        "tags": [
+          "MFA"
+        ]
       }
     },
     "/api/v1/me/mfa/disable": {
@@ -7391,7 +11956,9 @@
           }
         },
         "summary": "Disable MFA",
-        "tags": ["MFA"]
+        "tags": [
+          "MFA"
+        ]
       }
     },
     "/api/v1/me/mfa/enroll": {
@@ -7441,7 +12008,9 @@
           }
         },
         "summary": "Begin MFA enrollment",
-        "tags": ["MFA"]
+        "tags": [
+          "MFA"
+        ]
       }
     },
     "/api/v1/me/mfa/status": {
@@ -7490,7 +12059,9 @@
           }
         },
         "summary": "Whether MFA is enabled, and whether it's required",
-        "tags": ["MFA"]
+        "tags": [
+          "MFA"
+        ]
       }
     },
     "/api/v1/me/notifications": {
@@ -7561,7 +12132,9 @@
           }
         },
         "summary": "List my notifications",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/api/v1/me/notifications/read-all": {
@@ -7610,7 +12183,9 @@
           }
         },
         "summary": "Mark every notification read",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
       }
     },
     "/api/v1/me/notifications/{notification_id}/read": {
@@ -7644,7 +12219,535 @@
           }
         },
         "summary": "Mark one notification read",
-        "tags": ["Notifications"]
+        "tags": [
+          "Notifications"
+        ]
+      }
+    },
+    "/api/v1/me/private-settings": {
+      "get": {
+        "operationId": "read_private_settings_api_v1_me_private_settings_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Read Private Settings Api V1 Me Private Settings Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Read Private Settings",
+        "tags": [
+          "Account"
+        ]
+      },
+      "put": {
+        "operationId": "write_private_settings_api_v1_me_private_settings_put",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrivateSettings"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Write Private Settings Api V1 Me Private Settings Put",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Write Private Settings",
+        "tags": [
+          "Account"
+        ]
+      }
+    },
+    "/api/v1/me/profile": {
+      "get": {
+        "operationId": "get_my_profile_api_v1_me_profile_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get My Profile",
+        "tags": [
+          "Profiles"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_profile_api_v1_me_profile_patch",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProfileEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Profile",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/me/profile/ads": {
+      "get": {
+        "operationId": "owner_ads_api_v1_me_profile_ads_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "tab",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "enum": [
+                "all",
+                "active",
+                "inactive"
+              ],
+              "title": "Tab",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 120,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 30,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Owner Ads",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/me/profile/ads/{listing_id}/action": {
+      "post": {
+        "operationId": "ad_action_api_v1_me_profile_ads__listing_id__action_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "listing_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Listing Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdAction"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Ad Action",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/me/profile/initialize": {
+      "post": {
+        "operationId": "initialize_profile_api_v1_me_profile_initialize_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Initialize Profile",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/me/profile/name": {
+      "post": {
+        "operationId": "confirm_name_api_v1_me_profile_name_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NameConfirmation"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirm Name",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/me/profile/photo": {
+      "post": {
+        "operationId": "upload_profile_photo_api_v1_me_profile_photo_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Profile Photo",
+        "tags": [
+          "Profiles"
+        ]
       }
     },
     "/api/v1/me/reports": {
@@ -7693,7 +12796,9 @@
           }
         },
         "summary": "My own report submissions",
-        "tags": ["Moderation"]
+        "tags": [
+          "Moderation"
+        ]
       },
       "post": {
         "operationId": "create_report_api_v1_me_reports_post",
@@ -7750,7 +12855,9 @@
           }
         },
         "summary": "Report a listing, seller, message, or something else",
-        "tags": ["Moderation"]
+        "tags": [
+          "Moderation"
+        ]
       }
     },
     "/api/v1/me/saved-searches": {
@@ -7799,7 +12906,9 @@
           }
         },
         "summary": "List saved searches",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       },
       "post": {
         "operationId": "create_saved_search_api_v1_me_saved_searches_post",
@@ -7856,7 +12965,9 @@
           }
         },
         "summary": "Save the current browse filter",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/saved-searches/{search_id}": {
@@ -7890,7 +13001,9 @@
           }
         },
         "summary": "Delete a saved search",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/me/transactions": {
@@ -7939,7 +13052,9 @@
           }
         },
         "summary": "My transactions, buying or selling",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/meeting-venues": {
@@ -8011,7 +13126,9 @@
           }
         },
         "summary": "Platform-suggested public meetup spots near a city",
-        "tags": ["SafeMeet"]
+        "tags": [
+          "SafeMeet"
+        ]
       }
     },
     "/api/v1/meetups/{meetup_id}/respond": {
@@ -8080,7 +13197,9 @@
           }
         },
         "summary": "Accept or decline a proposed SafeMeet",
-        "tags": ["SafeMeet"]
+        "tags": [
+          "SafeMeet"
+        ]
       }
     },
     "/api/v1/offers/{offer_id}/respond": {
@@ -8149,7 +13268,108 @@
           }
         },
         "summary": "Accept or reject an open offer",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
+      }
+    },
+    "/api/v1/public/catalogue-options": {
+      "get": {
+        "operationId": "catalogue_options_api_v1_public_catalogue_options_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "categoryNodeId",
+            "required": true,
+            "schema": {
+              "maxLength": 240,
+              "title": "Categorynodeid",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "field",
+            "required": true,
+            "schema": {
+              "maxLength": 40,
+              "title": "Field",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "parentValue",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 160,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Parentvalue"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 80,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Catalogue Options Api V1 Public Catalogue Options Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Confirmed brand/model suggestions from eligible listings",
+        "tags": [
+          "Public Page"
+        ]
       }
     },
     "/api/v1/public/listings": {
@@ -8172,6 +13392,40 @@
                 }
               ],
               "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "categoryNodeId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 240,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Categorynodeid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "facets",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 3000,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Facets"
             }
           },
           {
@@ -8504,7 +13758,9 @@
           }
         },
         "summary": "Browse and search active listings (no auth)",
-        "tags": ["Public Page"]
+        "tags": [
+          "Public Page"
+        ]
       }
     },
     "/api/v1/public/listings/{listing_id}": {
@@ -8564,7 +13820,494 @@
           }
         },
         "summary": "View a listing (no auth)",
-        "tags": ["Public Page"]
+        "tags": [
+          "Public Page"
+        ]
+      }
+    },
+    "/api/v1/public/motor-dealers": {
+      "get": {
+        "operationId": "motor_dealers_api_v1_public_motor_dealers_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 12,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Motor Dealers Api V1 Public Motor Dealers Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Verified business sellers with visible motor listings",
+        "tags": [
+          "Public Page"
+        ]
+      }
+    },
+    "/api/v1/public/profiles/{reference}": {
+      "get": {
+        "operationId": "get_public_profile_api_v1_public_profiles__reference__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "reference",
+            "required": true,
+            "schema": {
+              "title": "Reference",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Public Profile",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/public/profiles/{user_id}/photo": {
+      "get": {
+        "operationId": "public_photo_api_v1_public_profiles__user_id__photo_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "User Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Public Photo",
+        "tags": [
+          "Profiles"
+        ]
+      }
+    },
+    "/api/v1/public/recommendations": {
+      "get": {
+        "operationId": "public_recommendations_api_v1_public_recommendations_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "listingId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Listingid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "categoryNodeId",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 240,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Categorynodeid"
+            }
+          },
+          {
+            "in": "query",
+            "name": "category",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Category"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 200,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "city",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 80,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "City"
+            }
+          },
+          {
+            "in": "query",
+            "name": "area",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 120,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Area"
+            }
+          },
+          {
+            "in": "query",
+            "name": "minPrice",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Minprice"
+            }
+          },
+          {
+            "in": "query",
+            "name": "maxPrice",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Maxprice"
+            }
+          },
+          {
+            "in": "query",
+            "name": "nearLatitude",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 90,
+                  "minimum": -90,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Nearlatitude"
+            }
+          },
+          {
+            "in": "query",
+            "name": "nearLongitude",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 180,
+                  "minimum": -180,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Nearlongitude"
+            }
+          },
+          {
+            "in": "query",
+            "name": "radiusKm",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 500,
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Radiuskm"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exclude",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 8000,
+              "title": "Exclude",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 4,
+              "maximum": 20,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-device-fingerprint",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Device-Fingerprint"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Public Recommendations Api V1 Public Recommendations Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Related eligible listings, deduplicated by purpose",
+        "tags": [
+          "Public Page"
+        ]
       }
     },
     "/api/v1/public/sellers/{handle}/reviews": {
@@ -8646,7 +14389,9 @@
           }
         },
         "summary": "A seller's public reviews and rating (no auth)",
-        "tags": ["Reputation"]
+        "tags": [
+          "Reputation"
+        ]
       }
     },
     "/api/v1/public/sellers/{seller_ref}/trust-score": {
@@ -8719,7 +14464,9 @@
           }
         },
         "summary": "Buyer-facing score for the public seller page (no auth)",
-        "tags": ["Public Page"]
+        "tags": [
+          "Public Page"
+        ]
       }
     },
     "/api/v1/sellers/me": {
@@ -8768,7 +14515,9 @@
           }
         },
         "summary": "Own seller profile",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       },
       "patch": {
         "operationId": "update_my_seller_api_v1_sellers_me_patch",
@@ -8825,7 +14574,9 @@
           }
         },
         "summary": "Update own seller profile",
-        "tags": ["Me"]
+        "tags": [
+          "Me"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score": {
@@ -8885,7 +14636,9 @@
           }
         },
         "summary": "Get the current trust score with its full breakdown",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score/history": {
@@ -8957,7 +14710,9 @@
           }
         },
         "summary": "Score history",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score/improvements": {
@@ -9017,7 +14772,9 @@
           }
         },
         "summary": "Ranked list of what would raise this score",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/sellers/{seller_id}/trust-score/recompute": {
@@ -9077,7 +14834,9 @@
           }
         },
         "summary": "Queue a recomputation",
-        "tags": ["Trust Score"]
+        "tags": [
+          "Trust Score"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/cancel": {
@@ -9146,7 +14905,9 @@
           }
         },
         "summary": "Cancel a transaction",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/complete": {
@@ -9205,7 +14966,9 @@
           }
         },
         "summary": "Mark a handover as done",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/dispute": {
@@ -9275,7 +15038,9 @@
           }
         },
         "summary": "Raise a dispute on a transaction",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/handover": {
@@ -9334,7 +15099,9 @@
           }
         },
         "summary": "Confirm handover via QR check-in (QR-01)",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/installment-plan": {
@@ -9393,7 +15160,9 @@
           }
         },
         "summary": "View the installment plan for a transaction, if any",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       },
       "post": {
         "operationId": "create_installment_plan_api_v1_transactions__transaction_id__installment_plan_post",
@@ -9460,7 +15229,9 @@
           }
         },
         "summary": "Set up a buy-now-pay-later plan for a transaction",
-        "tags": ["Commerce"]
+        "tags": [
+          "Commerce"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/reviews": {
@@ -9529,7 +15300,9 @@
           }
         },
         "summary": "Review the other party in a completed transaction",
-        "tags": ["Reputation"]
+        "tags": [
+          "Reputation"
+        ]
       }
     },
     "/api/v1/transactions/{transaction_id}/reviews/mine": {
@@ -9588,7 +15361,9 @@
           }
         },
         "summary": "My own review of this transaction, if I've left one",
-        "tags": ["Reputation"]
+        "tags": [
+          "Reputation"
+        ]
       }
     },
     "/api/v1/verification/business": {
@@ -9648,7 +15423,9 @@
           }
         },
         "summary": "Submit a business registration document for review (BUS-01)",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/device": {
@@ -9707,7 +15484,9 @@
           }
         },
         "summary": "Submit a device fingerprint",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/identity": {
@@ -9756,10 +15535,12 @@
           }
         },
         "summary": "Identity verification status",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       },
       "post": {
-        "description": "Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).",
+        "description": "Records the submission and queues OCR + face comparisons. If hold-ID mode is enabled, the fourth private frame is required and the result is queued for human review. Camera guidance is not certified liveness.",
         "operationId": "submit_identity_api_v1_verification_identity_post",
         "parameters": [
           {
@@ -9813,8 +15594,10 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Submit CNIC and selfie for verification",
-        "tags": ["Verification"]
+        "summary": "Submit CNIC, face, and optional holding-card evidence",
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/phone/request-otp": {
@@ -9873,7 +15656,9 @@
           }
         },
         "summary": "Send a phone verification code",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/phone/verify-otp": {
@@ -9932,7 +15717,9 @@
           }
         },
         "summary": "Confirm a phone verification code",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/api/v1/verification/status": {
@@ -9981,7 +15768,9 @@
           }
         },
         "summary": "All verification checks in one call",
-        "tags": ["Verification"]
+        "tags": [
+          "Verification"
+        ]
       }
     },
     "/health/live": {
@@ -10002,7 +15791,9 @@
           }
         },
         "summary": "Liveness probe",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/health/ready": {
@@ -10023,7 +15814,9 @@
           }
         },
         "summary": "Readiness probe",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/health/worker": {
@@ -10045,7 +15838,9 @@
           }
         },
         "summary": "Is the worker still consuming jobs?",
-        "tags": ["Health"]
+        "tags": [
+          "Health"
+        ]
       }
     },
     "/public/v1/sellers/lookup": {
@@ -10103,7 +15898,9 @@
           }
         },
         "summary": "Look up several sellers at once",
-        "tags": ["Public API"]
+        "tags": [
+          "Public API"
+        ]
       }
     },
     "/public/v1/sellers/{seller_ref}/trust-score": {
@@ -10176,7 +15973,9 @@
           }
         },
         "summary": "Get a seller's trust score",
-        "tags": ["Public API"]
+        "tags": [
+          "Public API"
+        ]
       }
     },
     "/public/v1/status": {
@@ -10196,7 +15995,9 @@
           }
         },
         "summary": "Service status and current scoring model",
-        "tags": ["Public API"]
+        "tags": [
+          "Public API"
+        ]
       }
     }
   },

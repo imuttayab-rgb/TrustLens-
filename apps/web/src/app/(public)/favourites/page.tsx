@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/favourites: page. */
 'use client';
 
 import { RequireSession } from '@/features/auth';
@@ -5,7 +6,8 @@ import { useMyFavorites, useSavedSearches } from '@/features/marketplace';
 import { useMyFollows } from '@/features/reputation';
 import { cn } from '@trustlens/utils';
 import { Heart, Lock, Search, Users } from 'lucide-react';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useLocale } from 'next-intl';
 import { FavouriteListingsTab } from './FavouriteListingsTab';
 import { FollowedSellersTab } from './FollowedSellersTab';
 import { SavedSearchesTab } from './SavedSearchesTab';
@@ -19,14 +21,21 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 function FavouritesContent() {
-  const [tab, setTab] = useState<Tab>('listings');
+  const params = useSearchParams();
+  const router = useRouter();
+  const ur = useLocale() === 'ur';
+  const selected = params.get('tab');
+  const tab: Tab = selected === 'searches' || selected === 'sellers' ? selected : 'listings';
+  const setTab = (value: Tab) => router.replace(`/favourites?tab=${value}`, { scroll: false });
   const { data: favorites } = useMyFavorites({ limit: 50 });
   const { data: searches } = useSavedSearches();
   const { data: follows } = useMyFollows();
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-      <h1 className="text-2xl font-bold sm:text-3xl">Your Favourites</h1>
+      <h1 className="text-2xl font-bold sm:text-3xl">
+        {ur ? 'آپ کی پسندیدہ چیزیں' : 'Your Favourites'}
+      </h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Save listings, follow sellers and bookmark searches you care about.
       </p>
@@ -48,7 +57,13 @@ function FavouritesContent() {
               tab === t.key ? 'text-brand' : 'text-muted-foreground hover:text-foreground',
             )}
           >
-            {t.label}
+            {ur
+              ? {
+                  listings: 'پسندیدہ اشتہارات',
+                  searches: 'محفوظ تلاشیں',
+                  sellers: 'فالو کیے گئے فروخت کنندگان',
+                }[t.key]
+              : t.label}
             {tab === t.key && (
               <span className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand" />
             )}

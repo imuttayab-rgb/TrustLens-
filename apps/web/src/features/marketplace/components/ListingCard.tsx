@@ -1,11 +1,21 @@
+/** Reusable UI rendering and interaction component: ListingCard. */
 'use client';
 
-import { RISK_PRESENTATION, type RiskLevel } from '@trustlens/constants';
+import { ProfileAvatar } from '@/features/profile';
+import {
+  RISK_PRESENTATION,
+  listingSpecSummary,
+  categoryNode,
+  type RiskLevel,
+} from '@trustlens/constants';
 import { cn, formatRelative } from '@trustlens/utils';
 import { BadgeCheck, Heart, ImageOff, MessageCircle, Share2, ShieldCheck } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useLocale } from 'next-intl';
+import { useState } from 'react';
+import { useBrowseContext } from '../browse-context';
 import type { PublicListing } from '../hooks/use-public-listings';
 
 const STATUS_LABEL: Record<string, string> = {
@@ -45,14 +55,23 @@ export function ListingCard({
   favorited,
   onToggleFavorite,
   togglingFavorite,
+  layout = 'grid',
 }: {
   listing: PublicListing;
   /** Omit entirely (rather than passing false) to hide the heart button. */
   favorited?: boolean;
   onToggleFavorite?: () => void;
   togglingFavorite?: boolean;
+  layout?: 'grid' | 'list';
 }) {
   const router = useRouter();
+  const ur = useLocale() === 'ur';
+  const context = useBrowseContext();
+  const [shareMessage, setShareMessage] = useState('');
+  const facts = listingSpecSummary(listing.categoryNodeId, listing.categoryData, ur);
+  const physical =
+    !categoryNode(listing.categoryNodeId) ||
+    categoryNode(listing.categoryNodeId)?.conditionRequired;
   const statusLabel = STATUS_LABEL[listing.status];
 
   async function share(event: React.MouseEvent) {
@@ -69,18 +88,37 @@ export function ListingCard({
     }
     try {
       await navigator.clipboard.writeText(url);
+      setShareMessage(ur ? 'لنک کاپی ہو گیا' : 'Link copied');
     } catch {
-      // Clipboard access can be denied (permissions, non-HTTPS context);
-      // there's no good fallback UI on a catalog card for that failure.
+      setShareMessage(
+        ur
+          ? 'لنک کاپی نہیں ہوا؛ اشتہار کھول کر ایڈریس کاپی کریں۔'
+          : 'Could not copy. Open the listing and copy its address.',
+      );
     }
   }
 
   return (
-    <Link
-      href={`/listing/${listing.id}`}
-      className="group block overflow-hidden rounded-lg border border-border bg-card transition-colors hover:border-foreground/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    <article
+      className={cn(
+        'tl-listing-card group relative h-full overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-brand/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        layout === 'list' ? 'flex' : 'block',
+      )}
     >
-      <div className="relative aspect-square w-full bg-muted/50">
+      <Link
+        href={context.href(`/listing/${listing.id}`)}
+        className="absolute inset-0 z-10 rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        <span className="sr-only">{listing.title}</span>
+      </Link>
+      <div
+        className={cn(
+          'relative bg-muted/50',
+          layout === 'list'
+            ? 'min-h-44 w-28 shrink-0 self-stretch sm:w-52'
+            : 'aspect-square w-full',
+        )}
+      >
         {(listing.thumbnailUrl ?? listing.imageUrl) ? (
           <Image
             src={listing.thumbnailUrl ?? listing.imageUrl ?? ''}
@@ -99,16 +137,16 @@ export function ListingCard({
         )}
 
         {statusLabel && (
-          <span className="absolute left-2 top-2 rounded-full bg-foreground/90 px-2 py-0.5 text-xs font-semibold text-background">
+          <span className="absolute start-2 top-2 rounded-full bg-foreground/90 px-2 py-0.5 text-xs font-semibold text-background">
             {statusLabel}
           </span>
         )}
 
         <button
           type="button"
-          aria-label="Share this listing"
+          aria-label={ur ? 'اشتہار شیئر کریں' : 'Share this listing'}
           onClick={(event) => void share(event)}
-          className="absolute bottom-2 left-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-foreground opacity-0 shadow backdrop-blur transition-opacity hover:scale-110 group-hover:opacity-100"
+          className="absolute bottom-2 start-2 z-20 grid h-10 w-10 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-opacity hover:scale-110 focus-visible:opacity-100 [@media(hover:hover)]:opacity-0 [@media(hover:hover)]:group-hover:opacity-100"
         >
           <Share2 className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -116,7 +154,15 @@ export function ListingCard({
         {onToggleFavorite && (
           <button
             type="button"
-            aria-label={favorited ? 'Remove from favorites' : 'Save to favorites'}
+            aria-label={
+              favorited
+                ? ur
+                  ? 'پسندیدہ سے ہٹائیں'
+                  : 'Remove from favorites'
+                : ur
+                  ? 'پسندیدہ میں محفوظ کریں'
+                  : 'Save to favorites'
+            }
             aria-pressed={favorited}
             disabled={togglingFavorite}
             onClick={(event) => {
@@ -126,7 +172,7 @@ export function ListingCard({
               event.stopPropagation();
               onToggleFavorite();
             }}
-            className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110 disabled:pointer-events-none disabled:opacity-60"
+            className="absolute end-2 top-2 z-20 grid h-10 w-10 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110 disabled:pointer-events-none disabled:opacity-60"
           >
             <Heart
               className={cn('h-4 w-4', favorited && 'fill-current text-destructive')}
@@ -137,48 +183,68 @@ export function ListingCard({
 
         <button
           type="button"
-          aria-label="Message the seller"
+          aria-label={ur ? 'فروخت کنندہ کو پیغام بھیجیں' : 'Message the seller'}
           onClick={(event) => {
             event.preventDefault();
             event.stopPropagation();
             router.push(`/messages/new?listingId=${listing.id}`);
           }}
           className={cn(
-            'absolute right-2 grid h-8 w-8 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110',
-            onToggleFavorite ? 'top-12' : 'top-2',
+            'absolute end-2 z-20 grid h-10 w-10 place-items-center rounded-full bg-background/80 text-foreground shadow backdrop-blur transition-transform hover:scale-110',
+            onToggleFavorite ? 'top-14' : 'top-2',
           )}
         >
           <MessageCircle className="h-4 w-4" aria-hidden="true" />
         </button>
       </div>
-      <div className="space-y-1.5 p-3">
-        <p className="truncate text-sm font-medium">{listing.title}</p>
-        <p className="text-sm font-semibold">
+      <div className={cn('min-w-0 flex-1 space-y-2 p-3', layout === 'list' && 'sm:p-5')}>
+        <p
+          className={cn(
+            'line-clamp-2 break-words text-sm font-medium',
+            layout === 'list' && 'sm:text-base',
+          )}
+        >
+          {listing.title}
+        </p>
+        <p className="text-base font-semibold tabular-nums">
           {listing.price !== null
             ? `${listing.currency ?? ''} ${listing.price.toLocaleString()}`
-            : 'Price on request'}
+            : ur
+              ? 'قیمت پوچھیں'
+              : 'Price on request'}
           {listing.negotiable && (
-            <span className="ml-1.5 text-xs font-normal text-muted-foreground">negotiable</span>
+            <span className="ms-1.5 text-xs font-normal text-muted-foreground">
+              {ur ? 'قابلِ مذاکرہ' : 'negotiable'}
+            </span>
           )}
         </p>
+        {facts.length > 0 && (
+          <p className="line-clamp-2 text-xs leading-5 text-muted-foreground">
+            {facts.join(' · ')}
+          </p>
+        )}
         <p className="truncate text-xs text-muted-foreground">
-          {listing.condition ? listing.condition.replace(/_/g, ' ').toLowerCase() : 'Used'}
+          {physical && listing.condition
+            ? `${ur ? (({ NEW: 'نیا', LIKE_NEW: 'نئے جیسا', USED: 'استعمال شدہ', FOR_PARTS: 'پرزوں کے لیے' } as Record<string, string>)[listing.condition] ?? listing.condition) : listing.condition.replace(/_/g, ' ').toLowerCase()} · `
+            : ''}
           {listing.area
-            ? ` · ${listing.area}, ${listing.city}`
+            ? `${listing.area}, ${listing.city}`
             : listing.city
-              ? ` · ${listing.city}`
+              ? `${listing.city}`
               : ''}
           {' · '}
           {formatRelative(listing.createdAt)}
         </p>
         <div className="flex items-center justify-between gap-2 pt-0.5">
-          <p className="flex min-w-0 items-center gap-1.5 truncate text-xs text-muted-foreground">
-            <span
-              aria-hidden="true"
-              className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-brand/15 text-[10px] font-bold uppercase text-brand"
-            >
-              {listing.sellerDisplayName.charAt(0)}
-            </span>
+          <Link
+            href={`/seller/${listing.sellerHandle}`}
+            className="relative z-20 flex min-w-0 items-center gap-1.5 truncate rounded text-xs text-muted-foreground hover:underline"
+          >
+            <ProfileAvatar
+              src={listing.sellerPhotoUrl}
+              name={listing.sellerDisplayName}
+              size={22}
+            />
             <span className="truncate">{listing.sellerDisplayName}</span>
             {listing.identityVerified && (
               <ShieldCheck
@@ -192,7 +258,7 @@ export function ListingCard({
                 aria-label="Phone verified"
               />
             )}
-          </p>
+          </Link>
           {listing.riskLevel && (
             <TrustBadge riskLevel={listing.riskLevel as RiskLevel} score={listing.score} />
           )}
@@ -217,12 +283,17 @@ export function ListingCard({
                 'noopener,noreferrer',
               );
             }}
-            className="inline-flex items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
+            className="relative z-20 inline-flex min-h-9 items-center gap-1 text-xs text-primary underline-offset-4 hover:underline"
           >
-            View on map
+            {ur ? 'نقشے پر دیکھیں' : 'View on map'}
           </button>
         )}
+        {shareMessage && (
+          <p role="status" className="text-xs text-brand">
+            {shareMessage}
+          </p>
+        )}
       </div>
-    </Link>
+    </article>
   );
 }

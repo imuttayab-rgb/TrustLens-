@@ -1,3 +1,4 @@
+/** Index module in appeals. */
 export { AppealForm } from './components/AppealForm';
 export { AppealList } from './components/AppealList';
 export {

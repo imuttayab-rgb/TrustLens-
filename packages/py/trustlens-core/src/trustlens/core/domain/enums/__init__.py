@@ -163,6 +163,9 @@ class ReasonCode(StrEnum):
     INSUFFICIENT_EVIDENCE = "INSUFFICIENT_EVIDENCE"
     ADMIN_OVERRIDE = "ADMIN_OVERRIDE"
     ADMIN_FLAGGED = "ADMIN_FLAGGED"
+    #: Explicit synthetic local-test evidence, not a real identity check.
+    #: Persisted by the demo seller fixture and read by normal score mappers.
+    DEMO_FIXTURE_PASS = "DEMO_FIXTURE_PASS"
 
 
 class ScoreTrigger(StrEnum):
@@ -370,6 +373,7 @@ class FilePurpose(StrEnum):
     CNIC_FRONT = "CNIC_FRONT"
     CNIC_BACK = "CNIC_BACK"
     SELFIE = "SELFIE"
+    HOLD_ID = "HOLD_ID"
     LISTING_IMAGE = "LISTING_IMAGE"
     LISTING_VIDEO = "LISTING_VIDEO"
     APPEAL_EVIDENCE = "APPEAL_EVIDENCE"
@@ -386,6 +390,7 @@ class FilePurpose(StrEnum):
             FilePurpose.CNIC_FRONT,
             FilePurpose.CNIC_BACK,
             FilePurpose.SELFIE,
+            FilePurpose.HOLD_ID,
             FilePurpose.BUSINESS_REGISTRATION,
         }
 

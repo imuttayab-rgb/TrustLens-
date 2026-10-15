@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 from typing import Protocol
 from uuid import UUID
 
+from trustlens.core.application.services.listing_publication import sync_listing_publication
 from trustlens.core.domain.entities import OtpCode, PhoneNumber
 from trustlens.core.domain.enums import OtpPurpose, VerificationStatus
 from trustlens.core.domain.errors import (
@@ -252,11 +253,14 @@ class VerifyPhoneOtp:
 
             seller = await self._uow.sellers.get_by_user(cmd.user_id)
             if seller is not None:
-                await self._uow.sellers.update(
+                updated_seller = await self._uow.sellers.update(
                     dataclasses.replace(
                         seller, phone_status=VerificationStatus.VERIFIED, updated_at=now
                     )
                 )
+                # Phone may be the seller's final missing check. Publish only
+                # analysed, non-flagged drafts after *all* checks now pass.
+                await sync_listing_publication(self._uow, updated_seller, now=now)
 
             await self._uow.publish(
                 PhoneVerified(

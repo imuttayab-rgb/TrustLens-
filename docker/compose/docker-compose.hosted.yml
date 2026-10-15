@@ -32,6 +32,15 @@
 name: trustlens-hosted
 
 x-backend-env: &backend-env
+  # Browser voice calls; keys remain server-side.
+  CALLS_ENABLED: ${CALLS_ENABLED:-false}
+  CALLS_LIVEKIT_URL: ${CALLS_LIVEKIT_URL:-}
+  CALLS_LIVEKIT_INTERNAL_URL: ${CALLS_LIVEKIT_INTERNAL_URL:-}
+  CALLS_LIVEKIT_API_KEY: ${CALLS_LIVEKIT_API_KEY:-}
+  CALLS_LIVEKIT_API_SECRET: ${CALLS_LIVEKIT_API_SECRET:-}
+  CALLS_VAPID_PUBLIC_KEY: ${CALLS_VAPID_PUBLIC_KEY:-}
+  CALLS_VAPID_PRIVATE_KEY: ${CALLS_VAPID_PRIVATE_KEY:-}
+  CALLS_VAPID_SUBJECT: ${CALLS_VAPID_SUBJECT:-}
   ENV: ${ENV:-staging}
   # Neon. Note the asymmetry, which is not a typo:
   #   DATABASE_URL       - asyncpg, TLS comes from DB_SSL_REQUIRE

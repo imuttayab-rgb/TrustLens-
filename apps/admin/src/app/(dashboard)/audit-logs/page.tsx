@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/audit-logs: page. */
 import { AuditTrail } from '@/features/audit';
 
 export const metadata = { title: 'Audit log' };

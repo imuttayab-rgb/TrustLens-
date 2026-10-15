@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/favourites: FollowedSellerRow. */
 'use client';
 
 import { RiskBadge } from '@trustlens/ui';

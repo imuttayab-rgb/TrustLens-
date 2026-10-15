@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: InstallmentPanel. */
 'use client';
 
 import { toApiError } from '@trustlens/api-client';

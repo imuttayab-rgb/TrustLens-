@@ -7,10 +7,14 @@ single model's mistake cannot dominate the LISTING signal.
 
 from __future__ import annotations
 
-import dataclasses
 from typing import Any
 from uuid import UUID
 
+from trustlens.core.application.services.listing_publication import (
+    SAFE_LISTING_RISK_LIMIT,
+    listing_media_missing,
+    seller_can_publish,
+)
 from trustlens.core.domain.entities import ListingAnalysis, ScamLabel
 from trustlens.core.domain.enums import ListingStatus
 from trustlens.core.domain.errors import ExternalServiceError
@@ -67,6 +71,25 @@ async def analyse_listing(ctx: dict[str, Any], *, listing_id: str) -> dict[str, 
     now = ctx["clock"].now()
 
     async with uow:
+        # A seller can save and analyse a draft, but analysis alone is never
+        # permission to publish. Re-read both rows inside the write transaction
+        # so a verification decision arriving during analysis is respected.
+        current = await uow.listings.get(lid)
+        if current is None or current.status in {
+            ListingStatus.REMOVED, ListingStatus.EXPIRED, ListingStatus.SOLD
+        }:
+            return {"skipped": "listing is no longer publishable"}
+        if (current.title, current.description, current.price, current.category_node_id, current.category_data, current.attributes, current.condition, current.video_file_id) != (
+            listing.title, listing.description, listing.price, listing.category_node_id, listing.category_data, listing.attributes, listing.condition, listing.video_file_id
+        ):
+            return {"skipped": "listing changed during analysis"}
+        seller = await uow.sellers.get(current.seller_id)
+        # Becoming ACTIVE needs BOTH a verified seller and a complete ad
+        # (photo + video + map location). Anything else stays a private draft.
+        media_missing = listing_media_missing(
+            current, await uow.listings.count_images(current.id)
+        )
+        permitted = seller is not None and seller_can_publish(seller) and not media_missing
         analysis = await uow.listings.add_analysis(
             ListingAnalysis(
                 id=ctx["ids"].new(),
@@ -96,13 +119,26 @@ async def analyse_listing(ctx: dict[str, Any], *, listing_id: str) -> dict[str, 
                 analysed_at=now,
             )
         )
-        await uow.listings.update(
-            dataclasses.replace(
-                listing,
-                status=ListingStatus.FLAGGED if combined_risk >= 60 else ListingStatus.ACTIVE,
-                latest_analysis=analysis,
-            )
+        target = (
+            ListingStatus.FLAGGED
+            if combined_risk >= SAFE_LISTING_RISK_LIMIT
+            else ListingStatus.RESERVED
+            if current.status == ListingStatus.RESERVED
+            else ListingStatus.ACTIVE if permitted else ListingStatus.DRAFT
         )
+        changed = await uow.listings.set_publication_status_if_current(
+            current.id,
+            from_status=current.status,
+            to_status=target,
+            expected_version=current.version,
+            expected_analysis_id=analysis.id,
+            at=now,
+        )
+        if not changed:
+            # add_analysis repointed latest_analysis_id inside this transaction.
+            # Discard it rather than saving a verdict for a newer seller edit.
+            await uow.rollback()
+            return {"skipped": "listing changed during analysis"}
         await uow.commit()
 
     await ctx["queue"].enqueue(

@@ -137,8 +137,11 @@ async def _throttle(container: ContainerDep, meta: MetaDep) -> None:
             f"anon:score:{meta.ip}", limit=limits.anon_per_minute, window_seconds=60
         )
     except Exception:
-        log.warning("anon_rate_limit_unavailable_failing_open", ip=meta.ip)
-        return
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            503, "Abuse protection temporarily unavailable", headers={"Retry-After": "30"}
+        ) from None
 
     if not allowed:
         raise RateLimitExceeded(

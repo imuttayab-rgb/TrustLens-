@@ -22,12 +22,7 @@ router = APIRouter(prefix="/health", tags=["Health"])
 
 @router.get("/live", summary="Liveness probe")
 async def live(container: ContainerDep) -> dict[str, Any]:
-    return {
-        "status": "ok",
-        "service": container.settings.observability.otel_service_name,
-        "version": container.settings.app_version,
-        "env": container.settings.env.value,
-    }
+    return {"status": "ok"}
 
 
 @router.get("/ready", summary="Readiness probe")
@@ -38,19 +33,19 @@ async def ready(container: ContainerDep, response: Response) -> dict[str, Any]:
         async with container.session_factory() as session:
             await session.execute(text("SELECT 1"))
         checks["database"] = "ok"
-    except Exception as exc:
-        checks["database"] = f"error: {type(exc).__name__}"
+    except Exception:
+        checks["database"] = "error"
 
     try:
         checks["cache"] = "ok" if await container.cache.ping() else "error"
-    except Exception as exc:
-        checks["cache"] = f"error: {type(exc).__name__}"
+    except Exception:
+        checks["cache"] = "error"
 
     healthy = all(value == "ok" for value in checks.values())
     if not healthy:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
-    return {"status": "ok" if healthy else "degraded", "checks": checks}
+    return {"status": "ok" if healthy else "degraded"}
 
 
 @router.get("/worker", summary="Is the worker still consuming jobs?")
@@ -72,18 +67,12 @@ async def worker(container: ContainerDep, response: Response) -> dict[str, Any]:
 
     if beat is None:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
-        return {
-            "status": "unknown",
-            "detail": (
-                "No heartbeat. Either the worker is not running, or it has not "
-                "completed a job since it started. Enqueue one to confirm."
-            ),
-        }
+        return {"status": "unknown"}
 
     if not beat["healthy"]:
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
-    return {"status": "ok" if beat["healthy"] else "stale", **beat}
+    return {"status": "ok" if beat["healthy"] else "stale"}
 
 
 __all__ = ["router"]

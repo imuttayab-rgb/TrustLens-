@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/sellers: page. */
 import { SellerList } from '@/features/sellers';
 
 export const metadata = { title: 'Sellers' };

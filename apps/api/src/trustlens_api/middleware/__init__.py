@@ -14,7 +14,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 from starlette.responses import JSONResponse
-from starlette.types import ASGIApp
+from starlette.types import ASGIApp, Scope, Receive, Send
 
 from trustlens.shared.config.settings import Settings
 from trustlens.shared.logging import (
@@ -38,8 +38,8 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request: Request, call_next: Next) -> Response:
-        request_id = request.headers.get("X-Request-Id") or f"req_{uuid.uuid4().hex[:20]}"
-        trace_id = request.headers.get("X-Trace-Id") or request_id
+        request_id = f"req_{uuid.uuid4().hex[:20]}"
+        trace_id = request_id
 
         request_id_var.set(request_id)
         trace_id_var.set(trace_id)
@@ -50,6 +50,26 @@ class RequestContextMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         response.headers["X-Request-Id"] = request_id
         return response
+
+
+def apply_security_headers(response: Response, *, is_production: bool) -> None:
+    """Shared normal/error response protection, including outer 500 responses."""
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("X-Frame-Options", "DENY")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault(
+        "Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=()"
+    )
+    response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
+    # The API returns JSON, never markup, so it can afford the strictest
+    # possible CSP.
+    response.headers.setdefault(
+        "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
+    )
+    if is_production:
+        response.headers.setdefault(
+            "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+        )
 
 
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
@@ -65,47 +85,116 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
 
     async def dispatch(self, request: Request, call_next: Next) -> Response:
         response = await call_next(request)
-        response.headers.setdefault("X-Content-Type-Options", "nosniff")
-        response.headers.setdefault("X-Frame-Options", "DENY")
-        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-        response.headers.setdefault(
-            "Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=()"
-        )
-        response.headers.setdefault("Cross-Origin-Opener-Policy", "same-origin")
-        # The API returns JSON, never markup, so it can afford the strictest
-        # possible CSP.
-        response.headers.setdefault(
-            "Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'"
-        )
-        if self._is_production:
-            response.headers.setdefault(
-                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
-            )
+        apply_security_headers(response, is_production=self._is_production)
         return response
 
 
-class BodySizeLimitMiddleware(BaseHTTPMiddleware):
-    """Reject oversized bodies BEFORE they are buffered into memory."""
+class BodySizeLimitMiddleware:
+    """Bound actual received bytes before routing, including chunked requests.
+
+    Content-Length is only an early rejection hint. Bounded buffering prevents
+    downstream multipart/JSON parsers from allocating an unlimited request.
+    """
 
     def __init__(self, app: ASGIApp, *, max_bytes: int) -> None:
-        super().__init__(app)
-        self._max_bytes = max_bytes
+        self.app, self.max_bytes = app, max_bytes
 
-    async def dispatch(self, request: Request, call_next: Next) -> Response:
-        content_length = request.headers.get("content-length")
-        if content_length and content_length.isdigit() and int(content_length) > self._max_bytes:
-            return JSONResponse(
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        headers = dict(scope.get("headers", []))
+        length = headers.get(b"content-length", b"")
+        payload = bytearray()
+        oversized = length.isdigit() and int(length) > self.max_bytes
+        while not oversized:
+            message = await receive()
+            if message["type"] == "http.disconnect":
+                return
+            data = message.get("body", b"")
+            if len(payload) + len(data) > self.max_bytes:
+                oversized = True
+                break
+            payload.extend(data)
+            if not message.get("more_body", False):
+                break
+        if oversized:
+            response = JSONResponse(
                 status_code=413,
                 media_type="application/problem+json",
                 content={
                     "type": "https://api.trustlens.app/errors/payload-too-large",
                     "title": "Payload too large",
                     "status": 413,
-                    "detail": f"Request body exceeds {self._max_bytes} bytes.",
+                    "detail": f"Request body exceeds {self.max_bytes} bytes.",
                     "code": "PAYLOAD_TOO_LARGE",
                     "requestId": request_id_var.get(),
                 },
             )
+            await response(scope, receive, send)
+            return
+        delivered = False
+
+        async def replay() -> dict:
+            nonlocal delivered
+            if not delivered:
+                delivered = True
+                return {"type": "http.request", "body": bytes(payload), "more_body": False}
+            return await receive()
+
+        await self.app(scope, replay, send)
+
+
+class RequestBudgetMiddleware(BaseHTTPMiddleware):
+    """Apply an IP budget to every API route, not just selected handlers."""
+
+    def __init__(self, app: ASGIApp, *, settings: Settings) -> None:
+        super().__init__(app)
+        self.settings = settings
+
+    async def dispatch(self, request: Request, call_next: Next) -> Response:
+        container = getattr(request.app.state, "container", None)
+        if (
+            container is not None
+            and self.settings.rate_limit.enabled
+            and request.method != "OPTIONS"
+            and request.url.path.startswith(("/api/", "/public/"))
+        ):
+            from trustlens_api.api.deps import _client_ip
+
+            ip = _client_ip(request, self.settings.security.trusted_proxy_count) or "unknown"
+            authenticated = request.headers.get("authorization", "").lower().startswith("bearer ")
+            limit = (
+                self.settings.rate_limit.ip_per_minute
+                if authenticated
+                else self.settings.rate_limit.anon_per_minute
+            )
+            try:
+                allowed, _, retry = await container.rate_limiter.hit(
+                    f"request:{'bearer' if authenticated else 'anonymous'}:{ip}",
+                    limit=limit,
+                    window_seconds=60,
+                )
+            except Exception:
+                return JSONResponse(
+                    status_code=503,
+                    headers={"Retry-After": "30"},
+                    content={
+                        "code": "RATE_LIMIT_UNAVAILABLE",
+                        "detail": "Service temporarily unavailable. Try again shortly.",
+                        "requestId": request_id_var.get(),
+                    },
+                )
+            if not allowed:
+                return JSONResponse(
+                    status_code=429,
+                    headers={"Retry-After": str(retry)},
+                    content={
+                        "code": "RATE_LIMITED",
+                        "detail": "Too many requests. Try again shortly.",
+                        "requestId": request_id_var.get(),
+                    },
+                )
         return await call_next(request)
 
 
@@ -142,7 +231,7 @@ class AccessLogMiddleware(BaseHTTPMiddleware):
                 path=request.url.path,
                 status=response.status_code,
                 duration_ms=duration_ms,
-                query=str(request.url.query)[:200] or None,
+                query_count=len(request.query_params),
             )
         return response
 
@@ -158,6 +247,7 @@ def install_middleware(app: FastAPI, settings: Settings) -> None:
         -> BodySizeLimit -> AccessLog -> router
     """
     app.add_middleware(AccessLogMiddleware)
+    app.add_middleware(RequestBudgetMiddleware, settings=settings)
     app.add_middleware(
         BodySizeLimitMiddleware,
         max_bytes=settings.storage.storage_max_upload_bytes + 1_048_576,

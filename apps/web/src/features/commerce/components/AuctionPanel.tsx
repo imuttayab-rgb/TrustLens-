@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: AuctionPanel. */
 'use client';
 
 import { useSession } from '@/lib/auth/use-session';

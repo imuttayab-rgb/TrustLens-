@@ -21,12 +21,15 @@ class PublicListingResponse(Schema):
     price: float | None = None
     currency: str | None = None
     category: str | None = None
+    category_node_id: str | None = None
+    category_data: dict[str, str | float] = Field(default_factory=dict)
     condition: str | None = None
     city: str | None = None
     area: str | None = None
     created_at: datetime
     seller_handle: str
     seller_display_name: str
+    seller_photo_url: str | None = None
     status: str = "ACTIVE"
     negotiable: bool = False
     risk_level: str | None = None
@@ -52,15 +55,19 @@ class PublicListingDetailResponse(Schema):
     price: float | None = None
     currency: str | None = None
     category: str | None = None
+    category_node_id: str | None = None
+    category_data: dict[str, str | float] = Field(default_factory=dict)
     condition: str | None = None
     city: str | None = None
     area: str | None = None
     created_at: datetime
     seller_handle: str
     seller_display_name: str
+    seller_photo_url: str | None = None
     status: str = "ACTIVE"
     negotiable: bool = False
     attributes: dict[str, str] = Field(default_factory=dict)
+    public_phone: str | None = None
     video_url: str | None = None
     risk_level: str | None = None
     identity_verified: bool = False

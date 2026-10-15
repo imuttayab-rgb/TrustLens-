@@ -7,7 +7,7 @@
 # able to run the whole product on one machine, or on any host that takes a
 # container, without depending on a particular platform's build system. Vercel
 # still works and builds natively - it ignores this file.
-FROM node:20-alpine AS base
+FROM node:24-alpine AS base
 RUN corepack enable
 WORKDIR /app
 
@@ -25,15 +25,18 @@ COPY apps/admin/package.json apps/admin/
 COPY packages/ packages/
 RUN pnpm install --frozen-lockfile
 
-FROM base AS builder
+# Keep the pnpm/Corepack cache downloaded by `pnpm install` in deps.
+# Starting from base and copying only /app discards that cache and makes
+# the first pnpm build command fetch the package manager again.
+FROM deps AS builder
 ARG APP=web
 
-# The WHOLE /app, not just /app/node_modules. pnpm writes a node_modules into
-# the root *and* into every workspace package - the per-package ones hold the
-# .bin symlinks - so copying only the root one produces `sh: next: not found`.
-COPY --from=deps /app ./
-# Source on top. COPY adds and overwrites; it does not delete, so every
-# node_modules from the stage above survives this.
+# Inherit the whole /app, including every workspace node_modules/.bin.
+# Corepack must use the already-installed, project-pinned pnpm version.
+# This affects Corepack only; Next.js can still fetch its configured fonts.
+ENV COREPACK_ENABLE_NETWORK=0
+RUN pnpm --version && echo COREPACK_CACHE=READY
+# Source on top. COPY does not remove the inherited dependencies or cache.
 COPY . .
 
 # NEXT_PUBLIC_* values are inlined at build time, so they must be present here
@@ -41,6 +44,16 @@ COPY . .
 # surprise: changing one later needs a rebuild, not a restart.
 ARG NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
 ENV NEXT_PUBLIC_API_BASE_URL=${NEXT_PUBLIC_API_BASE_URL}
+# NEXT_PUBLIC_* values are compiled into the browser bundle. Keeping the
+# challenge default-off lets an existing Docker install rebuild unchanged.
+ARG NEXT_PUBLIC_LIVE_FACE_SCAN=false
+ENV NEXT_PUBLIC_LIVE_FACE_SCAN=${NEXT_PUBLIC_LIVE_FACE_SCAN}
+# Webcam-only document capture is a separate opt-in from live face scan.
+# This flag is compiled into the web bundle; the admin app remains unchanged.
+ARG NEXT_PUBLIC_LIVE_ID_SCAN=false
+ENV NEXT_PUBLIC_LIVE_ID_SCAN=${NEXT_PUBLIC_LIVE_ID_SCAN}
+ARG NEXT_PUBLIC_HOLD_ID_SCAN=false
+ENV NEXT_PUBLIC_HOLD_ID_SCAN=${NEXT_PUBLIC_HOLD_ID_SCAN}
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo run build --filter=@trustlens/${APP}
 

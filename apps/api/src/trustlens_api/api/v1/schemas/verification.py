@@ -12,7 +12,7 @@ from trustlens_api.api.v1.schemas.common import Schema
 
 class UploadIntentRequest(Schema):
     purpose: str = Field(
-        description="CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE | LISTING_VIDEO"
+        description="CNIC_FRONT | CNIC_BACK | SELFIE | HOLD_ID | LISTING_IMAGE | LISTING_VIDEO"
     )
     content_type: str
     size_bytes: int = Field(gt=0)
@@ -25,8 +25,8 @@ class UploadIntentRequest(Schema):
         # size/mime limits) happens in the handler, which knows the
         # purpose; this is just a first, purpose-blind filter against
         # anything that couldn't ever be a valid upload.
-        if v not in {"image/jpeg", "image/png", "image/webp", "video/mp4"}:
-            raise ValueError("Only JPEG, PNG, WEBP images or an MP4 video are accepted.")
+        if v not in {"image/jpeg", "image/png", "image/webp", "video/mp4", "video/webm"}:
+            raise ValueError("Only JPEG, PNG, WEBP images or an MP4/WebM video are accepted.")
         return v
 
 
@@ -42,6 +42,9 @@ class SubmitIdentityRequest(Schema):
     cnic_front_file_id: UUID
     cnic_back_file_id: UUID
     selfie_file_id: UUID
+    # One frame showing the applicant holding the front of the ID beside
+    # their face. Optional for older deployments, required in the opt-in pilot.
+    hold_id_file_id: UUID | None = None
     #: Biometric processing requires explicit, versioned consent before the
     #: face comparison may run.
     biometric_consent: bool

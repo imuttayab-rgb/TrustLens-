@@ -80,3 +80,15 @@ docs/
 *.pdf
 *.bat
 testing/
+
+# Generated calling keys and media-server configuration
+.trustlens-calls/
+
+# Local setup mutex and transfer artifacts
+.trustlens-setup-lock/
+transfer-backups/
+
+# Private updater state must never enter images or commits.
+.trustlens-update-backups/
+.trustlens-update-lock/
+.trustlens-local-project

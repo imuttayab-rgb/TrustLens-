@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for not-found.tsx: not found. */
 import { Button } from '@trustlens/ui';
 import Link from 'next/link';
 

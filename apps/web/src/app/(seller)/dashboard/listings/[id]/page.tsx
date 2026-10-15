@@ -1,14 +1,14 @@
+/** Next.js route/layout composition for (seller)/dashboard/listings/[id]: page. */
 'use client';
 
 import { StartAuctionCard } from '@/features/commerce';
 import {
-  ListingForm,
-  ListingImages,
+  PostAdWizard,
   ListingRiskPanel,
+  PublicationNotice,
   useAnalyseListing,
   useDeleteListing,
   useListing,
-  useUpdateListing,
 } from '@/features/listings';
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Spinner } from '@trustlens/ui';
 import Link from 'next/link';
@@ -21,7 +21,7 @@ export default function ListingDetailPage() {
   const id = params.id;
 
   const { data: listing, isPending } = useListing(id);
-  const update = useUpdateListing(id);
+
   const remove = useDeleteListing();
   const analyse = useAnalyseListing();
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -41,11 +41,16 @@ export default function ListingDetailPage() {
   const removed = listing.status === 'REMOVED';
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto max-w-7xl">
       <Link href="/dashboard/listings" className="text-sm text-muted-foreground hover:underline">
         ← Back to selling
       </Link>
       <h1 className="mt-2 truncate text-2xl font-bold">{listing.title}</h1>
+      {!removed && (
+        <div className="mt-5">
+          <PublicationNotice />
+        </div>
+      )}
 
       <Card className="mt-6">
         <CardHeader>
@@ -81,16 +86,7 @@ export default function ListingDetailPage() {
       ) : (
         <>
           <div className="mt-10">
-            <ListingImages listingId={id} />
-          </div>
-
-          <h2 className="mt-10 text-lg font-semibold">Edit</h2>
-          <div className="mt-4">
-            <ListingForm
-              listing={listing}
-              onSubmit={(payload) => update.mutateAsync(payload)}
-              submitLabel="Save changes"
-            />
+            <PostAdWizard initialListingId={id} mode="edit" />
           </div>
 
           <div className="mt-10 border-t border-border pt-6">

@@ -1,5 +1,5 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
+import tooling from './packages/config-eslint/tooling.js';
+const { js, tseslint } = tooling;
 
 /**
  * Root flat config.

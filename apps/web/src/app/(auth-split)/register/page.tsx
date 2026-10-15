@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (auth-split)/register: page. */
 import { RegisterForm } from '@/features/auth';
 import type { Metadata } from 'next';
 import { AuthTabs } from '../AuthTabs';

@@ -30,6 +30,8 @@ class CreateSavedSearchCommand:
     user_id: UUID
     name: str
     category: str | None = None
+    category_node_id: str | None = None
+    facets: dict | None = None
     q: str | None = None
     city: str | None = None
     area: str | None = None
@@ -50,6 +52,13 @@ class CreateSavedSearch:
         if len(name) > MAX_NAME_CHARS:
             raise ValidationError(f"Keep the name under {MAX_NAME_CHARS} characters.", field="name")
         category = validate_category(cmd.category)
+        from trustlens.core.catalogue import category_node, validate_facets
+        node = category_node(cmd.category_node_id) if cmd.category_node_id else None
+        if cmd.category_node_id and node is None:
+            raise ValidationError("Choose a valid category.", field="categoryNodeId")
+        facets = validate_facets(cmd.category_node_id, cmd.facets or {})
+        if cmd.min_price is not None and cmd.max_price is not None and cmd.min_price > cmd.max_price:
+            raise ValidationError("Minimum price cannot exceed maximum price.", field="minPrice")
 
         async with self._uow:
             if (
@@ -66,6 +75,8 @@ class CreateSavedSearch:
                     user_id=cmd.user_id,
                     name=name,
                     category=category,
+                    category_node_id=cmd.category_node_id,
+                    facets=facets,
                     q=(cmd.q.strip() or None) if cmd.q else None,
                     city=cmd.city,
                     area=cmd.area,

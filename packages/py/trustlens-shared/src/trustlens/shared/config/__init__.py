@@ -1,3 +1,4 @@
+"""  init   module in config."""
 from trustlens.shared.config.settings import (
     Environment,
     Settings,

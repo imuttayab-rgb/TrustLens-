@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: ImageCapture. */
 'use client';
 
 import { Alert, Progress, cn } from '@trustlens/ui';

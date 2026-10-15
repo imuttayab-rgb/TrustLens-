@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: Card. */
 import * as React from 'react';
 import { cn } from '../lib/cn';
 

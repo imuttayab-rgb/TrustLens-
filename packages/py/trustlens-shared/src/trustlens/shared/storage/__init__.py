@@ -50,21 +50,35 @@ class S3ObjectStorage(ObjectStorage):
 
     def __init__(self, settings: StorageSettings) -> None:
         self._settings = settings
-        self._client = boto3.client(
-            "s3",
-            endpoint_url=settings.storage_endpoint_url,
-            region_name=settings.storage_region,
-            aws_access_key_id=(
+        client_options: dict[str, Any] = {
+            "region_name": settings.storage_region,
+            "aws_access_key_id": (
                 settings.storage_access_key_id.get_secret_value()
                 if settings.storage_access_key_id
                 else None
             ),
-            aws_secret_access_key=(
+            "aws_secret_access_key": (
                 settings.storage_secret_access_key.get_secret_value()
                 if settings.storage_secret_access_key
                 else None
             ),
-            config=BotoConfig(signature_version="s3v4", retries={"max_attempts": 3}),
+            "config": BotoConfig(signature_version="s3v4", retries={"max_attempts": 3}),
+        }
+        # Server-side object operations always use the private Docker hostname.
+        self._client = boto3.client(
+            "s3", endpoint_url=settings.storage_endpoint_url, **client_options
+        )
+        # SigV4 includes the Host header in its signature. Signing at the
+        # internal hostname then string-replacing it with localhost produces a
+        # broken signature, so instantiate a separate signer with the SAME keys
+        # and region but a browser-reachable public origin. No network request
+        # is made when botocore creates these presigned URLs.
+        self._presign_client = (
+            boto3.client(
+                "s3", endpoint_url=settings.storage_public_endpoint_url, **client_options
+            )
+            if settings.storage_public_endpoint_url
+            else self._client
         )
 
     async def presign_upload(
@@ -78,7 +92,7 @@ class S3ObjectStorage(ObjectStorage):
     ) -> PresignedUpload:
         def _presign() -> dict[str, Any]:
             # boto3 ships no stubs, so this arrives as Any at the boundary.
-            presigned: Any = self._client.generate_presigned_post(
+            presigned: Any = self._presign_client.generate_presigned_post(
                 Bucket=bucket,
                 Key=object_key,
                 Fields={"Content-Type": content_type},
@@ -103,7 +117,7 @@ class S3ObjectStorage(ObjectStorage):
     async def presign_download(self, *, bucket: str, object_key: str, ttl_seconds: int) -> str:
         def _presign() -> str:
             return str(
-                self._client.generate_presigned_url(
+                self._presign_client.generate_presigned_url(
                     "get_object",
                     Params={"Bucket": bucket, "Key": object_key},
                     ExpiresIn=ttl_seconds,

@@ -1,3 +1,4 @@
+/** Index module in notifications. */
 export { NotificationBell } from './components/NotificationBell';
 export {
   useMarkAllNotificationsRead,

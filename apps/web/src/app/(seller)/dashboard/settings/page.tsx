@@ -1,6 +1,9 @@
+/** Next.js route/layout composition for (seller)/dashboard/settings: page. */
 'use client';
 
 import { api } from '@/lib/api/client';
+import { PrivateAccountDetails } from '@/features/account';
+import { setAccessToken } from '@/lib/auth/session';
 import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -31,6 +34,16 @@ const deleteSchema = z.object({
   password: z.string().min(1, 'Password is required to delete your account'),
 });
 
+const sessionsSchema = z.array(
+  z.object({
+    id: z.string(),
+    createdAt: z.string(),
+    userAgent: z.string().nullable(),
+    ipAddress: z.string().nullable(),
+    isCurrent: z.boolean(),
+  }),
+);
+
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const router = useRouter();
@@ -41,7 +54,7 @@ export default function SettingsPage() {
     queryFn: async () => {
       const result = await api.GET('/api/v1/auth/sessions');
       if (result.error) throw toApiError(result.error);
-      return (result.data as any).data;
+      return sessionsSchema.parse(result.data?.data);
     },
   });
 
@@ -54,7 +67,7 @@ export default function SettingsPage() {
       if (result.error) throw toApiError(result.error);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
+      void queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
     },
   });
 
@@ -72,7 +85,7 @@ export default function SettingsPage() {
     });
     if (ok) {
       pwForm.reset();
-      queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
+      void queryClient.invalidateQueries({ queryKey: ['auth', 'sessions'] });
       alert('Password changed successfully. Other sessions have been signed out.');
     }
   });
@@ -100,7 +113,9 @@ export default function SettingsPage() {
   const delApi = useApiForm(delForm.setError);
   const onDeleteSubmit = delForm.handleSubmit(async (values) => {
     if (
-      !confirm('Are you absolutely sure you want to delete your account? This cannot be undone.')
+      !confirm(
+        'Deactivate your account, hide your ads and request data deletion? You will be signed out. Data erasure requires staff review.',
+      )
     ) {
       return;
     }
@@ -111,7 +126,9 @@ export default function SettingsPage() {
       if (result.error) throw toApiError(result.error);
     });
     if (ok) {
-      router.push('/login');
+      setAccessToken(null);
+      queryClient.clear();
+      router.push('/login?account=deactivated');
     }
   });
 
@@ -122,6 +139,7 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">Manage your security and data.</p>
       </div>
 
+      <PrivateAccountDetails />
       <Card>
         <CardHeader>
           <CardTitle>Change Password</CardTitle>
@@ -163,7 +181,7 @@ export default function SettingsPage() {
             <Spinner />
           ) : (
             <ul className="divide-y divide-border rounded-md border border-border">
-              {sessions?.map((session: any) => (
+              {sessions?.map((session) => (
                 <li key={session.id} className="flex items-center justify-between p-4">
                   <div>
                     <p className="font-medium">
@@ -221,8 +239,9 @@ export default function SettingsPage() {
           <div className="border-t border-border pt-6">
             <h3 className="font-medium text-destructive">Delete Account</h3>
             <p className="mb-4 text-sm text-muted-foreground">
-              Permanently delete your account, listings, and verification data. This action is
-              irreversible.
+              Deactivate your account and hide your ads immediately. Data deletion is recorded for
+              staff review; stored records are not automatically erased. Google-only users must set
+              a password using Forgot password before confirming.
             </p>
             <form onSubmit={(e) => void onDeleteSubmit(e)} className="space-y-4">
               <Field
@@ -234,7 +253,9 @@ export default function SettingsPage() {
               </Field>
               {delApi.formError && <Alert tone="error">{delApi.formError.message}</Alert>}
               <Button type="submit" variant="destructive" disabled={delForm.formState.isSubmitting}>
-                {delForm.formState.isSubmitting ? 'Deleting...' : 'Delete My Account'}
+                {delForm.formState.isSubmitting
+                  ? 'Submitting...'
+                  : 'Deactivate and Request Deletion'}
               </Button>
             </form>
           </div>

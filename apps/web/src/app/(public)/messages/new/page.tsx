@@ -1,5 +1,7 @@
+/** Next.js route/layout composition for (public)/messages/new: page. */
 'use client';
 
+import { useMyProfile } from '@/features/profile';
 import { useSendMessage } from '@/features/messaging';
 import { Alert, Button } from '@trustlens/ui';
 import Link from 'next/link';
@@ -12,6 +14,7 @@ export default function NewConversationPage() {
   const listingId = searchParams.get('listingId');
   const intent = searchParams.get('intent');
   const sendMessage = useSendMessage();
+  const { data: profile } = useMyProfile();
   const [body, setBody] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -42,8 +45,8 @@ export default function NewConversationPage() {
       });
       const suffix = intent ? `?intent=${encodeURIComponent(intent)}` : '';
       router.push(`/messages/${result.conversationId}${suffix}`);
-    } catch {
-      setError('Could not send that message. Try again.');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Could not send that message. Try again.');
     }
   }
 
@@ -57,6 +60,14 @@ export default function NewConversationPage() {
         Ask about this listing before you commit to anything.
       </p>
 
+      {!profile?.canInteract && (
+        <Alert tone="warning" className="mt-4">
+          <Link href="/dashboard" className="underline">
+            Confirm your permanent username, ID-matched name and approved profile photo before
+            sending a message.
+          </Link>
+        </Alert>
+      )}
       <form onSubmit={(event) => void handleSubmit(event)} className="mt-6 space-y-4">
         <textarea
           value={body}
@@ -73,7 +84,7 @@ export default function NewConversationPage() {
           type="submit"
           size="lg"
           className="w-full"
-          disabled={!body.trim() || sendMessage.isPending}
+          disabled={!body.trim() || sendMessage.isPending || !profile?.canInteract}
         >
           {sendMessage.isPending ? 'Sending…' : 'Send message'}
         </Button>

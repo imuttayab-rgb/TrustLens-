@@ -1,7 +1,9 @@
+/** Feature state, queries or side-effect coordination for use messaging. */
 'use client';
 
+import { profileRequest } from '@/features/profile';
 import { api } from '@/lib/api/client';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 
 export interface ConversationSummary {
@@ -10,11 +12,22 @@ export interface ConversationSummary {
   listingTitle: string | null;
   counterpartName: string;
   counterpartUserId: string;
+  counterpartProfileUrl?: string;
+  counterpartAvatarUrl?: string | null;
+  counterpartPhotoMatched?: boolean;
   lastMessageAt: string;
   lastMessagePreview: string | null;
   unreadCount: number;
   createdAt: string;
   muted: boolean;
+  important?: boolean;
+  serverNow?: string;
+  listingStatus?: string;
+  inactiveSince?: string | null;
+  closesAt?: string | null;
+  readOnly?: boolean;
+  canSend?: boolean;
+  blocked?: boolean;
   /** Only set when the counterpart is the seller side (i.e. the current
    * user is the buyer here) - a buyer counterpart has no trust score. */
   counterpartSellerHandle: string | null;
@@ -29,6 +42,14 @@ export interface Message {
   body: string;
   createdAt: string;
   readAt: string | null;
+  kind?: 'text' | 'voice';
+  playedAt?: string | null;
+  editedAt?: string | null;
+  deleted?: boolean;
+  editableUntil?: string;
+  replyTo?: { id: string; body: string } | null;
+  forwarded?: boolean;
+  voice?: { duration: number; waveform: number[] } | null;
 }
 
 const qk = {
@@ -36,11 +57,18 @@ const qk = {
   messages: (conversationId: string) => ['conversations', conversationId, 'messages'] as const,
 };
 
-export function useConversations() {
+export function useConversations(
+  options: {
+    folder?: 'all' | 'buying' | 'selling' | 'unread' | 'important';
+    q?: string;
+    offset?: number;
+    limit?: number;
+  } = {},
+) {
   return useQuery<{ items: ConversationSummary[]; total: number }>({
-    queryKey: qk.conversations,
+    queryKey: [...qk.conversations, options],
     queryFn: async () => {
-      const result = await api.GET('/api/v1/me/conversations');
+      const result = await api.GET('/api/v1/me/conversations', { params: { query: options } });
       if (result.error) throw toApiError(result.error);
       const body = result.data as {
         data: ConversationSummary[];
@@ -56,34 +84,42 @@ export function useConversations() {
 }
 
 export function useMessages(conversationId: string | null) {
-  return useQuery<Message[]>({
+  const query = useInfiniteQuery({
     queryKey: qk.messages(conversationId ?? 'none'),
     enabled: Boolean(conversationId),
-    queryFn: async () => {
-      const result = await api.GET('/api/v1/me/conversations/{conversation_id}/messages', {
-        params: { path: { conversation_id: conversationId as string } },
-      });
-      if (result.error) throw toApiError(result.error);
-      return (result.data as { data: Message[] }).data;
-    },
+    initialPageParam: null as string | null,
+    queryFn: ({ pageParam }) =>
+      profileRequest<{ items: Message[]; nextCursor: string | null; serverNow: string }>(
+        `/me/conversations/${conversationId}/timeline${pageParam ? `?before=${pageParam}` : ''}`,
+      ),
+    getNextPageParam: (page) => page.nextCursor,
     refetchInterval: 5_000,
   });
+  return {
+    ...query,
+    data: query.data?.pages
+      .slice()
+      .reverse()
+      .flatMap((page) => page.items),
+    serverNow: query.data?.pages[0]?.serverNow,
+  };
 }
 
 export function useSendMessage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { body: string; conversationId?: string; listingId?: string }) => {
-      const result = await api.POST('/api/v1/me/conversations', {
-        body: {
-          body: input.body,
-          conversationId: input.conversationId ?? null,
-          listingId: input.listingId ?? null,
-        },
-      });
-      if (result.error) throw toApiError(result.error);
-      return (result.data as { data: { conversationId: string; message: Message } }).data;
-    },
+    mutationFn: (input: {
+      body: string;
+      conversationId?: string;
+      listingId?: string;
+      clientId?: string;
+      replyToId?: string;
+      forwardId?: string;
+    }) =>
+      profileRequest<{ conversationId: string; message: Message }>('/me/conversations', {
+        method: 'POST',
+        body: JSON.stringify({ ...input, clientId: input.clientId ?? crypto.randomUUID() }),
+      }),
     onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: qk.conversations });
       await queryClient.invalidateQueries({ queryKey: qk.messages(data.conversationId) });
@@ -105,5 +141,27 @@ export function useSetConversationMuted() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: qk.conversations });
     },
+  });
+}
+
+export function useConversation(conversationId: string) {
+  return useQuery<ConversationSummary>({
+    queryKey: ['conversations', conversationId, 'header'],
+    queryFn: () => profileRequest(`/me/conversations/${encodeURIComponent(conversationId)}`),
+    staleTime: 2_000,
+    refetchInterval: 5_000,
+    retry: 1,
+  });
+}
+
+export function useSetConversationImportant() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { conversationId: string; important: boolean }) =>
+      profileRequest<{ important: boolean }>(
+        `/me/conversations/${input.conversationId}/important`,
+        { method: 'PUT', body: JSON.stringify({ important: input.important }) },
+      ),
+    onSuccess: () => client.invalidateQueries({ queryKey: qk.conversations }),
   });
 }

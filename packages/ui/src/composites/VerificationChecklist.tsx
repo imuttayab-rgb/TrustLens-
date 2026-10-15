@@ -1,5 +1,7 @@
+/** Reusable UI rendering and interaction component: VerificationChecklist. */
 import { VERIFICATION_LABELS, type VerificationStatus } from '@trustlens/constants';
 import { Check, ChevronRight, Clock, X } from 'lucide-react';
+import type { ElementType } from 'react';
 import { cn } from '../lib/cn';
 
 export interface ChecklistItem {
@@ -39,9 +41,12 @@ const TONE: Record<string, string> = {
 export function VerificationChecklist({
   items,
   className,
+  actionLink,
 }: {
   items: ChecklistItem[];
   className?: string;
+  /** Router-aware link supplied by the host app; defaults to a plain anchor. */
+  actionLink?: ElementType;
 }) {
   const earned = items
     .filter((i) => i.status === 'VERIFIED')
@@ -59,7 +64,7 @@ export function VerificationChecklist({
         {items.map((item) => {
           const Icon = ICON[item.status] ?? ChevronRight;
           const done = item.status === 'VERIFIED';
-          const Wrapper = item.actionUrl && !done ? 'a' : 'div';
+          const Wrapper = item.actionUrl && !done ? (actionLink ?? 'a') : 'div';
 
           return (
             <li key={item.key}>

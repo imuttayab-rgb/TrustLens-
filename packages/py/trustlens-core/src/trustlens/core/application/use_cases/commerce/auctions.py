@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from uuid import UUID
 
 from trustlens.core.application.notifications import notify
+from trustlens.core.application.services.listing_publication import seller_can_publish
 from trustlens.core.domain.entities import (
     Auction,
     Bid,
@@ -86,6 +87,8 @@ class CreateAuction:
                 raise PermissionDenied("This listing belongs to someone else.")
             if listing.status != ListingStatus.ACTIVE:
                 raise InvalidStateError("This listing isn't open for an auction right now.")
+            if not seller_can_publish(seller):
+                raise InvalidStateError("Complete seller verification before starting an auction.")
 
             existing = await self._uow.auctions.get_for_listing(listing.id)
             if existing is not None and existing.is_open:
@@ -131,6 +134,17 @@ class PlaceBid:
                 raise InvalidStateError("This auction has ended.")
             if cmd.bidder_id == auction.seller_id:
                 raise PermissionDenied("You cannot bid on your own listing.")
+            listing = await self._uow.listings.get(auction.listing_id)
+            seller = await self._uow.sellers.get_by_user(auction.seller_id)
+            if (
+                listing is None
+                or listing.status != ListingStatus.ACTIVE
+                or seller is None
+                or not seller_can_publish(seller)
+            ):
+                raise InvalidStateError(
+                    "The seller must be verified and the listing public to bid."
+                )
 
             highest = await self._uow.auctions.get_highest_bid(auction.id)
             if highest is None:
@@ -211,9 +225,17 @@ class CloseAuction:
                 raise InvalidStateError("This auction hasn't ended yet.")
 
             highest = await self._uow.auctions.get_highest_bid(auction.id)
+            listing = await self._uow.listings.get(auction.listing_id)
+            seller = await self._uow.sellers.get_by_user(auction.seller_id)
+            still_public = (
+                listing is not None
+                and listing.status == ListingStatus.ACTIVE
+                and seller is not None
+                and seller_can_publish(seller)
+            )
             winning_bid = (
                 highest
-                if highest is not None
+                if still_public and highest is not None
                 and (auction.reserve_price is None or highest.amount >= auction.reserve_price)
                 else None
             )
@@ -227,10 +249,18 @@ class CloseAuction:
                 )
             )
 
-            listing = await self._uow.listings.get(auction.listing_id)
             if winning_bid is not None and listing is not None:
                 await self._settle(auction, winning_bid, listing, now)
             else:
+                if highest is not None and not still_public:
+                    await notify(
+                        self._uow, self._ids, self._clock,
+                        user_id=highest.bidder_id,
+                        type="AUCTION_ENDED_NO_WINNER",
+                        title="Auction closed without a sale",
+                        body="The listing is no longer public or the seller needs verification.",
+                        data={"auctionId": str(auction.id), "listingId": str(auction.listing_id)},
+                    )
                 await notify(
                     self._uow,
                     self._ids,
@@ -238,9 +268,13 @@ class CloseAuction:
                     user_id=auction.seller_id,
                     type="AUCTION_ENDED_NO_WINNER",
                     title="Auction ended with no winner",
-                    body="No bid met your reserve price."
-                    if highest is not None
-                    else "Nobody placed a bid before it ended.",
+                    body=(
+                        "Seller verification or listing publication is no longer valid."
+                        if not still_public
+                        else "No bid met your reserve price."
+                        if highest is not None
+                        else "Nobody placed a bid before it ended."
+                    ),
                     data={"auctionId": str(auction.id), "listingId": str(auction.listing_id)},
                 )
 

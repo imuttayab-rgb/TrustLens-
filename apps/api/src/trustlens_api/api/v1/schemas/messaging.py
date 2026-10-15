@@ -12,7 +12,10 @@ from trustlens_api.api.v1.schemas.common import Schema
 
 
 class SendMessageRequest(Schema):
-    body: str = Field(min_length=1, max_length=MAX_MESSAGE_CHARS)
+    body: str = Field(default="", max_length=MAX_MESSAGE_CHARS)
+    client_id: UUID | None = None
+    reply_to_id: UUID | None = None
+    forward_id: UUID | None = None
     #: Exactly one of these two, enforced in the use case (not here) so the
     #: error carries the same field-level detail the rest of the API uses.
     conversation_id: UUID | None = None

@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/messages: SafeMeetSidebar. */
 'use client';
 
 import {

@@ -49,12 +49,17 @@ async def to_public_listing_response(
         price=item.price,
         currency=item.currency,
         category=item.category,
+        category_node_id=item.category_node_id,
+        category_data=item.category_data,
         condition=item.condition,
         city=item.city,
         area=item.area,
         created_at=item.created_at,
         seller_handle=item.seller_handle,
         seller_display_name=item.seller_display_name,
+        seller_photo_url=f"/api/v1/public/profiles/{item.seller_user_id}/photo"
+        if item.seller_user_id
+        else None,
         status=item.status,
         negotiable=item.negotiable,
         risk_level=item.risk_level,

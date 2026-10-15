@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/scoring: page. */
 import { ScoringModelsClient } from './ScoringModelsClient';
 
 export const metadata = { title: 'Scoring models' };

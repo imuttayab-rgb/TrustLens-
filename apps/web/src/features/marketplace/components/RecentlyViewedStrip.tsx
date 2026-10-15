@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: RecentlyViewedStrip. */
 'use client';
 
 import { stagger, usePrefersReducedMotion } from '@/lib/motion';
@@ -5,7 +6,7 @@ import { cn } from '@trustlens/utils';
 import { History } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRecentlyViewed } from '../hooks/use-recently-viewed';
+import { clearRecentlyViewed, useRecentlyViewed } from '../hooks/use-recently-viewed';
 
 /** MKT-01's "recently viewed" rail - local history only, see `use-recently-viewed`. */
 export function RecentlyViewedStrip({ excludeId }: { excludeId?: string }) {
@@ -23,6 +24,9 @@ export function RecentlyViewedStrip({ excludeId }: { excludeId?: string }) {
       <h2 className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground">
         <History className="h-4 w-4" aria-hidden="true" />
         Recently viewed
+        <button type="button" onClick={clearRecentlyViewed} className="ml-auto text-xs underline">
+          Clear history
+        </button>
       </h2>
       <div className="mt-3 flex gap-3 overflow-x-auto pb-1">
         {items.map((listing, index) => (

@@ -40,10 +40,10 @@ const config: NextConfig = {
           { key: 'X-Content-Type-Options', value: 'nosniff' },
           { key: 'X-Frame-Options', value: 'DENY' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          // camera=(self) is required for the selfie capture step.
+          // Selfie capture and user-initiated chat recording need same-origin access.
           {
             key: 'Permissions-Policy',
-            value: 'camera=(self), microphone=(), geolocation=(), payment=()',
+            value: 'camera=(self), microphone=(self), geolocation=(), payment=()',
           },
         ],
       },

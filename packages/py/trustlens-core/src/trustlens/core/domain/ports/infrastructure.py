@@ -190,6 +190,10 @@ class JobQueue(Protocol):
 
     async def status(self, job_id: str) -> str | None: ...
 
+    async def describe(self, job_id: str) -> dict[str, Any] | None:
+        """Trusted queue metadata for authorization; never returned verbatim to clients."""
+        ...
+
 
 @dataclass(frozen=True, slots=True)
 class PresignedUpload:

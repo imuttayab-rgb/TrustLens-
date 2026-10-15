@@ -25,7 +25,11 @@ log = get_logger(__name__)
 
 
 def build_ocr_engine(settings: AiSettings) -> OcrEngine:
-    if settings.use_fake_ai:
+    # Real OCR is independently opt-in for the laptop FYP demo, exactly like
+    # FACE_MATCH_REAL_IN_DEMO: the local ONNX model reads the CNIC images while
+    # the LLM/classifier stay mocked. With the flag off, USE_FAKE_AI keeps its
+    # previous behaviour (deterministic fake OCR).
+    if settings.use_fake_ai and not settings.ocr_real_in_demo:
         from trustlens.ai.fakes import FakeOcrEngine
 
         return FakeOcrEngine()
@@ -49,7 +53,10 @@ def build_ocr_engine(settings: AiSettings) -> OcrEngine:
 
 
 def build_face_matcher(settings: AiSettings) -> FaceMatcher:
-    if settings.use_fake_ai:
+    # Real 1:1 comparison is independently opt-in for a laptop FYP demo: the
+    # heavy model stays in the worker, and mock OCR/LLM need no paid API keys.
+    # With the flag off, USE_FAKE_AI retains precisely its previous behavior.
+    if settings.use_fake_ai and not settings.face_match_real_in_demo:
         from trustlens.ai.fakes import FakeFaceMatcher
 
         return FakeFaceMatcher()

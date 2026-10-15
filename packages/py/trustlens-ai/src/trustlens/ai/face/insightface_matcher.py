@@ -24,6 +24,7 @@ stay behind `FACE_ENGINE` for Phase 1 to benchmark.
 from __future__ import annotations
 
 import asyncio
+import math
 import os
 from typing import Any
 
@@ -64,6 +65,7 @@ class InsightFaceMatcher:
         # weights) without a second code path.
         self._model_root = model_root or os.environ.get("INSIGHTFACE_HOME", "~/.insightface")
         self._app: Any | None = None
+        self._compare_lock = asyncio.Lock()
 
     def _get_app(self) -> Any:
         """Built once, lazily - model load is seconds, not milliseconds.
@@ -93,7 +95,55 @@ class InsightFaceMatcher:
     async def compare(
         self, document_image: bytes, selfie_image: bytes, *, threshold: float
     ) -> FaceMatchResult:
-        return await asyncio.to_thread(self._compare_sync, document_image, selfie_image, threshold)
+        async with self._compare_lock:
+            return await asyncio.to_thread(
+                self._compare_sync, document_image, selfie_image, threshold
+            )
+
+    async def compare_profile(
+        self, photo: bytes, reference: bytes, *, threshold: float
+    ) -> FaceMatchResult:
+        async with self._compare_lock:
+            return await asyncio.to_thread(self._profile_sync, photo, reference, threshold)
+
+    def _profile_sync(self, photo: bytes, reference: bytes, threshold: float) -> FaceMatchResult:
+        import cv2
+        import numpy as np
+
+        faces = []
+        for raw in (photo, reference):
+            decoded = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_COLOR)
+            if decoded is None:
+                raise ValueError("Image could not be decoded")
+            faces.append(list(self._get_app().get(decoded)))
+        counts = {"profile_face_count": len(faces[0]), "reference_face_count": len(faces[1])}
+        if any(
+            len(f) != 1 or _face_width(f[0]) < 80 or float(f[0].det_score) < 0.70 for f in faces
+        ):
+            return FaceMatchResult(
+                similarity=0,
+                distance=1,
+                threshold=threshold,
+                engine=ENGINE_NAME,
+                engine_version=self._model_name,
+                face_detected_in_document=False,
+                face_detected_in_selfie=False,
+                raw={**counts, "reason": "one_clear_face_required"},
+            )
+        a, b = (f[0].embedding for f in faces)
+        cosine = float(np.dot(a / (np.linalg.norm(a) + 1e-10), b / (np.linalg.norm(b) + 1e-10)))
+        if not math.isfinite(cosine):
+            raise ValueError("Face comparison returned invalid evidence")
+        similarity = max(0.0, min(1.0, (cosine + 1.0) / 2.0))
+        return FaceMatchResult(
+            similarity=similarity,
+            distance=1.0 - similarity,
+            threshold=threshold,
+            engine=ENGINE_NAME,
+            engine_version=self._model_name,
+            liveness_passed=None,
+            raw=counts,
+        )
 
     def _compare_sync(
         self, document_image: bytes, selfie_image: bytes, threshold: float

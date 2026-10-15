@@ -83,8 +83,7 @@ router = APIRouter(tags=["Verification"])
 async def _throttle_otp_request(container: ContainerDep, meta: MetaDep) -> None:
     """Per-IP limit on top of the use case's per-account hourly/daily caps
     (VER-02) - those alone do nothing about many throwaway accounts each
-    requesting SMS from the same address. Fails open, same policy as every
-    other limiter here."""
+    requesting SMS from the same address. Fails closed if the rate-limit store is unavailable."""
     limits = container.settings.rate_limit
     if not limits.enabled or meta.ip is None:
         return
@@ -95,8 +94,11 @@ async def _throttle_otp_request(container: ContainerDep, meta: MetaDep) -> None:
             window_seconds=3600,
         )
     except Exception:
-        log.warning("otp_request_throttle_unavailable_failing_open", ip=meta.ip)
-        return
+        from fastapi import HTTPException
+
+        raise HTTPException(
+            503, "Abuse protection temporarily unavailable", headers={"Retry-After": "30"}
+        ) from None
     if not allowed:
         raise RateLimitExceeded(
             "Too many verification codes requested from this network. Try again later.",
@@ -129,6 +131,12 @@ async def upload_intent(
     uow: UowDep,
     meta: MetaDep,
 ) -> dict[str, Any]:
+    from trustlens_api.modules.security.rate_limits import enforce_limit
+
+    limits = container.settings.rate_limit
+    await enforce_limit(
+        container, f"upload:{actor.user_id}", limit=limits.upload_per_minute, window=60
+    )
     settings = container.settings.storage
 
     try:
@@ -148,7 +156,7 @@ async def upload_intent(
         settings.storage_allowed_video_mime if is_video else settings.storage_allowed_mime
     )
     extensions = (
-        {"video/mp4": "mp4"}
+        {"video/mp4": "mp4", "video/webm": "webm"}
         if is_video
         else {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
     )
@@ -159,10 +167,18 @@ async def upload_intent(
         )
     if body.content_type not in allowed_mime:
         raise ValidationError(
-            "MP4 only." if is_video else "Only JPEG, PNG and WEBP images are accepted.",
+            "MP4 or WebM video only."
+            if is_video
+            else "Only JPEG, PNG and WEBP images are accepted.",
             field="contentType",
         )
 
+    await uow.files.check_upload_budget(
+        _require_user_id(actor),
+        requested_bytes=body.size_bytes,
+        max_bytes=limits.upload_total_bytes_per_user,
+        max_files=limits.upload_total_files_per_user,
+    )
     file_id = container.ids.new()
     bucket = (
         settings.storage_bucket_documents
@@ -178,7 +194,7 @@ async def upload_intent(
         bucket=bucket,
         object_key=object_key,
         content_type=body.content_type,
-        max_bytes=max_bytes,
+        max_bytes=body.size_bytes,
         ttl_seconds=settings.storage_presign_ttl_seconds,
     )
 
@@ -212,7 +228,7 @@ async def upload_intent(
             upload_url=presigned.url,
             fields=presigned.fields,
             expires_at=presigned.expires_at,
-            max_bytes=settings.storage_max_upload_bytes,
+            max_bytes=body.size_bytes,
         ).model_dump(by_alias=True),
         request_id=meta.request_id,
     )
@@ -221,11 +237,11 @@ async def upload_intent(
 @router.post(
     "/verification/identity",
     status_code=status.HTTP_202_ACCEPTED,
-    summary="Submit CNIC and selfie for verification",
+    summary="Submit CNIC, face, and optional holding-card evidence",
     description=(
-        "Records the submission and queues OCR + face matching. Returns "
-        "immediately with a job id - the AI pipeline takes 15-30 seconds and "
-        "runs in the worker (ADR-0003)."
+        "Records the submission and queues OCR + face comparisons. If hold-ID "
+        "mode is enabled, the fourth private frame is required and the result "
+        "is queued for human review. Camera guidance is not certified liveness."
     ),
     dependencies=[Depends(require_permissions("identity:submit"))],
 )
@@ -238,6 +254,10 @@ async def submit_identity(
     meta: MetaDep,
 ) -> dict[str, Any]:
     now = container.clock.now()
+    if container.settings.hold_id_required and body.hold_id_file_id is None:
+        raise ValidationError(
+            "Capture your ID beside your face before submitting.", field="holdIdFileId"
+        )
 
     # Record biometric consent BEFORE the use case checks for it. Comparing a
     # face against a national ID photo without recorded, versioned consent is
@@ -267,6 +287,7 @@ async def submit_identity(
             cnic_front_file_id=body.cnic_front_file_id,
             cnic_back_file_id=body.cnic_back_file_id,
             selfie_file_id=body.selfie_file_id,
+            hold_id_file_id=body.hold_id_file_id,
         )
     )
 
@@ -345,6 +366,12 @@ async def request_otp(
 ) -> dict[str, Any]:
     await _throttle_otp_request(container, meta)
     notifications = container.settings.notifications
+    if notifications.sms_provider == "disabled":
+        from trustlens.core.domain.errors import InvalidStateError
+
+        raise InvalidStateError(
+            "Phone verification is currently unavailable. Please contact support."
+        )
     result = await RequestPhoneOtp(
         uow=uow,
         otp=container.otp_generator,
@@ -356,10 +383,8 @@ async def request_otp(
         max_attempts=notifications.otp_max_attempts,
         limit_per_hour=notifications.otp_send_limit_hour,
         limit_per_day=notifications.otp_send_limit_day,
-        # Only ever true with the console sender, i.e. local development, so
-        # the offline demo can complete the flow.
-        expose_debug_code=notifications.sms_provider == "console"
-        and not container.settings.env.is_deployed,
+        # Local previews are delivered to Mailpit; never echo OTPs in API payloads.
+        expose_debug_code=False,
     ).execute(RequestOtpCommand(user_id=_require_user_id(actor), phone_number=body.phone_number))
 
     return envelope(

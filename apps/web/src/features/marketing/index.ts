@@ -1,3 +1,4 @@
+/** Index module in marketing. */
 export { CategoryRow } from './components/CategoryRow';
 export { ChecksGrid } from './components/ChecksGrid';
 export { FreshListings } from './components/FreshListings';
@@ -7,3 +8,6 @@ export { SafetyBanner } from './components/SafetyBanner';
 export { SiteFooter } from './components/SiteFooter';
 export { SiteNav } from './components/SiteNav';
 export { WhyChooseUs } from './components/WhyChooseUs';
+
+export { ShoppingHelp } from './components/ShoppingHelp';
+export { CategoryListingRows, ListingRow } from './components/CategoryListingRows';

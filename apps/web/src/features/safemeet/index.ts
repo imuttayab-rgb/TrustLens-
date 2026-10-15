@@ -1,3 +1,4 @@
+/** Index module in safemeet. */
 export { MeetupPanel } from './components/MeetupPanel';
 export {
   useMeetups,

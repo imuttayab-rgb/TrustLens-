@@ -149,7 +149,20 @@ async def get_optional_actor(
     if claims.get("typ") != "access":
         raise TokenInvalid("Wrong token type.")
 
-    user_id = UUID(claims["sub"])
+    try:
+        user_id = UUID(claims["sub"])
+        session_id = UUID(claims["sid"])
+    except (KeyError, ValueError, TypeError):
+        raise TokenInvalid("Please sign in again.") from None
+    if not await uow.users.session_allowed(user_id):
+        raise TokenInvalid("This account is no longer active.")
+    if not await uow.refresh_tokens.family_is_active(
+        user_id,
+        session_id,
+        at=container.clock.now(),
+        idle_days=container.settings.security.refresh_idle_ttl_days,
+    ):
+        raise TokenInvalid("This session has ended. Please sign in again.")
 
     # `pv` (permission version) compared against a Redis counter: one cheap
     # GET makes a revoked role take effect in seconds instead of waiting out
@@ -158,11 +171,19 @@ async def get_optional_actor(
     if current_version is not None and int(current_version) != int(claims.get("pv", 0)):
         raise TokenInvalid("Your permissions changed. Please refresh your session.")
 
+    from trustlens_api.modules.security.rate_limits import enforce_limit
+
+    await enforce_limit(
+        container,
+        f"request:user:{user_id}",
+        limit=container.settings.rate_limit.user_per_minute,
+        window=60,
+    )
     actor = AuthenticatedActor(
         user_id=user_id,
         roles=frozenset(UserRole(r) for r in claims.get("roles", [])),
         permissions=frozenset(claims.get("perms", [])),
-        session_id=UUID(claims["sid"]) if claims.get("sid") else None,
+        session_id=session_id,
     )
     actor_id_var.set(str(user_id))
     actor_type_var.set("USER")

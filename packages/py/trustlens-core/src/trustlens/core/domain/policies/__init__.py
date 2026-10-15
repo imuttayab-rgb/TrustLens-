@@ -237,7 +237,7 @@ def mfa_required_for(user: User, required_roles: frozenset[UserRole] | None = No
     """
     if required_roles is None:
         return user.requires_mfa
-    return bool(user.roles & required_roles)
+    return bool((user.roles | {user.primary_role}) & required_roles)
 
 
 __all__ = [

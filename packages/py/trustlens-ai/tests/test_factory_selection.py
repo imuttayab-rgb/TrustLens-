@@ -84,6 +84,40 @@ class TestFakeSwitch:
         assert isinstance(factory.build_ocr_engine(cfg), FakeOcrEngine)
         assert isinstance(factory.build_face_matcher(cfg), FakeFaceMatcher)
 
+    def test_real_face_is_opt_in_without_enabling_real_ocr_or_llm(
+        self, stub_modules: dict[str, list[Any]]
+    ) -> None:
+        # The FYP can show a REAL local 1:1 card/photo comparison without
+        # switching all AI ports (which would require a paid LLM API key).
+        cfg = settings(
+            use_fake_ai=True,
+            face_match_real_in_demo=True,
+            face_engine="insightface",
+            ocr_engine="rapidocr",
+        )
+        assert isinstance(factory.build_ocr_engine(cfg), FakeOcrEngine)
+        factory.build_face_matcher(cfg)
+        assert type(stub_modules["face"][-1]).__name__ == "InsightFaceMatcher"
+
+    def test_real_ocr_is_opt_in_without_enabling_the_llm(
+        self, stub_modules: dict[str, list[Any]]
+    ) -> None:
+        # OCR_REAL_IN_DEMO reads CNICs with the local engine while the LLM and
+        # classifier stay on their offline stand-ins (no paid API key).
+        from trustlens.ai.fakes import FakeScamClassifier, StubLlmAnalyzer
+
+        cfg = settings(use_fake_ai=True, ocr_real_in_demo=True, ocr_engine="rapidocr")
+        factory.build_ocr_engine(cfg)
+        assert type(stub_modules["ocr"][-1]).__name__ == "RapidOcrEngine"
+        assert isinstance(factory.build_llm_analyzer(cfg), StubLlmAnalyzer)
+        assert isinstance(factory.build_scam_classifier(cfg), FakeScamClassifier)
+        assert isinstance(factory.build_face_matcher(cfg), FakeFaceMatcher)
+
+    def test_real_ocr_flag_defaults_off(self) -> None:
+        cfg = settings(use_fake_ai=True, ocr_engine="rapidocr")
+        assert cfg.ocr_real_in_demo is False
+        assert isinstance(factory.build_ocr_engine(cfg), FakeOcrEngine)
+
 
 class TestOcrSelection:
     def test_default_is_easyocr(self, stub_modules: dict[str, list[Any]]) -> None:
@@ -134,7 +168,10 @@ class TestSettingsContract:
     def test_the_real_settings_expose_what_the_factory_reads(self) -> None:
         # These are the fields factory.py reads. Naming them explicitly means
         # a rename fails here rather than at worker startup in production.
-        for field in ("ocr_engine", "face_engine", "face_onnx_model", "use_fake_ai"):
+        for field in (
+            "ocr_engine", "face_engine", "face_onnx_model", "use_fake_ai",
+            "face_match_real_in_demo", "ocr_real_in_demo",
+        ):
             assert field in AiSettings.model_fields, f"AiSettings lost {field}"
 
     def test_engine_names_are_constrained(self) -> None:

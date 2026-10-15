@@ -46,7 +46,13 @@ from trustlens.core.domain.entities import (
     ScoringModel,
     ScoringWeight,
 )
-from trustlens.core.domain.enums import DocumentType, ReportStatus, RiskLevel, TransactionStatus
+from trustlens.core.domain.enums import (
+    DocumentType,
+    FilePurpose,
+    ReportStatus,
+    RiskLevel,
+    TransactionStatus,
+)
 from trustlens.core.domain.errors import (
     ConflictError,
     EntityNotFound,
@@ -166,6 +172,7 @@ class IdentityReviewModel(Schema):
     name_match_score: float | None
     decision_reason: str | None
     documents: list[IdentityReviewDocumentModel]
+    hold_card: dict[str, Any] | None = None
 
 
 class ReviewCaseModel(BaseModel):
@@ -560,6 +567,33 @@ async def get_identity_review(
             )
         )
 
+    # Bind the fourth frame to this verification, then re-check owner/purpose
+    # before presigning a short-lived private reviewer preview URL.
+    hold_id_file_id = verification.raw_result.get("hold_id_file_id")
+    if hold_id_file_id:
+        hold_file = await uow.files.get(UUID(hold_id_file_id))
+        if (
+            hold_file is not None
+            and hold_file.owner_user_id == seller.user_id
+            and hold_file.purpose == FilePurpose.HOLD_ID
+        ):
+            review_documents.append(
+                IdentityReviewDocumentModel(
+                    document_type="HOLD_ID",
+                    status="PENDING_REVIEW",
+                    preview_url=await container.storage.presign_download(
+                        bucket=hold_file.bucket,
+                        object_key=hold_file.object_key,
+                        ttl_seconds=ttl_seconds,
+                    ),
+                    url_expires_at=expires_at,
+                    ocr_confidence=None,
+                    quality_score=None,
+                    extracted_name=None,
+                    expiry_date=None,
+                )
+            )
+
     if actor.user_id is not None:
         await uow.audit_logs.record(
             AuditLogEntry(
@@ -588,6 +622,7 @@ async def get_identity_review(
         name_match_score=verification.name_match_score,
         decision_reason=verification.decision_reason,
         documents=review_documents,
+        hold_card=verification.raw_result.get("hold_card"),
     )
     return envelope(review.model_dump(by_alias=True), request_id=meta.request_id)
 
@@ -838,8 +873,11 @@ async def list_report_queue(
 ) -> dict[str, Any]:
     status_value = ReportStatus(status_filter) if status_filter else None
     page = await ListReportQueue(uow=uow).execute(status=status_value, limit=limit, offset=offset)
+    from sqlalchemy import select
+    from trustlens.db.models import ChatCaseModel
+    chat_ids = set((await uow.session.execute(select(ChatCaseModel.report_id).where(ChatCaseModel.report_id.in_([item.id for item in page.items])))).scalars())
     return envelope(
-        [_to_admin_report(item).model_dump(by_alias=True) for item in page.items],
+        [dict(_to_admin_report(item).model_dump(by_alias=True), chatCase=item.id in chat_ids) for item in page.items],
         request_id=meta.request_id,
         pagination=PageMeta.build(
             page=(page.offset // page.limit) + 1, per_page=page.limit, total=page.total

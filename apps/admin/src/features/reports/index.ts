@@ -1,3 +1,4 @@
+/** Index module in reports. */
 export {
   useReportQueue,
   useResolveDispute,
@@ -7,3 +8,5 @@ export {
   type ReportStatus,
   type ReportTargetType,
 } from './hooks/use-reports';
+
+export { ChatCaseReview } from './ChatCaseReview';

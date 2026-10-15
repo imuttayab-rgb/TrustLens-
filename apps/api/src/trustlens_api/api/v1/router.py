@@ -7,7 +7,9 @@ from fastapi import APIRouter
 from trustlens_api.api.v1.routers import (
     admin,
     appeals,
+    assistant,
     auth,
+    calls,
     commerce,
     health,
     jobs,
@@ -18,6 +20,8 @@ from trustlens_api.api.v1.routers import (
     moderation,
     notifications,
     partners,
+    private_account,
+    profiles,
     public_listings,
     public_scores,
     reputation,
@@ -27,17 +31,21 @@ from trustlens_api.api.v1.routers import (
 )
 
 api_v1 = APIRouter()
+api_v1.include_router(assistant.router)
 api_v1.include_router(auth.router)
 api_v1.include_router(admin.router)
 api_v1.include_router(appeals.router)
 api_v1.include_router(partners.router)
 api_v1.include_router(me.router)
+api_v1.include_router(private_account.router)
+api_v1.include_router(profiles.router)
 api_v1.include_router(verification.router)
 api_v1.include_router(listings.router)
 api_v1.include_router(trust_scores.router)
 api_v1.include_router(public_scores.router)
 api_v1.include_router(public_listings.router)
 api_v1.include_router(messaging.router)
+api_v1.include_router(calls.router)
 api_v1.include_router(notifications.router)
 api_v1.include_router(mfa.router)
 api_v1.include_router(moderation.router)

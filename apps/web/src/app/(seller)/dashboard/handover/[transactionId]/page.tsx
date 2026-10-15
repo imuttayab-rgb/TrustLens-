@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (seller)/dashboard/handover/[transactionId]: page. */
 'use client';
 
 import { useConfirmHandover, useMyTransactions, useRaiseDispute } from '@/features/commerce';

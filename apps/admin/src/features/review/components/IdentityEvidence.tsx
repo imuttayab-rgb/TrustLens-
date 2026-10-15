@@ -58,6 +58,15 @@ export function IdentityEvidence({ identity }: { identity: ReturnType<typeof use
           Threshold: <strong>{review.thresholdUsed?.toFixed(3) ?? '—'}</strong>
         </p>
       </div>
+      {review.holdCard && (
+        <Alert tone="info" title="Applicant holding ID — human review required">
+          Card visual pattern in frame: {review.holdCard.card_found ? 'detected' : 'not confirmed'}.
+          Holder face found: {review.holdCard.holder_face_detected ? 'yes' : 'not confirmed'}.
+          Holder-to-selfie similarity: {review.holdCard.holder_face_similarity?.toFixed(3) ?? 'unavailable'}.
+          Camera motion alone cannot establish document authenticity or certified liveness.
+          Compare all four frames before making and documenting a decision.
+        </Alert>
+      )}
       <p className="text-xs text-muted-foreground">
         Images use short-lived private URLs and are not stored in the browser cache by TrustLens.
       </p>

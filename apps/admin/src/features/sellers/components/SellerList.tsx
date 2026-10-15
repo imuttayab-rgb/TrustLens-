@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: SellerList. */
 'use client';
 
 import { useSellerSearch, type SellerRisk, type SellerSearchParams } from '@/features/sellers';

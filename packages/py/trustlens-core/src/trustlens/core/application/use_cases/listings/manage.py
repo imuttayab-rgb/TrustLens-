@@ -17,9 +17,19 @@ import dataclasses
 from dataclasses import dataclass, field
 from uuid import UUID
 
+from trustlens.core.application.services.listing_publication import (
+    listing_media_missing,
+    seller_can_publish,
+)
+from trustlens.core.catalogue import category_node, typed_attributes
 from trustlens.core.domain.entities import Listing
 from trustlens.core.domain.enums import ListingSource, ListingStatus
-from trustlens.core.domain.errors import EntityNotFound, PermissionDenied, ValidationError
+from trustlens.core.domain.errors import (
+    EntityNotFound,
+    InvalidStateError,
+    PermissionDenied,
+    ValidationError,
+)
 from trustlens.core.domain.events import ListingCreated
 from trustlens.core.domain.ports import Clock, IdGenerator, JobQueue, UnitOfWork
 from trustlens.core.domain.value_objects import Money, validate_category
@@ -40,9 +50,13 @@ class ListingInput:
     price: float | None = None
     currency: str | None = None
     category: str | None = None
+    category_node_id: str | None = None
+    show_phone: bool | None = None
     condition: str | None = None
     city: str | None = None
     area: str | None = None
+    #: Private full address (Post-an-Ad v2) - never shown to buyers.
+    address_line: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     country_code: str | None = None
@@ -56,6 +70,37 @@ class ListingInput:
         if not self.currency:
             raise ValidationError("A currency is required when a price is given.", field="currency")
         return Money(amount=self.price, currency=self.currency)
+
+
+#: Long enough for "House 12, Street 5, Block C, DHA Phase 6, Lahore" with
+#: room to spare; matches the listings.address_line column.
+MAX_ADDRESS_CHARS = 300
+
+
+def _category(data: ListingInput, previous: str | None = None) -> tuple[str | None, str | None, dict]:
+    node_id = data.category_node_id or previous
+    node = category_node(node_id, leaf=True)
+    category = validate_category(data.category)
+    if node and category not in (None, node['legacyCategory']):
+        raise ValidationError('Category does not match the selected subcategory.', field='category')
+    attributes = typed_attributes(node_id, data.attributes)
+    if node and node['conditionRequired'] and data.condition not in {'NEW', 'LIKE_NEW', 'USED', 'FOR_PARTS'}:
+        raise ValidationError('Choose the actual item condition.', field='condition')
+    return (node['legacyCategory'] if node else category), node_id, attributes
+
+
+def _clean_address(value: str | None) -> str | None:
+    """Trim the private address; an empty string means "no address"."""
+    if value is None:
+        return None
+    text = " ".join(value.split())
+    if not text:
+        return None
+    if len(text) > MAX_ADDRESS_CHARS:
+        raise ValidationError(
+            f"Keep the address under {MAX_ADDRESS_CHARS} characters.", field="addressLine"
+        )
+    return text
 
 
 def _clean(value: str, *, field: str, maximum: int) -> str:
@@ -115,6 +160,7 @@ class CreateListing:
                 raise EntityNotFound("seller", cmd.seller_id)
             await _validate_video(self._uow, cmd.data.video_file_id, owner_user_id=seller.user_id)
 
+            category, node_id, category_data = _category(cmd.data)
             listing = await self._uow.listings.add(
                 Listing(
                     id=self._ids.new(),
@@ -127,16 +173,21 @@ class CreateListing:
                     source=ListingSource.MANUAL,
                     created_at=now,
                     price=cmd.data.money(),
-                    category=validate_category(cmd.data.category),
+                    category=category,
+                    category_node_id=node_id,
+                    category_schema_version=1 if node_id else None,
+                    category_data=category_data,
                     condition=cmd.data.condition,
                     city=cmd.data.city,
                     area=cmd.data.area,
+                    address_line=_clean_address(cmd.data.address_line),
                     latitude=cmd.data.latitude,
                     longitude=cmd.data.longitude,
                     country_code=cmd.data.country_code,
                     negotiable=cmd.data.negotiable,
                     attributes=cmd.data.attributes,
                     video_file_id=cmd.data.video_file_id,
+                    show_phone=bool(cmd.data.show_phone),
                 )
             )
             await self._uow.publish(
@@ -187,24 +238,57 @@ class UpdateListing:
             assert seller is not None  # _require_own_listing already proved this seller owns it
             await _validate_video(self._uow, cmd.data.video_file_id, owner_user_id=seller.user_id)
 
-            text_changed = title != listing.title or description != listing.description
+            category, node_id, category_data = _category(cmd.data, listing.category_node_id)
+            text_changed = (title != listing.title or description != listing.description
+                            or node_id != listing.category_node_id or cmd.data.attributes != listing.attributes
+                            or cmd.data.condition != listing.condition)
+            address_line = _clean_address(cmd.data.address_line)
+            # An ACTIVE ad edited so it no longer has its photo, video or map
+            # location goes back to a private draft (Post-an-Ad v2 rule).
+            media_incomplete = bool(
+                listing_media_missing(
+                    dataclasses.replace(
+                        listing,
+                        category_node_id=node_id,
+                        category_data=category_data,
+                        city=cmd.data.city,
+                        video_file_id=cmd.data.video_file_id,
+                        latitude=cmd.data.latitude,
+                        longitude=cmd.data.longitude,
+                        address_line=address_line,
+                    ),
+                    await self._uow.listings.count_images(listing.id),
+                )
+            )
             updated = await self._uow.listings.update(
                 dataclasses.replace(
                     listing,
                     title=title,
                     description=description,
                     price=cmd.data.money(),
-                    category=validate_category(cmd.data.category),
+                    category=category,
+                    category_node_id=node_id,
+                    category_schema_version=1 if node_id else None,
+                    category_data=category_data,
                     condition=cmd.data.condition,
                     city=cmd.data.city,
                     area=cmd.data.area,
+                    address_line=address_line,
                     latitude=cmd.data.latitude,
                     longitude=cmd.data.longitude,
                     country_code=cmd.data.country_code,
                     negotiable=cmd.data.negotiable,
                     attributes=cmd.data.attributes,
                     video_file_id=cmd.data.video_file_id,
-                    status=ListingStatus.ANALYSING if text_changed else listing.status,
+                    show_phone=listing.show_phone if cmd.data.show_phone is None else cmd.data.show_phone,
+                    status=(
+                        ListingStatus.ANALYSING
+                        if text_changed
+                        else ListingStatus.DRAFT
+                        if listing.status == ListingStatus.ACTIVE
+                        and (not seller_can_publish(seller) or media_incomplete)
+                        else listing.status
+                    ),
                     updated_at=now,
                 )
             )
@@ -330,6 +414,8 @@ class RequestListingAnalysis:
                 raise EntityNotFound("listing", listing_id)
             if listing.seller_id != seller_id:
                 raise PermissionDenied("This listing belongs to another account.")
+            if listing.status in {ListingStatus.REMOVED, ListingStatus.EXPIRED, ListingStatus.SOLD}:
+                raise InvalidStateError("This listing is no longer open for analysis.")
         return await self._queue.enqueue("listings.analyse_listing", listing_id=str(listing_id))
 
 

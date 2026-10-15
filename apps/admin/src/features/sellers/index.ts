@@ -1,3 +1,4 @@
+/** Index module in sellers. */
 export { SellerList } from './components/SellerList';
 export { useAdminSummary } from './hooks/use-admin-summary';
 export type { AdminSummary } from './hooks/use-admin-summary';

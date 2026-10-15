@@ -1,3 +1,4 @@
+/** Actions module; defines setLocaleAction. */
 'use server';
 
 import { cookies } from 'next/headers';

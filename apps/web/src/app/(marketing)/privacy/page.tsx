@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (marketing)/privacy: page. */
 import Link from 'next/link';
 
 export const metadata = {

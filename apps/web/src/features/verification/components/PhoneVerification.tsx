@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: PhoneVerification. */
 'use client';
 
 import { api } from '@/lib/api/client';

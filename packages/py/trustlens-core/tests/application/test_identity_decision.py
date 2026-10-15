@@ -79,8 +79,18 @@ class TestHardRejections:
         assert not needs_review
         assert "expired" in reason.lower()
 
+    def test_reliable_expiry_outranks_an_unreadable_face(self, decide: Decider) -> None:
+        """A clearly expired card cannot become valid in review; resubmit instead."""
+        decision, needs_review, reason = decide(
+            make_command(document_expired=True, face_similarity=None), 0
+        )
+        assert decision is VerificationStatus.REJECTED
+        assert not needs_review
+        assert "expired" in reason.lower()
+
     def test_duplicate_cnic_is_rejected_and_reviewed(self, decide: Decider) -> None:
-        decision, needs_review, _ = decide(make_command(), 2)
+        # One prior owner is already a duplicate for this new account.
+        decision, needs_review, _ = decide(make_command(), 1)
         assert decision is VerificationStatus.REJECTED
         assert needs_review
 
@@ -129,12 +139,38 @@ class TestSuccessAndBorderline:
         assert decision is VerificationStatus.PENDING
         assert needs_review
 
+    def test_card_beside_face_is_reviewed_even_with_strong_matches(self, decide: Decider) -> None:
+        decision, needs_review, reason = decide(
+            make_command(
+                hold_review_required=True,
+                hold_card_found=True,
+                holder_face_similarity=0.91,
+                face_similarity=0.99,
+            ), 0
+        )
+        assert decision is VerificationStatus.PENDING
+        assert needs_review
+        assert "human review" in reason
+
+    def test_missing_hold_card_is_review_not_automatic_fraud(self, decide: Decider) -> None:
+        command = make_command(hold_review_required=True, hold_card_found=False)
+        decision, needs_review, _ = decide(command, 0)
+        assert decision is VerificationStatus.PENDING
+        assert needs_review
+        assert "could not be confirmed" in FinalizeIdentityVerification._review_reason(command, 0)
+
+    def test_expired_id_remains_rejected_with_hold_card(self, decide: Decider) -> None:
+        decision, _, _ = decide(
+            make_command(hold_review_required=True, document_expired=True), 0
+        )
+        assert decision is VerificationStatus.REJECTED
+
 
 class TestReviewReason:
     @pytest.mark.parametrize(
         ("command_kwargs", "duplicates", "expected"),
         [
-            ({}, 2, "Duplicate CNIC across accounts"),
+            ({}, 1, "Duplicate CNIC across accounts"),
             ({"ocr_confidence": None}, 0, "Documents could not be read automatically"),
             (
                 {"cnic_check_failures": ("CNIC_GENDER_MISMATCH",)},

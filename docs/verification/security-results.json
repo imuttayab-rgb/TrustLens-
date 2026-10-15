@@ -1,0 +1,247 @@
+[
+  {
+    "id": "JWT-valid",
+    "status": "PASS",
+    "observed": "Ed25519 signed access token accepted"
+  },
+  {
+    "id": "JWT-expired",
+    "status": "PASS",
+    "observed": "rejected"
+  },
+  {
+    "id": "JWT-issuer",
+    "status": "PASS",
+    "observed": "rejected"
+  },
+  {
+    "id": "JWT-audience",
+    "status": "PASS",
+    "observed": "rejected"
+  },
+  {
+    "id": "JWT-malformed",
+    "status": "PASS",
+    "observed": "rejected"
+  },
+  {
+    "id": "JWT-none",
+    "status": "PASS",
+    "observed": "rejected"
+  },
+  {
+    "id": "JWT-role-tamper",
+    "status": "PASS",
+    "observed": "rejected"
+  },
+  {
+    "id": "JWT-required-exp",
+    "status": "PASS",
+    "observed": "missing claim rejected"
+  },
+  {
+    "id": "JWT-required-iat",
+    "status": "PASS",
+    "observed": "missing claim rejected"
+  },
+  {
+    "id": "JWT-required-sub",
+    "status": "PASS",
+    "observed": "missing claim rejected"
+  },
+  {
+    "id": "JWT-required-jti",
+    "status": "PASS",
+    "observed": "missing claim rejected"
+  },
+  {
+    "id": "JWT-required-iss",
+    "status": "PASS",
+    "observed": "missing claim rejected"
+  },
+  {
+    "id": "JWT-required-aud",
+    "status": "PASS",
+    "observed": "missing claim rejected"
+  },
+  {
+    "id": "password-hashing",
+    "status": "PASS",
+    "observed": "Argon2id, correct password accepted / wrong rejected"
+  },
+  {
+    "id": "logout-access-revocation",
+    "status": "PASS",
+    "observed": {
+      "refresh_family_revoked": true,
+      "old_access_token_rejected": true,
+      "token_ttl_minutes": 15
+    }
+  },
+  {
+    "id": "logout-all-access-revocation",
+    "status": "PASS",
+    "observed": "old bearer rejected after logout-all"
+  },
+  {
+    "id": "inactive-account-access",
+    "status": "PASS",
+    "observed": "inactive account rejected"
+  },
+  {
+    "id": "permission-version-revocation",
+    "status": "PASS",
+    "observed": "changed permission version rejected"
+  },
+  {
+    "id": "reset-maximum-15-minutes",
+    "status": "PASS",
+    "observed": {
+      "ttl_seconds": 900.0,
+      "bound_to_user": true,
+      "stored_hash_only": true
+    }
+  },
+  {
+    "id": "login-5-per-minute",
+    "status": "PASS",
+    "observed": {
+      "limit": 5,
+      "window_seconds": 60
+    }
+  },
+  {
+    "id": "reset-3-per-hour",
+    "status": "PASS",
+    "observed": {
+      "limit": 3,
+      "window_seconds": 3600
+    }
+  },
+  {
+    "id": "auth-rate-outage-protection",
+    "status": "PASS",
+    "observed": "limiter outage blocks login attempts"
+  },
+  {
+    "id": "refresh-cookie-flags",
+    "status": "PASS",
+    "observed": {
+      "httpOnly": true,
+      "secure": true,
+      "sameSiteLax": true
+    }
+  },
+  {
+    "id": "api-normal-security-headers",
+    "status": "PASS",
+    "observed": {
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "DENY",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "x-request-id": "req_b1039e4e0cc04452b1c7"
+    }
+  },
+  {
+    "id": "api-unhandled-error-headers",
+    "status": "PASS",
+    "observed": {
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "DENY",
+      "strict-transport-security": "max-age=31536000; includeSubDomains",
+      "content-security-policy": "default-src 'none'; frame-ancestors 'none'",
+      "x-request-id": "req_0d83a9512df14b03a644"
+    }
+  },
+  {
+    "id": "api-generic-500",
+    "status": "PASS",
+    "observed": {
+      "status": 500,
+      "body": {
+        "type": "https://api.trustlens.app/errors/internal",
+        "title": "Internal server error",
+        "status": 500,
+        "detail": "Something went wrong on our side. Quote the request id below if you contact support.",
+        "instance": "/boom",
+        "code": "INTERNAL_ERROR",
+        "requestId": "req_0d83a9512df14b03a644"
+      }
+    }
+  },
+  {
+    "id": "cors-untrusted-origin",
+    "status": "PASS",
+    "observed": {
+      "status": 400
+    }
+  },
+  {
+    "id": "access-log-query-redaction",
+    "status": "PASS",
+    "observed": {
+      "query": "[redacted]"
+    }
+  },
+  {
+    "id": "body-declared-limit",
+    "status": "PASS",
+    "observed": {
+      "status": 413
+    }
+  },
+  {
+    "id": "body-streamed-limit",
+    "status": "PASS",
+    "observed": {
+      "status": 413,
+      "response": {
+        "type": "https://api.trustlens.app/errors/payload-too-large",
+        "title": "Payload too large",
+        "status": 413,
+        "detail": "Request body exceeds 64 bytes.",
+        "code": "PAYLOAD_TOO_LARGE",
+        "requestId": "req_821850458c4745b8a3f3"
+      }
+    }
+  },
+  {
+    "id": "log-deep-redaction",
+    "status": "PASS",
+    "observed": "8-level synthetic password redacted"
+  },
+  {
+    "id": "sentry-pii-scrub",
+    "status": "PASS",
+    "observed": {
+      "exception": {
+        "values": []
+      }
+    }
+  },
+  {
+    "id": "routes-anonymous-blocked",
+    "status": "PASS",
+    "observed": {
+      "protected_operations": 157,
+      "unexpected": []
+    }
+  },
+  {
+    "id": "routes-malformed-blocked",
+    "status": "PASS",
+    "observed": {
+      "protected_operations": 157,
+      "unexpected": []
+    }
+  },
+  {
+    "id": "admin-buyer-blocked",
+    "status": "PASS",
+    "observed": {
+      "operations": 38,
+      "unexpected": []
+    }
+  }
+]

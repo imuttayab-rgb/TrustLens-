@@ -292,6 +292,22 @@ class SignalCollector:
                 ReasonCode.IDENTITY_NOT_SUBMITTED,
                 "No government ID has been submitted.",
             )
+        # An OCR-readable front is not an approved identity. In the opt-in
+        # card-beside-face pilot all evidence awaits a human decision; never
+        # award document points before the reviewer has inspected four frames.
+        verification = e.identity_verification
+        if (
+            verification is not None
+            and verification.raw_result.get("hold_id_file_id")
+            and verification.decision in {VerificationStatus.PENDING, VerificationStatus.PROCESSING}
+        ):
+            return SignalEvaluation.unavailable(
+                code,
+                cat,
+                "The held-card identity evidence is awaiting human review.",
+                source_table="identity_documents",
+                source_id=front.id,
+            )
         if front.status in {VerificationStatus.PENDING, VerificationStatus.PROCESSING}:
             return SignalEvaluation.unavailable(
                 code,

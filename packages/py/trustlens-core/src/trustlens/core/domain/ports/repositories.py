@@ -14,7 +14,7 @@ repository is the classic cause of N+1 death in admin panels.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 from uuid import UUID
 
@@ -71,6 +71,7 @@ if TYPE_CHECKING:
     )
     from trustlens.core.domain.enums import (
         AppealStatus,
+        ListingStatus,
         MeetupStatus,
         OfferStatus,
         OtpPurpose,
@@ -92,6 +93,10 @@ class UserRepository(Protocol):
     async def create(self, *, user: User, password_hash: str | None) -> User: ...
 
     async def update(self, user: User) -> User: ...
+
+    async def session_allowed(self, user_id: UUID) -> bool: ...
+
+    async def request_deletion(self, user_id: UUID, *, at: datetime) -> None: ...
 
     async def set_password_hash(self, user_id: UUID, password_hash: str) -> None: ...
 
@@ -178,6 +183,17 @@ class IdentityRepository(Protocol):
         """
         ...
 
+    async def list_verified_sellers_with_lapsed_id(
+        self, *, today: date, excluded_engines: tuple[str, ...], limit: int
+    ) -> list[UUID]:
+        """VERIFIED sellers with a CNIC document whose stored expiry < `today`.
+
+        A cheap pre-filter only: callers re-check against the latest
+        verification. Documents from `excluded_engines` (fake/demo OCR) and
+        documents without an engine are ignored.
+        """
+        ...
+
 
 @runtime_checkable
 class PhoneNumberRepository(Protocol):
@@ -234,6 +250,16 @@ class DeviceRepository(Protocol):
 
 @runtime_checkable
 class ListingRepository(Protocol):
+    async def category_field_options(
+        self,
+        node_id: str,
+        field: str,
+        *,
+        parent_key: str | None = None,
+        parent_value: str | None = None,
+        query: str = "",
+    ) -> list[str]: ...
+
     async def get(self, listing_id: UUID) -> Listing | None: ...
 
     async def list_for_seller(
@@ -242,9 +268,37 @@ class ListingRepository(Protocol):
 
     async def count_for_seller(self, seller_id: UUID) -> int: ...
 
+    async def lock_owned_for_media(self, listing_id: UUID, seller_id: UUID) -> Listing: ...
+
+    async def edit_images(
+        self,
+        listing_id: UUID,
+        seller_id: UUID,
+        *,
+        order: list[UUID] | None = None,
+        remove_id: UUID | None = None,
+    ) -> None: ...
+
+    async def count_images(self, listing_id: UUID) -> int:
+        """Photos attached to a listing (the publish rule needs at least one)."""
+        ...
+
     async def add(self, listing: Listing) -> Listing: ...
 
     async def update(self, listing: Listing) -> Listing: ...
+
+    async def set_publication_status_if_current(
+        self,
+        listing_id: UUID,
+        *,
+        from_status: ListingStatus,
+        to_status: ListingStatus,
+        expected_version: int,
+        expected_analysis_id: UUID | None,
+        at: datetime,
+    ) -> bool:
+        """Status-only compare-and-swap; never discard seller edits or AI evidence."""
+        ...
 
     async def add_analysis(self, analysis: ListingAnalysis) -> ListingAnalysis: ...
 
@@ -253,6 +307,10 @@ class ListingRepository(Protocol):
     ) -> list[ListingAnalysis]: ...
 
     async def category_median_price(self, category: str, *, currency: str) -> float | None: ...
+
+    async def public_dealers(
+        self, *, limit: int = 12, offset: int = 0, city: str | None = None, q: str | None = None
+    ) -> list[dict]: ...
 
     async def get_public_detail(self, listing_id: UUID) -> PublicListingDetail | None:
         """The full "view this listing" page - every image, the
@@ -265,6 +323,8 @@ class ListingRepository(Protocol):
         self,
         *,
         category: str | None = None,
+        category_node_id: str | None = None,
+        facets: dict | None = None,
         q: str | None = None,
         city: str | None = None,
         area: str | None = None,
@@ -290,6 +350,8 @@ class ListingRepository(Protocol):
         self,
         *,
         category: str | None = None,
+        category_node_id: str | None = None,
+        facets: dict | None = None,
         q: str | None = None,
         city: str | None = None,
         area: str | None = None,
@@ -413,7 +475,13 @@ class MessagingRepository(Protocol):
         ...
 
     async def list_conversations_for_user(
-        self, user_id: UUID, *, limit: int = 20, offset: int = 0
+        self,
+        user_id: UUID,
+        *,
+        limit: int = 20,
+        offset: int = 0,
+        folder: str = "all",
+        query: str = "",
     ) -> list[ConversationSummary]:
         """Every conversation where this user is a participant - as buyer,
         or as the seller (resolved through their seller profile) - ordered
@@ -421,7 +489,9 @@ class MessagingRepository(Protocol):
         inbox renders in one round trip."""
         ...
 
-    async def count_conversations_for_user(self, user_id: UUID) -> int: ...
+    async def count_conversations_for_user(
+        self, user_id: UUID, *, folder: str = "all", query: str = ""
+    ) -> int: ...
 
     async def get_participants(self, conversation_id: UUID) -> tuple[UUID, UUID] | None:
         """(buyer_user_id, seller_user_id) for authorization checks - a
@@ -736,6 +806,10 @@ class RefreshTokenRepository(Protocol):
         self, user_id: UUID, *, at: datetime, reason: str, except_id: UUID | None = None
     ) -> int: ...
 
+    async def family_is_active(
+        self, user_id: UUID, family_id: UUID, *, at: datetime, idle_days: int
+    ) -> bool: ...
+
     async def list_active_for_user(self, user_id: UUID) -> list[RefreshToken]: ...
 
     async def delete_expired(self, *, before: datetime) -> int: ...
@@ -805,6 +879,10 @@ class ConsentRepository(Protocol):
 
 @runtime_checkable
 class FileRepository(Protocol):
+    async def check_upload_budget(
+        self, user_id: UUID, *, requested_bytes: int, max_bytes: int, max_files: int
+    ) -> None: ...
+
     async def get(self, file_id: UUID) -> StoredFile | None: ...
 
     async def add(self, file: StoredFile) -> StoredFile: ...

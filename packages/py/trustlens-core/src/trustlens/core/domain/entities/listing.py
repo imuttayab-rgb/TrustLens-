@@ -90,6 +90,9 @@ class Listing:
     external_listing_ref: str | None = None
     price: Money | None = None
     category: str | None = None
+    category_node_id: str | None = None
+    category_schema_version: int | None = None
+    category_data: dict[str, str | float] = field(default_factory=dict)
     condition: str | None = None
     city: str | None = None
     area: str | None = None
@@ -106,7 +109,12 @@ class Listing:
     #: no per-category schema, so a seller can describe anything without a
     #: migration, and MKT-01's attribute search matches on these keys.
     attributes: dict[str, str] = field(default_factory=dict)
+    show_phone: bool = False
     video_file_id: UUID | None = None
+    #: The seller's full street address (Post-an-Ad v2). PRIVATE: returned
+    #: only to the owning seller, never copied into a public projection.
+    #: Buyers see city/area and a coordinate rounded to ~1.1 km instead.
+    address_line: str | None = None
     images: tuple[ListingImage, ...] = ()
     latest_analysis: ListingAnalysis | None = None
     updated_at: datetime | None = None
@@ -138,6 +146,9 @@ class PublicListingSummary:
     seller_id: UUID
     seller_handle: str
     seller_display_name: str
+    category_node_id: str | None = None
+    category_schema_version: int | None = None
+    category_data: dict[str, str | float] = field(default_factory=dict)
     condition: str | None = None
     #: ACTIVE/RESERVED/SOLD as a plain string - a buyer's own favorites and
     #: a seller's storefront both now show a deal in progress or done, not
@@ -155,6 +166,8 @@ class PublicListingSummary:
     primary_image_thumbnail_key: str | None = None
     latitude: float | None = None
     longitude: float | None = None
+
+    seller_user_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -189,10 +202,15 @@ class PublicListingDetail:
     seller_id: UUID
     seller_handle: str
     seller_display_name: str
+    category_node_id: str | None = None
+    category_schema_version: int | None = None
+    category_data: dict[str, str | float] = field(default_factory=dict)
     condition: str | None = None
     status: str = "ACTIVE"
     negotiable: bool = False
     attributes: dict[str, str] = field(default_factory=dict)
+    public_phone: str | None = None
+    show_phone: bool = False
     video_file_id: UUID | None = None
     risk_level: str | None = None
     identity_verified: bool = False
@@ -200,6 +218,8 @@ class PublicListingDetail:
     images: tuple[PublicListingImage, ...] = ()
     latitude: float | None = None
     longitude: float | None = None
+
+    seller_user_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -229,6 +249,8 @@ class SavedSearch:
     user_id: UUID
     name: str
     category: str | None = None
+    category_node_id: str | None = None
+    facets: dict | None = None
     q: str | None = None
     city: str | None = None
     area: str | None = None

@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: RiskBadge. */
 import { RISK_PRESENTATION, type RiskLevel } from '@trustlens/constants';
 import { AlertTriangle, HelpCircle, ShieldAlert, ShieldCheck } from 'lucide-react';
 import { cn } from '../lib/cn';

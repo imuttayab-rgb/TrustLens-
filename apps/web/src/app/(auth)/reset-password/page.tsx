@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (auth)/reset-password: page. */
 import { ResetPasswordForm } from '@/features/auth';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';

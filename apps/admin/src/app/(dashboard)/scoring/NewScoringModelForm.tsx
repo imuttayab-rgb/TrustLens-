@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/scoring: NewScoringModelForm. */
 'use client';
 
 import { useCreateScoringModel, type ScoringModel } from '@/features/scoring';

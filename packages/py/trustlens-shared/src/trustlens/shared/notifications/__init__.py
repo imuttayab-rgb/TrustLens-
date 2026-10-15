@@ -8,6 +8,7 @@ demonstrable on a lab machine.
 from __future__ import annotations
 
 from email.message import EmailMessage
+from trustlens.core.domain.errors import ExternalServiceError
 from typing import Any
 
 import aiosmtplib
@@ -30,7 +31,7 @@ TEMPLATES: dict[str, tuple[str, str]] = {
     "reset_password": (
         "Reset your TrustLens password",
         "A password reset was requested for your account.\n\n"
-        "{web_base_url}/reset-password/{token}\n\nThis link expires in 1 hour.\n"
+        "{web_base_url}/reset-password/{token}\n\nThis link expires in 15 minutes.\n"
         "If this was not you, you can ignore this email.\n",
     ),
     "registration_attempt_existing_account": (
@@ -103,22 +104,6 @@ class ResendEmailSender(EmailSender):
             response.raise_for_status()
 
 
-class ConsoleEmailSender(EmailSender):
-    """Development sender. Prints instead of sending.
-
-    The token is logged deliberately here and ONLY here: without it there is
-    no way to complete an email-verification flow offline.
-    """
-
-    def __init__(self, *, web_base_url: str) -> None:
-        self._web_base_url = web_base_url
-
-    async def send(self, *, to: str, subject: str, template: str, context: dict[str, Any]) -> None:
-        default_subject, body = TEMPLATES.get(template, (subject, "{body}"))
-        rendered = body.format(web_base_url=self._web_base_url, **{"body": "", **context})
-        print(f"\n--- EMAIL to {to} ---\n{subject or default_subject}\n{rendered}---\n")
-
-
 class TwilioSmsSender(SmsSender):
     def __init__(self, account_sid: str, auth_token: str, from_number: str) -> None:
         self._sid = account_sid
@@ -135,42 +120,64 @@ class TwilioSmsSender(SmsSender):
             response.raise_for_status()
 
 
-class ConsoleSmsSender(SmsSender):
-    """Development sender. Prints the OTP so offline verification works."""
+class LocalSmsInboxSender(SmsSender):
+    """Free localhost OTP preview in Mailpit; codes never enter application logs.
+
+    The SMTP sink is bound to loopback by the local compose setup. This adapter
+    is rejected by production configuration and does not send a real SMS.
+    """
+
+    def __init__(self, settings: NotificationSettings) -> None:
+        self._email = SmtpEmailSender(settings, web_base_url="http://localhost:3000")
 
     async def send(self, *, to: str, message: str) -> None:
-        print(f"\n--- SMS to {to} ---\n{message}\n---\n")
+        await self._email.send(
+            to="sms@localhost.test",
+            subject="TrustLens local SMS preview",
+            template="local_sms",
+            context={"body": f"Recipient: {to}\n{message}"},
+        )
+
+
+class DisabledSmsSender(SmsSender):
+    async def send(self, *, to: str, message: str) -> None:
+        raise ExternalServiceError(
+            "sms", "Phone verification is unavailable. Please contact support."
+        )
 
 
 def build_email_sender(settings: NotificationSettings, *, web_base_url: str) -> EmailSender:
-    if settings.email_provider == "resend" and settings.resend_api_key:
+    if settings.email_provider == "resend":
+        if not settings.resend_api_key:
+            raise ValueError("RESEND_API_KEY is required for the selected email provider")
         return ResendEmailSender(
             settings.resend_api_key.get_secret_value(), settings, web_base_url=web_base_url
         )
-    if settings.email_provider == "smtp":
-        return SmtpEmailSender(settings, web_base_url=web_base_url)
-    return ConsoleEmailSender(web_base_url=web_base_url)
+    # Old local 'console' configs now use the local SMTP inbox, preserving demo
+    # verification without printing credentials. Production rejects console.
+    return SmtpEmailSender(settings, web_base_url=web_base_url)
 
 
 def build_sms_sender(settings: NotificationSettings) -> SmsSender:
-    if (
-        settings.sms_provider == "twilio"
-        and settings.twilio_account_sid
-        and settings.twilio_auth_token
-        and settings.twilio_from_number
-    ):
+    if settings.sms_provider == "twilio":
+        if not (
+            settings.twilio_account_sid
+            and settings.twilio_auth_token
+            and settings.twilio_from_number
+        ):
+            raise ValueError("Twilio SID, auth token and sender are required")
         return TwilioSmsSender(
             settings.twilio_account_sid,
             settings.twilio_auth_token.get_secret_value(),
             settings.twilio_from_number,
         )
-    return ConsoleSmsSender()
+    if settings.sms_provider == "disabled":
+        return DisabledSmsSender()
+    return LocalSmsInboxSender(settings)
 
 
 __all__ = [
     "TEMPLATES",
-    "ConsoleEmailSender",
-    "ConsoleSmsSender",
     "ResendEmailSender",
     "SmtpEmailSender",
     "TwilioSmsSender",

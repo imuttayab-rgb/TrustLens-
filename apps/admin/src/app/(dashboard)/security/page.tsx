@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/security: page. */
 import { MfaSettings } from '@/features/mfa';
 
 export const metadata = { title: 'Security' };

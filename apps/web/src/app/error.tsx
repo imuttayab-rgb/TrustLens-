@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for error.tsx: error. */
 'use client';
 
 import { Button } from '@trustlens/ui';

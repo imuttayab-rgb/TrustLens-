@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: AppealList. */
 'use client';
 
 import { Alert, Button, Card, CardContent, CardHeader, CardTitle, Spinner } from '@trustlens/ui';

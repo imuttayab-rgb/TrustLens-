@@ -1,3 +1,4 @@
+/** Index module in marketplace. */
 export { ListingCard } from './components/ListingCard';
 export { ListingDescription } from './components/ListingDescription';
 export { ListingDetailActions } from './components/ListingDetailActions';
@@ -33,3 +34,7 @@ export {
   type SortOrder,
 } from './hooks/use-public-listings';
 export { recordRecentlyViewed, useRecentlyViewed } from './hooks/use-recently-viewed';
+export { MarketplaceHub } from './components/MarketplaceHub';
+export { RelatedRecommendations } from './components/RelatedRecommendations';
+export { useBrowseContext } from './browse-context';
+export { Dealers } from './components/Dealers';

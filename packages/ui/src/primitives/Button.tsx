@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: Button. */
 'use client';
 
 import { Slot } from '@radix-ui/react-slot';

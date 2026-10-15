@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: SimilarListings. */
 'use client';
 
 import { ListingCard } from './ListingCard';

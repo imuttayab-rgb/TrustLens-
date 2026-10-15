@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: MeetupPanel. */
 'use client';
 
 import { ReportButton } from '@/features/moderation';

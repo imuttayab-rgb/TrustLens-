@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 from typing import Protocol
 from uuid import UUID
 
+from trustlens.core.application.services.listing_publication import sync_listing_publication
 from trustlens.core.domain.entities import (
     AuthenticatedActor,
     Consent,
@@ -464,7 +465,9 @@ class AuthenticateWithGoogle:
         clock: Clock,
         ids: IdGenerator,
         refresh_ttl_days: int = 30,
+        mfa_required_roles: frozenset[UserRole] | None = None,
     ) -> None:
+        self._mfa_required_roles = mfa_required_roles
         self._uow = uow
         self._tokens = tokens
         self._clock = clock
@@ -496,6 +499,9 @@ class AuthenticateWithGoogle:
                         user, email_verified_at=now, status=AccountStatus.ACTIVE
                     )
 
+            if user.mfa_enabled or mfa_required_for(user, self._mfa_required_roles):
+                await self._uow.commit()
+                raise MfaRequired(user_id=user.id)
             session = await _new_session(
                 self._uow,
                 self._tokens,
@@ -785,11 +791,12 @@ class VerifyEmail:
             if seller is not None:
                 import dataclasses
 
-                await self._uow.sellers.update(
+                updated_seller = await self._uow.sellers.update(
                     dataclasses.replace(
                         seller, email_status=VerificationStatus.VERIFIED, updated_at=now
                     )
                 )
+                await sync_listing_publication(self._uow, updated_seller, now=now)
 
             await self._uow.commit()
 

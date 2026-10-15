@@ -1,3 +1,4 @@
+/** Use logout module; defines useLogout. */
 'use client';
 
 import { api } from '@/lib/api/client';

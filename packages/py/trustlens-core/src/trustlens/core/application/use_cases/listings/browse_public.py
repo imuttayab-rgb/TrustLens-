@@ -11,7 +11,9 @@ buyer would contradict the product's whole premise.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from typing import Any
+from trustlens.core.catalogue import category_node, validate_facets
 from uuid import UUID
 
 from trustlens.core.domain.entities import PublicListingDetail, PublicListingSummary
@@ -28,7 +30,7 @@ MAX_QUERY_CHARS = 200
 #: A fixed vocabulary, not a free sort expression - the repository maps each
 #: one to a specific ORDER BY, so there is no column name for a client to
 #: smuggle through here.
-SORT_ORDERS = frozenset({"newest", "price_asc", "price_desc"})
+SORT_ORDERS = frozenset({"newest", "price_asc", "price_desc", "relevance"})
 
 #: Mirrors `LISTING_CONDITIONS` in `@trustlens/validation` - the same
 #: vocabulary a listing's own `condition` field is validated against when a
@@ -40,6 +42,8 @@ LISTING_CONDITIONS = frozenset({"NEW", "LIKE_NEW", "USED", "FOR_PARTS"})
 @dataclass(frozen=True, slots=True)
 class BrowsePublicListingsQuery:
     category: str | None = None
+    category_node_id: str | None = None
+    facets: dict[str, Any] = field(default_factory=dict)
     q: str | None = None
     city: str | None = None
     area: str | None = None
@@ -86,6 +90,8 @@ class BrowsePublicListings:
         limit = max(1, min(query.limit, 50))
         offset = max(0, query.offset)
         category = validate_category(query.category)
+        category_node(query.category_node_id)
+        facets = validate_facets(query.category_node_id, query.facets)
         q = query.q.strip() if query.q else None
         q = q[:MAX_QUERY_CHARS] if q else None
         city = query.city.strip() if query.city else None
@@ -127,6 +133,8 @@ class BrowsePublicListings:
         async with self._uow:
             items = await self._uow.listings.search_public(
                 category=category,
+                category_node_id=query.category_node_id,
+                facets=facets,
                 q=q,
                 city=city,
                 area=area,
@@ -149,6 +157,8 @@ class BrowsePublicListings:
             )
             total = await self._uow.listings.count_public(
                 category=category,
+                category_node_id=query.category_node_id,
+                facets=facets,
                 q=q,
                 city=city,
                 area=area,

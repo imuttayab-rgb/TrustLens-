@@ -1,6 +1,5 @@
-import { Ambient, ThemeToggle } from '@trustlens/ui';
-import { ShieldCheck } from 'lucide-react';
-import Link from 'next/link';
+import { SiteNav } from '@/features/marketing';
+import { Ambient } from '@trustlens/ui';
 
 /**
  * Shell for every signed-out screen.
@@ -14,22 +13,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     <div className="relative flex min-h-dvh flex-col overflow-hidden">
       <Ambient intensity="full" />
 
-      <header className="flex items-center justify-between px-6 py-5">
-        <Link
-          href="/"
-          className="group inline-flex items-center gap-2.5 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-brand to-brand-2 transition-transform duration-300 group-hover:scale-105">
-            <ShieldCheck
-              className="h-4 w-4 text-[hsl(var(--background))]"
-              strokeWidth={2.5}
-              aria-hidden="true"
-            />
-          </span>
-          <span className="text-sm font-bold tracking-tight">TrustLens</span>
-        </Link>
-        <ThemeToggle />
-      </header>
+      <SiteNav />
 
       <main
         id="main-content"

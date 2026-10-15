@@ -1,0 +1,128 @@
+[
+  {
+    "category": "mobiles",
+    "asset": "apps/web/public/images/categories/mobiles.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "dd830e771067fad4ee082dba7477d9897511249fe26974857367f00d37290f2f",
+    "bytes": 11672,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "vehicles",
+    "asset": "apps/web/public/images/categories/vehicles.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "3bffb716b5c9b1603e1935f93ed26c156f93e5559bf1112189cb7c936f76eef9",
+    "bytes": 18534,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "property-sale",
+    "asset": "apps/web/public/images/categories/property-sale.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "723f7db53e2dde8721277c82f0e274716dc65270a92ff0da32410610da64b503",
+    "bytes": 27456,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "property-rent",
+    "asset": "apps/web/public/images/categories/property-rent.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "ee07cb07274e0f64af0f37383e9d7cd6365e7f7fc921a9cd5f9339749ee6e077",
+    "bytes": 25520,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "electronics-appliances",
+    "asset": "apps/web/public/images/categories/electronics-appliances.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "608200b59ea1db294647f78c70336dd1fb6c08f8abd4888d030c3139f04f8b44",
+    "bytes": 21080,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "bikes",
+    "asset": "apps/web/public/images/categories/bikes.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "c03b7920b1f5ef3faae8e07e515bba24f0c31e360065579afb461bfbf4ba050c",
+    "bytes": 43776,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "business-industrial-agriculture",
+    "asset": "apps/web/public/images/categories/business-industrial-agriculture.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "8933440acc038bccf2aaac718bb20d1cb5eab349dcb03d544d94b43819e33216",
+    "bytes": 36234,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "services",
+    "asset": "apps/web/public/images/categories/services.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "eb27599354a9e255c96ee21dab0dc97dce791d393ef602de38ee67643d1b8f83",
+    "bytes": 28862,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "jobs",
+    "asset": "apps/web/public/images/categories/jobs.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "17edb6ce81507a75545e136937940a0d46aa20d38001b7ad1c9c24119486b014",
+    "bytes": 27346,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "animals",
+    "asset": "apps/web/public/images/categories/animals.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "d6887aa90e15a8f77e5f82951d3582de7c4c5924d2e2d9aab7a9703f6ff1e06a",
+    "bytes": 34328,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "furniture",
+    "asset": "apps/web/public/images/categories/furniture.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "48a6f895557d17ff22b8d742341a02411dd1aad5465a23b1ed45a3a04427168c",
+    "bytes": 18320,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "fashion-beauty",
+    "asset": "apps/web/public/images/categories/fashion-beauty.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "2afdcef05dc7e804c140e4275e7339cb6061eda7bab0130488001379611ac130",
+    "bytes": 17968,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "books-sports-hobbies",
+    "asset": "apps/web/public/images/categories/books-sports-hobbies.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "700f0872c4d3e04a79038b2213c6f75083d6cf0bca0f78db36698a89dcaeef69",
+    "bytes": 24574,
+    "width": 384,
+    "height": 384
+  },
+  {
+    "category": "kids",
+    "asset": "apps/web/public/images/categories/kids.webp",
+    "source": "Original AI-generated category illustration; not listing evidence",
+    "sha256": "4ea634f0c09d2b47067b53c924cb78ae7aec4621f86d7cbb33279905234be000",
+    "bytes": 39150,
+    "width": 384,
+    "height": 384
+  }
+]

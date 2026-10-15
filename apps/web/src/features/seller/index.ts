@@ -1,3 +1,4 @@
+/** Index module in seller. */
 export { BecomeSellerForm } from './components/BecomeSellerForm';
 export {
   useSeller,

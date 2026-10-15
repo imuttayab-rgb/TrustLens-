@@ -1,0 +1,252 @@
+.searchStrip {
+  position: relative;
+  z-index: 30;
+  min-width: 0;
+}
+.searchForm {
+  display: flex;
+  width: 100%;
+  margin: 0 auto;
+  align-items: stretch;
+  gap: 18px;
+}
+.searchFields {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid hsl(var(--input));
+  border-radius: 16px;
+  background: hsl(var(--card));
+}
+.query {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 14px;
+  padding-inline: 18px;
+}
+.query > svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.searchInput {
+  height: 54px;
+  width: 100%;
+  min-width: 0;
+  background: transparent;
+  font-size: 15px;
+  outline: none;
+}
+.primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  border: 1px solid hsl(var(--brand));
+  border-radius: 9px;
+  background: hsl(var(--brand));
+  color: #07131c;
+  font-size: 16px;
+  font-weight: 500;
+  min-height: 46px;
+  padding: 10px 22px;
+}
+:global(.dark) .primary {
+  color: #07131c;
+}
+.primary:hover {
+  filter: brightness(0.95);
+}
+.primary > svg {
+  width: 19px;
+  height: 19px;
+}
+.searchButton {
+  width: 132px;
+  min-height: 56px;
+  flex-shrink: 0;
+  border-radius: 11px;
+}
+.locationRoot {
+  position: relative;
+  width: 33%;
+  min-width: 190px;
+  border-inline-start: 1px solid hsl(var(--border));
+}
+.locationTrigger {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  min-height: 54px;
+  padding: 12px 18px;
+  width: 100%;
+  text-align: start;
+  font-size: 15px;
+}
+.locationTrigger span {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.locationTrigger > svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+.locationTrigger > svg:last-child {
+  width: 16px;
+}
+.locationPopover {
+  position: absolute;
+  inset-inline-end: 0;
+  top: calc(100% + 10px);
+  width: 340px;
+  max-width: 88vw;
+  padding: 18px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 12px;
+  box-shadow: 0 12px 40px #102b4720;
+  display: grid;
+  gap: 14px;
+  font-size: 13px;
+}
+.locationPopover label {
+  display: grid;
+  gap: 6px;
+}
+.popoverHeading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.popoverHeading button {
+  padding: 5px;
+}
+.popoverHeading svg {
+  width: 16px;
+  height: 16px;
+}
+.fieldLabel {
+  display: block;
+  margin-bottom: 6px;
+}
+.nearbyButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 13px;
+  padding: 6px;
+  color: hsl(var(--brand));
+}
+.nearbyButton svg {
+  width: 16px;
+  height: 16px;
+}
+.input {
+  height: 37px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid hsl(var(--input));
+  border-radius: 8px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  padding-inline: 10px;
+  font-size: 12px;
+}
+.input::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+.input:disabled {
+  opacity: 0.55;
+}
+@media (max-width: 767px) {
+  .searchForm {
+    gap: 9px;
+  }
+  .searchFields {
+    flex-direction: column;
+    border-radius: 10px;
+  }
+  .searchInput {
+    height: 43px;
+  }
+  .query {
+    padding-inline: 12px;
+    gap: 10px;
+  }
+  .locationRoot {
+    width: 100%;
+    min-width: 0;
+    border-inline-start: 0;
+    border-top: 1px solid hsl(var(--border));
+  }
+  .locationTrigger {
+    min-height: 40px;
+    padding: 8px 12px;
+    font-size: 13px;
+    gap: 10px;
+  }
+  .locationTrigger > svg {
+    width: 17px;
+    height: 17px;
+  }
+  .locationPopover {
+    inset-inline-start: 0;
+    inset-inline-end: auto;
+  }
+  .searchButton {
+    width: 78px;
+    flex-direction: column;
+    padding: 8px;
+    font-size: 13px;
+  }
+}
+
+.searchInput::placeholder,
+.placeholder {
+  color: hsl(var(--muted-foreground));
+}
+.placeholder {
+  display: flex;
+  align-items: center;
+  min-height: 54px;
+  font-size: 15px;
+}
+.hint {
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+.searchStrip button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+@media (min-width: 1100px) and (max-width: 1399px) {
+  .searchForm {
+    gap: 10px;
+  }
+  .searchButton {
+    width: 105px;
+    padding-inline: 12px;
+  }
+  .locationRoot {
+    min-width: 155px;
+  }
+  .locationTrigger {
+    padding-inline: 12px;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .query {
+    gap: 9px;
+    padding-inline: 12px;
+  }
+  .searchInput {
+    font-size: 13px;
+  }
+}

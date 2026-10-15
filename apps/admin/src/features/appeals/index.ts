@@ -1,3 +1,4 @@
+/** Index module in appeals. */
 export { AppealQueue } from './components/AppealQueue';
 export {
   APPEAL_QUEUE_KEY,

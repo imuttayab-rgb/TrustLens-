@@ -14,6 +14,8 @@ from trustlens_api.api.v1.schemas.common import Schema
 class CreateSavedSearchRequest(Schema):
     name: str = Field(min_length=1, max_length=MAX_NAME_CHARS)
     category: str | None = None
+    category_node_id: str | None = Field(default=None, max_length=240)
+    facets: dict = Field(default_factory=dict, max_length=12)
     q: str | None = None
     city: str | None = None
     area: str | None = None
@@ -25,6 +27,8 @@ class SavedSearchResponse(Schema):
     id: UUID
     name: str
     category: str | None = None
+    category_node_id: str | None = Field(default=None, max_length=240)
+    facets: dict = Field(default_factory=dict, max_length=12)
     q: str | None = None
     city: str | None = None
     area: str | None = None

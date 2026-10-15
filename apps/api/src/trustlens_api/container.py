@@ -39,7 +39,7 @@ from trustlens.shared.crypto import (
 from trustlens.shared.ip import build_ip_intelligence
 from trustlens.shared.logging import get_logger
 from trustlens.shared.notifications import build_email_sender, build_sms_sender
-from trustlens.shared.queue import ArqJobQueue, NullJobQueue
+from trustlens.shared.queue import ArqJobQueue
 from trustlens.shared.storage import build_storage
 
 log = get_logger(__name__)
@@ -88,14 +88,10 @@ async def build_container(settings: Settings) -> Container:
         settings.redis.redis_url, max_connections=settings.redis.redis_max_connections
     )
 
-    try:
-        queue: JobQueue = await ArqJobQueue.connect(settings.redis.redis_queue_url)
-    except Exception as exc:
-        # Degrade rather than refuse to boot: read paths (the public score
-        # lookup) stay fully functional without the queue, and the API is more
-        # useful up than down. Writes that need a job will surface the failure.
-        log.error("job_queue_unavailable", error=str(exc), degraded=True)
-        queue = NullJobQueue()
+    # A verification/reset job must never be acknowledged without being queued.
+    # Refuse startup if queue Redis is unavailable; the container restart policy
+    # retries when it recovers instead of returning fictional completed jobs.
+    queue: JobQueue = await ArqJobQueue.connect(settings.redis.redis_queue_url)
 
     password_hasher = Argon2PasswordHasher(settings.security)
 

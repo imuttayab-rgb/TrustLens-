@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: PartnerList. */
 'use client';
 
 import { toApiError } from '@trustlens/api-client';

@@ -63,7 +63,7 @@ def init_error_reporting(
             dsn=settings.sentry_dsn,
             environment=environment,
             release=release,
-            traces_sample_rate=settings.sentry_traces_sample_rate,
+            traces_sample_rate=0,  # Request traces can carry query/body data; export sanitized errors only.
             # This system holds CNIC numbers, selfies and phone numbers. Never
             # let an error report carry a request body or headers off the box.
             send_default_pii=False,
@@ -97,19 +97,59 @@ _SENSITIVE = (
 
 
 def _scrub(event: dict[str, Any], _hint: dict[str, Any]) -> dict[str, Any]:
-    """Redact anything whose key looks sensitive, at any depth."""
+    """Export only error classification and bounded source locations, never PII."""
+    import re
+    from pathlib import PurePosixPath
+    from trustlens.shared.logging import redact_processor
 
-    def walk(value: Any) -> Any:
-        if isinstance(value, dict):
-            return {
-                k: ("[redacted]" if any(s in k.lower() for s in _SENSITIVE) else walk(v))
-                for k, v in value.items()
+    identifier = re.compile(r"^[A-Za-z_][A-Za-z0-9_.<>-]{0,99}$")
+    safe = {
+        k: v
+        for k, v in event.items()
+        if k
+        in {
+            "event_id",
+            "timestamp",
+            "platform",
+            "level",
+            "release",
+            "environment",
+            "logger",
+        }
+    }
+    exception = event.get("exception")
+    values = exception.get("values", []) if isinstance(exception, dict) else []
+    projected = []
+    for item in values[:5] if isinstance(values, list) else []:
+        if not isinstance(item, dict):
+            continue
+        kind = str(item.get("type", "Exception"))
+        trace = item.get("stacktrace")
+        frames = trace.get("frames", []) if isinstance(trace, dict) else []
+        locations = []
+        for frame in frames[-30:] if isinstance(frames, list) else []:
+            if not isinstance(frame, dict):
+                continue
+            filename = PurePosixPath(str(frame.get("filename", "unknown")).replace("\\", "/")).name
+            function = str(frame.get("function", "unknown"))
+            locations.append(
+                {
+                    "filename": filename if identifier.fullmatch(filename) else "unknown",
+                    "function": function if identifier.fullmatch(function) else "unknown",
+                    "lineno": frame.get("lineno") if type(frame.get("lineno")) is int else None,
+                    "in_app": frame.get("in_app") is True,
+                }
+            )
+        projected.append(
+            {
+                "type": kind if identifier.fullmatch(kind) else "Exception",
+                "value": "[redacted]",
+                "stacktrace": {"frames": locations},
             }
-        if isinstance(value, list):
-            return [walk(v) for v in value]
-        return value
-
-    return walk(event)  # type: ignore[no-any-return]
+        )
+    safe = redact_processor(None, "error", safe)
+    safe["exception"] = {"values": projected}
+    return safe
 
 
 def capture_exception(exc: BaseException, **context: Any) -> None:

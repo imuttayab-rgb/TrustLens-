@@ -19,17 +19,18 @@ import { useEffect } from 'react';
 export function RequireStaff({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: user, isPending } = useSession();
+  const { data: user, isPending, isFetching } = useSession();
+  const checking = isPending || (!user && isFetching);
 
   const isStaff = Boolean(user?.roles.some((r) => (STAFF_ROLES as readonly string[]).includes(r)));
 
   useEffect(() => {
-    if (!isPending && !user) {
+    if (!checking && !user) {
       router.replace(`/login?next=${encodeURIComponent(pathname)}`);
     }
-  }, [isPending, user, pathname, router]);
+  }, [checking, user, pathname, router]);
 
-  if (isPending) {
+  if (checking) {
     return (
       <div className="flex min-h-[60dvh] items-center justify-center">
         <Spinner label="Checking your access" />

@@ -103,9 +103,9 @@ async def purge_expired_media(ctx: dict[str, Any]) -> dict[str, Any]:
 
 
 async def purge_account(ctx: dict[str, Any], *, user_id: str) -> dict[str, Any]:
-    """Purge an account and all its data."""
-    log.info("account_purged", user_id=user_id)
-    return {"purged": True}
+    """Legacy jobs must not report an erasure that was never performed."""
+    log.info("account_erasure_requires_review", user_id=user_id)
+    return {"purged": False, "status": "REQUIRES_REVIEW"}
 
 
 async def publish_outbox(ctx: dict[str, Any], *, batch: int = 100) -> dict[str, Any]:
@@ -228,8 +228,36 @@ async def _fan_out_to_webhooks(session: Any, event: Any, ctx: dict[str, Any]) ->
     return created
 
 
+async def expire_lapsed_identities(ctx: dict[str, Any]) -> dict[str, Any]:
+    """Daily: a VERIFIED seller whose card (real OCR) has expired -> EXPIRED.
+
+    Their live listings go back to private drafts until they re-verify with
+    a renewed card. Fake/demo OCR dates are never used. Logs counts only -
+    never a date, CNIC number or name.
+    """
+    from trustlens.core.application.use_cases.verification.identity_expiry import (
+        ExpireLapsedIdentities,
+    )
+
+    result = await ExpireLapsedIdentities(
+        uow=ctx["uow"](), queue=ctx["queue"], clock=ctx["clock"], ids=ctx["ids"]
+    ).execute()
+    log.info(
+        "identity_expiry_sweep",
+        checked=result.checked,
+        expired=result.expired,
+        listings_withheld=result.listings_withheld,
+    )
+    return {
+        "checked": result.checked,
+        "expired": result.expired,
+        "listings_withheld": result.listings_withheld,
+    }
+
+
 __all__ = [
     "enrich_ip",
+    "expire_lapsed_identities",
     "lookup_phone",
     "publish_outbox",
     "purge_account",

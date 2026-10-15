@@ -13,6 +13,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from uuid import UUID
 
+from trustlens.core.application.services.listing_publication import sync_listing_publication
 from trustlens.core.domain.entities import (
     IdentityDocument,
     IdentityVerification,
@@ -56,6 +57,7 @@ class SubmitIdentityCommand:
     cnic_front_file_id: UUID
     cnic_back_file_id: UUID
     selfie_file_id: UUID
+    hold_id_file_id: UUID | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -130,6 +132,13 @@ class SubmitIdentityDocuments:
                     front_document_id=front.id,
                     back_document_id=back.id,
                     selfie_document_id=selfie.id,
+                    # The optional fourth image has no OCR/document record. The
+                    # private JSONB metadata binds it to this exact attempt;
+                    # user ownership and purpose are validated below first.
+                    raw_result=(
+                        {"hold_id_file_id": str(cmd.hold_id_file_id)}
+                        if cmd.hold_id_file_id is not None else {}
+                    ),
                 )
             )
 
@@ -166,7 +175,13 @@ class SubmitIdentityDocuments:
         another user's uploaded CNIC as their own.
         """
         validated: list[object] = []
-        for field_name, expected_purpose in _REQUIRED_PURPOSES.items():
+        purposes = dict(_REQUIRED_PURPOSES)
+        if cmd.hold_id_file_id is not None:
+            purposes["hold_id_file_id"] = FilePurpose.HOLD_ID
+        file_ids = [getattr(cmd, key) for key in purposes]
+        if len(set(file_ids)) != len(file_ids):
+            raise ValidationError("Each identity image must be a different upload.")
+        for field_name, expected_purpose in purposes.items():
             file_id: UUID = getattr(cmd, field_name)
             stored = await self._uow.files.get(file_id)
             if stored is None:
@@ -205,6 +220,11 @@ class FinalizeIdentityCommand:
     #: data so the domain stays free of OCR concerns.
     cnic_needs_review: bool = False
     cnic_check_failures: tuple[str, ...] = ()
+    # A still image of a person holding a card is not certified liveness. The
+    # ORB/face signals help a human; this pilot never auto-awards verified.
+    hold_review_required: bool = False
+    hold_card_found: bool = False
+    holder_face_similarity: float | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -261,18 +281,23 @@ class FinalizeIdentityVerification:
                     engine_version=cmd.engine_version,
                     decision_reason=reason,
                     decision_source="AUTO",
-                    raw_result=dict(cmd.raw),
+                    # Do not lose the fourth-file link when the worker saves
+                    # OCR/matcher evidence after the upload is processed.
+                    raw_result={**verification.raw_result, **cmd.raw},
                     verified_at=now if decision == VerificationStatus.VERIFIED else None,
                 )
             )
-            await self._uow.sellers.update(
+            updated_seller = await self._uow.sellers.update(
                 dataclasses.replace(seller, identity_status=decision, updated_at=now)
             )
+            # Publication changes atomically with the identity verdict. Do
+            # not rely on a browser hiding an unverified seller's listing.
+            await sync_listing_publication(self._uow, updated_seller, now=now)
 
             if needs_review:
                 await self._open_review_case(seller, cmd, duplicates, now)
 
-            if duplicates >= 2:
+            if duplicates >= 1:
                 await self._uow.publish(
                     DuplicateIdentityDetected(
                         aggregate_id=seller.id,
@@ -301,6 +326,14 @@ class FinalizeIdentityVerification:
     def _decide(
         self, cmd: FinalizeIdentityCommand, duplicates: int
     ) -> tuple[VerificationStatus, bool, str]:
+        # Expiry first. The worker sets `document_expired` only from REAL OCR
+        # that read the expiry reliably (clear photo, consistent sides, all
+        # three dates present); fake OCR never sets it. An expired card is a
+        # seller-fixable fact a reviewer cannot overturn, so it is rejected
+        # even when the face could not be compared, and the seller may
+        # immediately resubmit with a valid card.
+        if cmd.document_expired:
+            return VerificationStatus.REJECTED, False, "The submitted ID has expired."
         # An unreadable upload is a photograph problem, not a fraud finding.
         # FAILED would cap the Trust Score for a blurry image, and the seller
         # cannot appeal against "we could not read it" - so this waits for a
@@ -311,9 +344,7 @@ class FinalizeIdentityVerification:
                 True,
                 "The documents could not be read automatically; sent for manual review.",
             )
-        if cmd.document_expired:
-            return VerificationStatus.REJECTED, False, "The submitted ID has expired."
-        if duplicates >= 2:
+        if duplicates >= 1:
             return (
                 VerificationStatus.REJECTED,
                 True,
@@ -326,6 +357,12 @@ class FinalizeIdentityVerification:
                 VerificationStatus.PENDING,
                 True,
                 "The ID details could not be confirmed; sent for manual review.",
+            )
+        if cmd.hold_review_required:
+            return (
+                VerificationStatus.PENDING,
+                True,
+                "ID beside face captured; card and face evidence awaits human review.",
             )
         if cmd.face_similarity >= cmd.threshold:
             return VerificationStatus.VERIFIED, False, "Selfie matches the ID photo."
@@ -343,12 +380,23 @@ class FinalizeIdentityVerification:
     @staticmethod
     def _review_reason(cmd: FinalizeIdentityCommand, duplicates: int) -> str:
         """Why a human is being asked to look, in the reviewer's own terms."""
-        if duplicates >= 2:
+        if duplicates >= 1:
             return "Duplicate CNIC across accounts"
         if cmd.ocr_confidence is None or cmd.face_similarity is None:
             return "Documents could not be read automatically"
+        if cmd.raw.get("ocr_engine") == "fake":
+            return "Demo OCR is simulated; inspect the physical ID manually"
         if cmd.cnic_check_failures:
-            return f"CNIC cross-check failed: {', '.join(cmd.cnic_check_failures)}"
+            # review_cases.trigger_reason is VARCHAR(120); never let a long
+            # list of codes fail the whole verification transaction.
+            reason = f"CNIC cross-check failed: {', '.join(cmd.cnic_check_failures)}"
+            return reason if len(reason) <= 120 else reason[:117] + "..."
+        if cmd.hold_review_required:
+            if not cmd.hold_card_found or cmd.holder_face_similarity is None:
+                return "Held card or applicant face could not be confirmed automatically"
+            if cmd.holder_face_similarity < cmd.threshold:
+                return "Held-card applicant face differs from the separate selfie"
+            return "Held-card image requires a human identity review"
         return "Borderline face-match similarity"
 
     async def _open_review_case(
@@ -365,11 +413,11 @@ class FinalizeIdentityVerification:
                 id=self._ids.new(),
                 seller_id=seller.id,
                 case_type=(
-                    ReviewCaseType.FRAUD_FLAG if duplicates >= 2 else ReviewCaseType.IDENTITY_REVIEW
+                    ReviewCaseType.FRAUD_FLAG if duplicates >= 1 else ReviewCaseType.IDENTITY_REVIEW
                 ),
                 status=ReviewStatus.QUEUED,
                 created_at=now,
-                priority=2 if duplicates >= 2 else 5,
+                priority=2 if duplicates >= 1 else 5,
                 trigger_reason=self._review_reason(cmd, duplicates),
                 related_entity_type="identity_verifications",
                 related_entity_id=cmd.verification_id,

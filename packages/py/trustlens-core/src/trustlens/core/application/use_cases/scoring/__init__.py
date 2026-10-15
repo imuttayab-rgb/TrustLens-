@@ -1,3 +1,4 @@
+"""Application use cases or port contracts for   init  ."""
 from trustlens.core.application.use_cases.scoring.compute_trust_score import (
     ComputeTrustScore,
     ComputeTrustScoreCommand,

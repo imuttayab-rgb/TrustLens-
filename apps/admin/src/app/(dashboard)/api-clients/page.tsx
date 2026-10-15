@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/api-clients: page. */
 import { PartnerList } from '@/features/partners';
 import { Card, CardContent, CardHeader, CardTitle } from '@trustlens/ui';
 

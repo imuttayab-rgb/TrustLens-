@@ -1,9 +1,13 @@
+/** Reusable UI rendering and interaction component: NotificationBell. */
 'use client';
 
 import { cn, formatRelative } from '@trustlens/utils';
 import { Bell } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useLocale } from 'next-intl';
+import { usePathname } from 'next/navigation';
+import styles from './NotificationBell.module.css';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
@@ -36,12 +40,24 @@ function linkFor(notification: AppNotification): string | null {
   }
 }
 
-export function NotificationBell() {
-  const { data } = useNotifications();
+export function NotificationBell({
+  variant = 'icon',
+  label,
+}: {
+  variant?: 'icon' | 'header';
+  label?: string;
+}) {
+  const isUrdu = useLocale() === 'ur';
+  const title = label ?? (isUrdu ? 'اطلاعات' : 'Notifications');
+  const { data, isLoading, isError, refetch } = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
   const [open, setOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const id = useId();
+  const pathname = usePathname();
+  useEffect(() => setOpen(false), [pathname]);
 
   useEffect(() => {
     if (!open) return;
@@ -50,34 +66,52 @@ export function NotificationBell() {
         setOpen(false);
       }
     }
+    function onEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape' && panelRef.current?.contains(document.activeElement)) {
+        setOpen(false);
+        trigger.current?.focus();
+      }
+    }
     document.addEventListener('mousedown', onClickOutside);
-    return () => document.removeEventListener('mousedown', onClickOutside);
+    document.addEventListener('keydown', onEscape);
+    return () => {
+      document.removeEventListener('mousedown', onClickOutside);
+      document.removeEventListener('keydown', onEscape);
+    };
   }, [open]);
 
   const unreadCount = data?.unreadCount ?? 0;
   const items = data?.items ?? [];
 
   return (
-    <div ref={panelRef} className="relative">
+    <div
+      ref={panelRef}
+      className={styles.root}
+      onBlur={(event) => {
+        if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget))
+          setOpen(false);
+      }}
+    >
       <button
+        ref={trigger}
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label={unreadCount > 0 ? `${unreadCount} unread notifications` : 'Notifications'}
+        aria-label={unreadCount > 0 ? `${title}: ${unreadCount}` : title}
         aria-expanded={open}
-        className="relative grid h-9 w-9 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        aria-controls={id}
+        className={cn(styles.trigger, variant === 'header' && styles.headerTrigger)}
       >
-        <Bell className="h-4 w-4" aria-hidden="true" />
+        <Bell aria-hidden="true" />
+        {variant === 'header' && <span>{title}</span>}
         {unreadCount > 0 && (
-          <span className="absolute right-1 top-1 grid h-4 min-w-4 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold text-white">
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </span>
+          <span className={styles.badge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
         )}
       </button>
 
       {open && (
-        <div className="bg-popover absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] rounded-lg border border-border shadow-lg">
+        <div id={id} role="region" aria-label={title} className={styles.panel}>
           <div className="flex items-center justify-between border-b border-border px-3 py-2">
-            <p className="text-sm font-medium">Notifications</p>
+            <p className="text-sm font-medium">{title}</p>
             {unreadCount > 0 && (
               <button
                 type="button"
@@ -85,14 +119,33 @@ export function NotificationBell() {
                 disabled={markAllRead.isPending}
                 className="text-xs text-primary hover:underline disabled:opacity-50"
               >
-                Mark all read
+                {isUrdu ? 'سب پڑھی ہوئی نشان زد کریں' : 'Mark all read'}
               </button>
             )}
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {items.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-muted-foreground">Nothing yet.</p>
+            {isLoading ? (
+              <p role="status" className="px-3 py-6 text-center text-sm">
+                {isUrdu ? 'لوڈ ہو رہا ہے…' : 'Loading notifications…'}
+              </p>
+            ) : isError ? (
+              <div className="px-3 py-6 text-center text-sm">
+                <p role="alert">
+                  {isUrdu ? 'اطلاعات لوڈ نہیں ہو سکیں۔' : 'Could not load notifications.'}
+                </p>
+                <button
+                  type="button"
+                  className="mt-2 text-primary underline"
+                  onClick={() => void refetch()}
+                >
+                  {isUrdu ? 'دوبارہ کوشش کریں' : 'Try again'}
+                </button>
+              </div>
+            ) : items.length === 0 ? (
+              <p className="px-3 py-6 text-center text-sm text-muted-foreground">
+                {isUrdu ? 'ابھی کوئی اطلاع نہیں۔' : 'Nothing yet.'}
+              </p>
             ) : (
               items.map((notification) => {
                 const href = linkFor(notification);
@@ -129,7 +182,7 @@ export function NotificationBell() {
                     key={notification.id}
                     type="button"
                     onClick={handleOpen}
-                    className="block w-full text-left"
+                    className="block w-full text-start"
                   >
                     {content}
                   </button>

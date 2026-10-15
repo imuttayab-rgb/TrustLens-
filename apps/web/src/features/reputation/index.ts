@@ -1,3 +1,4 @@
+/** Index module in reputation. */
 export { FollowButton } from './components/FollowButton';
 export { ReviewPrompt } from './components/ReviewPrompt';
 export {

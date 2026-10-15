@@ -14,6 +14,7 @@ from trustlens.core.domain.errors import EntityNotFound
 from trustlens_api.api.deps import ActorDep, ContainerDep, MetaDep, UowDep
 from trustlens_api.api.v1.schemas.common import envelope
 from trustlens_api.api.v1.schemas.seller import JobStatusResponse
+from trustlens_api.modules.operations.job_access import authorize_job, public_job_result
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
 
@@ -42,6 +43,10 @@ async def get_job(
 
     if run is None:
         # Fall back to the queue: the job may not have been mirrored yet.
+        description = await container.queue.describe(job_id)
+        if not description:
+            raise EntityNotFound("job", job_id)
+        await authorize_job(job_id, description["job_name"], description["payload"], actor, uow)
         queue_status = await container.queue.status(job_id)
         if queue_status is None:
             raise EntityNotFound("job", job_id)
@@ -53,6 +58,7 @@ async def get_job(
             request_id=meta.request_id,
         )
 
+    await authorize_job(job_id, run.job_name, run.payload, actor, uow)
     stage, progress = STAGE_PROGRESS.get(run.status, ("Processing", 50))
     return envelope(
         JobStatusResponse(
@@ -60,9 +66,11 @@ async def get_job(
             status=run.status,
             stage=stage,
             progress=progress,
-            result=run.result,
+            result=public_job_result(run.job_name, run.result),
             # The user-facing reason only. The stack trace stays in the log.
-            error=run.error_message if run.status in {"FAILED", "DEAD"} else None,
+            error="Processing failed. Please retry or contact support with the request ID."
+            if run.status in {"FAILED", "DEAD"}
+            else None,
         ).model_dump(by_alias=True),
         request_id=meta.request_id,
     )

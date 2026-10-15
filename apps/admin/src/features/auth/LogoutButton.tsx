@@ -1,3 +1,4 @@
+/** Logoutbutton module; defines LogoutButton. */
 'use client';
 
 import { useLogout } from '@/lib/auth/use-logout';

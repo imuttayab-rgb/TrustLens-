@@ -81,9 +81,14 @@ def _to_response(listing: Listing) -> ListingResponse:
         price=listing.price.amount if listing.price else None,
         currency=listing.price.currency if listing.price else None,
         category=listing.category,
+        category_node_id=listing.category_node_id,
+        category_schema_version=listing.category_schema_version,
+        category_data=listing.category_data,
+        show_phone=listing.show_phone,
         condition=listing.condition,
         city=listing.city,
         area=listing.area,
+        address_line=listing.address_line,
         latitude=listing.latitude,
         longitude=listing.longitude,
         country_code=listing.country_code,
@@ -102,9 +107,12 @@ def _to_input(body: ListingWriteRequest) -> ListingInput:
         price=body.price,
         currency=body.currency,
         category=body.category,
+        category_node_id=body.category_node_id,
+        show_phone=body.show_phone,
         condition=body.condition,
         city=body.city,
         area=body.area,
+        address_line=body.address_line,
         latitude=body.latitude,
         longitude=body.longitude,
         country_code=body.country_code,
@@ -255,10 +263,8 @@ async def analyse_listing(
     status_code=status.HTTP_201_CREATED,
     summary="Add an image to a listing",
     description=(
-        "Associates an already-uploaded file (obtained via /files/upload-intent "
-        "with purpose=LISTING_IMAGE) with this listing and computes a perceptual "
-        "hash for duplicate detection. A warning is returned if a near-identical "
-        "image already exists in this seller's listings (Hamming distance ≤ 5)."
+        "Checks an owned upload against other accounts' indexed photos before "
+        "attaching an immutable copy. Failed/busy checks do not attach the photo."
     ),
     dependencies=[Depends(require_permissions("listing:write:self"))],
 )
@@ -271,129 +277,124 @@ async def add_listing_image(
     meta: MetaDep,
 ) -> dict[Any, Any]:
     import hashlib
-    from io import BytesIO
+    from dataclasses import replace
 
-    import imagehash
-    from PIL import Image
+    from anyio import to_thread
 
     from trustlens.core.domain.entities import ListingImage
-    from trustlens.core.domain.errors import EntityNotFound, ValidationError
+    from trustlens.core.domain.errors import ConflictError, EntityNotFound, ValidationError
+    from trustlens.db.photo_guard import PhotoIndex
+    from trustlens_api.modules.photos.guard import prepare_photo, visually_matches
 
-    # Ownership check: the listing must belong to this seller.
     listing = await GetListing(uow=uow).execute(listing_id=listing_id, seller_id=seller.id)
     if listing is None:
         raise EntityNotFound("listing", listing_id)
-
-    # Max 10 images per listing (LST-01 - was hard-coded at 5).
-    count = await uow.listings.count_images(listing_id)
-    if count >= MAX_LISTING_IMAGES:
-        raise ValidationError(
-            f"A listing may have at most {MAX_LISTING_IMAGES} images.", field="fileId"
-        )
-
-    # Validate the file exists and belongs to this user.
     stored_file = await uow.files.get(body.file_id)
     if stored_file is None or stored_file.owner_user_id != seller.user_id:
         raise EntityNotFound("file", body.file_id)
     if stored_file.purpose.value != "LISTING_IMAGE":
+        raise ValidationError("Choose a listing photo.", field="fileId")
+
+    index = PhotoIndex(uow.session)
+    # A PostgreSQL transaction lock bounds processing across API processes and
+    # closes the simultaneous-upload race. Taken BEFORE downloading any bytes.
+    await index.lock()
+    await index.require_ready()
+    listing = await uow.listings.lock_owned_for_media(listing_id, seller.id)
+    count = await uow.listings.count_images(listing_id)
+    if count >= MAX_LISTING_IMAGES:
         raise ValidationError(
-            "File must have been uploaded with purpose=LISTING_IMAGE.", field="fileId"
+            f"An ad can have at most {MAX_LISTING_IMAGES} photos.", field="fileId"
         )
-
-    # Download the image bytes to compute perceptual hash, strip EXIF, and
-    # generate a thumbnail. This is the only case where bytes pass through
-    # the API: the payload is at most 10 MB, the processing is CPU-cheap,
-    # and the alternative (a separate worker job) would add a round trip
-    # for a feature sellers see immediately.
-    phash_bytes: bytes | None = None
-    sha256_bytes: bytes | None = None
-    width: int | None = None
-    height: int | None = None
-    duplicate_of: str | None = None
-    thumbnail_object_key: str | None = None
-
+    raw = await container.storage.get(bucket=stored_file.bucket, object_key=stored_file.object_key)
     try:
-        raw = await container.storage.get(
-            bucket=stored_file.bucket,
-            object_key=stored_file.object_key,
+        prepared = await to_thread.run_sync(prepare_photo, raw)
+    except (ValueError, OSError) as exc:
+        raise ValidationError(
+            str(exc)
+            if isinstance(exc, ValueError)
+            else "This image could not be read. Choose a JPEG, PNG or WebP photo.",
+            field="fileId",
+        ) from None
+    del raw
+    if await index.exact_match(seller.user_id, prepared.digests):
+        raise ConflictError(
+            "This photo is already attached to another account's ad. "
+            "Use your own original photo of the item.",
+            details={"reason": "PHOTO_ALREADY_USED", "field": "fileId"},
         )
-        img = Image.open(BytesIO(raw)).convert("RGB")
-        width, height = img.size
-        phash = imagehash.dhash(img, hash_size=8)
-        phash_bytes = phash.hash.tobytes()
-
-        # Duplicate detection across this seller's images.
-        dupe = await uow.listings.find_near_duplicate_hash(
-            phash_bytes,
-            seller_id=seller.id,
-        )
-        if dupe is not None:
-            duplicate_of = str(dupe.id)
-
-        # EXIF strip: re-encode from the already-decoded RGB image and
-        # overwrite the original object. `img.save` only writes an `exif`
-        # segment when one is explicitly passed - it is not here - so a
-        # phone's GPS/orientation/device metadata does not survive this
-        # round trip, even though the original bytes (briefly, in memory
-        # above) had it.
-        stripped = BytesIO()
-        img.save(stripped, format="JPEG", quality=90)
-        stripped_bytes = stripped.getvalue()
-        sha256_bytes = hashlib.sha256(stripped_bytes).digest()
-        await container.storage.put(
-            bucket=stored_file.bucket,
-            object_key=stored_file.object_key,
-            data=stripped_bytes,
-            content_type="image/jpeg",
+    candidates = await index.candidates(seller.user_id, prepared.bands)
+    matched = await to_thread.run_sync(
+        lambda: any(visually_matches(prepared.fingerprint, candidate) for candidate in candidates)
+    )
+    if matched:
+        raise ConflictError(
+            "This photo closely matches one used by another account and was not attached. "
+            "Take a fresh photo of your item from a different angle. "
+            "A visual match does not establish who owns the original.",
+            details={"reason": "PHOTO_SIMILAR", "field": "fileId"},
         )
 
-        # A ~400px-wide derivative for cards - the full-size original is
-        # what next/image would normally downscale client-side, but
-        # presigned URLs bypass that optimizer entirely (unoptimized=true),
-        # so without this every card downloads the full upload.
-        thumb = img.copy()
-        thumb.thumbnail((400, 400))
-        thumb_buffer = BytesIO()
-        thumb.save(thumb_buffer, format="JPEG", quality=85)
-        thumbnail_object_key = f"{stored_file.object_key}_thumb.jpg"
-        await container.storage.put(
-            bucket=stored_file.bucket,
-            object_key=thumbnail_object_key,
-            data=thumb_buffer.getvalue(),
-            content_type="image/jpeg",
-        )
-    except Exception:
-        # Processing failure is non-fatal: the image is still stored (as
-        # originally uploaded) and associated. The hash/thumbnail columns
-        # stay None; find_near_duplicate_hash skips None rows.
-        log.warning("listing_image_processing_failed", listing_id=str(listing_id), exc_info=True)
-
+    # Never serve a mutable upload target: its presigned PUT may still be valid.
+    # A fresh server-only key is written once; no upload URL is issued for it.
     now = container.clock.now()
+    frozen_id = container.ids.new()
+    frozen_key = f"listing_checked/{seller.user_id}/{frozen_id}.jpg"
+    thumbnail_key = frozen_key + "_thumb.jpg"
+    await container.storage.put(
+        bucket=stored_file.bucket,
+        object_key=frozen_key,
+        data=prepared.jpeg,
+        content_type="image/jpeg",
+        # Public listing asset; keep private-document storage defaults intact.
+        server_side_encryption=False,
+    )
+    await container.storage.put(
+        bucket=stored_file.bucket,
+        object_key=thumbnail_key,
+        data=prepared.thumbnail,
+        content_type="image/jpeg",
+        # Public listing asset; keep private-document storage defaults intact.
+        server_side_encryption=False,
+    )
+    frozen = replace(
+        stored_file,
+        id=frozen_id,
+        object_key=frozen_key,
+        mime_type="image/jpeg",
+        size_bytes=len(prepared.jpeg),
+        sha256=hashlib.sha256(prepared.jpeg).digest(),
+        width=prepared.width,
+        height=prepared.height,
+        created_at=now,
+    )
+    await uow.files.add(frozen)
     image = ListingImage(
         id=container.ids.new(),
         listing_id=listing_id,
-        file_id=body.file_id,
-        position=count,  # append to end
+        file_id=frozen_id,
+        position=count,
         created_at=now,
-        width=width,
-        height=height,
-        perceptual_hash=phash_bytes,
-        sha256=sha256_bytes,
-        is_primary=(count == 0),
-        thumbnail_object_key=thumbnail_object_key,
+        width=prepared.width,
+        height=prepared.height,
+        perceptual_hash=prepared.legacy_dhash,
+        sha256=frozen.sha256,
+        is_primary=count == 0,
+        thumbnail_object_key=thumbnail_key,
     )
     await uow.listings.create_image(image)
+    await index.add(image.id, seller.user_id, prepared)
     await uow.commit()
-
     return envelope(
         {
             "imageId": str(image.id),
             "position": image.position,
             "isPrimary": image.is_primary,
-            "width": width,
-            "height": height,
-            "isDuplicate": duplicate_of is not None,
-            "duplicateOf": duplicate_of,
+            "width": image.width,
+            "height": image.height,
+            "isDuplicate": False,
+            "duplicateOf": None,
+            "photoCheck": "CLEAR",
         },
         request_id=meta.request_id,
     )
@@ -453,3 +454,21 @@ async def list_listing_images(
 
 
 __all__ = ["router"]
+
+
+class ImageOrderRequest(Schema):
+    image_ids: list[UUID] = Field(min_length=1, max_length=10)
+
+
+@router.put('/{listing_id}/images/order', dependencies=[Depends(require_permissions('listing:write:self'))])
+async def order_listing_images(listing_id: UUID, body: ImageOrderRequest, seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
+    await uow.listings.edit_images(listing_id, seller.id, order=body.image_ids)
+    await uow.commit()
+    return envelope({'saved': True}, request_id=meta.request_id)
+
+
+@router.delete('/{listing_id}/images/{image_id}', dependencies=[Depends(require_permissions('listing:write:self'))])
+async def remove_listing_image(listing_id: UUID, image_id: UUID, seller: SellerDep, uow: UowDep, meta: MetaDep) -> dict[str, Any]:
+    await uow.listings.edit_images(listing_id, seller.id, remove_id=image_id)
+    await uow.commit()
+    return envelope({'removed': True, 'reanalysisRequired': True}, request_id=meta.request_id)

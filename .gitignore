@@ -169,3 +169,14 @@ apps/ml/reports/
 # meant to live in git history. Re-derive/re-request from the client if needed.
 # Note: gitignore patterns don't support shell-style quoting - the space is literal.
 docs/client docs/
+# Generated calling keys and media-server configuration
+.trustlens-calls/
+
+# Local setup mutex and transfer artifacts
+.trustlens-setup-lock/
+transfer-backups/
+
+# Private updater state must never enter images or commits.
+.trustlens-update-backups/
+.trustlens-update-lock/
+.trustlens-local-project

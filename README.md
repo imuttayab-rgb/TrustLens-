@@ -1,92 +1,67 @@
-# TrustLens
+# TrustLens — complete organized security release
 
-**AI-Powered Seller Trust Verification System for Online Marketplaces**
+Marketplace, seller verification, administration, retained messaging, voice messages and browser voice calls. This folder is a complete source distribution, not an incremental patch. Start with [START_HERE.md](START_HERE.md).
 
-Final Year Project — School of Software Engineering, Minhaj University Lahore
-Haseeb Ur Rehman (2022F-mulbsswe-043) · Muhammad Muttayab (2022F-mulbsswe-012)
-Supervisor: Mam Misbha
+## Update this laptop
 
----
-
-## What it does
-
-TrustLens verifies whether an online marketplace seller is genuine or fake and publishes a single
-**explainable Trust Score (0–100)** with a risk level and the reasons behind it, so buyers can judge a
-seller before paying.
-
-It combines seven independent signal families — identity (CNIC OCR + face match), phone, email, device,
-network/VPN, account behaviour, and AI listing analysis — into one score, and exposes that score to
-marketplaces through a public REST API.
-
-## Stack
-
-| Layer    | Technology                                                                                                                                                    |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Frontend | Next.js (React) · Tailwind CSS · TypeScript → **Vercel** (planned)                                                                                            |
-| Backend  | Python · FastAPI · SQLAlchemy · Alembic → **Fly.io** (planned)                                                                                                |
-| Worker   | ARQ over Redis (OCR, face match, LLM, scoring) → **Fly.io** (planned)                                                                                         |
-| Database | PostgreSQL · Redis (cache + queue)                                                                                                                            |
-| AI       | OpenAI / Claude API · RapidOCR + InsightFace on ONNX runtime, with EasyOCR + DeepFace kept behind a setting for benchmarking · custom scam-listing classifier |
-| Tooling  | pnpm · Turborepo · uv · Docker · Postman                                                                                                                      |
-
-Nothing is deployed yet — the hosting column is the decision recorded in
-[`docs/20-go-live-plan.md`](docs/20-go-live-plan.md), not a live system.
-
-## Status
-
-**Built and running locally.** 330 Python tests pass, `mypy`/`ruff`/`tsc`/`eslint` are clean, the
-architecture contracts hold, and the API serves 50 paths against 40 migrated tables.
-
-End to end today: register → verify the email → sign in → create a seller profile → complete the
-identity, phone, email and device checks → read an explainable Trust Score with its per-signal
-breakdown and ranked improvements → appeal it → have a reviewer decide and trigger a recompute.
-Buyers can open a seller's public page; partner marketplaces can read a signed score through the
-API-key-authenticated public API.
-
-**Not done yet:** the trained scam classifier, most of the admin panel, and deployment — there is
-no public URL. Real CNIC and face images have never been tested, so there are no accuracy numbers.
-
-The ordered list of remaining work is [`REMAINING.md`](REMAINING.md); the history, with the
-defects found along the way, is [`TASKS.md`](TASKS.md).
-
-## Documentation
-
-| Start here                                                   |                                                                 |
-| ------------------------------------------------------------ | --------------------------------------------------------------- |
-| [ARCHITECTURE.md](ARCHITECTURE.md)                           | 5-minute overview and the three decisions that shape everything |
-| [docs/README.md](docs/README.md)                             | Full documentation index (20 documents + 7 ADRs)                |
-| [docs/01-project-overview.md](docs/01-project-overview.md)   | Requirements traced to the proposal, assumptions, build order   |
-| [docs/11-development-setup.md](docs/11-development-setup.md) | How to install, run, migrate, seed and test                     |
-| [DEPLOYMENT.md](DEPLOYMENT.md)                               | Click-by-click deployment guide                                 |
-
-## Quick start
-
-**Production mode** — the whole product in containers, the way it is handed over:
+From the newly extracted release folder, with the existing stack running:
 
 ```bash
-make prod-init     # first run: creates .env.production with real secrets
-make prod-up       # build and start everything
-make prod-check    # verify it is actually serving
+bash scripts/local/update-existing.sh "$HOME/Documents/TrustLens" trustlens
 ```
 
-Windows: double-click **`prod-start.bat`**. Day-to-day operation is in
-[`RUNBOOK.md`](RUNBOOK.md).
+Read [existing-install update instructions](docs/operations/UPDATE_EXISTING.md) and the [security repair report](docs/development/SECURITY_FIX_REPORT.md). This preserves the old installation's environment, accounts and volumes; the source ZIP contains no user database.
 
-**Development mode** — hot reload, run from source.
+## Run locally on a fresh laptop
 
-Windows, one click: run **`start.bat`** (and `stop.bat` to shut it down).
-
-Everywhere else:
+Install Docker Desktop (Linux containers / WSL 2 on Windows) and Git for Windows. Extract this folder outside the old checkout. Start Docker Desktop, then double-click **START_LOCAL.bat**, or run in Git Bash:
 
 ```bash
-make setup         # deps, .env, docker services, migrations, seed data
-make dev           # web :3000 · admin :3001 · api :8000 · worker
-make dev-offline   # same, with USE_FAKE_AI=true — no API keys or internet needed
+bash scripts/local/start.sh
 ```
 
-Seeded demo accounts are listed in [`CREDENTIALS.dev.md`](CREDENTIALS.dev.md).
+The launcher creates private per-install configuration, builds the API/worker/web/admin, starts PostgreSQL, Redis, MinIO, Mailpit and LiveKit, applies migrations, and checks readiness. It uses the separate Compose project `trustlens-clean`. It does not import your old computer's records.
 
-## Licence
+| Service | Default local URL |
+| --- | --- |
+| Marketplace | http://localhost:3000 |
+| Administration | http://localhost:3001 |
+| API | http://localhost:8000 |
+| Development email inbox | http://localhost:8025 |
 
-Academic project, not licensed for commercial use. Note that the pretrained face-recognition
-weights it depends on carry non-commercial research licences, which academic FYP use permits.
+Optional demo accounts: `bash scripts/local/demo.sh`, then see [CREDENTIALS.dev.md](CREDENTIALS.dev.md). Stop with **STOP_LOCAL.bat**; volumes and records are retained. Never use `down -v` on data you need.
+
+## Structure
+
+| Path | Responsibility |
+| --- | --- |
+| `apps/web/src/app` | Next.js routes and layout composition |
+| `apps/web/src/features` | Feature UI, controllers/hooks and API adapters |
+| `apps/admin` | Staff review and administration UI |
+| `apps/api/src/trustlens_api/api` | Versioned HTTP routes, schemas and authorization dependencies |
+| `apps/api/src/trustlens_api/modules` | Calling, messaging, profile, photo and authentication orchestration |
+| `apps/worker` | Background jobs and retry/recovery supervision |
+| `apps/ml` | Offline training and evaluation; excluded from deployed application imports |
+| `packages/py/trustlens-core` | Framework-independent business rules and use cases |
+| `packages/py/trustlens-db` | Domain-grouped models, repositories and transaction unit of work |
+| `packages/py/trustlens-shared` | Typed configuration, logging, encryption and external adapters |
+| `packages/py/trustlens-ai` | AI ports/adapters and deterministic demo engines |
+| `packages/api-client` | Generated types, typed errors and shared JSON request transport |
+| `packages/ui`, `packages/config-*` | Reusable UI and shared tooling conventions |
+| `database/migrations` | Versioned, ordered database changes |
+| `docker`, `scripts/local` | Container definitions and portable localhost launchers |
+| `testing`, `**/tests`, `**/*.test.*` | Test infrastructure and regression checks |
+| `docs` | Architecture, setup, operations, feature rules and file index |
+
+## Read next
+
+- [Architecture](ARCHITECTURE.md)
+- [Developer guide: boundaries, state, errors and comments](docs/development/CONTRIBUTING.md)
+- [API structure and extension guide](docs/development/API_STRUCTURE.md)
+- [Environment variables](docs/development/ENVIRONMENT.md)
+- [Every source file and its purpose](docs/FILE_MAP.md)
+- [Moving source and data to another computer](docs/operations/TRANSFER.md)
+- [Refactor scope and verification](docs/development/REFACTOR_REPORT.md)
+- [Calling deployment requirements](docs/operations/voice-calls.md)
+
+Old planning/status documents describe earlier development stages; they are not a current test report. The release report records what was actually checked for this package. Retained-chat migrations intentionally refuse destructive downgrades. Browser calling requires browser support, microphone permission and reachable media services; an entirely closed browser cannot promise app-style incoming calls.

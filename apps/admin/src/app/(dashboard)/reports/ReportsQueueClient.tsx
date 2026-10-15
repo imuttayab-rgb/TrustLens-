@@ -1,9 +1,11 @@
+/** Next.js route/layout composition for (dashboard)/reports: ReportsQueueClient. */
 'use client';
 
 import { toApiError } from '@trustlens/api-client';
 import { Alert, Button, Card, CardContent, Spinner } from '@trustlens/ui';
 import { formatDateTime } from '@trustlens/utils';
 import { useState } from 'react';
+import { ChatCaseReview } from '@/features/reports';
 import {
   useReportQueue,
   useResolveDispute,
@@ -120,6 +122,7 @@ function ReportRow({ report }: { report: AdminReport }) {
         </div>
 
         <p className="text-sm">{report.description}</p>
+        {report.chatCase && <ChatCaseReview reportId={report.id}/>}
 
         {report.resolutionNote && (
           <div className="rounded-md bg-muted/40 p-2 text-xs text-muted-foreground">

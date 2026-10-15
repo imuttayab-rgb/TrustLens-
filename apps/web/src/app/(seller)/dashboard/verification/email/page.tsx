@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (seller)/dashboard/verification/email: page. */
 'use client';
 
 import { EmailVerification } from '@/features/verification';

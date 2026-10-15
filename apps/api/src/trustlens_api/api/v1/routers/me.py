@@ -165,6 +165,10 @@ async def update_my_seller(
         raise EntityNotFound("seller_profile", actor.user_id)
 
     changes = body.model_dump(exclude_unset=True, by_alias=False)
+    if "display_name" in changes:
+        raise ValidationError(
+            "Confirm or correct your ID-matched name in My Profile.", field="displayName"
+        )
     # account_type is the one field here that isn't a plain string on the
     # entity - splatting the raw request string in would write an invalid
     # enum value straight through to the database.
@@ -331,6 +335,8 @@ def _to_saved_search_response(search: Any) -> SavedSearchResponse:
         id=search.id,
         name=search.name,
         category=search.category,
+        category_node_id=search.category_node_id,
+        facets=search.facets or {},
         q=search.q,
         city=search.city,
         area=search.area,
@@ -358,6 +364,8 @@ async def create_saved_search(
             user_id=actor.user_id,
             name=body.name,
             category=body.category,
+            category_node_id=body.category_node_id,
+            facets=body.facets,
             q=body.q,
             city=body.city,
             area=body.area,

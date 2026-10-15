@@ -1,5 +1,7 @@
+/** Use logout module; defines useLogout. */
 'use client';
 
+import { clearDraftRecovery } from '@/lib/draft-recovery-cache';
 import { api } from '@/lib/api/client';
 import { qk } from '@/lib/api/query-keys';
 import { setAccessToken } from '@/lib/auth/session';
@@ -25,6 +27,8 @@ export function useLogout() {
       if (result.error) throw toApiError(result.error);
     },
     onSettled: () => {
+      window.dispatchEvent(new Event('tl:logout'));
+      clearDraftRecovery();
       setAccessToken(null);
       queryClient.setQueryData(qk.me, null);
       queryClient.clear();

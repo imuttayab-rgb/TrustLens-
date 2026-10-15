@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use seller detail. */
 'use client';
 
 import { api } from '@/lib/api/client';

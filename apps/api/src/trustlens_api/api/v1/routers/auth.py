@@ -10,9 +10,11 @@ import secrets
 from datetime import timedelta
 from typing import Annotated, Any
 from uuid import UUID
+from urllib.parse import quote, unquote
 
 from fastapi import APIRouter, Cookie, Request, Response, status
 from fastapi.responses import RedirectResponse
+from pydantic import Field
 
 from trustlens.core.application.use_cases.auth import (
     AuthenticateWithGoogle,
@@ -36,7 +38,6 @@ from trustlens.core.application.use_cases.auth import (
 from trustlens.core.domain.enums import UserRole
 from trustlens.core.domain.errors import (
     MfaRequired,
-    RateLimitExceeded,
     TokenExpired,
     TokenInvalid,
     TokenUsed,
@@ -60,10 +61,16 @@ from trustlens_api.api.v1.schemas.auth import (
     UserSummary,
     VerifyEmailRequest,
 )
-from trustlens_api.api.v1.schemas.common import MessageResponse, envelope
+from trustlens_api.api.v1.schemas.common import MessageResponse, Schema, envelope
 from trustlens_api.container import Container
 from trustlens_api.core.cookies import clear_refresh_cookie, set_refresh_cookie
-from trustlens_api.google_oauth import GoogleOAuthError, build_authorize_url, exchange_code
+from trustlens_api.modules.authentication.google import (
+    GoogleOAuthError,
+    build_authorize_url,
+    exchange_code,
+)
+
+from trustlens_api.modules.security.rate_limits import enforce_limit, private_key
 
 log = get_logger(__name__)
 
@@ -74,6 +81,29 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 #: anywhere else.
 _OAUTH_STATE_COOKIE = "tl_oauth_state"
 _OAUTH_STATE_PATH = "/api/v1/auth/google"
+_OAUTH_NEXT_COOKIE = "tl_oauth_next"
+
+
+def _safe_return_path(raw: str | None) -> str:
+    """Accept only a bounded internal path, including after percent decoding."""
+    if not raw or len(raw) > 2000:
+        return "/dashboard"
+    decoded = raw
+    for index in range(5):
+        if (
+            not decoded.startswith("/")
+            or decoded.startswith("//")
+            or "\\" in decoded
+            or any(ord(c) < 32 or ord(c) == 127 for c in decoded)
+        ):
+            return "/dashboard"
+        value = unquote(decoded)
+        if value == decoded:
+            return quote(raw, safe="/?=&%#-._~+:,@")
+        decoded = value
+        if index == 4:
+            return "/dashboard"
+    return "/dashboard"
 
 
 @router.post(
@@ -93,6 +123,16 @@ async def register(
     meta: MetaDep,
     request: Request,
 ) -> dict[str, Any]:
+    limits = container.settings.rate_limit
+    await enforce_limit(
+        container, f"signup:ip:{meta.ip or 'unknown'}", limit=limits.signup_per_hour, window=3600
+    )
+    await enforce_limit(
+        container,
+        f"signup:email:{private_key(body.email)}",
+        limit=limits.signup_email_per_hour,
+        window=3600,
+    )
     use_case = RegisterUser(
         uow=uow,
         hasher=container.password_hasher,
@@ -107,7 +147,7 @@ async def register(
             email=body.email,
             password=body.password,
             full_name=body.full_name,
-            as_seller=body.as_seller,
+            as_seller=True,  # one marketplace account can buy and sell
             ip=meta.ip,
             user_agent=meta.user_agent,
         )
@@ -119,45 +159,13 @@ async def register(
 
 
 async def _throttle_login_by_ip(container: Container, meta: RequestMeta) -> None:
-    """Per-IP login throttle, on top of the per-account lockout (P10-03).
-
-    `LoginThrottlePolicy` locks an ACCOUNT after repeated failures, which stops
-    someone grinding one password. It does nothing about the other shape of the
-    same attack: one IP trying one password against a thousand different
-    addresses. Every attempt hits an account that does not exist, so no counter
-    anywhere goes up, and a security scan of the login endpoint comes back
-    clean while the spray runs.
-
-    Counted on every attempt rather than only on failures, because at this
-    point we have not checked the credentials yet - and deciding whether to
-    count first would leak whether the account exists through response timing.
-
-    **Fails OPEN.** If Redis is unavailable this lets the request through: the
-    per-account lockout still applies, and a cache blip must not lock every
-    user out of the product. That is the opposite of the partner API's choice,
-    and deliberately so - there, refusing traffic protects cost; here, refusing
-    traffic IS the outage.
-    """
+    """Stop password spraying before hashing or querying account credentials."""
     limits = container.settings.rate_limit
-    if not limits.enabled or meta.ip is None:
-        return
-
-    try:
-        allowed, _remaining, retry_after = await container.rate_limiter.hit(
-            f"login:ip:{meta.ip}",
-            limit=limits.login_ip_per_15min,
-            window_seconds=900,
-        )
-    except Exception:
-        log.warning("login_ip_throttle_unavailable_failing_open", ip=meta.ip)
-        return
-
-    if not allowed:
-        log.warning("login_ip_throttled", ip=meta.ip)
-        raise RateLimitExceeded(
-            "Too many sign-in attempts from this address. Try again shortly.",
-            retry_after=retry_after,
-        )
+    ip = meta.ip or "unknown"
+    await enforce_limit(
+        container, f"login:minute:{ip}", limit=limits.login_ip_per_minute, window=60
+    )
+    await enforce_limit(container, f"login:ip:{ip}", limit=limits.login_ip_per_15min, window=900)
 
 
 @router.post("/login", summary="Sign in")
@@ -237,6 +245,28 @@ async def verify_mfa(
     return await _issue_session_response(session, response, container, uow, meta)
 
 
+class GoogleMfaRequest(Schema):
+    code: str = Field(min_length=1, max_length=40)
+
+
+@router.post("/google/mfa/verify", summary="Finish Google sign-in with MFA")
+async def google_verify_mfa(
+    body: GoogleMfaRequest,
+    response: Response,
+    container: ContainerDep,
+    uow: UowDep,
+    meta: MetaDep,
+    tl_google_mfa: Annotated[str | None, Cookie()] = None,
+) -> dict[str, Any]:
+    if not tl_google_mfa:
+        raise TokenInvalid("Google sign-in expired. Sign in again.")
+    result = await verify_mfa(
+        MfaVerifyRequest(mfa_token=tl_google_mfa, code=body.code), response, container, uow, meta
+    )
+    response.delete_cookie("tl_google_mfa", path="/api/v1/auth/google/mfa/verify")
+    return result
+
+
 @router.get(
     "/google/login",
     summary="Start Google sign-in",
@@ -245,7 +275,7 @@ async def verify_mfa(
         "navigate here directly (a link or `window.location`), not fetch it."
     ),
 )
-async def google_login(container: ContainerDep) -> RedirectResponse:
+async def google_login(container: ContainerDep, next: str | None = None) -> RedirectResponse:
     if not container.settings.google_auth.is_configured:
         raise TokenInvalid("Google sign-in is not configured on this deployment.")
 
@@ -257,6 +287,15 @@ async def google_login(container: ContainerDep) -> RedirectResponse:
     redirect.set_cookie(
         key=_OAUTH_STATE_COOKIE,
         value=state,
+        max_age=600,
+        httponly=True,
+        secure=container.settings.env.is_deployed,
+        samesite="lax",
+        path=_OAUTH_STATE_PATH,
+    )
+    redirect.set_cookie(
+        key=_OAUTH_NEXT_COOKIE,
+        value=_safe_return_path(next),
         max_age=600,
         httponly=True,
         secure=container.settings.env.is_deployed,
@@ -285,12 +324,15 @@ async def google_callback(
     state: str | None = None,
     error: str | None = None,
     tl_oauth_state: Annotated[str | None, Cookie()] = None,
+    tl_oauth_next: Annotated[str | None, Cookie()] = None,
 ) -> RedirectResponse:
+    destination = _safe_return_path(tl_oauth_next)
     failure = RedirectResponse(
-        f"{container.settings.web_base_url}/login?error=google",
+        f"{container.settings.web_base_url}/login?error=google&next={quote(destination, safe='')}",
         status_code=status.HTTP_302_FOUND,
     )
     failure.delete_cookie(key=_OAUTH_STATE_COOKIE, path=_OAUTH_STATE_PATH)
+    failure.delete_cookie(key=_OAUTH_NEXT_COOKIE, path=_OAUTH_STATE_PATH)
 
     # Constant-shape check on purpose: a missing cookie (state expired or
     # cookies blocked), a missing code (user denied consent), and a state
@@ -310,20 +352,43 @@ async def google_callback(
         log.warning("google_oauth_exchange_failed")
         return failure
 
-    session = await AuthenticateWithGoogle(
-        uow=uow,
-        tokens=container.token_hasher,
-        clock=container.clock,
-        ids=container.ids,
-        refresh_ttl_days=container.settings.security.refresh_token_ttl_days,
-    ).execute(
-        GoogleAuthCommand(
-            email=google_user.email,
-            full_name=google_user.name,
-            ip=meta.ip,
-            user_agent=meta.user_agent,
+    try:
+        session = await AuthenticateWithGoogle(
+            uow=uow,
+            tokens=container.token_hasher,
+            clock=container.clock,
+            ids=container.ids,
+            refresh_ttl_days=container.settings.security.refresh_token_ttl_days,
+            mfa_required_roles=frozenset(
+                UserRole(role) for role in container.settings.security.mfa_required_roles
+            ),
+        ).execute(
+            GoogleAuthCommand(
+                email=google_user.email,
+                full_name=google_user.name,
+                ip=meta.ip,
+                user_agent=meta.user_agent,
+            )
         )
-    )
+    except MfaRequired as exc:
+        assert exc.user_id is not None
+        challenge = await _issue_mfa_challenge(exc.user_id, container, uow, meta)
+        redirect = RedirectResponse(
+            f"{container.settings.web_base_url}/login?mfa=google&next={quote(destination, safe='')}",
+            status_code=302,
+        )
+        redirect.set_cookie(
+            "tl_google_mfa",
+            challenge["data"]["mfaToken"],
+            max_age=600,
+            httponly=True,
+            secure=container.settings.env.is_deployed,
+            samesite="lax",
+            path="/api/v1/auth/google/mfa/verify",
+        )
+        redirect.delete_cookie(key=_OAUTH_STATE_COOKIE, path=_OAUTH_STATE_PATH)
+        redirect.delete_cookie(key=_OAUTH_NEXT_COOKIE, path=_OAUTH_STATE_PATH)
+        return redirect
 
     # No JSON response to hand back an access token to - this is a full
     # page navigation, not a fetch. The refresh cookie is the handoff:
@@ -332,12 +397,13 @@ async def google_callback(
     # this cookie, and exchanges it exactly like it would after any other
     # hard reload. No new frontend session-handling code needed.
     redirect = RedirectResponse(
-        f"{container.settings.web_base_url}/dashboard", status_code=status.HTTP_302_FOUND
+        f"{container.settings.web_base_url}{destination}", status_code=status.HTTP_302_FOUND
     )
     set_refresh_cookie(
         redirect, container.settings, token=session.refresh_token_raw, expires_at=session.expires_at
     )
     redirect.delete_cookie(key=_OAUTH_STATE_COOKIE, path=_OAUTH_STATE_PATH)
+    redirect.delete_cookie(key=_OAUTH_NEXT_COOKIE, path=_OAUTH_STATE_PATH)
     return redirect
 
 
@@ -436,25 +502,23 @@ async def verify_email(
     )
 
 
-async def _throttle_email_send(container: Container, meta: RequestMeta, key: str) -> None:
-    """Per-IP limit shared by resend-verification and forgot-password
-    (BLK-03) - both are anonymous, unauthenticated endpoints that send a
-    real email, so without a limiter either is a free way to spam an inbox
-    or run up an email-provider bill. Fails open, same policy as every
-    other rate limit here: a Redis blip must not block a real user from
-    getting back into their account."""
-    limits = container.settings.rate_limit
-    if not limits.enabled or meta.ip is None:
-        return
-    try:
-        allowed, _remaining, retry_after = await container.rate_limiter.hit(
-            f"{key}:{meta.ip}", limit=limits.email_send_per_hour, window_seconds=3600
+async def _throttle_email_send(
+    container: Container, meta: RequestMeta, key: str, *, email: str | None = None
+) -> None:
+    """Limit reset/verification messages, including during cache outages."""
+    await enforce_limit(
+        container,
+        f"{key}:{meta.ip or 'unknown'}",
+        limit=container.settings.rate_limit.email_send_per_hour,
+        window=3600,
+    )
+    if email:
+        await enforce_limit(
+            container,
+            f"{key}:account:{private_key(email)}",
+            limit=container.settings.rate_limit.email_send_per_hour,
+            window=3600,
         )
-    except Exception:
-        log.warning("email_send_throttle_unavailable_failing_open", ip=meta.ip, key=key)
-        return
-    if not allowed:
-        raise RateLimitExceeded("Too many requests. Try again later.", retry_after=retry_after)
 
 
 @router.post(
@@ -475,7 +539,7 @@ async def resend_verification_email(
     meta: MetaDep,
     uow: UowDep,
 ) -> dict[str, Any]:
-    await _throttle_email_send(container, meta, "resend-verify:ip")
+    await _throttle_email_send(container, meta, "resend-verify:ip", email=body.email)
     await ResendEmailVerification(
         uow=uow,
         tokens=container.token_hasher,
@@ -512,7 +576,7 @@ async def forgot_password(
     from trustlens.core.domain.enums import TokenPurpose
     from trustlens.core.domain.value_objects import Email
 
-    await _throttle_email_send(container, meta, "forgot-password:ip")
+    await _throttle_email_send(container, meta, "forgot-password:ip", email=body.email)
     email = Email(body.email)
     user = await uow.users.get_by_email(email)
 
@@ -531,7 +595,7 @@ async def forgot_password(
                 target=email.value,
                 # Short-lived: a reset link is a full account takeover
                 # primitive for as long as it is valid.
-                expires_at=now + timedelta(hours=1),
+                expires_at=now + timedelta(minutes=15),
                 created_at=now,
             )
         )
@@ -639,7 +703,7 @@ async def list_sessions(actor: ActorDep, uow: UowDep, meta: MetaDep) -> dict[str
     return envelope(
         [
             SessionSummary(
-                id=token.id,
+                id=token.family_id,
                 created_at=token.created_at,
                 expires_at=token.expires_at,
                 ip_address=token.ip_address,
@@ -702,8 +766,12 @@ async def export_data(
     assert actor.user_id is not None
     user = await uow.users.get(actor.user_id)
     seller = await uow.sellers.get_by_user(actor.user_id)
+    from trustlens_api.api.v1.routers.private_account import read_private_settings
+
+    private = await read_private_settings(actor, uow, meta)
     return envelope(
         {
+            "private_settings": private["data"],
             "user": user,
             "seller_profile": seller,
             "message": "Data export complete. Additional logs can be requested via support.",
@@ -731,9 +799,7 @@ async def delete_account(
     user = await uow.users.get(actor.user_id)
     assert user is not None
 
-    # Soft delete the user
-    # Or queue an account deletion task
-    await container.queue.enqueue("accounts.purge", user_id=str(actor.user_id))
+    await uow.users.request_deletion(actor.user_id, at=container.clock.now())
 
     # Revoke all sessions and clear cookie
     await uow.refresh_tokens.revoke_all_for_user(
@@ -743,9 +809,9 @@ async def delete_account(
     clear_refresh_cookie(response, container.settings)
 
     return envelope(
-        MessageResponse(message="Account deletion initiated. Your data will be purged.").model_dump(
-            by_alias=True
-        ),
+        MessageResponse(
+            message="Account deactivated and ads hidden. Your data deletion request is awaiting staff review; records have not yet been erased."
+        ).model_dump(by_alias=True),
         request_id=meta.request_id,
     )
 

@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/favourites: FollowedSellersTab. */
 'use client';
 
 import { useMyFollows } from '@/features/reputation';

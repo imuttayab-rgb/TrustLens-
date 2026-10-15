@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use identity review. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -5,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toApiError } from '@trustlens/api-client';
 
 export interface IdentityReviewDocument {
-  documentType: 'CNIC_FRONT' | 'CNIC_BACK' | 'SELFIE';
+  documentType: 'CNIC_FRONT' | 'CNIC_BACK' | 'SELFIE' | 'HOLD_ID';
   status: string;
   previewUrl: string;
   urlExpiresAt: string;
@@ -28,6 +29,14 @@ export interface IdentityReview {
   nameMatchScore: number | null;
   decisionReason: string | null;
   documents: IdentityReviewDocument[];
+  holdCard?: {
+    card_found: boolean;
+    good_matches: number;
+    inliers: number;
+    holder_face_detected: boolean | null;
+    holder_face_similarity: number | null;
+    presentation_attack_detection: string;
+  } | null;
 }
 
 export function useIdentityReview(sellerId: string | null, enabled = true) {

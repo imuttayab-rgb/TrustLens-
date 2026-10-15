@@ -49,6 +49,7 @@ from trustlens_worker.jobs import (
     listings,
     maintenance,
     notifications,
+    profiles,
     scoring,
     webhooks,
 )
@@ -148,7 +149,15 @@ class WorkerSettings:
     # rescoring silently never ran. The strings below are the contract; change
     # one only together with its caller.
     functions = [
-        func(identity.verify_identity, name="identity.verify"),
+        func(profiles.check_photo, name="profiles.check_photo", timeout=240),
+        func(profiles.cleanup_photos, name="profiles.cleanup_photos"),
+        # Real OCR reads both CNIC sides plus up to two face comparisons on a
+        # CPU-only laptop, so this job uses its own (longer) configured limit.
+        func(
+            identity.verify_identity,
+            name="identity.verify",
+            timeout=get_settings().worker.job_identity_timeout_seconds,
+        ),
         func(listings.analyse_listing, name="listings.analyse_listing"),
         func(scoring.recompute_trust_score, name="scoring.recompute_trust_score"),
         func(scoring.bulk_recompute_for_model, name="scoring.bulk_recompute_for_model"),
@@ -158,6 +167,7 @@ class WorkerSettings:
         func(maintenance.enrich_ip, name="network.enrich_ip"),
         func(maintenance.lookup_phone, name="contact.lookup_phone"),
         func(maintenance.purge_expired_media, name="maintenance.purge_expired_media"),
+        func(maintenance.expire_lapsed_identities, name="identity.expire_lapsed"),
         func(maintenance.publish_outbox, name="maintenance.publish_outbox"),
         func(maintenance.purge_account, name="accounts.purge"),
         func(webhooks.deliver_webhook, name="webhooks.deliver"),
@@ -165,12 +175,23 @@ class WorkerSettings:
     ]
 
     cron_jobs = [
+        cron(profiles.cleanup_photos, hour=4, minute=15),
         # Nightly staleness sweep: scores expire after 30 days, so sellers
         # nobody has touched still get re-evaluated.
         cron(scoring.rescore_stale_sellers, hour=3, minute=0),
         # CNIC and selfie images are purged 90 days after a terminal decision.
         # Derived hashes and scores survive, so explainability is preserved.
         cron(maintenance.purge_expired_media, hour=4, minute=0),
+        # ID cards expire after verification. Daily, plus once when the
+        # worker starts so a laptop that was off at 02:30 still catches up.
+        # Only real-OCR expiry dates are used (never fake/demo values).
+        cron(
+            maintenance.expire_lapsed_identities,
+            hour=2,
+            minute=30,
+            run_at_startup=True,
+            unique=True,
+        ),
         # The transactional outbox relay. Frequent, because a delayed webhook
         # is a partner integration that looks broken.
         cron(maintenance.publish_outbox, second={0, 15, 30, 45}),

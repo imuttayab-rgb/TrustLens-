@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: AuditTrail. */
 'use client';
 
 import { useAuditLogs, type AuditLogParams } from '@/features/audit';

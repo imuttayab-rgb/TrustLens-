@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: Alert. */
 'use client';
 
 import { AlertTriangle, CheckCircle2, Info, XCircle } from 'lucide-react';

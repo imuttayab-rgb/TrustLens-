@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: LogoutButton. */
 'use client';
 
 import { useLogout } from '@/lib/auth/use-logout';

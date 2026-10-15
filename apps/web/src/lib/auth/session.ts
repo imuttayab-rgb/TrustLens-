@@ -1,10 +1,11 @@
 'use client';
+import { API_BASE_URL } from '@/config/environment';
 
 /**
  * In-memory session store.
  *
  * Deliberately a module-level variable rather than storage: the token dies
- * with the tab, and no XSS payload can read it. The lint config bans
+ * with the tab, and it is not persisted in browser storage. In-memory tokens still require XSS defenses. The lint config bans
  * localStorage/sessionStorage outright to keep it that way.
  */
 let accessToken: string | null = null;
@@ -18,12 +19,21 @@ export function setAccessToken(token: string | null): void {
 }
 
 /** Exchange the httpOnly refresh cookie for a new access token. */
-export async function refreshSession(): Promise<string | null> {
-  const base = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+let refreshInFlight: Promise<string | null> | null = null;
+export function refreshSession(): Promise<string | null> {
+  if (!refreshInFlight)
+    refreshInFlight = refreshOnce().finally(() => {
+      refreshInFlight = null;
+    });
+  return refreshInFlight;
+}
+async function refreshOnce(): Promise<string | null> {
+  const base = API_BASE_URL;
   try {
     const response = await fetch(`${base}/api/v1/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
+      signal: AbortSignal.timeout(15000),
     });
     if (!response.ok) return null;
     const body = (await response.json()) as { data: { accessToken: string } };

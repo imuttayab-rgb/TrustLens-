@@ -1,7 +1,7 @@
 # Local development credentials
 
 Everything here belongs to the **demo seed**, which runs only in development.
-`start.bat` creates it all automatically.
+For this complete edition, opt in with `bash scripts/local/demo.sh`.
 
 > ⚠️ **These accounts do not exist in production, by design.** Deployment seeds
 > _reference_ data only (roles, permissions, signals, scoring weights) — never
@@ -65,10 +65,9 @@ A buyer can look up sellers but has no seller profile of their own.
 
 ---
 
-## Infrastructure
+## Legacy host-development infrastructure
 
-Local containers only. Fine to keep in git precisely because they are
-unreachable from anywhere but this machine.
+These are old developer-template values only. The new `START_LOCAL.bat` creates random database/storage credentials in your private `.env.production`; those credentials are not the defaults below.
 
 | Service  | User         | Password        |
 | -------- | ------------ | --------------- |

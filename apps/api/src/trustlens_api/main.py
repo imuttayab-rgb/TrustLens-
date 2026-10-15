@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+import asyncio
 
 from fastapi import FastAPI
 from fastapi.responses import RedirectResponse
@@ -85,9 +86,20 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     _assert_mfa_roles_are_enrollable(settings)
 
     log.info("started", routes=len(app.routes))
+    from trustlens_api.modules.calling.maintenance import maintain_calls
+
+    calls_task = (
+        asyncio.create_task(maintain_calls(app.state.container))
+        if settings.calls.calls_livekit_api_secret
+        and settings.calls.calls_livekit_api_secret.get_secret_value()
+        else None
+    )
     try:
         yield
     finally:
+        if calls_task:
+            calls_task.cancel()
+            await asyncio.gather(calls_task, return_exceptions=True)
         log.info("shutting_down")
         await close_container(app.state.container)
 
@@ -154,6 +166,7 @@ _PUBLIC_ROUTES = {
     # - there is no session to require yet.
     "/api/v1/auth/google/login",
     "/api/v1/auth/google/callback",
+    "/api/v1/auth/google/mfa/verify",
     "/public/v1/status",
     "/health/worker",
     # The buyer-facing score read (P0-12). Anonymous by design - it is a page
@@ -164,8 +177,20 @@ _PUBLIC_ROUTES = {
     # The public listing catalog (browse/search) and the "view this listing"
     # page it opens into. Same anonymous-by-design reasoning: a buyer opens
     # these directly, and both are IP rate limited in the handler.
+    # Public profile projection and approved portraits only; own setup stays authenticated.
+    "/api/v1/public/profiles/{reference}",
+    "/api/v1/public/profiles/{user_id}/photo",
     "/api/v1/public/listings",
+    "/api/v1/public/motor-dealers",
+    "/api/v1/public/recommendations",
+    "/api/v1/public/catalogue-options",
     "/api/v1/public/listings/{listing_id}",
+    # Public shopping assistant: allowlisted public inventory, per-IP limits,
+    # bounded provider usage. Drafting/research retain authentication.
+    "/api/v1/assistant/status",
+    "/api/v1/assistant/chat",
+    "/api/v1/assistant/listings",
+    "/api/v1/assistant/suggestions",
     # A seller's public reviews (REP-01) - anonymous, PII-free, same
     # reasoning as the trust-score read above.
     "/api/v1/public/sellers/{handle}/reviews",

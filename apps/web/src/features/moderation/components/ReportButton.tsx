@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: ReportButton. */
 'use client';
 
 import { useSession } from '@/lib/auth/use-session';

@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: ReviewQueue. */
 'use client';
 
 import { MIN_DECISION_NOTE_CHARS } from '../constants';

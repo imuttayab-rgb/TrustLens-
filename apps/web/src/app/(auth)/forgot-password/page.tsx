@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (auth)/forgot-password: page. */
 import { ForgotPasswordForm } from '@/features/auth';
 import type { Metadata } from 'next';
 import Link from 'next/link';

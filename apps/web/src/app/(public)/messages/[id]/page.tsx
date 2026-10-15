@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/messages/[id]: page. */
 'use client';
 
 import { useConversations } from '@/features/messaging';
@@ -6,7 +7,7 @@ import { useSession } from '@/lib/auth/use-session';
 import { X } from 'lucide-react';
 import { useParams, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
-import { MessageThreadView } from '../MessageThreadView';
+import { MessageThreadView } from '@/features/messaging';
 import { SafeMeetSidebar } from '../SafeMeetSidebar';
 
 export default function ConversationPage() {

@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use reports. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -11,6 +12,7 @@ export type ReportCategory =
 export type ReportStatus = 'OPEN' | 'UNDER_REVIEW' | 'RESOLVED' | 'DISMISSED';
 
 export interface AdminReport {
+  chatCase?: boolean;
   id: string;
   reporterId: string;
   targetType: ReportTargetType;

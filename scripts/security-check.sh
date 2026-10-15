@@ -47,8 +47,9 @@ done
 echo ""
 echo "  PII exposure"
 BODY=$(curl -s --max-time 15 "$API/api/v1/public/sellers/ayesha-traders/trust-score" 2>/dev/null)
-if [ -z "$BODY" ]; then
-  note "buyer route returned nothing - is the stack seeded?"
+PUBLIC_STATUS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$API/api/v1/public/sellers/ayesha-traders/trust-score")
+if [ -z "$BODY" ] || [ "$PUBLIC_STATUS" != "200" ]; then
+  note "public score PII check NOT RUN: a valid synthetic seller response is required (HTTP $PUBLIC_STATUS)"
 else
   leaked=0
   # CNIC: 5 digits - 7 digits - 1
@@ -84,6 +85,8 @@ check_header() {
 check_header "x-content-type-options"
 check_header "x-frame-options"
 check_header "referrer-policy"
+check_header "content-security-policy"
+case "$WEB" in https://*) check_header "strict-transport-security" ;; esac
 
 API_HEADERS=$(curl -s -D - -o /dev/null --max-time 10 "$API/health/live" 2>/dev/null)
 if echo "$API_HEADERS" | grep -qi '^server: uvicorn'; then
@@ -117,14 +120,16 @@ fi
 # ── 6. Docs are closed in production ─────────────────────────────────
 echo ""
 echo "  Production posture"
-ENVIRON=$(curl -s --max-time 10 "$API/health/live" | grep -o '"env":"[^"]*"' | cut -d'"' -f4)
+# Health deliberately exposes no environment/version details. Operator declares
+# the expected posture; never infer success from a missing field.
+ENVIRON=${TRUSTLENS_CHECK_ENV:-staging}
 DOCS=$(curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$API/docs")
 if [ "$ENVIRON" = "production" ] && [ "$DOCS" = "200" ]; then
-  note "Swagger is open at /docs while ENV=production - set EXPOSE_DOCS=false if this is public"
+  bad "Swagger is open at /docs while production posture is expected"
 elif [ "$ENVIRON" = "production" ]; then
   ok "internal API docs are closed in production"
 else
-  ok "running as ENV=$ENVIRON (docs open is expected)"
+  note "production-only docs closure NOT RUN (expected posture: $ENVIRON)"
 fi
 
 # ── 7. Secrets are not in the image or the repo ──────────────────────

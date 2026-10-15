@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (auth)/verify-email: page. */
 import { VerifyEmailPanel } from '@/features/auth';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';

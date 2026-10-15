@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use listings. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -30,9 +31,14 @@ export interface Listing {
   price: number | null;
   currency: string | null;
   category: ListingCategory | null;
+  categoryNodeId: string | null;
+  categoryData: Record<string, string | number>;
+  showPhone: boolean;
   condition: string | null;
   city: string | null;
   area: string | null;
+  /** Private full address (seller-only). */
+  addressLine: string | null;
   latitude: number | null;
   longitude: number | null;
   countryCode: string | null;
@@ -54,9 +60,12 @@ export interface ListingPayload {
   price?: number | null;
   currency?: string | null;
   category?: ListingCategory | null;
+  categoryNodeId?: string | null;
+  showPhone?: boolean;
   condition?: string | null;
   city?: string | null;
   area?: string | null;
+  addressLine?: string | null;
   latitude?: number | null;
   longitude?: number | null;
   countryCode?: string | null;
@@ -208,5 +217,24 @@ export function useAddListingImage(listingId: string) {
         queryKey: [...qk.listing.byId(listingId), 'images'],
       });
     },
+  });
+}
+
+export function useManageListingPhotos(listingId: string) {
+  const invalidate = useInvalidate();
+  return useMutation({
+    mutationFn: async (action: { removeId: string } | { order: string[] }) => {
+      const r =
+        'removeId' in action
+          ? await api.DELETE('/api/v1/listings/{listing_id}/images/{image_id}', {
+              params: { path: { listing_id: listingId, image_id: action.removeId } },
+            })
+          : await api.PUT('/api/v1/listings/{listing_id}/images/order', {
+              params: { path: { listing_id: listingId } },
+              body: { imageIds: action.order },
+            });
+      if (r.error) throw toApiError(r.error);
+    },
+    onSuccess: invalidate,
   });
 }

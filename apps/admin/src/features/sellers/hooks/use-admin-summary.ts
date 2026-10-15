@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use admin summary. */
 'use client';
 
 import { api } from '@/lib/api/client';

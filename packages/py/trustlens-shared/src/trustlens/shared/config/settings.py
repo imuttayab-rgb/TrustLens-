@@ -61,6 +61,7 @@ class _Base(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
+        hide_input_in_errors=True,  # Startup failures must not print secret connection strings.
     )
 
 
@@ -122,9 +123,14 @@ class DatabaseSettings(_Base):
         providers reject unencrypted connections. Either way the failure
         surfaces during a release, which is the worst time to find it.
         """
-        if self.db_ssl_require and "sslmode=" not in self.database_url_sync:
+        from urllib.parse import parse_qs, urlsplit
+
+        modes = parse_qs(urlsplit(self.database_url_sync).query).get("sslmode", [])
+        if self.db_ssl_require and (
+            len(modes) != 1 or modes[0] not in {"require", "verify-ca", "verify-full"}
+        ):
             raise ValueError(
-                "DB_SSL_REQUIRE is true but DATABASE_URL_SYNC has no `sslmode`. "
+                "DB_SSL_REQUIRE needs one secure DATABASE_URL_SYNC `sslmode` (require, verify-ca or verify-full). "
                 "Alembic uses that URL as given, so migrations would not be encrypted. "
                 "Append `?sslmode=require` to DATABASE_URL_SYNC."
             )
@@ -233,6 +239,17 @@ class AiSettings(_Base):
     #: The escape hatch that makes the whole system demonstrable offline
     #: (NFR-8): every AI port resolves to a deterministic fake.
     use_fake_ai: bool = True
+    #: Optional FYP pilot: exercise the real, locally baked InsightFace model
+    #: for ID-photo-to-selfie comparison while OCR/LLM remain mocked. Default
+    #: false protects existing demos; a true face result does NOT validate ID
+    #: authenticity or turn a browser pose challenge into proven liveness.
+    face_match_real_in_demo: bool = False
+    #: Optional FYP pilot: run the real, local RapidOCR/EasyOCR engine on the
+    #: live-captured CNIC images while the LLM and scam classifier stay mocked
+    #: (no paid API key). Default false keeps the deterministic fake OCR. Real
+    #: OCR only READS printed text: it cannot prove a card is genuine (there is
+    #: no NADRA check), so unreadable or ambiguous results go to manual review.
+    ocr_real_in_demo: bool = False
     ai_provider: Literal["openai", "anthropic"] = "anthropic"
     ai_openai_api_key: SecretStr | None = None
     ai_openai_model: str = "gpt-4o-mini"
@@ -279,6 +296,12 @@ class AiSettings(_Base):
     #: operating point deliberately, and record why.
     classifier_threshold: float | None = None
 
+    @field_validator("classifier_threshold", mode="before")
+    @classmethod
+    def _blank_classifier_threshold(cls, value: object) -> object:
+        """An empty optional .env value keeps the artifact's calibrated threshold."""
+        return None if isinstance(value, str) and not value.strip() else value
+
     @model_validator(mode="after")
     def _key_present_for_live_provider(self) -> AiSettings:
         if self.use_fake_ai:
@@ -306,6 +329,10 @@ class AiSettings(_Base):
 class StorageSettings(_Base):
     storage_provider: Literal["s3", "local"] = "s3"
     storage_endpoint_url: str | None = None
+    #: Origin visible to browsers for presigned POST/GET only. SigV4 signs the
+    #: host, so replacing "minio" with "localhost" after signing is invalid.
+    #: When unset, preserve the historical single-client behavior for hosted S3.
+    storage_public_endpoint_url: str | None = None
     storage_region: str = "us-east-1"
     storage_access_key_id: SecretStr | None = None
     storage_secret_access_key: SecretStr | None = None
@@ -321,7 +348,9 @@ class StorageSettings(_Base):
     #: still image - its own, larger cap rather than raising the shared one
     #: for every purpose (CNIC, selfie, appeal evidence) that doesn't need it.
     storage_max_video_upload_bytes: int = 50 * 1024 * 1024
-    storage_allowed_video_mime: CsvList = Field(default_factory=lambda: ["video/mp4"])
+    #: WebM is what Chrome/Android MediaRecorder produces for the "Record
+    #: live video" option; MP4 covers uploaded phone videos.
+    storage_allowed_video_mime: CsvList = Field(default_factory=lambda: ["video/mp4", "video/webm"])
     media_retention_days_identity: int = 90
 
 
@@ -356,7 +385,7 @@ class NotificationSettings(_Base):
     smtp_tls: bool = False
     resend_api_key: SecretStr | None = None
 
-    sms_provider: Literal["twilio", "console"] = "console"
+    sms_provider: Literal["twilio", "console", "mailpit", "disabled"] = "console"
     twilio_account_sid: str | None = None
     twilio_auth_token: SecretStr | None = None
     twilio_from_number: str | None = None
@@ -380,6 +409,13 @@ class RateLimitSettings(_Base):
     enabled: bool = True
     anon_per_minute: int = 60
     user_per_minute: int = 300
+    ip_per_minute: int = 600
+    login_ip_per_minute: int = 5
+    signup_per_hour: int = 10
+    signup_email_per_hour: int = 3
+    upload_per_minute: int = 20
+    upload_total_bytes_per_user: int = 1_073_741_824
+    upload_total_files_per_user: int = 1000
     #: Per-ACCOUNT soft limit, feeding LoginThrottlePolicy.
     login_per_15min: int = 5
     #: Per-IP login limit. A separate number, not a multiple of the one above,
@@ -398,7 +434,7 @@ class RateLimitSettings(_Base):
     #: BLK-03's guard on the two anonymous endpoints that send a real email
     #: (resend-verification, forgot-password) - low, since a real person
     #: retries at most a couple of times an hour, not dozens.
-    email_send_per_hour: int = 5
+    email_send_per_hour: int = 3
     #: VER-02's IP-level guard on phone OTP requests - the existing hourly/
     #: daily caps are per-account, so many throwaway accounts from one
     #: address were free to each request their own SMS quota. Higher than
@@ -406,8 +442,7 @@ class RateLimitSettings(_Base):
     otp_request_per_ip_per_hour: int = 10
     public_api_free_per_minute: int = 60
     public_api_partner_per_minute: int = 600
-    #: Public API fails CLOSED (protects cost and data); auth fails OPEN
-    #: (a Redis blip must not lock everyone out).
+    #: Legacy partner API setting; account and upload protection always fails closed.
     fail_mode: Literal["open", "closed"] = "closed"
 
 
@@ -439,11 +474,55 @@ class IpIntelSettings(_Base):
     phone_lookup_provider: Literal["twilio_lookup", "none"] = "none"
 
 
+class CallSettings(_Base):
+    calls_enabled: bool = False
+    calls_livekit_url: str = ""
+    calls_livekit_internal_url: str = ""
+    calls_livekit_api_key: str = ""
+    calls_livekit_api_secret: SecretStr | None = None
+    calls_vapid_public_key: str = ""
+    calls_vapid_private_key: SecretStr | None = None
+    calls_vapid_subject: str = ""
+
+    @model_validator(mode="after")
+    def _valid_calls(self):
+        from urllib.parse import urlparse
+
+        if self.calls_enabled:
+            if (
+                not self.calls_livekit_api_key
+                or not self.calls_livekit_api_secret
+                or len(self.calls_livekit_api_secret.get_secret_value()) < 32
+            ):
+                raise ValueError(
+                    "Calling requires a LiveKit key and a secret of at least 32 characters"
+                )
+            public = urlparse(self.calls_livekit_url)
+            internal = urlparse(self.calls_livekit_internal_url)
+            if public.scheme not in {"ws", "wss"} or not public.hostname:
+                raise ValueError("CALLS_LIVEKIT_URL must be ws://localhost or a public wss:// URL")
+            if public.scheme == "ws" and public.hostname not in {"localhost", "127.0.0.1", "::1"}:
+                raise ValueError("Public calling deployments must use WSS")
+            if internal.scheme not in {"http", "https"} or not internal.hostname:
+                raise ValueError("CALLS_LIVEKIT_INTERNAL_URL must be an HTTP(S) service URL")
+        if self.calls_vapid_public_key and (
+            not self.calls_vapid_private_key
+            or not self.calls_vapid_subject.startswith(("mailto:", "https://"))
+        ):
+            raise ValueError(
+                "Web Push requires the VAPID private key and a mailto:/https:// subject"
+            )
+        return self
+
+
 class Settings(_Base):
     """The composed application configuration."""
 
     env: Environment = Environment.DEVELOPMENT
     debug: bool = False
+    # Opt-in pilot: API requires an additional, private, card-beside-face frame.
+    # It is evidence for manual review, not certified liveness or NADRA proof.
+    hold_id_required: bool = False
     app_name: str = "TrustLens"
     app_version: str = "0.1.0"
     api_base_url: str = "http://localhost:8000"
@@ -464,6 +543,7 @@ class Settings(_Base):
     observability: ObservabilitySettings = Field(default_factory=ObservabilitySettings)
     worker: WorkerSettings = Field(default_factory=WorkerSettings)
     ip_intel: IpIntelSettings = Field(default_factory=IpIntelSettings)
+    calls: CallSettings = Field(default_factory=CallSettings)
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -482,6 +562,21 @@ class Settings(_Base):
             return self
 
         problems: list[str] = []
+        if not self.rate_limit.enabled:
+            problems.append("Rate limiting must be enabled in production")
+        n = self.notifications
+        if n.email_provider == "console":
+            problems.append("Production email needs SMTP or Resend; console is local-only")
+        if n.email_provider == "smtp" and (not n.smtp_tls or not n.smtp_host):
+            problems.append("Production SMTP requires a host and SMTP_TLS=true")
+        if n.email_provider == "resend" and not n.resend_api_key:
+            problems.append("EMAIL_PROVIDER=resend requires RESEND_API_KEY")
+        if n.sms_provider in {"console", "mailpit"}:
+            problems.append("Production SMS needs Twilio or an explicit SMS_PROVIDER=disabled")
+        if n.sms_provider == "twilio" and not (
+            n.twilio_account_sid and n.twilio_auth_token and n.twilio_from_number
+        ):
+            problems.append("SMS_PROVIDER=twilio requires its SID, token and sender")
         if self.debug:
             problems.append("DEBUG must be false in production")
         if "*" in self.security.cors_origins or not self.security.cors_origins:
@@ -494,13 +589,26 @@ class Settings(_Base):
             problems.append("SECURITY_API_KEY_PREFIX must be 'tl_live' in production")
         if self.log_format != "json":
             problems.append("LOG_FORMAT must be 'json' in production")
-        if self.storage.storage_endpoint_url and "minio:" in self.storage.storage_endpoint_url:
+        if (
+            self.storage.storage_endpoint_url
+            and "minio:" in self.storage.storage_endpoint_url
+            and not self.storage.storage_public_endpoint_url
+        ):
             problems.append(
-                "STORAGE_ENDPOINT_URL still points at the internal 'minio:9000' compose "
-                "hostname - presigned upload/download URLs built from it are unreachable "
-                "from a browser. Point it at a publicly-reachable address (the published "
-                "MinIO port, or a managed S3-compatible provider like Cloudflare R2)."
+                "STORAGE_ENDPOINT_URL is internal 'minio:9000' but "
+                "STORAGE_PUBLIC_ENDPOINT_URL is missing. Signed browser URLs must use "
+                "a publicly reachable HTTPS address in production."
             )
+        if (
+            self.storage.storage_public_endpoint_url
+            and "minio:" in self.storage.storage_public_endpoint_url
+        ):
+            problems.append("STORAGE_PUBLIC_ENDPOINT_URL cannot be the compose-only minio hostname")
+        if (
+            self.storage.storage_public_endpoint_url
+            and not self.storage.storage_public_endpoint_url.startswith("https://")
+        ):
+            problems.append("STORAGE_PUBLIC_ENDPOINT_URL must use HTTPS in production")
 
         if problems:
             raise ValueError("Production configuration is unsafe:\n  - " + "\n  - ".join(problems))

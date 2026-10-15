@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: MfaSettings. */
 'use client';
 
 import { toApiError } from '@trustlens/api-client';

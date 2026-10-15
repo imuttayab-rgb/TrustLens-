@@ -1,6 +1,8 @@
+/** Next.js route/layout composition for layout.tsx: layout. */
 import '@/styles/globals.css';
 
 import { Providers } from '@/providers';
+import { AssistantWidget } from '@/features/assistant';
 import { dirForLocale } from '@/i18n/config';
 import { THEME_COOKIE, resolveTheme } from '@trustlens/ui';
 import type { Metadata } from 'next';
@@ -11,7 +13,11 @@ import { Inter } from 'next/font/google';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
 
+// Nonces require request-time rendering of every HTML document.
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
+  manifest: '/manifest.webmanifest',
   title: { default: 'TrustLens', template: '%s · TrustLens' },
   description:
     'Check whether an online marketplace seller is genuine before you pay. ' +
@@ -54,7 +60,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           {t('skipToContent')}
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>{children}</Providers>
+          <Providers>
+            {children}
+            <AssistantWidget />
+          </Providers>
         </NextIntlClientProvider>
       </body>
     </html>

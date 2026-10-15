@@ -23,11 +23,65 @@ class DeepFaceMatcher:
     ) -> None:
         self._model_name = model_name
         self._detector_backend = detector_backend
+        self._compare_lock = asyncio.Lock()
 
     async def compare(
         self, document_image: bytes, selfie_image: bytes, *, threshold: float
     ) -> FaceMatchResult:
-        return await asyncio.to_thread(self._compare_sync, document_image, selfie_image, threshold)
+        async with self._compare_lock:
+            return await asyncio.to_thread(
+                self._compare_sync, document_image, selfie_image, threshold
+            )
+
+    async def compare_profile(
+        self, photo: bytes, reference: bytes, *, threshold: float
+    ) -> FaceMatchResult:
+        async with self._compare_lock:
+            return await asyncio.to_thread(self._profile_sync, photo, reference, threshold)
+
+    def _profile_sync(self, photo: bytes, reference: bytes, threshold: float) -> FaceMatchResult:
+        import dataclasses
+
+        import cv2
+        import numpy as np
+        from deepface import DeepFace
+
+        counts = []
+        try:
+            for raw in (photo, reference):
+                decoded = cv2.imdecode(np.frombuffer(raw, dtype=np.uint8), cv2.IMREAD_COLOR)
+                if decoded is None:
+                    raise ValueError("Unreadable photo")
+                faces = DeepFace.extract_faces(
+                    img_path=decoded,
+                    detector_backend=self._detector_backend,
+                    enforce_detection=True,
+                )
+                counts.append(len(faces))
+                if (
+                    len(faces) != 1
+                    or min(faces[0]["facial_area"]["w"], faces[0]["facial_area"]["h"]) < 80
+                ):
+                    raise ValueError("One clear face required")
+        except ValueError:
+            return FaceMatchResult(
+                similarity=0,
+                distance=1,
+                threshold=threshold,
+                engine="deepface",
+                engine_version=self._model_name,
+                face_detected_in_document=False,
+                face_detected_in_selfie=False,
+                raw={
+                    "profile_face_count": counts[0] if counts else 0,
+                    "reference_face_count": counts[1] if len(counts) > 1 else 0,
+                    "reason": "one_clear_face_required",
+                },
+            )
+        result = self._compare_sync(photo, reference, threshold)
+        return dataclasses.replace(
+            result, raw={**result.raw, "profile_face_count": 1, "reference_face_count": 1}
+        )
 
     def _compare_sync(
         self, document_image: bytes, selfie_image: bytes, threshold: float

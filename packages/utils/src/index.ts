@@ -70,3 +70,5 @@ export function invariant(condition: unknown, message: string): asserts conditio
 export function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+export { documentPolicy } from './content-security-policy';

@@ -1,3 +1,4 @@
+/** Use api form module; defines FormError, useApiForm. */
 'use client';
 
 import { toApiError } from '@trustlens/api-client';

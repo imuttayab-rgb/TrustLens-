@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: IdentityVerification. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -11,9 +12,14 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useJobStatus } from '../hooks/use-job-status';
 import { CaptureTips, ImageCapture } from './ImageCapture';
+import { LiveFaceScan } from './LiveFaceScan';
+import { LiveIdScan } from './LiveIdScan';
+import { HoldIdFaceScan } from './HoldIdFaceScan';
+import { LiveVerificationWizard } from './LiveVerificationWizard';
 import { SelfieCapture } from './SelfieCapture';
+import { HOLD_ID_ENABLED, LIVE_FACE_SCAN_ENABLED, LIVE_ID_SCAN_ENABLED, LIVE_WIZARD_ENABLED } from './verification-flags';
 
-type Slot = 'cnicFront' | 'cnicBack' | 'selfie';
+type Slot = 'cnicFront' | 'cnicBack' | 'selfie' | 'holdId';
 
 const DOCUMENT_SLOTS: {
   key: 'cnicFront' | 'cnicBack';
@@ -39,8 +45,18 @@ const DOCUMENT_SLOTS: {
 ];
 
 const SLOTS = [...DOCUMENT_SLOTS, { key: 'selfie' as const, purpose: 'SELFIE', label: 'Selfie' }];
+const UPLOAD_SLOTS = HOLD_ID_ENABLED
+  ? [...SLOTS, { key: 'holdId' as const, purpose: 'HOLD_ID', label: 'Holding ID' }]
+  : SLOTS;
 
 export function IdentityVerification() {
+  // Full live camera mode (live CNIC + live face) uses the step-by-step
+  // wizard. Installations with the live flags off keep the original form.
+  if (LIVE_WIZARD_ENABLED) return <LiveVerificationWizard holdEnabled={HOLD_ID_ENABLED} />;
+  return <IdentityVerificationForm />;
+}
+
+function IdentityVerificationForm() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -48,6 +64,7 @@ export function IdentityVerification() {
     cnicFront: null,
     cnicBack: null,
     selfie: null,
+    holdId: null,
   });
   const [progress, setProgress] = useState<Partial<Record<Slot, number>>>({});
   const [consent, setConsent] = useState(false);
@@ -55,12 +72,13 @@ export function IdentityVerification() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<FormError | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
+  const [useStandardCapture, setUseStandardCapture] = useState(false);
 
   const job = useJobStatus(jobId);
   const complete = job.data?.status === 'complete';
   const failed = job.data?.status === 'failed' || job.data?.status === 'not_found';
 
-  const ready = SLOTS.every((s) => files[s.key]) && consent;
+  const ready = UPLOAD_SLOTS.every((s) => files[s.key]) && consent;
 
   async function onSubmit() {
     if (!consent) {
@@ -76,7 +94,7 @@ export function IdentityVerification() {
       // sequential ones, and a per-file progress bar is only honest if the
       // files are not competing for the same bandwidth.
       const ids: Partial<Record<Slot, string>> = {};
-      for (const slot of SLOTS) {
+      for (const slot of UPLOAD_SLOTS) {
         const file = files[slot.key];
         if (!file) continue;
         ids[slot.key] = await uploadFile(slot.purpose, file, {
@@ -89,6 +107,7 @@ export function IdentityVerification() {
           cnicFrontFileId: ids.cnicFront as string,
           cnicBackFileId: ids.cnicBack as string,
           selfieFileId: ids.selfie as string,
+          ...(HOLD_ID_ENABLED ? { holdIdFileId: ids.holdId as string } : {}),
           biometricConsent: true,
         },
       });
@@ -119,9 +138,9 @@ export function IdentityVerification() {
                 <p className="font-medium">Checking your documents…</p>
               </div>
               <p className="text-sm text-muted-foreground">
-                We are reading your CNIC and comparing your selfie with the photo on it. This
-                usually takes under a minute. You can leave this page — your score updates on its
-                own.
+                {HOLD_ID_ENABLED
+                  ? 'We are comparing the separate CNIC front, selfie and holding-card frame. Automated processing may finish quickly, but a human must review the result before any verified identity status is assigned.'
+                  : 'We are reading your CNIC and comparing your selfie with the photo on it. This usually takes under a minute. You can leave this page — your score updates on its own.'}
               </p>
             </>
           )}
@@ -129,7 +148,9 @@ export function IdentityVerification() {
           {complete && (
             <>
               <Alert tone="success" title="Documents received">
-                Your identity check has finished. Your Trust Score has been updated with the result.
+                {HOLD_ID_ENABLED
+                  ? 'Card and face evidence received. Your identity remains pending until a human reviewer decides; no verification is promised by this scan.'
+                  : 'Your identity check has finished. Your Trust Score has been updated with the result.'}
               </Alert>
               <Button
                 className="w-full"
@@ -167,9 +188,63 @@ export function IdentityVerification() {
 
   return (
     <div className="space-y-6">
-      <CaptureTips />
+      {LIVE_ID_SCAN_ENABLED && (
+        <Card>
+          <CardContent className="pt-6">
+            {/* Consent must precede BOTH ID and face camera access. Withdrawing
+                it stops any active ID stream in the LiveIdScan component. */}
+            <label htmlFor="live-id-consent" className="flex cursor-pointer items-start gap-3">
+              <input
+                id="live-id-consent"
+                type="checkbox"
+                checked={consent}
+                disabled={submitting}
+                onChange={(event) => {
+                  setConsent(event.target.checked);
+                  if (event.target.checked) setConsentError(false);
+                  // Revocation invalidates previously captured in-memory files.
+                  // Re-consenting must start a fresh front/back/face session.
+                  if (!event.target.checked) {
+                    setFiles({ cnicFront: null, cnicBack: null, selfie: null, holdId: null });
+                  }
+                }}
+                aria-invalid={consentError ? true : undefined}
+                aria-describedby={consentError ? 'live-id-consent-error' : undefined}
+                className="mt-0.5 h-4 w-4 shrink-0 rounded border-input"
+              />
+              <span className="text-sm font-medium">
+                I consent to live ID and face camera capture and comparing my face with the ID portrait.
+              </span>
+            </label>
+            <p className="mt-2 pl-7 text-sm text-muted-foreground">
+              Guided movement checks run on this device. {HOLD_ID_ENABLED ? 'Final front, back, face and holding-card stills' : 'Only the final front, back and face stills'}
+              are sent to private storage for the identity check and staff review under the published retention policy.
+              This is not a NADRA record or a certified document-liveness check.
+            </p>
+            {consentError && <p id="live-id-consent-error" role="alert" className="mt-2 text-sm text-destructive">Consent is required before verification.</p>}
+          </CardContent>
+        </Card>
+      )}
 
-      {DOCUMENT_SLOTS.map((slot) => (
+      {LIVE_ID_SCAN_ENABLED ? (
+        <Alert tone="info">
+          Scan the front and back of your physical card with the webcam. Keep all corners visible,
+          reduce glare and follow the left/right movement; a clear frame is saved automatically.
+          No gallery upload is available in this mode. A blurry laptop webcam may need better light
+          or an external USB camera; contact support if you cannot complete the scan.
+        </Alert>
+      ) : <CaptureTips />}
+
+      {LIVE_ID_SCAN_ENABLED ? DOCUMENT_SLOTS.map((slot) => (
+        <LiveIdScan
+          key={slot.key}
+          side={slot.key === 'cnicFront' ? 'front' : 'back'}
+          value={files[slot.key]}
+          onChange={(file) => setFiles((f) => ({ ...f, [slot.key]: file }))}
+          progress={progress[slot.key] ?? null}
+          disabled={submitting || !consent}
+        />
+      )) : DOCUMENT_SLOTS.map((slot) => (
         <ImageCapture
           key={slot.key}
           id={slot.key}
@@ -183,16 +258,75 @@ export function IdentityVerification() {
         />
       ))}
 
-      <SelfieCapture
-        id="selfie"
-        label="Selfie"
-        value={files.selfie}
-        onChange={(file) => setFiles((f) => ({ ...f, selfie: file }))}
-        progress={progress.selfie ?? null}
-        disabled={submitting}
-      />
+      {LIVE_FACE_SCAN_ENABLED && !useStandardCapture && !LIVE_ID_SCAN_ENABLED && (
+        <Card>
+          <CardContent className="pt-6">
+            <label htmlFor="face-scan-consent" className="flex cursor-pointer items-start gap-3">
+              <input
+                id="face-scan-consent"
+                type="checkbox"
+                checked={consent}
+                disabled={submitting}
+                onChange={(event) => {
+                  setConsent(event.target.checked);
+                  if (event.target.checked) setConsentError(false);
+                }}
+                className="mt-0.5 h-4 w-4 shrink-0"
+              />
+              <span className="text-sm">
+                I consent to live camera face processing and comparison with my ID portrait.
+              </span>
+            </label>
+            <p className="mt-2 pl-7 text-sm text-muted-foreground">
+              The live pose tracker runs on this device; only a final face image is uploaded for the
+              existing identity check. Images follow the account's identity-data retention settings.
+            </p>
+          </CardContent>
+        </Card>
+      )}
 
-      <Card>
+      {LIVE_FACE_SCAN_ENABLED && !useStandardCapture ? (
+        <LiveFaceScan
+          value={files.selfie}
+          onChange={(file) => setFiles((f) => ({ ...f, selfie: file }))}
+          progress={progress.selfie ?? null}
+          disabled={submitting || !consent}
+        />
+      ) : (
+        <SelfieCapture
+          id="selfie"
+          label="Selfie"
+          value={files.selfie}
+          onChange={(file) => setFiles((f) => ({ ...f, selfie: file }))}
+          progress={progress.selfie ?? null}
+          disabled={submitting}
+        />
+      )}
+
+      {HOLD_ID_ENABLED && <HoldIdFaceScan
+        value={files.holdId}
+        onChange={(file) => setFiles((f) => ({ ...f, holdId: file }))}
+        progress={progress.holdId ?? null}
+        disabled={submitting || !consent}
+      />}
+
+      {LIVE_FACE_SCAN_ENABLED && !HOLD_ID_ENABLED && (
+        <button
+          type="button"
+          disabled={submitting}
+          className="text-sm text-muted-foreground underline underline-offset-4"
+          onClick={() => {
+            // Changing mode clears the old photo so an unscanned image cannot
+            // be presented as the result of a completed live challenge.
+            setFiles((f) => ({ ...f, selfie: null, holdId: null }));
+            setUseStandardCapture((current) => !current);
+          }}
+        >
+          {useStandardCapture ? 'Try live scan instead' : 'Camera issue? Use standard verification'}
+        </button>
+      )}
+
+      {(!LIVE_FACE_SCAN_ENABLED || useStandardCapture) && !LIVE_ID_SCAN_ENABLED && <Card>
         <CardContent className="pt-6">
           <label htmlFor="biometric-consent" className="flex cursor-pointer items-start gap-3">
             <input
@@ -209,7 +343,7 @@ export function IdentityVerification() {
               className="mt-0.5 h-4 w-4 shrink-0 rounded border-input text-primary focus-visible:ring-2 focus-visible:ring-ring"
             />
             <span className="text-sm font-medium">
-              I agree to TrustLens comparing my selfie with the photo on my CNIC.
+              I agree to TrustLens comparing my captured face with the photo on my CNIC.
             </span>
           </label>
 
@@ -230,11 +364,12 @@ export function IdentityVerification() {
             </p>
           )}
         </CardContent>
-      </Card>
+      </Card>}
 
       <Alert tone="info">
-        TrustLens checks that your CNIC looks genuine and that it matches your face. It is not a
-        NADRA record check — no public service exists for that.
+        TrustLens checks the submitted ID's readable details and compares its portrait to your
+        captured face on the server. A camera-motion challenge is not foolproof liveness, and this
+        is not a NADRA record check. Demo AI settings may simulate the comparison.
       </Alert>
 
       {error && (

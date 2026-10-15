@@ -159,8 +159,10 @@ def register_exception_handlers(app: FastAPI) -> None:
         return problem(
             status=exc.status_code,
             slug=_slug_for_status(exc.status_code),
-            title=str(exc.detail),
-            detail=str(exc.detail),
+            title="Service error" if exc.status_code >= 500 else str(exc.detail),
+            detail="The service is temporarily unavailable. Please try again."
+            if exc.status_code >= 500
+            else str(exc.detail),
             code=f"HTTP_{exc.status_code}",
             instance=request.url.path,
             headers=dict(exc.headers or {}),
@@ -176,7 +178,7 @@ def register_exception_handlers(app: FastAPI) -> None:
             method=request.method,
             error_type=type(exc).__name__,
         )
-        return problem(
+        response = problem(
             status=500,
             slug="internal",
             title="Internal server error",
@@ -187,6 +189,12 @@ def register_exception_handlers(app: FastAPI) -> None:
             code="INTERNAL_ERROR",
             instance=request.url.path,
         )
+
+        from trustlens_api.middleware import apply_security_headers
+
+        apply_security_headers(response, is_production=app.state.settings.is_production)
+        response.headers["X-Request-Id"] = getattr(request.state, "request_id", "unknown")
+        return response
 
 
 def _slug_for_status(status: int) -> str:

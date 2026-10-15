@@ -95,6 +95,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/admin/chat-cases/{report_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Review Chat Case */
+    get: operations['review_chat_case_api_v1_admin_chat_cases__report_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/chat-cases/{report_id}/audio/{message_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Review Chat Audio */
+    get: operations['review_chat_audio_api_v1_admin_chat_cases__report_id__audio__message_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/chat-cases/{report_id}/hide': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Moderate Chat */
+    post: operations['moderate_chat_api_v1_admin_chat_cases__report_id__hide_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/admin/dashboard/summary': {
     parameters: {
       query?: never;
@@ -277,6 +328,40 @@ export interface paths {
      * @description Suspending stops all of a partner's traffic at once, without having to hunt down every key they hold.
      */
     post: operations['set_partner_status_api_v1_admin_partners__client_id__status_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/profile-name-reviews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Name Reviews */
+    get: operations['name_reviews_api_v1_admin_profile_name_reviews_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/admin/profile-name-reviews/{review_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Decide Name */
+    post: operations['decide_name_api_v1_admin_profile_name_reviews__review_id__post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -601,6 +686,125 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/assistant/chat': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Chat */
+    post: operations['chat_api_v1_assistant_chat_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/assistant/description': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Description */
+    post: operations['description_api_v1_assistant_description_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/assistant/enhance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Enhance Description */
+    post: operations['enhance_description_api_v1_assistant_enhance_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/assistant/listings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Listings */
+    post: operations['listings_api_v1_assistant_listings_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/assistant/research': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Research */
+    post: operations['research_api_v1_assistant_research_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/assistant/status': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Status */
+    get: operations['status_api_v1_assistant_status_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/assistant/suggestions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Suggestions */
+    get: operations['suggestions_api_v1_assistant_suggestions_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/auctions/{auction_id}': {
     parameters: {
       query?: never;
@@ -707,6 +911,23 @@ export interface paths {
     get: operations['google_login_api_v1_auth_google_login_get'];
     put?: never;
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/auth/google/mfa/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Finish Google sign-in with MFA */
+    post: operations['google_verify_mfa_api_v1_auth_google_mfa_verify_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1137,10 +1358,44 @@ export interface paths {
     put?: never;
     /**
      * Add an image to a listing
-     * @description Associates an already-uploaded file (obtained via /files/upload-intent with purpose=LISTING_IMAGE) with this listing and computes a perceptual hash for duplicate detection. A warning is returned if a near-identical image already exists in this seller's listings (Hamming distance ≤ 5).
+     * @description Checks an owned upload against other accounts' indexed photos before attaching an immutable copy. Failed/busy checks do not attach the photo.
      */
     post: operations['add_listing_image_api_v1_listings__listing_id__images_post'];
     delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/listings/{listing_id}/images/order': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Order Listing Images */
+    put: operations['order_listing_images_api_v1_listings__listing_id__images_order_put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/listings/{listing_id}/images/{image_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove Listing Image */
+    delete: operations['remove_listing_image_api_v1_listings__listing_id__images__image_id__delete'];
     options?: never;
     head?: never;
     patch?: never;
@@ -1215,6 +1470,177 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/calls': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Start */
+    post: operations['start_api_v1_me_calls_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/calls/active': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Active */
+    get: operations['active_api_v1_me_calls_active_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/calls/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Config */
+    get: operations['config_api_v1_me_calls_config_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/calls/push': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Subscribe */
+    post: operations['subscribe_api_v1_me_calls_push_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/calls/push/{subscription_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Unsubscribe */
+    delete: operations['unsubscribe_api_v1_me_calls_push__subscription_id__delete'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/calls/{call_id}/actions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Action */
+    post: operations['action_api_v1_me_calls__call_id__actions_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/calls/{call_id}/join': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Join */
+    post: operations['join_api_v1_me_calls__call_id__join_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/chat-messages/{message_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete Chat */
+    delete: operations['delete_chat_api_v1_me_chat_messages__message_id__delete'];
+    options?: never;
+    head?: never;
+    /** Edit Chat */
+    patch: operations['edit_chat_api_v1_me_chat_messages__message_id__patch'];
+    trace?: never;
+  };
+  '/api/v1/me/chat-messages/{message_id}/audio': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Chat Audio */
+    get: operations['chat_audio_api_v1_me_chat_messages__message_id__audio_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/chat-messages/{message_id}/played': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Voice Played */
+    post: operations['voice_played_api_v1_me_chat_messages__message_id__played_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me/conversations': {
     parameters: {
       query?: never;
@@ -1227,6 +1653,91 @@ export interface paths {
     put?: never;
     /** Send a message, starting a new conversation or replying to one */
     post: operations['send_message_api_v1_me_conversations_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Conversation header for either participant */
+    get: operations['get_conversation_api_v1_me_conversations__conversation_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/calls': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** History */
+    get: operations['history_api_v1_me_conversations__conversation_id__calls_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/clear': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Clear Chat */
+    post: operations['clear_chat_api_v1_me_conversations__conversation_id__clear_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/clear/undo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Undo Clear */
+    post: operations['undo_clear_api_v1_me_conversations__conversation_id__clear_undo_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/important': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Mark a conversation important for yourself */
+    put: operations['set_conversation_important_api_v1_me_conversations__conversation_id__important_put'];
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1264,6 +1775,57 @@ export interface paths {
      */
     put: operations['set_conversation_muted_api_v1_me_conversations__conversation_id__muted_put'];
     post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/support': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Chat Support */
+    post: operations['chat_support_api_v1_me_conversations__conversation_id__support_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/timeline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Chat Timeline */
+    get: operations['chat_timeline_api_v1_me_conversations__conversation_id__timeline_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/conversations/{conversation_id}/voice': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Send Voice */
+    post: operations['send_voice_api_v1_me_conversations__conversation_id__voice_post'];
     delete?: never;
     options?: never;
     head?: never;
@@ -1488,6 +2050,127 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/me/private-settings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read Private Settings */
+    get: operations['read_private_settings_api_v1_me_private_settings_get'];
+    /** Write Private Settings */
+    put: operations['write_private_settings_api_v1_me_private_settings_put'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/profile': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get My Profile */
+    get: operations['get_my_profile_api_v1_me_profile_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Edit Profile */
+    patch: operations['edit_profile_api_v1_me_profile_patch'];
+    trace?: never;
+  };
+  '/api/v1/me/profile/ads': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Owner Ads */
+    get: operations['owner_ads_api_v1_me_profile_ads_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/profile/ads/{listing_id}/action': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Ad Action */
+    post: operations['ad_action_api_v1_me_profile_ads__listing_id__action_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/profile/initialize': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Initialize Profile */
+    post: operations['initialize_profile_api_v1_me_profile_initialize_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/profile/name': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Confirm Name */
+    post: operations['confirm_name_api_v1_me_profile_name_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/me/profile/photo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Upload Profile Photo */
+    post: operations['upload_profile_photo_api_v1_me_profile_photo_post'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/me/reports': {
     parameters: {
       query?: never;
@@ -1609,6 +2292,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/api/v1/public/catalogue-options': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Confirmed brand/model suggestions from eligible listings */
+    get: operations['catalogue_options_api_v1_public_catalogue_options_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/api/v1/public/listings': {
     parameters: {
       query?: never;
@@ -1641,6 +2341,74 @@ export interface paths {
      * @description The full listing page a catalog card opens into. Anonymous, rate limited per IP. Returns 404 for anything not ACTIVE - a listing still being analysed, flagged, or removed is treated as not found, the same as one that never existed.
      */
     get: operations['get_public_listing_api_v1_public_listings__listing_id__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/motor-dealers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Verified business sellers with visible motor listings */
+    get: operations['motor_dealers_api_v1_public_motor_dealers_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/profiles/{reference}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Public Profile */
+    get: operations['get_public_profile_api_v1_public_profiles__reference__get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/profiles/{user_id}/photo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Public Photo */
+    get: operations['public_photo_api_v1_public_profiles__user_id__photo_get'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/api/v1/public/recommendations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Related eligible listings, deduplicated by purpose */
+    get: operations['public_recommendations_api_v1_public_recommendations_get'];
     put?: never;
     post?: never;
     delete?: never;
@@ -1960,8 +2728,8 @@ export interface paths {
     get: operations['identity_status_api_v1_verification_identity_get'];
     put?: never;
     /**
-     * Submit CNIC and selfie for verification
-     * @description Records the submission and queues OCR + face matching. Returns immediately with a job id - the AI pipeline takes 15-30 seconds and runs in the worker (ADR-0003).
+     * Submit CNIC, face, and optional holding-card evidence
+     * @description Records the submission and queues OCR + face comparisons. If hold-ID mode is enabled, the fourth private frame is required and the result is queued for human review. Camera guidance is not certified liveness.
      */
     post: operations['submit_identity_api_v1_verification_identity_post'];
     delete?: never;
@@ -2150,6 +2918,14 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** AdAction */
+    AdAction: {
+      /**
+       * Action
+       * @enum {string}
+       */
+      action: 'pause' | 'resume' | 'renew' | 'sold';
+    };
     /** AddFavoriteRequest */
     AddFavoriteRequest: {
       /**
@@ -2168,6 +2944,23 @@ export interface components {
        * @default false
        */
       isInternal: boolean;
+    };
+    /** AssistantStatus */
+    AssistantStatus: {
+      /**
+       * Freeplanrequired
+       * @default true
+       */
+      freePlanRequired: boolean;
+      /**
+       * Provider
+       * @default Groq
+       */
+      provider: string;
+      /** Ready */
+      ready: boolean;
+      /** Webready */
+      webReady: boolean;
     };
     /** BatchLookupRequest */
     BatchLookupRequest: {
@@ -2204,6 +2997,30 @@ export interface components {
        */
       blockedUserId: string;
     };
+    /** CallAction */
+    CallAction: {
+      /**
+       * Action
+       * @enum {string}
+       */
+      action: 'ring' | 'accept' | 'reject' | 'sync' | 'end' | 'failed';
+      /**
+       * Connected
+       * @default false
+       */
+      connected: boolean;
+      /**
+       * Deviceid
+       * Format: uuid
+       */
+      deviceId: string;
+      health?: components['schemas']['Health'] | null;
+      /**
+       * Muted
+       * @default false
+       */
+      muted: boolean;
+    };
     /** CancelTransactionRequest */
     CancelTransactionRequest: {
       /** Reason */
@@ -2215,6 +3032,68 @@ export interface components {
       currentPassword: string;
       /** Newpassword */
       newPassword: string;
+    };
+    /** ChatMessage */
+    ChatMessage: {
+      /** Content */
+      content: string;
+      /**
+       * Role
+       * @enum {string}
+       */
+      role: 'user' | 'assistant';
+    };
+    /** ChatReply */
+    ChatReply: {
+      /** Answer */
+      answer: string;
+      listings: components['schemas']['ListingResults'];
+      /** Marketoptions */
+      marketOptions: components['schemas']['MarketOption'][];
+      /**
+       * Mode
+       * @default ai
+       * @enum {string}
+       */
+      mode: 'ai' | 'listings-only';
+      /** Sources */
+      sources: components['schemas']['WebSource'][];
+      /** Warnings */
+      warnings: string[];
+      /**
+       * Websearched
+       * @default false
+       */
+      webSearched: boolean;
+    };
+    /** ChatReportRequest */
+    ChatReportRequest: {
+      /** Description */
+      description: string;
+      /** Messageid */
+      messageId?: string | null;
+      /**
+       * Reason
+       * @enum {string}
+       */
+      reason: 'sensitive_information' | 'delivery_issue' | 'harassment' | 'other';
+    };
+    /** ChatRequest */
+    ChatRequest: {
+      /** Compareids */
+      compareIds?: string[];
+      /** Currentlistingid */
+      currentListingId?: string | null;
+      filters?: components['schemas']['SearchFilters-Input'];
+      /** History */
+      history?: components['schemas']['ChatMessage'][];
+      /**
+       * Marketsearch
+       * @default true
+       */
+      marketSearch: boolean;
+      /** Message */
+      message: string;
     };
     /** CreateAuctionRequest */
     CreateAuctionRequest: {
@@ -2298,8 +3177,14 @@ export interface components {
       area?: string | null;
       /** Category */
       category?: string | null;
+      /** Categorynodeid */
+      categoryNodeId?: string | null;
       /** City */
       city?: string | null;
+      /** Facets */
+      facets?: {
+        [key: string]: unknown;
+      };
       /** Maxprice */
       maxPrice?: number | null;
       /** Minprice */
@@ -2328,6 +3213,18 @@ export interface components {
       /** Weights */
       weights: components['schemas']['ScoringWeightInput'][];
     };
+    /** CursorMeta */
+    CursorMeta: {
+      /**
+       * Hasnext
+       * @default false
+       */
+      hasNext: boolean;
+      /** Next */
+      next?: string | null;
+      /** Prev */
+      prev?: string | null;
+    };
     /** DecideReviewRequest */
     DecideReviewRequest: {
       /** Approve */
@@ -2343,6 +3240,54 @@ export interface components {
       /** Password */
       password: string;
     };
+    /** DescriptionReply */
+    DescriptionReply: {
+      /** Description */
+      description: string;
+      /** Missingdetails */
+      missingDetails: string[];
+      /**
+       * Mode
+       * @default ai
+       * @enum {string}
+       */
+      mode: 'ai' | 'template';
+    };
+    /** DescriptionRequest */
+    DescriptionRequest: {
+      /** Category */
+      category: string;
+      /**
+       * Condition
+       * @enum {string}
+       */
+      condition: 'NEW' | 'LIKE_NEW' | 'USED' | 'FOR_PARTS';
+      /** Facts */
+      facts?: {
+        [key: string]: string;
+      };
+      /**
+       * Language
+       * @default en
+       * @enum {string}
+       */
+      language: 'en' | 'ur' | 'roman-ur';
+      /**
+       * Notes
+       * @default
+       */
+      notes: string;
+      /** Title */
+      title: string;
+    };
+    /** Device */
+    Device: {
+      /**
+       * Deviceid
+       * Format: uuid
+       */
+      deviceId: string;
+    };
     /** DeviceFingerprintRequest */
     DeviceFingerprintRequest: {
       /** Fingerprint */
@@ -2355,6 +3300,104 @@ export interface components {
       timezone?: string | null;
       /** Useragent */
       userAgent?: string | null;
+    };
+    /** EditChatRequest */
+    EditChatRequest: {
+      /** Body */
+      body: string;
+    };
+    /** EnhanceReply */
+    EnhanceReply: {
+      /** Description */
+      description: string;
+      /** Missingdetails */
+      missingDetails: string[];
+      /** Photohints */
+      photoHints: string[];
+      /**
+       * Photoschecked
+       * @default 0
+       */
+      photosChecked: number;
+      /** Sources */
+      sources: components['schemas']['WebSource'][];
+      /** Specs */
+      specs: components['schemas']['ProductSpec'][];
+      /** Warnings */
+      warnings: string[];
+    };
+    /** EnhanceRequest */
+    EnhanceRequest: {
+      /** Category */
+      category: string;
+      /** Categorynodeid */
+      categoryNodeId?: string | null;
+      /** Condition */
+      condition?: ('NEW' | 'LIKE_NEW' | 'USED' | 'FOR_PARTS') | null;
+      /**
+       * Description
+       * @default
+       */
+      description: string;
+      /** Facts */
+      facts?: {
+        [key: string]: string;
+      };
+      /**
+       * Language
+       * @default en
+       * @enum {string}
+       */
+      language: 'en' | 'ur' | 'roman-ur';
+      /** Listingid */
+      listingId?: string | null;
+      /**
+       * Notes
+       * @default
+       */
+      notes: string;
+      /** Title */
+      title: string;
+      /**
+       * Usephotos
+       * @default true
+       */
+      usePhotos: boolean;
+    };
+    /** Envelope[AssistantStatus] */
+    Envelope_AssistantStatus_: {
+      data: components['schemas']['AssistantStatus'];
+      meta: components['schemas']['ResponseMeta'];
+    };
+    /** Envelope[ChatReply] */
+    Envelope_ChatReply_: {
+      data: components['schemas']['ChatReply'];
+      meta: components['schemas']['ResponseMeta'];
+    };
+    /** Envelope[DescriptionReply] */
+    Envelope_DescriptionReply_: {
+      data: components['schemas']['DescriptionReply'];
+      meta: components['schemas']['ResponseMeta'];
+    };
+    /** Envelope[EnhanceReply] */
+    Envelope_EnhanceReply_: {
+      data: components['schemas']['EnhanceReply'];
+      meta: components['schemas']['ResponseMeta'];
+    };
+    /** Envelope[ListingResults] */
+    Envelope_ListingResults_: {
+      data: components['schemas']['ListingResults'];
+      meta: components['schemas']['ResponseMeta'];
+    };
+    /** Envelope[ResearchReply] */
+    Envelope_ResearchReply_: {
+      data: components['schemas']['ResearchReply'];
+      meta: components['schemas']['ResponseMeta'];
+    };
+    /** Envelope[SuggestionsReply] */
+    Envelope_SuggestionsReply_: {
+      data: components['schemas']['SuggestionsReply'];
+      meta: components['schemas']['ResponseMeta'];
     };
     /** FollowSellerRequest */
     FollowSellerRequest: {
@@ -2369,10 +3412,44 @@ export interface components {
        */
       email: string;
     };
+    /** GoogleMfaRequest */
+    GoogleMfaRequest: {
+      /** Code */
+      code: string;
+    };
     /** HTTPValidationError */
     HTTPValidationError: {
       /** Detail */
       detail?: components['schemas']['ValidationError'][];
+    };
+    /** Health */
+    Health: {
+      /**
+       * Packetslost
+       * @default 0
+       */
+      packetsLost: number;
+      /**
+       * Quality
+       * @default unknown
+       * @enum {string}
+       */
+      quality: 'unknown' | 'excellent' | 'good' | 'poor' | 'lost';
+      /**
+       * Receivedbytes
+       * @default 0
+       */
+      receivedBytes: number;
+      /**
+       * Sentbytes
+       * @default 0
+       */
+      sentBytes: number;
+    };
+    /** ImageOrderRequest */
+    ImageOrderRequest: {
+      /** Imageids */
+      imageIds: string[];
     };
     /** IssueKeyRequest */
     IssueKeyRequest: {
@@ -2382,6 +3459,40 @@ export interface components {
       name: string;
       /** Scopes */
       scopes?: string[];
+    };
+    /** ListingCard */
+    ListingCard: {
+      /** Area */
+      area: string | null;
+      /** Attributes */
+      attributes: {
+        [key: string]: string;
+      };
+      /** Category */
+      category: string | null;
+      /** City */
+      city: string | null;
+      /** Condition */
+      condition: string | null;
+      /** Currency */
+      currency: string | null;
+      /** Href */
+      href: string;
+      /** Id */
+      id: string;
+      /**
+       * Identityverified
+       * @default false
+       */
+      identityVerified: boolean;
+      /** Imageurl */
+      imageUrl: string | null;
+      /** Price */
+      price: number | null;
+      /** Score */
+      score: number | null;
+      /** Title */
+      title: string;
     };
     /**
      * ListingImageRequest
@@ -2395,6 +3506,19 @@ export interface components {
        */
       fileId: string;
     };
+    /** ListingResults */
+    ListingResults: {
+      filters: components['schemas']['SearchFilters-Output'];
+      /** Items */
+      items: components['schemas']['ListingCard'][];
+      /** Nextoffset */
+      nextOffset: number | null;
+      /**
+       * Total
+       * @default 0
+       */
+      total: number;
+    };
     /**
      * ListingWriteRequest
      * @description Create or replace a listing.
@@ -2405,6 +3529,8 @@ export interface components {
      *     analyser's verdict can only move one bounded signal (ADR-0002).
      */
     ListingWriteRequest: {
+      /** Addressline */
+      addressLine?: string | null;
       /** Area */
       area?: string | null;
       /** Attributes */
@@ -2413,6 +3539,8 @@ export interface components {
       };
       /** Category */
       category?: string | null;
+      /** Categorynodeid */
+      categoryNodeId?: string | null;
       /** City */
       city?: string | null;
       /** Condition */
@@ -2434,6 +3562,8 @@ export interface components {
       negotiable: boolean;
       /** Price */
       price?: number | null;
+      /** Showphone */
+      showPhone?: boolean | null;
       /** Title */
       title: string;
       /** Videofileid */
@@ -2450,6 +3580,15 @@ export interface components {
       email: string;
       /** Password */
       password: string;
+    };
+    /** MarketOption */
+    MarketOption: {
+      /** Name */
+      name: string;
+      /** Sourceids */
+      sourceIds: number[];
+      /** Summary */
+      summary: string;
     };
     /** MfaConfirmRequest */
     MfaConfirmRequest: {
@@ -2472,6 +3611,43 @@ export interface components {
       /** Mfatoken */
       mfaToken: string;
     };
+    /** ModerateChatRequest */
+    ModerateChatRequest: {
+      /**
+       * Messageid
+       * Format: uuid
+       */
+      messageId: string;
+      /** Reason */
+      reason: string;
+    };
+    /** NameConfirmation */
+    NameConfirmation: {
+      /** Fullname */
+      fullName: string;
+      /**
+       * Note
+       * @default
+       */
+      note: string;
+      /**
+       * Publicnameconsent
+       * @constant
+       */
+      publicNameConsent: true;
+      /**
+       * Requestreview
+       * @default false
+       */
+      requestReview: boolean;
+    };
+    /** NameDecision */
+    NameDecision: {
+      /** Approve */
+      approve: boolean;
+      /** Note */
+      note: string;
+    };
     /** OverrideScoreRequest */
     OverrideScoreRequest: {
       /** Reason */
@@ -2479,10 +3655,96 @@ export interface components {
       /** Score */
       score: number;
     };
+    /** PageMeta */
+    PageMeta: {
+      /** Hasnext */
+      hasNext: boolean;
+      /** Hasprev */
+      hasPrev: boolean;
+      /** Page */
+      page: number;
+      /** Perpage */
+      perPage: number;
+      /** Total */
+      total: number;
+      /** Totalpages */
+      totalPages: number;
+    };
     /** PlaceBidRequest */
     PlaceBidRequest: {
       /** Amount */
       amount: number;
+    };
+    /** PrivateAddress */
+    PrivateAddress: {
+      /** Addressline */
+      addressLine: string;
+      /**
+       * Area
+       * @default
+       */
+      area: string;
+      /** City */
+      city: string;
+      /** Id */
+      id?: string | null;
+      /** Label */
+      label: string;
+      /**
+       * Province
+       * @default
+       */
+      province: string;
+    };
+    /** PrivateSettings */
+    PrivateSettings: {
+      /** Addresses */
+      addresses?: components['schemas']['PrivateAddress'][];
+      /** Dateofbirth */
+      dateOfBirth?: string | null;
+      /** Gender */
+      gender?: ('Woman' | 'Man' | 'Non-binary' | 'Self-described' | 'Prefer not to say') | null;
+      /**
+       * Version
+       * @default 0
+       */
+      version: number;
+    };
+    /** ProductResearchRequest */
+    ProductResearchRequest: {
+      /** Category */
+      category?: string | null;
+      /**
+       * Language
+       * @default en
+       * @enum {string}
+       */
+      language: 'en' | 'ur' | 'roman-ur';
+      /** Product */
+      product: string;
+    };
+    /** ProductSpec */
+    ProductSpec: {
+      /** Key */
+      key: string;
+      /** Value */
+      value: string;
+    };
+    /** ProfileEdit */
+    ProfileEdit: {
+      /** Bio */
+      bio?: string | null;
+      /** City */
+      city?: string | null;
+      /**
+       * Confirmusername
+       * @default false
+       */
+      confirmUsername: boolean;
+      /** Handle */
+      handle: string;
+      /** Version */
+      version: number;
     };
     /** ProposeMeetupRequest */
     ProposeMeetupRequest: {
@@ -2594,6 +3856,19 @@ export interface components {
       /** Status */
       status: string;
     };
+    /** PushKeys */
+    PushKeys: {
+      /** Auth */
+      auth: string;
+      /** P256Dh */
+      p256Dh: string;
+    };
+    /** PushSubscription */
+    PushSubscription: {
+      /** Endpoint */
+      endpoint: string;
+      keys: components['schemas']['PushKeys'];
+    };
     /** RaiseDisputeRequest */
     RaiseDisputeRequest: {
       /** Category */
@@ -2652,6 +3927,17 @@ export interface components {
        */
       phoneNumber: string;
     };
+    /** ResearchReply */
+    ResearchReply: {
+      /** Questions */
+      questions: string[];
+      /** Sources */
+      sources: components['schemas']['WebSource'][];
+      /** Specs */
+      specs: components['schemas']['SourcedSpec'][];
+      /** Summary */
+      summary: string;
+    };
     /** ResetPasswordRequest */
     ResetPasswordRequest: {
       /** Password */
@@ -2693,6 +3979,22 @@ export interface components {
       /** Accept */
       accept: boolean;
     };
+    /** ResponseMeta */
+    ResponseMeta: {
+      /** Cached */
+      cached?: boolean | null;
+      cursor?: components['schemas']['CursorMeta'] | null;
+      pagination?: components['schemas']['PageMeta'] | null;
+      /** Requestid */
+      requestId?: string | null;
+      /**
+       * Timestamp
+       * Format: date-time
+       */
+      timestamp: string;
+      /** Warnings */
+      warnings?: string[] | null;
+    };
     /**
      * RiskLevel
      * @enum {string}
@@ -2716,14 +4018,68 @@ export interface components {
       /** Weight */
       weight: number;
     };
+    /** SearchFilters */
+    'SearchFilters-Input': {
+      /** Category */
+      category?: string | null;
+      /** City */
+      city?: string | null;
+      /** Condition */
+      condition?: ('NEW' | 'LIKE_NEW' | 'USED' | 'FOR_PARTS') | null;
+      /** Maxprice */
+      maxPrice?: number | null;
+      /** Minprice */
+      minPrice?: number | null;
+      /**
+       * Offset
+       * @default 0
+       */
+      offset: number;
+      /** Q */
+      q?: string | null;
+    };
+    /** SearchFilters */
+    'SearchFilters-Output': {
+      /** Category */
+      category: string | null;
+      /** City */
+      city: string | null;
+      /** Condition */
+      condition: ('NEW' | 'LIKE_NEW' | 'USED' | 'FOR_PARTS') | null;
+      /** Maxprice */
+      maxPrice: number | null;
+      /** Minprice */
+      minPrice: number | null;
+      /**
+       * Offset
+       * @default 0
+       */
+      offset: number;
+      /** Q */
+      q: string | null;
+    };
     /** SendMessageRequest */
     SendMessageRequest: {
-      /** Body */
+      /**
+       * Body
+       * @default
+       */
       body: string;
+      /** Clientid */
+      clientId?: string | null;
       /** Conversationid */
       conversationId?: string | null;
+      /** Forwardid */
+      forwardId?: string | null;
       /** Listingid */
       listingId?: string | null;
+      /** Replytoid */
+      replyToId?: string | null;
+    };
+    /** SetImportantRequest */
+    SetImportantRequest: {
+      /** Important */
+      important: boolean;
     };
     /** SetMutedRequest */
     SetMutedRequest: {
@@ -2737,6 +4093,35 @@ export interface components {
        * @description PENDING | ACTIVE | SUSPENDED
        */
       status: string;
+    };
+    /** SourcedSpec */
+    SourcedSpec: {
+      /** Evidence */
+      evidence: string;
+      /** Key */
+      key: string;
+      /** Sourceid */
+      sourceId: number;
+      /** Value */
+      value: string;
+    };
+    /** StartCall */
+    StartCall: {
+      /**
+       * Callid
+       * Format: uuid
+       */
+      callId: string;
+      /**
+       * Conversationid
+       * Format: uuid
+       */
+      conversationId: string;
+      /**
+       * Deviceid
+       * Format: uuid
+       */
+      deviceId: string;
     };
     /** SubmitAppealRequest */
     SubmitAppealRequest: {
@@ -2777,11 +4162,50 @@ export interface components {
        * Format: uuid
        */
       cnicFrontFileId: string;
+      /** Holdidfileid */
+      holdIdFileId?: string | null;
       /**
        * Selfiefileid
        * Format: uuid
        */
       selfieFileId: string;
+    };
+    /** Suggestion */
+    Suggestion: {
+      /** Category */
+      category: string | null;
+      /**
+       * Kind
+       * @default suggestion
+       * @enum {string}
+       */
+      kind: 'listing' | 'suggestion';
+      /** Query */
+      query: string | null;
+      /** Text */
+      text: string;
+    };
+    /** SuggestionsReply */
+    SuggestionsReply: {
+      /** Fields */
+      fields: string[];
+      /** Items */
+      items: components['schemas']['Suggestion'][];
+      /** Nextoffset */
+      nextOffset: number | null;
+      /**
+       * Total
+       * @default 0
+       */
+      total: number;
+    };
+    /** UndoClearRequest */
+    UndoClearRequest: {
+      /**
+       * Undotoken
+       * Format: uuid
+       */
+      undoToken: string;
     };
     /** UpdateSellerRequest */
     UpdateSellerRequest: {
@@ -2806,7 +4230,7 @@ export interface components {
       filename?: string | null;
       /**
        * Purpose
-       * @description CNIC_FRONT | CNIC_BACK | SELFIE | LISTING_IMAGE | LISTING_VIDEO
+       * @description CNIC_FRONT | CNIC_BACK | SELFIE | HOLD_ID | LISTING_IMAGE | LISTING_VIDEO
        */
       purpose: string;
       /** Sizebytes */
@@ -2834,6 +4258,19 @@ export interface components {
     VerifyOtpRequest: {
       /** Code */
       code: string;
+    };
+    /** WebSource */
+    WebSource: {
+      /** Checkedat */
+      checkedAt: string;
+      /** Excerpt */
+      excerpt: string;
+      /** Id */
+      id: number;
+      /** Title */
+      title: string;
+      /** Url */
+      url: string;
     };
   };
   responses: never;
@@ -3021,6 +4458,110 @@ export interface operations {
           'application/json': {
             [key: string]: unknown;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  review_chat_case_api_v1_admin_chat_cases__report_id__get: {
+    parameters: {
+      query?: {
+        before?: string | null;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        report_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  review_chat_audio_api_v1_admin_chat_cases__report_id__audio__message_id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        report_id: string;
+        message_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  moderate_chat_api_v1_admin_chat_cases__report_id__hide_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        report_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ModerateChatRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */
@@ -3483,6 +5024,74 @@ export interface operations {
           'application/json': {
             [key: string]: unknown;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  name_reviews_api_v1_admin_profile_name_reviews_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  decide_name_api_v1_admin_profile_name_reviews__review_id__post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        review_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NameDecision'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */
@@ -4188,6 +5797,250 @@ export interface operations {
       };
     };
   };
+  chat_api_v1_assistant_chat_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChatRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_ChatReply_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  description_api_v1_assistant_description_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DescriptionRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_DescriptionReply_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  enhance_description_api_v1_assistant_enhance_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EnhanceRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_EnhanceReply_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  listings_api_v1_assistant_listings_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SearchFilters-Input'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_ListingResults_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  research_api_v1_assistant_research_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProductResearchRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_ResearchReply_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  status_api_v1_assistant_status_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_AssistantStatus_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  suggestions_api_v1_assistant_suggestions_get: {
+    parameters: {
+      query?: {
+        q?: string;
+        category?: string | null;
+        city?: string | null;
+        mode?: 'buyer' | 'seller';
+        offset?: number;
+        limit?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Envelope_SuggestionsReply_'];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   get_auction_api_v1_auctions__auction_id__get: {
     parameters: {
       query?: never;
@@ -4384,6 +6237,7 @@ export interface operations {
       path?: never;
       cookie?: {
         tl_oauth_state?: string | null;
+        tl_oauth_next?: string | null;
       };
     };
     requestBody?: never;
@@ -4410,7 +6264,9 @@ export interface operations {
   };
   google_login_api_v1_auth_google_login_get: {
     parameters: {
-      query?: never;
+      query?: {
+        next?: string | null;
+      };
       header?: never;
       path?: never;
       cookie?: never;
@@ -4424,6 +6280,54 @@ export interface operations {
         };
         content: {
           'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  google_verify_mfa_api_v1_auth_google_mfa_verify_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: {
+        tl_google_mfa?: string | null;
+      };
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GoogleMfaRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
         };
       };
     };
@@ -5540,6 +7444,81 @@ export interface operations {
       };
     };
   };
+  order_listing_images_api_v1_listings__listing_id__images_order_put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ImageOrderRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  remove_listing_image_api_v1_listings__listing_id__images__image_id__delete: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+        image_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   get_me_api_v1_me_get: {
     parameters: {
       query?: never;
@@ -5703,11 +7682,388 @@ export interface operations {
       };
     };
   };
+  start_api_v1_me_calls_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StartCall'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  active_api_v1_me_calls_active_get: {
+    parameters: {
+      query: {
+        deviceId: string;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  config_api_v1_me_calls_config_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  subscribe_api_v1_me_calls_push_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PushSubscription'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  unsubscribe_api_v1_me_calls_push__subscription_id__delete: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        subscription_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  action_api_v1_me_calls__call_id__actions_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        call_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CallAction'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  join_api_v1_me_calls__call_id__join_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        call_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Device'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  delete_chat_api_v1_me_chat_messages__message_id__delete: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        message_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  edit_chat_api_v1_me_chat_messages__message_id__patch: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        message_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['EditChatRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  chat_audio_api_v1_me_chat_messages__message_id__audio_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        message_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  voice_played_api_v1_me_chat_messages__message_id__played_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        message_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   list_conversations_api_v1_me_conversations_get: {
     parameters: {
       query?: {
         limit?: number;
         offset?: number;
+        folder?: 'all' | 'buying' | 'selling' | 'unread' | 'important';
+        q?: string;
       };
       header?: {
         'x-device-fingerprint'?: string | null;
@@ -5763,6 +8119,179 @@ export interface operations {
           'application/json': {
             [key: string]: unknown;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_conversation_api_v1_me_conversations__conversation_id__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  history_api_v1_me_conversations__conversation_id__calls_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  clear_chat_api_v1_me_conversations__conversation_id__clear_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  undo_clear_api_v1_me_conversations__conversation_id__clear_undo_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UndoClearRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  set_conversation_important_api_v1_me_conversations__conversation_id__important_put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetImportantRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */
@@ -5840,6 +8369,115 @@ export interface operations {
           'application/json': {
             [key: string]: unknown;
           };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  chat_support_api_v1_me_conversations__conversation_id__support_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ChatReportRequest'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  chat_timeline_api_v1_me_conversations__conversation_id__timeline_get: {
+    parameters: {
+      query?: {
+        before?: string | null;
+        limit?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  send_voice_api_v1_me_conversations__conversation_id__voice_post: {
+    parameters: {
+      query: {
+        clientId: string;
+        replyToId?: string | null;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        conversation_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
         };
       };
       /** @description Validation Error */
@@ -6313,6 +8951,312 @@ export interface operations {
       };
     };
   };
+  read_private_settings_api_v1_me_private_settings_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  write_private_settings_api_v1_me_private_settings_put: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PrivateSettings'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_my_profile_api_v1_me_profile_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  edit_profile_api_v1_me_profile_patch: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ProfileEdit'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  owner_ads_api_v1_me_profile_ads_get: {
+    parameters: {
+      query?: {
+        tab?: 'all' | 'active' | 'inactive';
+        q?: string;
+        limit?: number;
+        offset?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  ad_action_api_v1_me_profile_ads__listing_id__action_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        listing_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AdAction'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  initialize_profile_api_v1_me_profile_initialize_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  confirm_name_api_v1_me_profile_name_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NameConfirmation'];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  upload_profile_photo_api_v1_me_profile_photo_post: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   list_my_reports_api_v1_me_reports_get: {
     parameters: {
       query?: never;
@@ -6629,10 +9573,50 @@ export interface operations {
       };
     };
   };
+  catalogue_options_api_v1_public_catalogue_options_get: {
+    parameters: {
+      query: {
+        categoryNodeId: string;
+        field: string;
+        parentValue?: string | null;
+        q?: string;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
   browse_public_listings_api_v1_public_listings_get: {
     parameters: {
       query?: {
         category?: string | null;
+        categoryNodeId?: string | null;
+        facets?: string | null;
         q?: string | null;
         city?: string | null;
         area?: string | null;
@@ -6692,6 +9676,157 @@ export interface operations {
       path: {
         listing_id: string;
       };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  motor_dealers_api_v1_public_motor_dealers_get: {
+    parameters: {
+      query?: {
+        limit?: number;
+        offset?: number;
+        city?: string | null;
+        q?: string | null;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': {
+            [key: string]: unknown;
+          };
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  get_public_profile_api_v1_public_profiles__reference__get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        reference: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  public_photo_api_v1_public_profiles__user_id__photo_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path: {
+        user_id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HTTPValidationError'];
+        };
+      };
+    };
+  };
+  public_recommendations_api_v1_public_recommendations_get: {
+    parameters: {
+      query?: {
+        listingId?: string | null;
+        categoryNodeId?: string | null;
+        category?: string | null;
+        q?: string | null;
+        city?: string | null;
+        area?: string | null;
+        minPrice?: number | null;
+        maxPrice?: number | null;
+        nearLatitude?: number | null;
+        nearLongitude?: number | null;
+        radiusKm?: number | null;
+        exclude?: string;
+        limit?: number;
+      };
+      header?: {
+        'x-device-fingerprint'?: string | null;
+      };
+      path?: never;
       cookie?: never;
     };
     requestBody?: never;

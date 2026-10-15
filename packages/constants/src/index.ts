@@ -1,3 +1,6 @@
+import { PAKISTAN_PROVINCES } from './pakistan-locations';
+export { PAKISTAN_PROVINCES } from './pakistan-locations';
+
 /**
  * Cross-app constants.
  *
@@ -221,9 +224,9 @@ export const LISTING_CATEGORY_LABELS: Record<ListingCategory, string> = {
  * same "Lahore" / "lahore" / "LHR" fragmentation category slugs were built
  * to avoid (see LISTING_CATEGORIES above).
  *
- * Coverage is the ten largest cities with their well-known
- * neighbourhoods/towns, not exhaustive - "Other" is always offered as an
- * escape hatch so a real location is never blocked by a missing entry.
+ * Neighbourhood coverage remains the original ten cities. The separate
+ * province/city catalogue covers Pakistan cities and towns; locations without
+ * a neighbourhood list retain Other as an escape hatch.
  */
 export const PAKISTAN_LOCATIONS = {
   Lahore: [
@@ -292,34 +295,22 @@ export const PAKISTAN_LOCATIONS = {
   Other: ['Other'],
 } as const;
 
-export const PAKISTAN_CITIES = Object.keys(
-  PAKISTAN_LOCATIONS,
-) as (keyof typeof PAKISTAN_LOCATIONS)[];
+export const PAKISTAN_CITIES: readonly string[] = [
+  ...new Set<string>(Object.values(PAKISTAN_PROVINCES).flat()),
+]
+  .sort((a, b) => a.localeCompare(b, 'en'))
+  .concat('Other');
 
-export type PakistanCity = (typeof PAKISTAN_CITIES)[number];
+export type PakistanCity = string;
 
 export function areasForCity(city: string | null | undefined): readonly string[] {
-  if (city && city in PAKISTAN_LOCATIONS) {
-    return PAKISTAN_LOCATIONS[city as PakistanCity];
+  if (city && Object.hasOwn(PAKISTAN_LOCATIONS, city)) {
+    return PAKISTAN_LOCATIONS[city as keyof typeof PAKISTAN_LOCATIONS];
   }
   return PAKISTAN_LOCATIONS.Other;
 }
 
-/**
- * Real geography, not app data - grouping the same 10 hardcoded cities by
- * the actual province/territory they sit in. A client-side filtering aid
- * only: picking a province narrows the City dropdown to real cities in it,
- * it never reaches the API as its own query param (the backend has no
- * province column to filter on, and city already does the real filtering).
- */
-export const PAKISTAN_PROVINCES = {
-  Punjab: ['Lahore', 'Faisalabad', 'Multan', 'Gujranwala', 'Sialkot', 'Rawalpindi'],
-  Sindh: ['Karachi'],
-  'Khyber Pakhtunkhwa': ['Peshawar'],
-  Balochistan: ['Quetta'],
-  'Islamabad Capital Territory': ['Islamabad'],
-} as const satisfies Record<string, PakistanCity[]>;
-
+// Province/region is a city-picker aid. Public listings are filtered by city.
 export type PakistanProvince = keyof typeof PAKISTAN_PROVINCES;
 
 export function provinceOfCity(city: string | null | undefined): PakistanProvince | null {
@@ -331,8 +322,10 @@ export function provinceOfCity(city: string | null | undefined): PakistanProvinc
 }
 
 export function citiesInProvince(province: string | null | undefined): readonly PakistanCity[] {
-  if (province && province in PAKISTAN_PROVINCES) {
+  if (province && Object.hasOwn(PAKISTAN_PROVINCES, province)) {
     return PAKISTAN_PROVINCES[province as PakistanProvince];
   }
   return PAKISTAN_CITIES;
 }
+
+export * from './marketplace';

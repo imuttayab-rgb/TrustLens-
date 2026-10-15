@@ -10,6 +10,7 @@ log aggregator forever.
 from __future__ import annotations
 
 import logging
+import re
 import sys
 from contextvars import ContextVar
 from typing import Any, Literal, cast
@@ -51,29 +52,56 @@ SENSITIVE_KEYS = frozenset(
         "pepper",
         "encryption_key",
         "credit_card",
+        "email",
+        "phone",
+        "e164",
+        "ip_address",
+        "user_agent",
+        "full_name",
+        "address",
+        "query",
+        "exception",
+        "exc_info",
+        "stack",
+        "error",
+        "detail",
+        "headers",
+        "body",
+        "payload",
+        "context",
+        "recipient",
     }
 )
 
 #: Keys that are useful for debugging but must be shortened rather than
 #: dropped entirely.
-PARTIAL_KEYS = frozenset({"email", "phone", "e164", "ip", "ip_address"})
+PARTIAL_KEYS = frozenset({"ip"})
 
 REDACTED = "[redacted]"
 
 
-def _mask(key: str, value: Any) -> Any:
-    if not isinstance(value, str) or not value:
-        return REDACTED
-    if "email" in key:
-        local, _, domain = value.partition("@")
-        return f"{local[:2]}***@{domain}" if domain else REDACTED
-    if "phone" in key or key == "e164":
-        return f"{value[:4]}***{value[-2:]}" if len(value) > 6 else REDACTED
-    if "ip" in key:
-        # Keep the network portion for correlation, drop the host portion.
-        parts = value.split(".")
-        return ".".join([*parts[:2], "x", "x"]) if len(parts) == 4 else REDACTED
+def _mask(key: str, value: Any) -> str:
+    """Personal values are omitted, including network prefixes."""
     return REDACTED
+
+
+def safe_text(value: str) -> str:
+    """Scrub common embedded identifiers; structured sensitive fields are dropped entirely.
+
+    This is defense in depth, not a promise to identify every secret in arbitrary
+    prose. Callers should use stable event names and typed metadata, not free text.
+    """
+    value = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", REDACTED, value)
+    value = re.sub(
+        r"(?i)(password|passwd|token|secret|otp|code|api[-_]?key|authorization)\s*[=:]\s*[^\s&,;]+",
+        r"\1=[redacted]",
+        value,
+    )
+    value = re.sub(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", REDACTED, value)
+    value = re.sub(r"(?<!\w)\+?\d[\d ()-]{8,}\d(?!\w)", REDACTED, value)
+    value = re.sub(r"(?i)(https?://[^\s?]+)\?[^\s]+", r"\1?[redacted]", value)
+    value = re.sub(r"(?i)(://)[^\s/@:]+:[^\s/@]+@", r"\1[redacted]@", value)
+    return value[:4000]
 
 
 def redact_processor(_logger: Any, _method: str, event_dict: dict[str, Any]) -> dict[str, Any]:
@@ -81,12 +109,18 @@ def redact_processor(_logger: Any, _method: str, event_dict: dict[str, Any]) -> 
 
     def scrub(value: Any, depth: int = 0) -> Any:
         if depth > 6:  # guard against pathological nesting
-            return value
+            return REDACTED
         if isinstance(value, dict):
             out: dict[str, Any] = {}
             for k, v in value.items():
                 key = str(k).lower()
-                if any(s in key for s in SENSITIVE_KEYS):
+                if (
+                    key in {"error_type", "exception_type"}
+                    and isinstance(v, str)
+                    and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]{0,99}", v)
+                ):
+                    out[k] = v
+                elif any(s in key for s in SENSITIVE_KEYS):
                     out[k] = REDACTED
                 elif any(p in key for p in PARTIAL_KEYS):
                     out[k] = _mask(key, v)
@@ -95,7 +129,9 @@ def redact_processor(_logger: Any, _method: str, event_dict: dict[str, Any]) -> 
             return out
         if isinstance(value, list | tuple):
             return [scrub(v, depth + 1) for v in value]
-        return value
+        if isinstance(value, str):
+            return safe_text(value)
+        return value if value is None or type(value) in (bool, int, float) else REDACTED
 
     return cast("dict[str, Any]", scrub(event_dict))
 
@@ -134,6 +170,7 @@ def configure_logging(
         structlog.processors.add_log_level,
         structlog.processors.TimeStamper(fmt="iso", utc=True),
         structlog.processors.StackInfoRenderer(),
+        structlog.processors.format_exc_info,
         context_processor,
         _static_fields(service=service, version=version, env=env),
         # Redaction is LAST so nothing added by an earlier processor escapes it.
@@ -147,13 +184,35 @@ def configure_logging(
     )
 
     structlog.configure(
-        processors=[*shared, structlog.processors.format_exc_info, renderer],
+        processors=[*shared, renderer],
         wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelNamesMapping()[level]),
         logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
         cache_logger_on_first_use=True,
     )
 
-    logging.basicConfig(format="%(message)s", stream=sys.stdout, level=level)
+    class SafeFormatter(logging.Formatter):
+        """Route third-party logging through the same policy; never render raw exceptions."""
+
+        def format(self, record: logging.LogRecord) -> str:
+            message = safe_text(record.getMessage())
+            # Libraries sometimes embed SQL, request bodies or credentials in free text.
+            # Keep the logger/level, but suppress unknown message text in deployed logs.
+            event = {
+                "event": message if env in {"development", "test"} else "library_log",
+                "logger": record.name,
+                "level": record.levelname,
+            }
+            if record.exc_info:
+                event["exception_type"] = (
+                    record.exc_info[0].__name__ if record.exc_info[0] else "Exception"
+                )
+            import json
+
+            return json.dumps(redact_processor(None, record.levelname, event))
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(SafeFormatter())
+    logging.basicConfig(handlers=[handler], level=level, force=True)
     for noisy in ("uvicorn.access", "sqlalchemy.engine", "botocore", "urllib3", "asyncio"):
         logging.getLogger(noisy).setLevel(logging.WARNING)
 

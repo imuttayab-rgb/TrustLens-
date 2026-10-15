@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/sellers/[sellerId]: page. */
 'use client';
 
 import { useSellerDetail, useSellerTrustScore } from '@/features/sellers';

@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard): layout. */
 import { LogoutButton, RequireStaff } from '@/features/auth';
 import { ADMIN_ROUTES } from '@trustlens/constants';
 import { Ambient, ThemeToggle } from '@trustlens/ui';
@@ -5,6 +6,7 @@ import { ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 const NAV = [
+  { href: '/profile-names', label: 'Profile names' },
   { href: ADMIN_ROUTES.overview, label: 'Overview' },
   { href: ADMIN_ROUTES.reviews, label: 'Review queue' },
   { href: ADMIN_ROUTES.sellers, label: 'Sellers' },

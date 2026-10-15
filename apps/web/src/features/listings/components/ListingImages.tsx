@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: ListingImages. */
 'use client';
 
 import { uploadFile } from '@/lib/upload';
@@ -43,7 +44,7 @@ export function ListingImages({ listingId }: { listingId: string }) {
 
         if (result.isDuplicate) {
           setDuplicateWarning(
-            'One of your images appears to be a near-duplicate of an image you have already uploaded. Duplicate images do not improve your listing score.',
+            'One of your images appears to be a near-duplicate of an image you have already uploaded. Different angles help buyers inspect your item.',
           );
         }
       }

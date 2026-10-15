@@ -1,3 +1,4 @@
+import { API_BASE_URL } from '@/config/environment';
 /**
  * A plain link, not a fetch - clicking it must be a full top-level
  * navigation to the backend, which itself redirects on to Google. The
@@ -6,12 +7,19 @@
  * refreshSession) picks it up from there, so nothing here needs to know
  * what happens after the click.
  */
-export function GoogleAuthButton({ label = 'Continue with Google' }: { label?: string }) {
-  const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:8000';
+import { safeNext } from '@/lib/auth/safe-next';
+export function GoogleAuthButton({
+  label = 'Continue with Google',
+  next,
+}: {
+  label?: string;
+  next?: string;
+}) {
+  const apiBase = API_BASE_URL;
 
   return (
     <a
-      href={`${apiBase}/api/v1/auth/google/login`}
+      href={`${apiBase}/api/v1/auth/google/login?next=${encodeURIComponent(safeNext(next))}`}
       className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-md border border-input bg-background px-6 text-base font-medium transition-all duration-150 hover:scale-[1.01] hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[0.99]"
     >
       <svg className="h-4 w-4" viewBox="0 0 24 24" aria-hidden="true">

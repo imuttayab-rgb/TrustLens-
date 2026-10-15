@@ -1,3 +1,4 @@
+/** Commitlint.config module in configs. */
 module.exports = {
   extends: ['@commitlint/config-conventional'],
   rules: {

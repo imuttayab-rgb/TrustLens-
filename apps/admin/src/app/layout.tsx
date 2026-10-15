@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for layout.tsx: layout. */
 import '@/styles/globals.css';
 
 import { Providers } from '@/providers';
@@ -7,6 +8,9 @@ import { Inter } from 'next/font/google';
 import { cookies } from 'next/headers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
+
+// Nonces require request-time rendering of every HTML document.
+export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
   title: { default: 'TrustLens Admin', template: '%s · TrustLens Admin' },

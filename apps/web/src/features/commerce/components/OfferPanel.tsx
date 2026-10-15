@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: OfferPanel. */
 'use client';
 
 import { ReviewPrompt } from '@/features/reputation';

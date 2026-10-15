@@ -55,30 +55,15 @@ class ArqJobQueue(JobQueue):
         except Exception:
             return None
 
+    async def describe(self, job_id: str) -> dict[str, Any] | None:
+        """Read server-enqueued scope before allowing a status lookup."""
+        from arq.jobs import Job
+
+        info = await Job(job_id, self._redis).info()
+        return None if info is None else {"job_name": info.function, "payload": info.kwargs}
+
     async def close(self) -> None:
         await self._redis.aclose()
 
 
-class NullJobQueue(JobQueue):
-    """Records enqueues instead of performing them. Used in tests and in the
-    API's degraded mode when Redis is unavailable."""
-
-    def __init__(self) -> None:
-        self.enqueued: list[tuple[str, tuple[Any, ...], dict[str, Any]]] = []
-
-    async def enqueue(
-        self,
-        job_name: str,
-        *args: Any,
-        job_id: str | None = None,
-        defer_seconds: int | None = None,
-        **kwargs: Any,
-    ) -> str:
-        self.enqueued.append((job_name, args, kwargs))
-        return job_id or f"null-{len(self.enqueued)}"
-
-    async def status(self, job_id: str) -> str | None:
-        return "complete"
-
-
-__all__ = ["ArqJobQueue", "NullJobQueue"]
+__all__ = ["ArqJobQueue"]

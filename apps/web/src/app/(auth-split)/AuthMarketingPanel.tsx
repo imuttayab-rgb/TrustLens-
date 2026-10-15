@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (auth-split): AuthMarketingPanel. */
 'use client';
 
 import { stagger, usePrefersReducedMotion } from '@/lib/motion';

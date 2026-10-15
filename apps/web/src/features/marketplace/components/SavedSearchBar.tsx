@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: SavedSearchBar. */
 'use client';
 
 import { useSession } from '@/lib/auth/use-session';
@@ -26,6 +27,8 @@ export function SavedSearchBar({
   hasFilters: boolean;
   currentFilters: {
     category: string | null;
+    categoryNodeId?: string | null;
+    facets?: Record<string, unknown>;
     q: string | null;
     city: string | null;
     area: string | null;

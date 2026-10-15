@@ -1,7 +1,7 @@
+/** Reusable UI rendering and interaction component: LoginForm. */
 'use client';
 
 import { api } from '@/lib/api/client';
-import { qk } from '@/lib/api/query-keys';
 import { setAccessToken } from '@/lib/auth/session';
 import { useApiForm } from '@/lib/forms/use-api-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -13,13 +13,9 @@ import { loginSchema, type LoginInput } from '@trustlens/validation';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { useState } from 'react';
 import { GoogleAuthButton } from './GoogleAuthButton';
-
-/** Only ever redirect within this app - an open redirect is a phishing gift. */
-function safeNext(raw: string | null): string {
-  if (!raw || !raw.startsWith('/') || raw.startsWith('//')) return '/dashboard';
-  return raw;
-}
+import { safeNext } from '@/lib/auth/safe-next';
 
 export function LoginForm({ className }: { className?: string }) {
   const router = useRouter();
@@ -27,6 +23,35 @@ export function LoginForm({ className }: { className?: string }) {
   const queryClient = useQueryClient();
   const next = safeNext(params.get('next'));
   const googleError = params.get('error') === 'google';
+  const [mfaToken, setMfaToken] = useState<string | null>(null);
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaError, setMfaError] = useState<string | null>(null);
+  const [mfaBusy, setMfaBusy] = useState(false);
+  const googleMfa = params.get('mfa') === 'google';
+  function finishSignIn(token: string) {
+    setAccessToken(token);
+    queryClient.clear();
+    router.push(next);
+  }
+  async function finishMfa() {
+    setMfaBusy(true);
+    setMfaError(null);
+    try {
+      const result = googleMfa
+        ? await api.POST('/api/v1/auth/google/mfa/verify', { body: { code: mfaCode } })
+        : await api.POST('/api/v1/auth/mfa/verify', {
+            body: { mfaToken: mfaToken!, code: mfaCode },
+          });
+      if (result.error) throw toApiError(result.error);
+      const token = (result.data as { data: { accessToken?: string } }).data.accessToken;
+      if (!token) throw new Error('Sign-in did not complete. Try again.');
+      finishSignIn(token);
+    } catch (error) {
+      setMfaError(error instanceof Error ? error.message : 'Could not verify this code.');
+    } finally {
+      setMfaBusy(false);
+    }
+  }
 
   const {
     register,
@@ -38,24 +63,62 @@ export function LoginForm({ className }: { className?: string }) {
   const { submit, formError } = useApiForm<LoginInput>(setError);
 
   const onSubmit = handleSubmit(async (values) => {
+    let token: string | undefined;
     const ok = await submit(async () => {
       const result = await api.POST('/api/v1/auth/login', { body: values });
       if (result.error) throw toApiError(result.error);
-      const token = (result.data as { data: { accessToken: string } }).data.accessToken;
-      setAccessToken(token);
+      const data = (
+        result.data as { data: { accessToken?: string; mfaRequired?: boolean; mfaToken?: string } }
+      ).data;
+      if (data.mfaRequired && data.mfaToken) {
+        setMfaToken(data.mfaToken);
+        return;
+      }
+      if (!data.accessToken) throw new Error('Sign-in did not complete.');
+      token = data.accessToken;
     });
-
-    if (ok) {
-      // The guard may already have cached "not signed in" before redirecting
-      // here; without dropping it the dashboard bounces straight back.
-      await queryClient.invalidateQueries({ queryKey: qk.me });
-      router.push(next);
-      // The dashboard renders on the server from the session cookie, so its
-      // cached payload has to be dropped or the first paint is the
-      // logged-out one.
-      router.refresh();
-    }
+    if (ok && token) finishSignIn(token);
   });
+
+  if (mfaToken || googleMfa)
+    return (
+      <form
+        className="space-y-4"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void finishMfa();
+        }}
+      >
+        <h2 className="text-lg font-semibold">Verify your sign-in</h2>
+        <p className="text-sm text-muted-foreground">
+          Enter your authenticator code or one unused recovery code.
+        </p>
+        <Field htmlFor="mfa-code" label="Verification code">
+          <Input
+            id="mfa-code"
+            autoComplete="one-time-code"
+            value={mfaCode}
+            onChange={(e) => setMfaCode(e.target.value)}
+            maxLength={40}
+            required
+          />
+        </Field>
+        {mfaError && <Alert tone="error">{mfaError}</Alert>}
+        <Button type="submit" disabled={mfaBusy || !mfaCode.trim()}>
+          {mfaBusy ? 'Verifying…' : 'Verify and sign in'}
+        </Button>
+        <Link
+          href="/login"
+          onClick={() => {
+            setMfaToken(null);
+            setMfaCode('');
+          }}
+          className="ms-3 text-sm underline"
+        >
+          Start again
+        </Link>
+      </form>
+    );
 
   return (
     <form
@@ -119,7 +182,7 @@ export function LoginForm({ className }: { className?: string }) {
         <div className="absolute inset-x-0 top-1/2 border-t border-border" />
       </div>
 
-      <GoogleAuthButton />
+      <GoogleAuthButton next={next} />
       <p className="text-center text-xs text-muted-foreground">
         Signing in with Google for the first time creates an account, and agrees to the{' '}
         <Link href="/terms" className="underline-offset-4 hover:underline">

@@ -1,3 +1,4 @@
+/** Regression coverage and test support for auth.spec. */
 import { expect, test } from '@playwright/test';
 
 test.describe('authentication', () => {

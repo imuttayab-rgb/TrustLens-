@@ -18,8 +18,15 @@ from datetime import datetime
 from uuid import UUID
 
 from trustlens.core.application.notifications import notify
+from trustlens.core.application.services.listing_publication import seller_can_publish
 from trustlens.core.domain.entities import Conversation, ConversationSummary, Message
-from trustlens.core.domain.errors import EntityNotFound, PermissionDenied, ValidationError
+from trustlens.core.domain.enums import ListingStatus
+from trustlens.core.domain.errors import (
+    EntityNotFound,
+    InvalidStateError,
+    PermissionDenied,
+    ValidationError,
+)
 from trustlens.core.domain.ports import Clock, IdGenerator, UnitOfWork
 
 MAX_MESSAGE_CHARS = 4000
@@ -134,6 +141,12 @@ class SendMessage:
             raise EntityNotFound("listing", cmd.listing_id)
 
         seller = await self._uow.sellers.get(listing.seller_id)
+        if (
+            listing.status != ListingStatus.ACTIVE
+            or seller is None
+            or not seller_can_publish(seller)
+        ):
+            raise InvalidStateError("This listing is not public yet. The seller must verify first.")
         if seller is not None and seller.user_id == cmd.sender_id:
             raise ValidationError("You cannot message yourself about your own listing.")
         if seller is not None and await self._uow.blocks.is_blocked_either_way(
@@ -167,6 +180,8 @@ class ListConversationsQuery:
     user_id: UUID
     limit: int = 20
     offset: int = 0
+    folder: str = "all"
+    q: str = ""
 
 
 @dataclass(frozen=True, slots=True)
@@ -184,11 +199,15 @@ class ListConversations:
     async def execute(self, query: ListConversationsQuery) -> ConversationPage:
         limit = max(1, min(query.limit, 50))
         offset = max(0, query.offset)
+        if query.folder not in {'all','buying','selling','unread','important'}:
+            from trustlens.core.domain.errors import ValidationError
+            raise ValidationError('Choose a supported inbox folder.', field='folder')
+        filters = {'folder': query.folder, 'query': query.q[:100]} if query.folder != 'all' or query.q else {}
         async with self._uow:
             items = await self._uow.messaging.list_conversations_for_user(
-                query.user_id, limit=limit, offset=offset
+                query.user_id, limit=limit, offset=offset, **filters
             )
-            total = await self._uow.messaging.count_conversations_for_user(query.user_id)
+            total = await self._uow.messaging.count_conversations_for_user(query.user_id, **filters)
         return ConversationPage(items=tuple(items), total=total, limit=limit, offset=offset)
 
 

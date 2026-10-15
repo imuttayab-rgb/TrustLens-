@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (dashboard)/appeals: page. */
 import { AppealQueue } from '@/features/appeals';
 import { Card, CardContent, CardHeader, CardTitle } from '@trustlens/ui';
 

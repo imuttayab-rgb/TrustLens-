@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (auth-split): AuthTabs. */
 'use client';
 
 import { cn } from '@trustlens/utils';

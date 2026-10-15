@@ -22,6 +22,8 @@ import dataclasses
 from dataclasses import dataclass
 from uuid import UUID
 
+from trustlens.core.application.services.identity_expiry import lapsed_expiry
+from trustlens.core.application.services.listing_publication import sync_listing_publication
 from trustlens.core.domain.entities import AuditLogEntry, ReviewCase
 from trustlens.core.domain.enums import (
     ReviewCaseType,
@@ -172,12 +174,64 @@ class DecideReviewCase:
             # verdict changes a verification record, not just the queue.
             seller = await self._uow.sellers.get(case.seller_id)
             if seller is not None and case.related_entity_type == "identity_verifications":
+                # The score collector reads the verification decision, not
+                # only the seller's cached identity_status. Update BOTH in
+                # this transaction or a manual approval remains PENDING.
+                if case.related_entity_id is None:
+                    raise InvalidStateError("Identity case has no verification reference.")
+                verification = await self._uow.identities.get_latest_verification_by_id(
+                    case.related_entity_id
+                )
+                if verification is None or verification.seller_id != case.seller_id:
+                    raise InvalidStateError("Identity evidence does not belong to this case.")
+                # Backend guard: a human cannot approve a card that real OCR
+                # read reliably as expired (fake/demo OCR dates never count).
+                # The seller resubmits with a renewed card instead.
+                if cmd.approve:
+                    case_documents = await self._uow.identities.list_documents(seller.id)
+                    if lapsed_expiry(verification, case_documents, now.date()) is not None:
+                        raise InvalidStateError(
+                            "This ID card has expired; it cannot be approved. "
+                            "Reject it so the seller can resubmit with a valid card."
+                        )
                 new_status = (
                     VerificationStatus.VERIFIED if cmd.approve else VerificationStatus.REJECTED
                 )
-                await self._uow.sellers.update(
+                await self._uow.identities.update_verification(
+                    dataclasses.replace(
+                        verification,
+                        decision=new_status,
+                        decision_source="MANUAL",
+                        decided_by=cmd.reviewer_id,
+                        decision_reason=note,
+                        verified_at=now if cmd.approve else None,
+                    )
+                )
+                updated_seller = await self._uow.sellers.update(
                     dataclasses.replace(seller, identity_status=new_status, updated_at=now)
                 )
+                if cmd.approve and verification.front_document_id is not None:
+                    # Real OCR can fail to read a genuine card (glare, blur,
+                    # layout). Once a human has inspected the images and
+                    # approved, the front document must not keep scoring as
+                    # "unreadable". Expiry/hash evidence is left untouched.
+                    for document in await self._uow.identities.list_documents(seller.id):
+                        if (
+                            document.id == verification.front_document_id
+                            and document.status != VerificationStatus.VERIFIED
+                        ):
+                            await self._uow.identities.update_document(
+                                dataclasses.replace(
+                                    document,
+                                    status=VerificationStatus.VERIFIED,
+                                    rejection_reason=None,
+                                    processed_at=now,
+                                )
+                            )
+                # Commit visibility and reviewer verdict together so a pending
+                # or rejected seller cannot keep an ACTIVE listing by racing
+                # a listing-analysis worker.
+                await sync_listing_publication(self._uow, updated_seller, now=now)
                 identity_updated = True
             elif seller is not None and case.case_type == ReviewCaseType.BUSINESS_VERIFICATION:
                 new_status = (

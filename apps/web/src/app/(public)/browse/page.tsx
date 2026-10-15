@@ -1,7 +1,7 @@
+/** Next.js route/layout composition for (public)/browse: page. */
 'use client';
 
 import {
-  ListingCard,
   RecentlyViewedStrip,
   SavedSearchBar,
   useAddFavorite,
@@ -10,8 +10,12 @@ import {
   useRemoveFavorite,
   type SortOrder,
 } from '@/features/marketplace';
+import { CategoryFilters, parseFacets } from '@/features/categories';
+import { RelatedRecommendations } from '@/features/marketplace';
+import { categoryNode, categoryLabel } from '@trustlens/constants';
+import { CityPicker } from '@/features/location';
+import { askAssistant } from '@/features/assistant';
 import { useSession } from '@/lib/auth/use-session';
-import { stagger, usePrefersReducedMotion } from '@/lib/motion';
 import {
   areasForCity,
   citiesInProvince,
@@ -22,12 +26,29 @@ import {
   type ListingCategory,
 } from '@trustlens/constants';
 import { LISTING_CONDITIONS } from '@trustlens/validation';
-import { Alert, Button, Spinner } from '@trustlens/ui';
+import { Button } from '@trustlens/ui';
 import { cn } from '@trustlens/utils';
-import { ChevronRight, Grid2x2, List, Loader2, MapPin, Search, Check, X } from 'lucide-react';
+import {
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  Smartphone,
+  CircleCheck,
+  Grid2x2,
+  List,
+  Search,
+  X,
+  SlidersHorizontal,
+  Sparkles,
+  RotateCcw,
+} from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { nextBrowseHref, pageFromParam, priceFromInput, priceRangeError } from './browse-params';
+
+import { BrowseResultCard } from './BrowseResultCard';
+import styles from './browse-reference.module.css';
 
 const PAGE_SIZE = 24;
 
@@ -37,6 +58,7 @@ const DEFAULT_NEARBY_RADIUS_KM = 15;
 
 const SORT_LABELS: Record<SortOrder, string> = {
   newest: 'Newest',
+  relevance: 'Most relevant',
   price_asc: 'Price: low to high',
   price_desc: 'Price: high to low',
 };
@@ -68,24 +90,24 @@ interface FilterState {
   verifiedOnly: boolean;
 }
 
-function inputClass() {
-  return 'h-10 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
-}
-
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-b border-border/70 py-4 first:pt-0 last:border-0">
-      <h3 className="text-sm font-semibold">{title}</h3>
-      <div className="mt-3">{children}</div>
-    </div>
+    <details open className={styles.filterSection}>
+      <summary>
+        {title}
+        <ChevronDown aria-hidden="true" />
+      </summary>
+      <div className={styles.filterContent}>{children}</div>
+    </details>
   );
 }
 
 export default function BrowsePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const reduced = usePrefersReducedMotion();
 
+  const categoryNodeId = categoryNode(searchParams.get('categoryNodeId'))?.id ?? null;
+  const facets = parseFacets(searchParams.get('facets'));
   const categoryParam = searchParams.get('category');
   const category: ListingCategory | null =
     categoryParam && (LISTING_CATEGORIES as readonly string[]).includes(categoryParam)
@@ -98,8 +120,9 @@ export default function BrowsePage() {
   const area = areaParam && areaOptions.includes(areaParam) ? areaParam : null;
   const minPriceParam = searchParams.get('minPrice');
   const maxPriceParam = searchParams.get('maxPrice');
-  const minPrice = minPriceParam ? Number(minPriceParam) : null;
-  const maxPrice = maxPriceParam ? Number(maxPriceParam) : null;
+  const minPrice = priceFromInput(minPriceParam);
+  const maxPrice = priceFromInput(maxPriceParam);
+  const appliedPriceError = priceRangeError(minPriceParam, maxPriceParam);
   const conditionParam = searchParams.get('condition');
   const condition =
     conditionParam && (LISTING_CONDITIONS as readonly string[]).includes(conditionParam)
@@ -110,8 +133,10 @@ export default function BrowsePage() {
   const verifiedOnly = searchParams.get('verified') === '1';
   const sortParam = searchParams.get('sort');
   const sort: SortOrder =
-    sortParam === 'price_asc' || sortParam === 'price_desc' ? sortParam : 'newest';
-  const page = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
+    sortParam === 'price_asc' || sortParam === 'price_desc' || sortParam === 'relevance'
+      ? sortParam
+      : 'newest';
+  const page = pageFromParam(searchParams.get('page'));
   const view = searchParams.get('view') === 'list' ? 'list' : 'grid';
   const nearLatParam = searchParams.get('lat');
   const nearLngParam = searchParams.get('lng');
@@ -120,9 +145,8 @@ export default function BrowsePage() {
   const radiusKm =
     nearLatitude !== null ? Number(searchParams.get('radius') ?? DEFAULT_NEARBY_RADIUS_KM) : null;
 
-  const [searchInput, setSearchInput] = useState(qParam);
-  useEffect(() => setSearchInput(qParam), [qParam]);
-  const [locating, setLocating] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const filterToggle = useRef<HTMLButtonElement>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
 
   // The sidebar is a draft, committed all at once by "Apply Filters" -
@@ -139,7 +163,18 @@ export default function BrowsePage() {
     trustBand: trustBand?.key ?? null,
     verifiedOnly,
   });
+  // A sidebar category click navigates immediately. Keep other unapplied
+  // sidebar inputs intact for that navigation; header links/back still sync
+  // every draft field from the URL as usual.
+  const pendingCategoryClick = useRef<ListingCategory | null | undefined>(undefined);
   useEffect(() => {
+    const preserveOtherDrafts =
+      pendingCategoryClick.current !== undefined && pendingCategoryClick.current === category;
+    pendingCategoryClick.current = undefined;
+    if (preserveOtherDrafts) {
+      setDraft((current) => ({ ...current, category }));
+      return;
+    }
     setDraft({
       category,
       minPrice: minPriceParam ?? '',
@@ -158,8 +193,10 @@ export default function BrowsePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
-  const { data, isPending, isError } = usePublicListings({
+  const { data, isPending, isError, isFetching, refetch } = usePublicListings({
     category,
+    categoryNodeId,
+    facets,
     q: qParam || null,
     city: cityParam,
     area,
@@ -193,23 +230,33 @@ export default function BrowsePage() {
   }
 
   function updateParams(next: Record<string, string | null | undefined>, resetPage = true) {
-    const params = new URLSearchParams(searchParams.toString());
-    for (const [key, value] of Object.entries(next)) {
-      if (value === undefined) continue;
-      if (value) params.set(key, value);
-      else params.delete(key);
-    }
-    if (resetPage) params.delete('page');
-    router.push(`/browse${params.toString() ? `?${params.toString()}` : ''}`);
+    router.push(nextBrowseHref(searchParams.toString(), next, resetPage));
   }
 
+  function selectSidebarCategory(nextCategory: ListingCategory | null) {
+    if (nextCategory === category) return;
+    // Header/home links already write `?category=`. The left rail must do the
+    // same instead of waiting for the unrelated "Apply Filters" button.
+    pendingCategoryClick.current = nextCategory;
+    setDraft((current) => ({ ...current, category: nextCategory }));
+    updateParams({ categoryNodeId: null, facets: null, category: nextCategory });
+  }
+
+  const draftPriceError = priceRangeError(draft.minPrice, draft.maxPrice);
+
   function applyDraft() {
+    if ((draft.province && !draft.city) || draftPriceError) return;
+    if (mobileFiltersOpen) filterToggle.current?.focus();
+    setMobileFiltersOpen(false);
     updateParams({
       category: draft.category,
       city: draft.city,
-      area: draft.city === cityParam ? draft.area : null,
-      minPrice: draft.minPrice.trim() || null,
-      maxPrice: draft.maxPrice.trim() || null,
+      area: draft.area,
+      ...(draft.city !== cityParam || draft.area !== area
+        ? { lat: null, lng: null, radius: null }
+        : {}),
+      minPrice: priceFromInput(draft.minPrice)?.toString() ?? null,
+      maxPrice: priceFromInput(draft.maxPrice)?.toString() ?? null,
       condition: draft.condition,
       trust: draft.trustBand,
       verified: draft.verifiedOnly ? '1' : null,
@@ -217,19 +264,52 @@ export default function BrowsePage() {
   }
 
   function clearAll() {
-    router.push('/browse');
+    if (mobileFiltersOpen) filterToggle.current?.focus();
+    pendingCategoryClick.current = undefined;
+    setDraft({
+      category: null,
+      minPrice: '',
+      maxPrice: '',
+      condition: null,
+      province: null,
+      city: null,
+      area: null,
+      trustBand: null,
+      verifiedOnly: false,
+    });
+    setMobileFiltersOpen(false);
+    setLocationError(null);
+    router.push(
+      nextBrowseHref('', {
+        sort: sort === 'newest' ? null : sort,
+        view: view === 'list' ? 'list' : null,
+      }),
+    );
   }
 
-  function useNearbySearch() {
+  function askForHelp() {
+    const details = [
+      qParam || (category ? LISTING_CATEGORY_LABELS[category] : 'a suitable product'),
+      cityParam ? `in ${cityParam}` : '',
+      minPrice !== null ? `minimum budget PKR ${minPrice}` : '',
+      maxPrice !== null ? `maximum budget PKR ${maxPrice}` : '',
+      condition ? `condition: ${CONDITION_LABELS[condition as keyof typeof CONDITION_LABELS]}` : '',
+    ]
+      .filter(Boolean)
+      .join(', ');
+    askAssistant(
+      `Help me find ${details}. Keep my budget and location constraints. Explain suitable options and distinguish available TrustLens listings from wider market guidance.`,
+    );
+  }
+
+  function searchNearby() {
     setLocationError(null);
     if (!navigator.geolocation) {
       setLocationError('Your browser does not support location search.');
       return;
     }
-    setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLocating(false);
         updateParams({
           lat: String(position.coords.latitude),
           lng: String(position.coords.longitude),
@@ -237,7 +317,6 @@ export default function BrowsePage() {
         });
       },
       () => {
-        setLocating(false);
         setLocationError('Could not get your location - check your browser permissions.');
       },
       { timeout: 10_000 },
@@ -247,19 +326,28 @@ export default function BrowsePage() {
   const total = data?.total ?? 0;
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const hasFilters = Boolean(
+    categoryNodeId ||
+    Object.keys(facets).length ||
     qParam ||
     category ||
     cityParam ||
     area ||
-    minPrice ||
-    maxPrice ||
+    minPrice !== null ||
+    maxPrice !== null ||
     condition ||
     trustBand ||
     verifiedOnly ||
-    nearLatitude,
+    nearLatitude !== null,
   );
   const hasSavableFilters = Boolean(
-    qParam || category || cityParam || area || minPrice || maxPrice,
+    categoryNodeId ||
+    Object.keys(facets).length ||
+    qParam ||
+    category ||
+    cityParam ||
+    area ||
+    minPrice !== null ||
+    maxPrice !== null,
   );
 
   // What the results count reads as: "Marketplace in DHA, Lahore" once a
@@ -267,11 +355,23 @@ export default function BrowsePage() {
   const locationLabel = area ? `${area}, ${cityParam}` : cityParam;
 
   const chips: { key: string; label: string; onRemove: () => void }[] = [];
+  if (categoryNodeId)
+    chips.push({
+      key: 'categoryNodeId',
+      label: categoryLabel(categoryNodeId),
+      onRemove: () => updateParams({ categoryNodeId: null, facets: null }),
+    });
+  if (Object.keys(facets).length)
+    chips.push({
+      key: 'facets',
+      label: 'Specification filters',
+      onRemove: () => updateParams({ facets: null }),
+    });
   if (category) {
     chips.push({
       key: 'category',
       label: `Category: ${LISTING_CATEGORY_LABELS[category]}`,
-      onRemove: () => updateParams({ category: null }),
+      onRemove: () => updateParams({ categoryNodeId: null, facets: null, category: null }),
     });
   }
   if (area) {
@@ -332,273 +432,223 @@ export default function BrowsePage() {
       key: 'q',
       label: `"${qParam}"`,
       onRemove: () => {
-        setSearchInput('');
         updateParams({ q: null });
       },
     });
   }
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-      <nav
-        aria-label="Breadcrumb"
-        className="flex items-center gap-1.5 text-sm text-muted-foreground"
-      >
-        <Link href="/" className="hover:text-foreground hover:underline">
-          Home
-        </Link>
-        <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="text-foreground">Marketplace</span>
-      </nav>
-
-      <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
-        {locationLabel ? `Marketplace in ${locationLabel}` : 'Marketplace'}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        {isPending ? 'Loading listings…' : `${total.toLocaleString()} verified listings near you`}
-      </p>
-
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          updateParams({ q: searchInput.trim() || null });
-        }}
-        className="mt-6 flex flex-col gap-2 rounded-xl border border-border bg-card p-2 shadow-sm sm:flex-row sm:items-center"
-      >
-        <div className="flex flex-1 items-center gap-2 px-2">
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <input
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="What are you looking for?"
-            aria-label="Search listings"
-            className="h-10 w-full min-w-0 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
+    <div className={styles.page}>
+      <div className={styles.container}>
+        <div className={styles.intro}>
+          <nav aria-label="Breadcrumb" className={styles.breadcrumb}>
+            <Link href="/">Home</Link>
+            <span aria-hidden="true">/</span>
+            <span>Marketplace</span>
+          </nav>
+          <h1 className={styles.heading}>
+            {locationLabel ? `Marketplace in ${locationLabel}` : 'Marketplace in Pakistan'}
+          </h1>
+          <p className={styles.subtitle} role="status">
+            {isPending
+              ? 'Finding listings…'
+              : isError || appliedPriceError
+                ? 'Find your next purchase on TrustLens'
+                : `${total.toLocaleString()} ${verifiedOnly ? 'listings from identity-verified sellers' : total === 1 ? 'listing' : 'listings'}${locationLabel ? ' in your selected location' : nearLatitude !== null ? ' near you' : ' across Pakistan'}`}
+          </p>
         </div>
-        {nearLatitude !== null ? (
-          <button
-            type="button"
-            onClick={() => updateParams({ lat: null, lng: null, radius: null })}
-            className="flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-brand bg-brand/10 px-3 text-sm font-medium text-brand"
-          >
-            <MapPin className="h-4 w-4" aria-hidden="true" />
-            Nearby ({radiusKm}km)
-            <X className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={useNearbySearch}
-            disabled={locating}
-            className="flex h-10 shrink-0 items-center gap-1.5 rounded-md border border-input px-3 text-sm transition-colors hover:border-foreground/40 disabled:opacity-60"
-          >
-            {locating ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <MapPin className="h-4 w-4" aria-hidden="true" />
-            )}
-            {locating ? 'Locating…' : 'Nearby'}
-          </button>
-        )}
-        <Button type="submit" className="h-10 shrink-0 gap-2">
-          <Search className="h-4 w-4" aria-hidden="true" />
-          Search
-        </Button>
-      </form>
-      {locationError && <p className="mt-1 text-xs text-destructive">{locationError}</p>}
-
-      <SavedSearchBar
-        hasFilters={hasSavableFilters}
-        currentFilters={{ category, q: qParam || null, city: cityParam, area, minPrice, maxPrice }}
-      />
-
-      {chips.length > 0 && (
-        <div
-          className={cn('mt-4 flex flex-wrap items-center gap-2', !reduced && 'animate-fade-in')}
+        <button
+          ref={filterToggle}
+          type="button"
+          aria-expanded={mobileFiltersOpen}
+          aria-controls="browse-filters"
+          onClick={() => setMobileFiltersOpen((open) => !open)}
+          className={styles.mobileToggle}
         >
-          {chips.map((chip) => (
-            <button
-              key={chip.key}
-              type="button"
-              onClick={chip.onRemove}
-              className="flex items-center gap-1.5 rounded-full border border-brand/30 bg-brand/10 px-3 py-1 text-xs font-medium text-brand transition-all hover:scale-[1.03] hover:bg-brand/15"
-            >
-              {chip.label}
-              <X className="h-3 w-3" aria-hidden="true" />
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={clearAll}
-            className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          <SlidersHorizontal aria-hidden="true" />
+          {mobileFiltersOpen ? 'Hide filters' : 'Filters'}
+          {chips.length > 0 ? ` (${chips.length})` : ''}
+        </button>
+        <div className={styles.columns}>
+          <aside
+            id="browse-filters"
+            aria-label="Listing filters"
+            className={cn(styles.sidebar, mobileFiltersOpen && styles.sidebarOpen)}
           >
-            Clear all
-          </button>
-        </div>
-      )}
-
-      <div className="mt-6">
-        <RecentlyViewedStrip />
-      </div>
-
-      <div className="mt-6 grid gap-8 lg:grid-cols-[240px_1fr]">
-        <aside className={cn('lg:sticky lg:top-20 lg:self-start', !reduced && 'animate-fade-up')}>
-          <FilterSection title="Category">
-            <ul className="space-y-1">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => setDraft((d) => ({ ...d, category: null }))}
-                  className={cn(
-                    'flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-sm transition-colors',
-                    draft.category === null
-                      ? 'bg-brand/10 font-medium text-brand'
-                      : 'text-muted-foreground hover:bg-muted',
+            <CategoryFilters
+              nodeId={categoryNodeId}
+              facets={facets}
+              onNavigate={(next) => updateParams(next)}
+            />
+            {!categoryNodeId && (
+              <FilterSection title="Category">
+                <div className={styles.categoryControl}>
+                  {draft.category === 'mobiles' ? (
+                    <Smartphone aria-hidden="true" />
+                  ) : (
+                    <Grid2x2 aria-hidden="true" />
                   )}
-                >
-                  All categories
-                  {draft.category === null && <Check className="h-4 w-4" aria-hidden="true" />}
-                </button>
-              </li>
-              {LISTING_CATEGORIES.map((slug) => (
-                <li key={slug}>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setDraft((d) => ({ ...d, category: d.category === slug ? null : slug }))
+                  <select
+                    aria-label="Category"
+                    value={draft.category ?? ''}
+                    className={cn(styles.input, styles.categorySelect)}
+                    onChange={(event) =>
+                      selectSidebarCategory((event.target.value || null) as ListingCategory | null)
                     }
-                    className={cn(
-                      'flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left text-sm transition-colors',
-                      draft.category === slug
-                        ? 'bg-brand/10 font-medium text-brand'
-                        : 'text-muted-foreground hover:bg-muted',
-                    )}
                   >
-                    {LISTING_CATEGORY_LABELS[slug]}
-                    {draft.category === slug && (
-                      <Check className="h-4 w-4 shrink-0" aria-hidden="true" />
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </FilterSection>
-
-          <FilterSection title="Price Range (PKR)">
-            <div className="flex items-center gap-2">
-              <input
-                value={draft.minPrice}
-                onChange={(event) => setDraft((d) => ({ ...d, minPrice: event.target.value }))}
-                inputMode="numeric"
-                placeholder="Min price"
-                className={inputClass()}
-              />
-              <span className="text-muted-foreground">-</span>
-              <input
-                value={draft.maxPrice}
-                onChange={(event) => setDraft((d) => ({ ...d, maxPrice: event.target.value }))}
-                inputMode="numeric"
-                placeholder="Max price"
-                className={inputClass()}
-              />
-            </div>
-          </FilterSection>
-
-          <FilterSection title="Condition">
-            <ul className="space-y-2">
-              {LISTING_CONDITIONS.map((value) => (
-                <li key={value}>
-                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <option value="">All categories</option>
+                    {LISTING_CATEGORIES.map((slug) => (
+                      <option key={slug} value={slug}>
+                        {LISTING_CATEGORY_LABELS[slug]}
+                      </option>
+                    ))}
+                  </select>
+                  <CircleCheck aria-hidden="true" />
+                </div>
+              </FilterSection>
+            )}
+            <FilterSection title="Price Range (PKR)">
+              <div className={styles.priceInputs}>
+                <input
+                  value={draft.minPrice}
+                  onChange={(e) => setDraft((d) => ({ ...d, minPrice: e.target.value }))}
+                  inputMode="decimal"
+                  aria-label="Minimum price in PKR"
+                  aria-invalid={Boolean(draftPriceError)}
+                  aria-describedby={draftPriceError ? 'price-filter-error' : undefined}
+                  placeholder="Min price"
+                  className={styles.input ?? ''}
+                />
+                <span aria-hidden="true">-</span>
+                <input
+                  value={draft.maxPrice}
+                  onChange={(e) => setDraft((d) => ({ ...d, maxPrice: e.target.value }))}
+                  inputMode="decimal"
+                  aria-label="Maximum price in PKR"
+                  aria-invalid={Boolean(draftPriceError)}
+                  aria-describedby={draftPriceError ? 'price-filter-error' : undefined}
+                  placeholder="Max price"
+                  className={styles.input ?? ''}
+                />
+              </div>
+              {draftPriceError && (
+                <p id="price-filter-error" role="status" className="mt-2 text-xs text-destructive">
+                  {draftPriceError}
+                </p>
+              )}
+            </FilterSection>
+            <FilterSection title="Condition">
+              <div className={styles.checkList}>
+                {LISTING_CONDITIONS.filter(
+                  (value) => value !== 'FOR_PARTS' || draft.condition === 'FOR_PARTS',
+                ).map((value) => (
+                  <label key={value}>
                     <input
                       type="checkbox"
                       checked={draft.condition === value}
                       onChange={() =>
-                        setDraft((d) => ({
-                          ...d,
-                          condition: d.condition === value ? null : value,
-                        }))
+                        setDraft((d) => ({ ...d, condition: d.condition === value ? null : value }))
                       }
-                      className="h-4 w-4 rounded border-input text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                     {CONDITION_LABELS[value]}
                   </label>
-                </li>
-              ))}
-            </ul>
-          </FilterSection>
-
-          <FilterSection title="Province">
-            <select
-              value={draft.province ?? ''}
-              onChange={(event) => {
-                const province = event.target.value || null;
-                setDraft((d) => ({ ...d, province, city: null, area: null }));
-              }}
-              className={inputClass()}
-            >
-              <option value="">All provinces</option>
-              {Object.keys(PAKISTAN_PROVINCES).map((p) => (
-                <option key={p} value={p}>
-                  {p}
-                </option>
-              ))}
-            </select>
-          </FilterSection>
-
-          <FilterSection title="City">
-            <select
-              value={draft.city ?? ''}
-              onChange={(event) =>
-                setDraft((d) => ({ ...d, city: event.target.value || null, area: null }))
-              }
-              className={inputClass()}
-            >
-              <option value="">All cities</option>
-              {citiesInProvince(draft.province).map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </FilterSection>
-
-          <FilterSection title="Area">
-            <select
-              value={draft.city === cityParam ? (draft.area ?? '') : ''}
-              disabled={!draft.city}
-              onChange={(event) => setDraft((d) => ({ ...d, area: event.target.value || null }))}
-              className={cn(inputClass(), 'disabled:opacity-50')}
-            >
-              <option value="">{draft.city ? 'All areas' : 'Choose a city first'}</option>
-              {(draft.city ? areasForCity(draft.city) : []).map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
-          </FilterSection>
-
-          {nearLatitude !== null && (
-            <FilterSection title="Radius">
-              <select
-                value={String(radiusKm)}
-                onChange={(event) => updateParams({ radius: event.target.value })}
-                className={inputClass()}
-              >
-                {[5, 10, 15, 25, 50, 100].map((km) => (
-                  <option key={km} value={km}>
-                    {km} km
-                  </option>
                 ))}
-              </select>
+              </div>
             </FilterSection>
-          )}
-
-          <FilterSection title="Trust Score">
-            <ul className="space-y-2">
-              {TRUST_BANDS.map((band) => (
-                <li key={band.key}>
-                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <div className={styles.locationRows}>
+              <div className={styles.locationRow}>
+                <label htmlFor="browse-province">Province</label>
+                <select
+                  id="browse-province"
+                  value={draft.province ?? ''}
+                  onChange={(e) =>
+                    setDraft((d) => ({
+                      ...d,
+                      province: e.target.value || null,
+                      city: null,
+                      area: null,
+                    }))
+                  }
+                  className={styles.input ?? ''}
+                >
+                  <option value="">All regions</option>
+                  {Object.keys(PAKISTAN_PROVINCES)
+                    .sort()
+                    .map((p) => (
+                      <option key={p}>{p}</option>
+                    ))}
+                </select>
+              </div>
+              <div className={styles.locationRow}>
+                <span>City</span>
+                <div className={styles.cityControl}>
+                  <CityPicker
+                    value={draft.city ?? ''}
+                    onChange={(city) =>
+                      setDraft((d) => ({
+                        ...d,
+                        city: city || null,
+                        province: d.province || provinceOfCity(city),
+                        area: null,
+                      }))
+                    }
+                    cities={citiesInProvince(draft.province)}
+                    province={draft.province}
+                    placeholder={draft.province ? 'Select city' : 'All cities'}
+                    className={styles.input ?? ''}
+                  />
+                </div>
+              </div>
+              <div className={styles.locationRow}>
+                <label htmlFor="browse-area">Area</label>
+                <select
+                  id="browse-area"
+                  value={draft.area ?? ''}
+                  disabled={!draft.city}
+                  onChange={(e) => setDraft((d) => ({ ...d, area: e.target.value || null }))}
+                  className={styles.input ?? ''}
+                >
+                  <option value="">All areas</option>
+                  {(draft.city ? areasForCity(draft.city) : []).map((a) => (
+                    <option key={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
+              <div className={styles.locationRow}>
+                <label htmlFor="browse-radius">Radius</label>
+                <select
+                  id="browse-radius"
+                  value={nearLatitude !== null ? String(radiusKm) : ''}
+                  className={styles.input ?? ''}
+                  onChange={(e) => {
+                    if (e.target.value === 'nearby') searchNearby();
+                    else if (e.target.value === '')
+                      updateParams({ lat: null, lng: null, radius: null });
+                    else updateParams({ radius: e.target.value });
+                  }}
+                >
+                  <option value="">All distances</option>
+                  {nearLatitude !== null ? (
+                    [5, 10, 15, 25, 50, 100].map((km) => (
+                      <option key={km} value={km}>
+                        {km} km
+                      </option>
+                    ))
+                  ) : (
+                    <option value="nearby">Use my location</option>
+                  )}
+                </select>
+              </div>
+            </div>
+            {locationError && (
+              <p role="status" className="mb-2 text-xs text-destructive">
+                {locationError}
+              </p>
+            )}
+            <FilterSection title="Trust Score">
+              <div className={styles.checkList}>
+                {TRUST_BANDS.map((band) => (
+                  <label key={band.key}>
                     <input
                       type="checkbox"
                       checked={draft.trustBand === band.key}
@@ -608,97 +658,106 @@ export default function BrowsePage() {
                           trustBand: d.trustBand === band.key ? null : band.key,
                         }))
                       }
-                      className="h-4 w-4 rounded border-input text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                     {band.label}
                   </label>
-                </li>
-              ))}
-            </ul>
-          </FilterSection>
-
-          <FilterSection title="Verified Sellers only">
-            <label className="flex cursor-pointer items-center justify-between text-sm">
-              <span className="text-muted-foreground">Identity-verified sellers only</span>
+                ))}
+              </div>
+            </FilterSection>
+            <label
+              className={styles.verified}
+              title="Show listings from sellers whose identity is verified"
+            >
+              <span>Verified Sellers only</span>
               <input
                 type="checkbox"
+                aria-label="Identity-verified sellers only"
                 checked={draft.verifiedOnly}
-                onChange={(event) =>
-                  setDraft((d) => ({ ...d, verifiedOnly: event.target.checked }))
-                }
-                className="h-4 w-4 rounded border-input text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                onChange={(e) => setDraft((d) => ({ ...d, verifiedOnly: e.target.checked }))}
               />
             </label>
-          </FilterSection>
-
-          <Button
-            onClick={applyDraft}
-            className="mt-4 w-full transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            Apply Filters
-          </Button>
-        </aside>
-
-        <section className="min-w-0">
-          {isPending ? (
-            <div className="flex justify-center py-16">
-              <Spinner label="Loading listings" />
-            </div>
-          ) : isError ? (
-            <div className={!reduced ? 'animate-fade-in' : undefined}>
-              <Alert tone="error" title="Could not load listings">
-                Try again in a moment.
-              </Alert>
-            </div>
-          ) : data.items.length === 0 ? (
-            <div className={!reduced ? 'animate-fade-in' : undefined}>
-              <Alert tone="info" title="No listings found">
-                {hasFilters
-                  ? 'Try a different search, area, or price range.'
-                  : 'Nobody has listed anything yet.'}
-              </Alert>
-            </div>
-          ) : (
-            <>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-sm text-muted-foreground">
-                  {total.toLocaleString()} result{total === 1 ? '' : 's'}
-                </p>
-                <div className="flex items-center gap-2">
-                  <div className="flex overflow-hidden rounded-md border border-input">
+            {draft.province && !draft.city && (
+              <p className={styles.hint} role="status">
+                Select a city in {draft.province} to apply the location filter.
+              </p>
+            )}
+            <button
+              type="button"
+              disabled={Boolean((draft.province && !draft.city) || draftPriceError)}
+              onClick={applyDraft}
+              className={cn(styles.primary, styles.apply)}
+            >
+              Apply Filters
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileFiltersOpen(false);
+                filterToggle.current?.focus();
+              }}
+              className={styles.closeFilters}
+            >
+              Close filters
+            </button>
+          </aside>
+          <div className={styles.resultsColumn}>
+            <section className={styles.results} aria-label="Search results" aria-busy={isFetching}>
+              {chips.length > 0 && (
+                <div className={styles.chips}>
+                  {chips.map((chip) => (
+                    <button
+                      key={chip.key}
+                      type="button"
+                      onClick={chip.onRemove}
+                      aria-label={`Remove ${chip.label} filter`}
+                      className={styles.chip}
+                    >
+                      {chip.label}
+                      <X aria-hidden="true" />
+                    </button>
+                  ))}
+                  <button type="button" onClick={clearAll} className={styles.clear}>
+                    Clear all
+                  </button>
+                </div>
+              )}
+              <div className={styles.toolbar}>
+                <h2 className={styles.resultCount} role="status" aria-live="polite">
+                  {isPending ? (
+                    'Finding listings…'
+                  ) : isError || appliedPriceError ? (
+                    'Search results'
+                  ) : (
+                    <>
+                      <strong>{total.toLocaleString()}</strong> results
+                      {isFetching ? ' · Updating…' : ''}
+                    </>
+                  )}
+                </h2>
+                <div className={styles.toolbarActions}>
+                  <div className={styles.views} aria-label="Results layout">
                     <button
                       type="button"
                       aria-label="Grid view"
                       aria-pressed={view === 'grid'}
                       onClick={() => updateParams({ view: null }, false)}
-                      className={cn(
-                        'grid h-9 w-9 place-items-center transition-colors',
-                        view === 'grid'
-                          ? 'bg-brand text-[hsl(var(--background))]'
-                          : 'text-muted-foreground hover:bg-muted',
-                      )}
                     >
-                      <Grid2x2 className="h-4 w-4" aria-hidden="true" />
+                      <Grid2x2 aria-hidden="true" />
                     </button>
                     <button
                       type="button"
                       aria-label="List view"
                       aria-pressed={view === 'list'}
                       onClick={() => updateParams({ view: 'list' }, false)}
-                      className={cn(
-                        'grid h-9 w-9 place-items-center border-l border-input transition-colors',
-                        view === 'list'
-                          ? 'bg-brand text-[hsl(var(--background))]'
-                          : 'text-muted-foreground hover:bg-muted',
-                      )}
                     >
-                      <List className="h-4 w-4" aria-hidden="true" />
+                      <List aria-hidden="true" />
                     </button>
                   </div>
                   <select
+                    aria-label="Sort listings"
                     value={sort}
-                    onChange={(event) => updateParams({ sort: event.target.value }, false)}
-                    className="h-9 rounded-md border border-input bg-background px-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    onChange={(e) => updateParams({ sort: e.target.value })}
+                    className={styles.sort}
                   >
                     {(Object.keys(SORT_LABELS) as SortOrder[]).map((value) => (
                       <option key={value} value={value}>
@@ -708,25 +767,94 @@ export default function BrowsePage() {
                   </select>
                 </div>
               </div>
-
-              <div
-                className={cn(
-                  'mt-4 grid gap-4',
-                  view === 'list' ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3',
-                )}
-              >
-                {data.items.map((listing, index) => (
-                  <div
-                    key={listing.id}
-                    style={!reduced ? stagger(index, 45) : undefined}
-                    className={cn(
-                      view === 'list' ? 'max-w-md' : undefined,
-                      'transition-transform duration-200 hover:-translate-y-1',
-                      !reduced && 'animate-fade-up',
-                    )}
+              {appliedPriceError ? (
+                <div role="alert" className={styles.empty}>
+                  <h3>Check your price range</h3>
+                  <p>{appliedPriceError}</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => updateParams({ minPrice: null, maxPrice: null })}
                   >
-                    <ListingCard
+                    Remove price filter
+                  </Button>
+                </div>
+              ) : isPending ? (
+                <div role="status">
+                  <span className="sr-only">Loading listings</span>
+                  <div
+                    aria-hidden="true"
+                    className={cn(styles.grid, view === 'list' && styles.list)}
+                  >
+                    {Array.from({ length: 6 }, (_, i) => (
+                      <div
+                        key={i}
+                        className={cn(
+                          styles.card,
+                          'motion-safe:animate-pulse',
+                          view === 'list' && styles.listCard,
+                        )}
+                      >
+                        <div className={styles.photo} />
+                        <div className={styles.cardBody}>
+                          <div className={styles.skeletonLine} />
+                          <div className={styles.skeletonLine} />
+                          <div className={styles.skeletonLine} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : isError ? (
+                <div role="alert" className={styles.empty}>
+                  <RotateCcw aria-hidden="true" />
+                  <h3>We couldn't load these listings</h3>
+                  <p>Your filters are still here. Try loading the results again.</p>
+                  <Button onClick={() => void refetch()} disabled={isFetching}>
+                    {isFetching ? 'Trying again…' : 'Try again'}
+                  </Button>
+                </div>
+              ) : data.items.length === 0 ? (
+                <div className={styles.empty}>
+                  <Search aria-hidden="true" />
+                  <h3>
+                    {total > 0 && page > totalPages
+                      ? 'This results page is no longer available'
+                      : 'No listings found'}
+                  </h3>
+                  <p>
+                    {total > 0 && page > totalPages
+                      ? 'Listings may have changed. Return to the first page with your current filters.'
+                      : hasFilters
+                        ? 'Try a different model, a wider price range or another location.'
+                        : 'There are no listings to show yet. Post an ad or ask for buying guidance.'}
+                  </p>
+                  <div className={styles.emptyActions}>
+                    {total > 0 && page > totalPages ? (
+                      <Button onClick={() => updateParams({ page: null }, false)}>
+                        Go to first page
+                      </Button>
+                    ) : hasFilters ? (
+                      <Button variant="outline" onClick={clearAll}>
+                        Clear filters
+                      </Button>
+                    ) : (
+                      <Button asChild variant="outline">
+                        <Link href="/dashboard/listings/new">Post an ad</Link>
+                      </Button>
+                    )}
+                    <Button onClick={askForHelp}>
+                      <Sparkles className="me-2 h-4 w-4" aria-hidden="true" />
+                      Ask for guidance
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className={cn(styles.grid, view === 'list' && styles.list)}>
+                  {data.items.map((listing) => (
+                    <BrowseResultCard
+                      key={listing.id}
                       listing={listing}
+                      layout={view}
                       favorited={favoriteIds?.has(listing.id) ?? false}
                       onToggleFavorite={() => toggleFavorite(listing.id)}
                       togglingFavorite={
@@ -734,65 +862,89 @@ export default function BrowsePage() {
                         (removeFavorite.isPending && removeFavorite.variables === listing.id)
                       }
                     />
-                  </div>
-                ))}
-              </div>
-
-              {totalPages > 1 && (
-                <nav
-                  aria-label="Pagination"
-                  className="mt-8 flex items-center justify-center gap-1.5"
-                >
-                  <button
-                    type="button"
-                    disabled={page <= 1}
-                    onClick={() => updateParams({ page: String(page - 1) }, false)}
-                    className="rounded-md border border-border px-2.5 py-1.5 text-sm transition-transform hover:scale-110 hover:bg-muted disabled:pointer-events-none disabled:opacity-40 disabled:hover:scale-100"
-                  >
-                    ‹
-                  </button>
-                  {pageNumbers(page, totalPages).map((entry, index) =>
-                    entry === '…' ? (
-                      <span
-                        key={`ellipsis-${index}`}
-                        className="px-1 text-sm text-muted-foreground"
-                      >
-                        …
-                      </span>
-                    ) : (
-                      <button
-                        key={entry}
-                        type="button"
-                        onClick={() =>
-                          updateParams({ page: entry === 1 ? null : String(entry) }, false)
-                        }
-                        aria-current={entry === page ? 'page' : undefined}
-                        className={cn(
-                          'h-8 w-8 rounded-md text-sm transition-all',
-                          entry === page
-                            ? 'bg-brand text-[hsl(var(--background))]'
-                            : 'text-muted-foreground hover:scale-110 hover:bg-muted',
-                        )}
-                      >
-                        {entry}
-                      </button>
-                    ),
-                  )}
-                  <button
-                    type="button"
-                    disabled={page >= totalPages}
-                    onClick={() => updateParams({ page: String(page + 1) }, false)}
-                    className="rounded-md border border-border px-2.5 py-1.5 text-sm transition-transform hover:scale-110 hover:bg-muted disabled:pointer-events-none disabled:opacity-40 disabled:hover:scale-100"
-                  >
-                    ›
-                  </button>
-                </nav>
+                  ))}
+                </div>
               )}
-            </>
-          )}
-        </section>
+            </section>
+            {!isPending && !isError && !appliedPriceError && totalPages > 1 && (
+              <nav aria-label="Pagination" className={styles.pagination}>
+                <button
+                  type="button"
+                  aria-label="Previous page"
+                  disabled={page <= 1}
+                  onClick={() => updateParams({ page: String(page - 1) }, false)}
+                >
+                  <ChevronLeft aria-hidden="true" />
+                </button>
+                {pageNumbers(page, totalPages).map((entry, index) =>
+                  entry === '…' ? (
+                    <span key={`ellipsis-${index}`}>…</span>
+                  ) : (
+                    <button
+                      key={entry}
+                      type="button"
+                      onClick={() =>
+                        updateParams({ page: entry === 1 ? null : String(entry) }, false)
+                      }
+                      aria-current={entry === page ? 'page' : undefined}
+                    >
+                      {entry}
+                    </button>
+                  ),
+                )}
+                <button
+                  type="button"
+                  aria-label="Next page"
+                  disabled={page >= totalPages}
+                  onClick={() => updateParams({ page: String(page + 1) }, false)}
+                >
+                  <ChevronRight aria-hidden="true" />
+                </button>
+              </nav>
+            )}
+            {!isPending &&
+              !isError &&
+              !appliedPriceError &&
+              (categoryNodeId || category || qParam) &&
+              (page >= totalPages || total === 0) && (
+                <RelatedRecommendations
+                  category={category}
+                  nodeId={categoryNodeId}
+                  query={qParam}
+                  exclude={data?.items.map((l) => l.id) ?? []}
+                />
+              )}
+          </div>
+        </div>
+        <details className={styles.extras}>
+          <summary>Saved searches, recently viewed &amp; more filters</summary>
+          <SavedSearchBar
+            hasFilters={hasSavableFilters}
+            currentFilters={{
+              categoryNodeId,
+              facets,
+              category,
+              q: qParam || null,
+              city: cityParam,
+              area,
+              minPrice,
+              maxPrice,
+            }}
+          />
+          <label className="my-4 flex items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={condition === 'FOR_PARTS'}
+              onChange={() =>
+                updateParams({ condition: condition === 'FOR_PARTS' ? null : 'FOR_PARTS' })
+              }
+            />
+            For parts / repair
+          </label>
+          <RecentlyViewedStrip />
+        </details>
       </div>
-    </main>
+    </div>
   );
 }
 
@@ -800,7 +952,15 @@ export default function BrowsePage() {
  * and last page, plus a small window around the current one. */
 function pageNumbers(current: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
-  const pages = new Set<number>([1, total, current, current - 1, current + 1]);
+  const pages = new Set<number>([
+    1,
+    total,
+    current,
+    current - 1,
+    current + 1,
+    ...(current <= 3 ? [2, 3, 4, 5] : []),
+    ...(current >= total - 2 ? [total - 4, total - 3, total - 2, total - 1] : []),
+  ]);
   const sorted = [...pages].filter((p) => p >= 1 && p <= total).sort((a, b) => a - b);
   const result: (number | '…')[] = [];
   sorted.forEach((page, index) => {

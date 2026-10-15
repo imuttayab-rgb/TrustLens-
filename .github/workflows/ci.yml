@@ -11,7 +11,7 @@ concurrency:
 
 env:
   PYTHON_VERSION: '3.12'
-  NODE_VERSION: '20'
+  NODE_VERSION: '24'
 
 jobs:
   # Path filters so a docs-only change does not run the ML test suite.
@@ -100,6 +100,9 @@ jobs:
       # Tests never reach a real provider, a real key, or a real bill.
       USE_FAKE_AI: 'true'
       ENV: test
+      SECURITY_JWT_ISSUER: http://localhost:8000
+      SECURITY_JWT_AUDIENCE: trustlens-web
+      CHAT_TEST_DATABASE_URL: postgresql+psycopg://trustlens:trustlens@localhost:5432/trustlens
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v3
@@ -109,12 +112,11 @@ jobs:
       - name: Generate ephemeral secrets
         run: bash scripts/generate-keys.sh >> "$GITHUB_ENV"
 
-      - name: Migrations apply, reverse and reapply
-        # An untested downgrade is not a rollback plan.
+      - name: Migrations apply and are safe to rerun
+        # Retained chat/call evidence forbids schema downgrade; roll back application images.
         run: |
           cd database
           uv run alembic upgrade head
-          uv run alembic downgrade base
           uv run alembic upgrade head
 
       - name: Seed reference data
@@ -139,7 +141,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: pnpm }
+        with: { node-version: '24', cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint
       - run: pnpm typecheck
@@ -154,7 +156,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: pnpm }
+        with: { node-version: '24', cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm build
 
@@ -168,7 +170,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: pnpm }
+        with: { node-version: '24', cache: pnpm }
       - run: uv sync --all-packages --dev
       - run: pnpm install --frozen-lockfile
       - run: bash scripts/generate-keys.sh >> "$GITHUB_ENV"
@@ -195,7 +197,7 @@ jobs:
       - uses: pnpm/action-setup@v4
         with: { version: 9 }
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: pnpm }
+        with: { node-version: '24', cache: pnpm }
       - run: pnpm install --frozen-lockfile
       - run: pnpm audit --audit-level=high || true
 

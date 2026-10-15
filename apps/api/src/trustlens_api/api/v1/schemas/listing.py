@@ -29,9 +29,14 @@ class ListingWriteRequest(Schema):
     price: float | None = Field(default=None, ge=0)
     currency: str | None = Field(default=None, min_length=3, max_length=3)
     category: str | None = Field(default=None, max_length=80)
+    category_node_id: str | None = Field(default=None, max_length=240)
+    show_phone: bool | None = None
     condition: str | None = Field(default=None, max_length=50)
     city: str | None = Field(default=None, max_length=80)
     area: str | None = Field(default=None, max_length=120)
+    #: Private full address used to place the map pin. Returned only on the
+    #: seller's own listing endpoints; no public schema carries it.
+    address_line: str | None = Field(default=None, max_length=300)
     latitude: float | None = Field(default=None, ge=-90, le=90)
     longitude: float | None = Field(default=None, ge=-180, le=180)
     country_code: str | None = Field(default=None, min_length=2, max_length=2)
@@ -67,9 +72,14 @@ class ListingResponse(Schema):
     price: float | None = None
     currency: str | None = None
     category: str | None = None
+    category_node_id: str | None = None
+    category_schema_version: int | None = None
+    category_data: dict[str, Any] = Field(default_factory=dict)
+    show_phone: bool = False
     condition: str | None = None
     city: str | None = None
     area: str | None = None
+    address_line: str | None = None
     latitude: float | None = None
     longitude: float | None = None
     country_code: str | None = None

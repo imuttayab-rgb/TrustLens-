@@ -1,0 +1,818 @@
+{
+  "mobiles": {
+    "Apple": [
+      "iPhone 18 Pro Max",
+      "iPhone 18 Pro",
+      "iPhone 17e",
+      "iPhone 17 Pro Max",
+      "iPhone 17 Pro",
+      "iPhone 17",
+      "iPhone Air",
+      "iPhone 16e",
+      "iPhone 16 Pro Max",
+      "iPhone 16 Pro",
+      "iPhone 16 Plus",
+      "iPhone 16",
+      "iPhone 15 Pro Max",
+      "iPhone 15 Pro",
+      "iPhone 15 Plus",
+      "iPhone 15",
+      "iPhone 14 Pro Max",
+      "iPhone 14 Pro",
+      "iPhone 14 Plus",
+      "iPhone 14",
+      "iPhone SE (3rd generation)",
+      "iPhone 13 Pro Max",
+      "iPhone 13 Pro",
+      "iPhone 13",
+      "iPhone 13 mini",
+      "iPhone 12 Pro Max",
+      "iPhone 12 Pro",
+      "iPhone 12",
+      "iPhone 12 mini",
+      "iPhone SE (2nd generation)",
+      "iPhone 11 Pro",
+      "iPhone 11 Pro Max",
+      "iPhone 11",
+      "iPhone XS",
+      "iPhone XS Max",
+      "iPhone XR",
+      "iPhone X",
+      "iPhone 8",
+      "iPhone 8 Plus",
+      "iPhone 7",
+      "iPhone 7 Plus",
+      "iPhone SE (1st generation)",
+      "iPhone 6s",
+      "iPhone 6s Plus",
+      "iPhone 6",
+      "iPhone 6 Plus",
+      "iPhone 5s",
+      "iPhone 5c",
+      "iPhone 5",
+      "iPhone 4s",
+      "iPhone 4",
+      "iPhone 3GS",
+      "iPhone 3G",
+      "iPhone"
+    ],
+    "Samsung": [
+      "Galaxy A05",
+      "Galaxy A05s",
+      "Galaxy A06",
+      "Galaxy A15",
+      "Galaxy A16",
+      "Galaxy A25",
+      "Galaxy A26",
+      "Galaxy A35",
+      "Galaxy A36",
+      "Galaxy A55",
+      "Galaxy A56",
+      "Galaxy A14",
+      "Galaxy A24",
+      "Galaxy A34",
+      "Galaxy A54",
+      "Galaxy A13",
+      "Galaxy A23",
+      "Galaxy A33",
+      "Galaxy A53",
+      "Galaxy A12",
+      "Galaxy A22",
+      "Galaxy A32",
+      "Galaxy A52",
+      "Galaxy A72",
+      "Galaxy A51",
+      "Galaxy A71",
+      "Galaxy A50",
+      "Galaxy A70",
+      "Galaxy S10",
+      "Galaxy S10+",
+      "Galaxy S10e",
+      "Galaxy S20",
+      "Galaxy S20+",
+      "Galaxy S20 Ultra",
+      "Galaxy S20 FE",
+      "Galaxy S21",
+      "Galaxy S21+",
+      "Galaxy S21 Ultra",
+      "Galaxy S21 FE",
+      "Galaxy S22",
+      "Galaxy S22+",
+      "Galaxy S22 Ultra",
+      "Galaxy S23",
+      "Galaxy S23+",
+      "Galaxy S23 Ultra",
+      "Galaxy S23 FE",
+      "Galaxy S24",
+      "Galaxy S24+",
+      "Galaxy S24 Ultra",
+      "Galaxy S24 FE",
+      "Galaxy S25",
+      "Galaxy S25+",
+      "Galaxy S25 Ultra",
+      "Galaxy Note 10",
+      "Galaxy Note 10+",
+      "Galaxy Note 20",
+      "Galaxy Note 20 Ultra",
+      "Galaxy Z Flip3",
+      "Galaxy Z Flip4",
+      "Galaxy Z Flip5",
+      "Galaxy Z Flip6",
+      "Galaxy Z Fold3",
+      "Galaxy Z Fold4",
+      "Galaxy Z Fold5",
+      "Galaxy Z Fold6"
+    ],
+    "OPPO": [
+      "Reno5",
+      "Reno5 Pro",
+      "Reno6",
+      "Reno6 Pro 5G",
+      "Reno11 5G",
+      "Reno12 5G",
+      "Reno12 F",
+      "Reno12 F 5G",
+      "Reno13 5G",
+      "Reno13 Pro 5G",
+      "Reno13 F",
+      "Reno14 5G",
+      "Reno14 Pro 5G",
+      "Reno14 F 5G",
+      "Reno15 5G",
+      "Reno15 Pro 5G",
+      "Reno15 F 5G",
+      "Reno16 5G",
+      "Reno16 F 5G",
+      "A6",
+      "A6c",
+      "A6k",
+      "A6s",
+      "A6x",
+      "A6 Pro",
+      "A6s Pro",
+      "A3",
+      "A3x",
+      "A5 Pro",
+      "A16",
+      "A17",
+      "A18",
+      "A38",
+      "A54",
+      "A57",
+      "A58",
+      "A60",
+      "A78"
+    ],
+    "Tecno": [
+      "Spark 10",
+      "Spark 10 Pro",
+      "Spark 20",
+      "Spark 20C",
+      "Spark 20 Pro",
+      "Spark 20 Pro+",
+      "Spark 30",
+      "Spark 30C",
+      "Spark 30 Pro",
+      "Camon 20",
+      "Camon 20 Pro",
+      "Camon 30",
+      "Camon 30 Premier 5G",
+      "Camon 30 Pro 5G",
+      "Camon 40",
+      "Camon 40 Pro",
+      "Pova 5",
+      "Pova 5 Pro",
+      "Pova 6",
+      "Pova 6 Pro",
+      "Pop 8",
+      "Pop 9"
+    ],
+    "Infinix": [
+      "Hot 30",
+      "Hot 30i",
+      "Hot 40",
+      "Hot 40i",
+      "Hot 40 Pro",
+      "Hot 50",
+      "Hot 50i",
+      "Hot 50 Pro",
+      "Hot 50 Pro+",
+      "Note 30",
+      "Note 30 Pro",
+      "Note 40",
+      "Note 40 Pro",
+      "Note 40 Pro+ 5G",
+      "Note 50",
+      "Note 50 Pro",
+      "Smart 7",
+      "Smart 8",
+      "Smart 9",
+      "Zero 30",
+      "Zero 30 5G",
+      "Zero 40",
+      "Zero 40 5G",
+      "GT 20 Pro"
+    ],
+    "Vivo": [
+      "Y03",
+      "Y04",
+      "Y17s",
+      "Y18",
+      "Y19s",
+      "Y21",
+      "Y22",
+      "Y27",
+      "Y28",
+      "Y29",
+      "Y36",
+      "Y100",
+      "V23 5G",
+      "V25 5G",
+      "V27e",
+      "V29",
+      "V29e",
+      "V30",
+      "V30e",
+      "V40",
+      "V40e",
+      "V50",
+      "X80",
+      "X90 Pro",
+      "X100 Pro",
+      "X200 Pro"
+    ],
+    "Redmi": [
+      "9A",
+      "10",
+      "12",
+      "13",
+      "14C",
+      "Note 10",
+      "Note 10 Pro",
+      "Note 11",
+      "Note 11 Pro",
+      "Note 12",
+      "Note 12 Pro",
+      "Note 13",
+      "Note 13 Pro",
+      "Note 13 Pro+ 5G",
+      "Note 14",
+      "Note 14 Pro",
+      "Note 14 Pro+ 5G"
+    ],
+    "Xiaomi": [
+      "13",
+      "13T",
+      "14",
+      "14T",
+      "15"
+    ],
+    "Google": [
+      "Pixel 4",
+      "Pixel 4 XL",
+      "Pixel 4a",
+      "Pixel 5",
+      "Pixel 5a",
+      "Pixel 6",
+      "Pixel 6 Pro",
+      "Pixel 6a",
+      "Pixel 7",
+      "Pixel 7 Pro",
+      "Pixel 7a",
+      "Pixel 8",
+      "Pixel 8 Pro",
+      "Pixel 8a",
+      "Pixel 9",
+      "Pixel 9 Pro",
+      "Pixel 9 Pro XL",
+      "Pixel 9a",
+      "Pixel Fold",
+      "Pixel 9 Pro Fold"
+    ],
+    "Realme": [
+      "C21",
+      "C25",
+      "C35",
+      "C51",
+      "C53",
+      "C55",
+      "C61",
+      "C63",
+      "C65",
+      "C67",
+      "C75",
+      "9 Pro",
+      "10",
+      "11 Pro",
+      "12",
+      "12+ 5G",
+      "13+ 5G",
+      "14 Pro"
+    ],
+    "OnePlus": [
+      "7",
+      "7 Pro",
+      "7T",
+      "8",
+      "8 Pro",
+      "8T",
+      "9",
+      "9 Pro",
+      "10 Pro",
+      "10T",
+      "11",
+      "12",
+      "12R",
+      "13",
+      "13R",
+      "Nord",
+      "Nord 2",
+      "Nord CE 3 Lite"
+    ],
+    "Nokia": [
+      "105",
+      "106",
+      "110",
+      "130",
+      "150",
+      "3310",
+      "G10",
+      "G20",
+      "G21",
+      "C21 Plus"
+    ]
+  },
+  "computers": {
+    "HP": [
+      "EliteBook 840 G3",
+      "EliteBook 840 G4",
+      "EliteBook 840 G5",
+      "EliteBook 840 G6",
+      "EliteBook 840 G7",
+      "EliteBook 840 G8",
+      "EliteBook 850 G5",
+      "EliteBook 850 G6",
+      "EliteBook 830 G5",
+      "EliteBook 830 G6",
+      "ProBook 430 G5",
+      "ProBook 430 G6",
+      "ProBook 440 G5",
+      "ProBook 440 G6",
+      "ProBook 450 G5",
+      "ProBook 450 G6",
+      "ProBook 450 G7",
+      "ProBook 640 G4",
+      "ProBook 650 G5",
+      "EliteBook 745 G5",
+      "EliteBook 755 G5",
+      "EliteBook 835 G7",
+      "EliteBook 845 G7",
+      "Pavilion 15",
+      "Envy x360",
+      "Spectre x360",
+      "Victus 15",
+      "Victus 16",
+      "Omen 15",
+      "Omen 16",
+      "Chromebook 11 G5",
+      "Chromebook 11 G6 EE",
+      "Chromebook 11 G7 EE",
+      "Chromebook 11 G8 EE",
+      "Chromebook 13 G1",
+      "Chromebook x360 11 G2 EE",
+      "Chromebook x360 14 G1"
+    ],
+    "Dell": [
+      "Latitude E7440",
+      "Latitude E7450",
+      "Latitude E7470",
+      "Latitude 5480",
+      "Latitude 5490",
+      "Latitude 5400",
+      "Latitude 5410",
+      "Latitude 5420",
+      "Latitude 5430",
+      "Latitude 7480",
+      "Latitude 7490",
+      "Latitude 7400",
+      "Latitude 7410",
+      "Latitude 7420",
+      "XPS 13 9360",
+      "XPS 13 9370",
+      "XPS 13 9380",
+      "XPS 13 9300",
+      "XPS 15 9570",
+      "XPS 15 9500",
+      "Inspiron 15 3511",
+      "Inspiron 15 3520",
+      "Precision 5520",
+      "Precision 5530",
+      "G15 5511",
+      "Chromebook 3180",
+      "Chromebook 3190",
+      "Chromebook 3100"
+    ],
+    "Lenovo": [
+      "ThinkPad T440",
+      "ThinkPad T450",
+      "ThinkPad T460",
+      "ThinkPad T470",
+      "ThinkPad T480",
+      "ThinkPad T490",
+      "ThinkPad T14 Gen 1",
+      "ThinkPad T14 Gen 2",
+      "ThinkPad X240",
+      "ThinkPad X250",
+      "ThinkPad X260",
+      "ThinkPad X270",
+      "ThinkPad X280",
+      "ThinkPad X1 Carbon Gen 6",
+      "ThinkPad X1 Carbon Gen 7",
+      "IdeaPad 3",
+      "IdeaPad 5",
+      "Legion 5",
+      "Legion 5 Pro",
+      "Yoga 7",
+      "Yoga 9",
+      "Chromebook 100e",
+      "Chromebook 300e"
+    ],
+    "Apple": [
+      "MacBook Air M1",
+      "MacBook Air M2",
+      "MacBook Air M3",
+      "MacBook Air M4",
+      "MacBook Pro M1",
+      "MacBook Pro M2",
+      "MacBook Pro M3",
+      "MacBook Pro M4",
+      "MacBook Pro 2017",
+      "MacBook Pro 2018",
+      "MacBook Pro 2019",
+      "MacBook Pro 2020",
+      "MacBook Air 2017",
+      "MacBook Air 2018",
+      "MacBook Air 2019"
+    ],
+    "Acer": [
+      "Chromebook 314",
+      "Chromebook Spin 311",
+      "Aspire 3",
+      "Aspire 5",
+      "Aspire 7",
+      "Swift 3",
+      "Swift 5",
+      "Swift Go 14",
+      "Nitro 5",
+      "Nitro V 15",
+      "Predator Helios 300",
+      "Predator Helios Neo 16"
+    ],
+    "Asus": [
+      "Chromebook C202",
+      "VivoBook 15",
+      "VivoBook 16",
+      "ZenBook 14",
+      "ZenBook Duo",
+      "TUF Gaming A15",
+      "TUF Gaming F15",
+      "ROG Zephyrus G14",
+      "ROG Zephyrus G15",
+      "ROG Strix G15",
+      "ROG Strix G16"
+    ]
+  },
+  "car": {
+    "Suzuki": [
+      "Alto",
+      "Mehran",
+      "Cultus",
+      "Swift",
+      "Wagon R",
+      "Bolan",
+      "Ravi",
+      "Jimny",
+      "Every",
+      "Hustler",
+      "Spacia",
+      "Vitara"
+    ],
+    "Toyota": [
+      "Corolla",
+      "Yaris",
+      "Vitz",
+      "Aqua",
+      "Prius",
+      "Passo",
+      "Camry",
+      "Fortuner",
+      "Hilux",
+      "Land Cruiser",
+      "Prado",
+      "Raize",
+      "C-HR",
+      "Hiace"
+    ],
+    "Honda": [
+      "Civic",
+      "City",
+      "BR-V",
+      "HR-V",
+      "Vezel",
+      "Fit",
+      "N-WGN",
+      "N-One",
+      "N-Box",
+      "Accord",
+      "CR-V",
+      "Insight"
+    ],
+    "Kia": [
+      "Sportage",
+      "Picanto",
+      "Sorento",
+      "Stonic",
+      "Carnival"
+    ],
+    "Hyundai": [
+      "Tucson",
+      "Elantra",
+      "Sonata",
+      "Santa Fe",
+      "Porter"
+    ],
+    "Daihatsu": [
+      "Mira",
+      "Move",
+      "Cuore",
+      "Tanto",
+      "Hijet"
+    ],
+    "Changan": [
+      "Alsvin",
+      "Oshan X7",
+      "Karvaan",
+      "M9"
+    ]
+  },
+  "bike": {
+    "Honda": [
+      "CD 70",
+      "CD 70 Dream",
+      "CG 125",
+      "CG 125S",
+      "Pridor",
+      "CB 125F",
+      "CB 150F"
+    ],
+    "Yamaha": [
+      "YBR 125",
+      "YBR 125G",
+      "YB 125Z",
+      "YB 125Z-DX"
+    ],
+    "Suzuki": [
+      "GS 150",
+      "GS 150 SE",
+      "GR 150",
+      "GD 110S"
+    ]
+  },
+  "electronics": {
+    "Sony": [
+      "PlayStation 5",
+      "PS5 Slim",
+      "PS5 Pro",
+      "PS5 Digital Edition",
+      "PlayStation 4",
+      "PS4 Slim",
+      "PS4 Pro",
+      "PlayStation 3",
+      "PlayStation VR2",
+      "PlayStation Portal",
+      "TV",
+      "A6000",
+      "A6400",
+      "A7 III",
+      "WH-1000XM4",
+      "WH-1000XM5",
+      "speaker"
+    ],
+    "Microsoft": [
+      "Xbox Series X",
+      "Xbox Series S",
+      "Xbox One",
+      "Xbox One S",
+      "Xbox One X",
+      "Xbox 360",
+      "Xbox controller"
+    ],
+    "Nintendo": [
+      "Switch",
+      "Switch OLED",
+      "Switch Lite",
+      "Switch 2",
+      "3DS"
+    ],
+    "Samsung": [
+      "TV",
+      "Galaxy Buds2 Pro",
+      "soundbar",
+      "Galaxy Watch4",
+      "Galaxy Watch5",
+      "Galaxy Watch6"
+    ],
+    "LG": [
+      "TV"
+    ],
+    "TCL": [
+      "TV"
+    ],
+    "Haier": [
+      "TV"
+    ],
+    "Hisense": [
+      "TV"
+    ],
+    "Canon": [
+      "EOS 200D",
+      "EOS 250D",
+      "EOS 80D",
+      "EOS 90D",
+      "EOS R50"
+    ],
+    "Nikon": [
+      "D3500",
+      "D5600",
+      "D7500"
+    ],
+    "Apple": [
+      "AirPods 2",
+      "AirPods 3",
+      "AirPods Pro 2",
+      "Watch Series 7",
+      "Watch Series 8",
+      "Watch Series 9",
+      "Watch Ultra"
+    ],
+    "Huawei": [
+      "Watch GT 3"
+    ]
+  },
+  "home-appliances": {
+    "Haier": [
+      "washing machine",
+      "refrigerator",
+      "AC"
+    ],
+    "Dawlance": [
+      "washing machine",
+      "refrigerator",
+      "AC"
+    ],
+    "Samsung": [
+      "washing machine",
+      "refrigerator"
+    ],
+    "LG": [
+      "washing machine",
+      "refrigerator"
+    ],
+    "PEL": [
+      "washing machine",
+      "refrigerator"
+    ],
+    "Gree": [
+      "AC"
+    ],
+    "Orient": [
+      "AC"
+    ],
+    "Kenwood": [
+      "AC"
+    ]
+  },
+  "vehicle-parts": {
+    "Honda": [
+      "CD 70 parts",
+      "CG 125 parts"
+    ],
+    "Yamaha": [
+      "YBR parts"
+    ],
+    "Suzuki": [
+      "GS 150 parts"
+    ]
+  },
+  "books-hobbies": {
+    "Yamaha": [
+      "guitar"
+    ]
+  },
+  "tablets": {
+    "Lenovo": [
+      "Tab M10"
+    ],
+    "Apple": [
+      "iPad 9th generation",
+      "iPad 10th generation",
+      "iPad Air M1",
+      "iPad Air M2",
+      "iPad Pro M2"
+    ],
+    "Samsung": [
+      "Galaxy Tab S8",
+      "Galaxy Tab S9",
+      "Galaxy Tab A9"
+    ]
+  },
+  "camera": {
+    "Sony": [
+      "A6000",
+      "A6400",
+      "A7 III"
+    ],
+    "Canon": [
+      "EOS 200D",
+      "EOS 250D",
+      "EOS 80D",
+      "EOS 90D",
+      "EOS R50"
+    ],
+    "Nikon": [
+      "D3500",
+      "D5600",
+      "D7500"
+    ]
+  },
+  "gaming": {
+    "Sony": [
+      "PlayStation 5",
+      "PS5 Slim",
+      "PS5 Pro",
+      "PS5 Digital Edition",
+      "PlayStation 4",
+      "PS4 Slim",
+      "PS4 Pro",
+      "PlayStation 3",
+      "PlayStation VR2",
+      "PlayStation Portal"
+    ],
+    "Microsoft": [
+      "Xbox Series X",
+      "Xbox Series S",
+      "Xbox One",
+      "Xbox One S",
+      "Xbox One X",
+      "Xbox 360",
+      "Xbox controller"
+    ],
+    "Nintendo": [
+      "Switch",
+      "Switch OLED",
+      "Switch Lite",
+      "Switch 2",
+      "3DS"
+    ]
+  },
+  "wearable": {
+    "Samsung": [
+      "Galaxy Watch4",
+      "Galaxy Watch5",
+      "Galaxy Watch6"
+    ],
+    "Apple": [
+      "Watch Series 7",
+      "Watch Series 8",
+      "Watch Series 9",
+      "Watch Ultra"
+    ],
+    "Huawei": [
+      "Watch GT 3"
+    ]
+  },
+  "audio": {
+    "Sony": [
+      "WH-1000XM4",
+      "WH-1000XM5",
+      "speaker"
+    ],
+    "Samsung": [
+      "Galaxy Buds2 Pro",
+      "soundbar"
+    ],
+    "Apple": [
+      "AirPods 2",
+      "AirPods 3",
+      "AirPods Pro 2"
+    ]
+  },
+  "tv": {
+    "Sony": [],
+    "Samsung": [],
+    "LG": [],
+    "TCL": [],
+    "Haier": [],
+    "Hisense": []
+  }
+}

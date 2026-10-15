@@ -1,56 +1,74 @@
+/** Coordinate browser history IDs with current public listing data. */
 'use client';
-
 import { useEffect, useState } from 'react';
+import { useQueries } from '@tanstack/react-query';
+import { api } from '@/lib/api/client';
+import { toApiError } from '@trustlens/api-client';
 import type { PublicListing } from './use-public-listings';
-
-const STORAGE_KEY = 'trustlens:recently-viewed';
-const MAX_ITEMS = 12;
-
-/**
- * Client-only, per-browser history of viewed listings (MKT-01). No backend
- * involvement - this is a convenience trail, not data anyone else needs to
- * see or that should survive a device switch, so localStorage is the right
- * tool rather than a new endpoint and table.
- */
-function readRecentlyViewed(): PublicListing[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as PublicListing[]) : [];
-  } catch {
-    return [];
-  }
-}
-
+import {
+  HISTORY_EVENT,
+  HISTORY_KEY,
+  readHistory,
+  recordHistory,
+  type HistoryEntry,
+} from '../lib/recent-history';
+export { clearRecentlyViewed } from '../lib/recent-history';
+type HistoryCard = Pick<PublicListing, 'id' | 'title' | 'thumbnailUrl' | 'imageUrl'>;
 export function recordRecentlyViewed(listing: PublicListing): void {
-  try {
-    const existing = readRecentlyViewed().filter((item) => item.id !== listing.id);
-    const next = [listing, ...existing].slice(0, MAX_ITEMS);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  } catch {
-    // Private browsing / storage quota / disabled storage - a lost history
-    // entry is not worth surfacing an error over.
-  }
+  recordHistory(listing.id);
 }
 
-/** Reads the trail, excluding whichever listing the caller is currently viewing. */
-export function useRecentlyViewed(excludeId?: string): PublicListing[] {
-  const [items, setItems] = useState<PublicListing[]>([]);
-
+export function useRecentlyViewed(excludeId?: string): HistoryCard[] {
+  const [entries, setEntries] = useState<HistoryEntry[]>([]);
   useEffect(() => {
-    setItems(readRecentlyViewed());
+    const refresh = () => setEntries(readHistory());
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === HISTORY_KEY || event.key === null) refresh();
+    };
+    refresh();
+    window.addEventListener(HISTORY_EVENT, refresh);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(HISTORY_EVENT, refresh);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
-
-  return excludeId ? items.filter((item) => item.id !== excludeId) : items;
+  const results = useQueries({
+    queries: entries
+      .filter((entry) => entry.id !== excludeId)
+      .map(({ id }) => ({
+        queryKey: ['recent-listing-card', id],
+        staleTime: 60_000,
+        retry: false,
+        queryFn: async (): Promise<HistoryCard> => {
+          const result = await api.GET('/api/v1/public/listings/{listing_id}', {
+            params: { path: { listing_id: id } },
+          });
+          if (result.error) throw toApiError(result.error);
+          const value = (
+            result.data as unknown as {
+              data: {
+                id: string;
+                title: string;
+                images: { imageUrl: string; thumbnailUrl: string | null; isPrimary?: boolean }[];
+              };
+            }
+          ).data;
+          const image = value.images.find((item) => item.isPrimary) ?? value.images[0];
+          return {
+            id: value.id,
+            title: value.title,
+            imageUrl: image?.imageUrl ?? null,
+            thumbnailUrl: image?.thumbnailUrl ?? null,
+          };
+        },
+      })),
+  });
+  return results.flatMap((result) => (result.data ? [result.data] : []));
 }
-
-/** Records the given listing as viewed once, on mount. */
 export function useRecordRecentlyViewed(listing: PublicListing | null): void {
+  const id = listing?.id;
   useEffect(() => {
-    if (listing) recordRecentlyViewed(listing);
-    // Only the id needs to retrigger this - the rest of the object is
-    // stable for a given listing within one page view.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listing?.id]);
+    if (id) recordHistory(id);
+  }, [id]);
 }

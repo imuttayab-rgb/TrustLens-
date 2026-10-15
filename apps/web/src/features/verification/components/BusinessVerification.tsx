@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: BusinessVerification. */
 'use client';
 
 import { useSeller, useSetAccountType, useSubmitBusinessVerification } from '@/features/seller';

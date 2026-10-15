@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@mediapipe/tasks-vision": "0.10.32",
     "@tanstack/react-query": "^5.59.20",
     "@thumbmarkjs/thumbmarkjs": "^1.10.1",
     "@trustlens/api-client": "workspace:*",
@@ -22,6 +23,7 @@
     "@trustlens/validation": "workspace:*",
     "date-fns": "^4.4.0",
     "leaflet": "^1.9.4",
+    "livekit-client": "2.22.4",
     "lucide-react": "^0.454.0",
     "next": "^15.0.3",
     "next-intl": "^4.14.5",

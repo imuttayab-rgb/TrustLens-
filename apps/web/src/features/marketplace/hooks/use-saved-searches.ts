@@ -1,3 +1,4 @@
+/** Feature state, queries or side-effect coordination for use saved searches. */
 'use client';
 
 import { api } from '@/lib/api/client';
@@ -9,6 +10,8 @@ export interface SavedSearch {
   id: string;
   name: string;
   category: ListingCategory | null;
+  categoryNodeId?: string | null;
+  facets?: Record<string, unknown>;
   q: string | null;
   city: string | null;
   area: string | null;
@@ -36,6 +39,8 @@ export function useCreateSavedSearch() {
     mutationFn: async (input: {
       name: string;
       category: string | null;
+      categoryNodeId?: string | null;
+      facets?: Record<string, unknown>;
       q: string | null;
       city: string | null;
       area: string | null;
@@ -46,6 +51,8 @@ export function useCreateSavedSearch() {
         body: {
           name: input.name,
           category: input.category,
+          categoryNodeId: input.categoryNodeId ?? null,
+          facets: input.facets ?? {},
           q: input.q,
           city: input.city,
           area: input.area,
@@ -81,6 +88,9 @@ export function useDeleteSavedSearch() {
 export function savedSearchToUrl(search: SavedSearch): string {
   const params = new URLSearchParams();
   if (search.category) params.set('category', search.category);
+  if (search.categoryNodeId) params.set('categoryNodeId', search.categoryNodeId);
+  if (search.facets && Object.keys(search.facets).length)
+    params.set('facets', JSON.stringify(search.facets));
   if (search.q) params.set('q', search.q);
   if (search.city) params.set('city', search.city);
   if (search.area) params.set('area', search.area);

@@ -1,0 +1,80 @@
+[
+  {
+    "id": "chat-xss-0",
+    "status": "PASS",
+    "observed": "stored API payload rendered as text; no execution"
+  },
+  {
+    "id": "chat-xss-1",
+    "status": "PASS",
+    "observed": "stored API payload rendered as text; no execution"
+  },
+  {
+    "id": "chat-xss-2",
+    "status": "PASS",
+    "observed": "stored API payload rendered as text; no execution"
+  },
+  {
+    "id": "chat-xss-3",
+    "status": "PASS",
+    "observed": "stored API payload rendered as text; no execution"
+  },
+  {
+    "id": "access-token-not-browser-storage",
+    "status": "PASS",
+    "observed": "synthetic bearer absent from localStorage/sessionStorage"
+  },
+  {
+    "id": "web-local-csp",
+    "status": "PASS",
+    "observed": {
+      "csp": "default-src 'self'; script-src 'self' 'nonce-ZTE4N2IyNDMtODczMS00MmIyLWE2ZmEtNWE1Yjg2N2UzZGVi' 'strict-dynamic' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data: blob: http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:* ; font-src 'self' data:; connect-src 'self'  http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; media-src 'self' blob:  http://localhost:* http://127.0.0.1:* ws://localhost:* ws://127.0.0.1:*; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+      "hsts": null,
+      "nosniff": "nosniff",
+      "frame": "DENY"
+    }
+  },
+  {
+    "id": "web-hidden-/.env",
+    "status": "PASS",
+    "observed": {
+      "status": 404
+    }
+  },
+  {
+    "id": "web-hidden-/.env.production",
+    "status": "PASS",
+    "observed": {
+      "status": 404
+    }
+  },
+  {
+    "id": "web-hidden-/.git/config",
+    "status": "PASS",
+    "observed": {
+      "status": 404
+    }
+  },
+  {
+    "id": "web-hidden-/openapi.json",
+    "status": "PASS",
+    "observed": {
+      "status": 404
+    }
+  },
+  {
+    "id": "web-hidden-/docs",
+    "status": "PASS",
+    "observed": {
+      "status": 404
+    }
+  },
+  {
+    "id": "nonce-scripts-hydrate",
+    "status": "PASS",
+    "observed": {
+      "nonceScripts": 29,
+      "errors": []
+    }
+  }
+]

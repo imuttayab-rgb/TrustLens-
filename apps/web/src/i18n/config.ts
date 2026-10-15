@@ -1,3 +1,4 @@
+/** Config module; defines LOCALES, Locale, DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_LABELS, RTL_LOCALES. */
 export const LOCALES = ['en', 'ur'] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = 'en';

@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: AppealForm. */
 'use client';
 
 import { useApiForm } from '@/lib/forms/use-api-form';

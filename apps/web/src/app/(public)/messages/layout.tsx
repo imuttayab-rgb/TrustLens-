@@ -1,3 +1,4 @@
+/** Next.js route/layout composition for (public)/messages: layout. */
 import { RequireSession } from '@/features/auth';
 import { MessagesShell } from './MessagesShell';
 

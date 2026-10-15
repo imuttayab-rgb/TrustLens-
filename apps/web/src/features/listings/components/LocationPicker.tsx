@@ -24,10 +24,18 @@ export function LocationPicker({
   latitude,
   longitude,
   onChange,
+  label = 'Pin the exact location (optional)',
+  hint,
+  heightClass = 'h-56',
 }: {
   latitude: number | null;
   longitude: number | null;
   onChange: (lat: number, lng: number) => void;
+  /** Heading above the map; the Post-an-Ad wizard uses its own wording. */
+  label?: string | null;
+  /** Replaces the default helper text under the map. */
+  hint?: string;
+  heightClass?: string;
 }) {
   const containerId = useId();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -82,25 +90,36 @@ export function LocationPicker({
       mapRef.current = null;
       markerRef.current = null;
     };
-    // Initialised once on mount - a later lat/lng prop change (e.g. the
-    // form resetting) is not fed back in, since the only source of truth
-    // for the pin's position while this component is mounted is the map
-    // itself.
+    // Initialised once on mount; later prop changes are handled below.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Post-an-Ad v2: typing an address and pressing "Find on map" changes the
+  // coordinate from OUTSIDE the map. Move the pin there and zoom in. A
+  // change that came from dragging the pin already matches, so nothing jumps.
+  useEffect(() => {
+    const map = mapRef.current;
+    const marker = markerRef.current;
+    if (!map || !marker || latitude === null || longitude === null) return;
+    const current = marker.getLatLng();
+    if (Math.abs(current.lat - latitude) < 1e-7 && Math.abs(current.lng - longitude) < 1e-7) {
+      return;
+    }
+    marker.setLatLng([latitude, longitude]);
+    map.setView([latitude, longitude], Math.max(map.getZoom(), 16));
+  }, [latitude, longitude]);
+
   return (
     <div className="space-y-2">
-      <span className="text-sm font-medium">Pin the exact location (optional)</span>
+      {label && <span className="text-sm font-medium">{label}</span>}
       <div
         id={containerId}
         ref={containerRef}
-        className="h-56 w-full overflow-hidden rounded-lg border border-border bg-muted"
+        className={`${heightClass} relative z-0 w-full overflow-hidden rounded-lg border border-border bg-muted`}
       />
       <p className="text-xs text-muted-foreground">
-        Click or drag the pin. Map data from OpenStreetMap. This is separate from the city/area
-        above and is only shown to buyers as a &ldquo;view on map&rdquo; link, never your exact
-        address unless you place the pin there yourself.
+        {hint ??
+          'Click or drag the pin. Map data from OpenStreetMap. Buyers only ever see an approximate area (about 1 km), never your exact address.'}
       </p>
     </div>
   );

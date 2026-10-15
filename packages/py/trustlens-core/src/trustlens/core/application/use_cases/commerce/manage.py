@@ -19,6 +19,7 @@ from datetime import timedelta
 from uuid import UUID
 
 from trustlens.core.application.notifications import notify
+from trustlens.core.application.services.listing_publication import seller_can_publish
 from trustlens.core.application.use_cases.moderation import clean_report_description
 from trustlens.core.domain.entities import Offer, Report, Transaction
 from trustlens.core.domain.enums import (
@@ -81,6 +82,11 @@ class CreateOffer:
                 raise EntityNotFound("listing", conversation.listing_id)
             if listing.status != ListingStatus.ACTIVE:
                 raise InvalidStateError("This listing isn't open for offers right now.")
+            seller = await self._uow.sellers.get(listing.seller_id)
+            if seller is None or not seller_can_publish(seller):
+                raise InvalidStateError(
+                    "The seller must finish verification before receiving offers."
+                )
             auction = await self._uow.auctions.get_for_listing(listing.id)
             if auction is not None and auction.is_open:
                 raise InvalidStateError(
@@ -197,6 +203,9 @@ class RespondToOffer:
                 raise EntityNotFound("listing", offer.listing_id)
             if listing.status != ListingStatus.ACTIVE:
                 raise InvalidStateError("This listing is no longer available.")
+            seller = await self._uow.sellers.get(listing.seller_id)
+            if seller is None or not seller_can_publish(seller):
+                raise InvalidStateError("The seller must be verified before an offer is accepted.")
 
             closed = await self._uow.offers.close(
                 offer.id, status=OfferStatus.ACCEPTED, responded_at=now
@@ -382,8 +391,17 @@ class CancelTransaction:
             )
             listing = await self._uow.listings.get(txn.listing_id)
             if listing is not None and listing.status == ListingStatus.RESERVED:
+                seller = await self._uow.sellers.get(listing.seller_id)
                 await self._uow.listings.update(
-                    dataclasses.replace(listing, status=ListingStatus.ACTIVE, updated_at=now)
+                    dataclasses.replace(
+                        listing,
+                        status=(
+                            ListingStatus.ACTIVE
+                            if seller is not None and seller_can_publish(seller)
+                            else ListingStatus.DRAFT
+                        ),
+                        updated_at=now,
+                    )
                 )
             other = txn.seller_id if cmd.actor_id == txn.buyer_id else txn.buyer_id
             await notify(
@@ -512,8 +530,17 @@ class ResolveDispute:
                         dataclasses.replace(listing, status=ListingStatus.SOLD, updated_at=now)
                     )
                 elif listing.status == ListingStatus.RESERVED:
+                    seller = await self._uow.sellers.get(listing.seller_id)
                     await self._uow.listings.update(
-                        dataclasses.replace(listing, status=ListingStatus.ACTIVE, updated_at=now)
+                        dataclasses.replace(
+                            listing,
+                            status=(
+                                ListingStatus.ACTIVE
+                                if seller is not None and seller_can_publish(seller)
+                                else ListingStatus.DRAFT
+                            ),
+                            updated_at=now,
+                        )
                     )
             for user_id in (txn.buyer_id, txn.seller_id):
                 await notify(

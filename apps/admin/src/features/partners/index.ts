@@ -1,3 +1,4 @@
+/** Index module in partners. */
 export { PartnerList } from './components/PartnerList';
 export {
   useIssueKey,

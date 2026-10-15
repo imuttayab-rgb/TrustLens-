@@ -1,3 +1,4 @@
+/** Reusable UI rendering and interaction component: ConversationList. */
 'use client';
 
 import { Alert, Spinner } from '@trustlens/ui';

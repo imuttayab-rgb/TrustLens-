@@ -1,3 +1,4 @@
+/** Request module in i18n. */
 import type { AbstractIntlMessages } from 'next-intl';
 import { cookies } from 'next/headers';
 import { getRequestConfig } from 'next-intl/server';
